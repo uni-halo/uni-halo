@@ -84,12 +84,18 @@ importers:
       dayjs:
         specifier: 1.11.10
         version: 1.11.10
+      mp-html:
+        specifier: ^2.5.2
+        version: 2.5.2
       pinia:
         specifier: 2.0.36
         version: 2.0.36(typescript@5.8.3)(vue@3.4.21(typescript@5.8.3))
       pinia-plugin-persistedstate:
         specifier: 3.2.1
         version: 3.2.1(pinia@2.0.36(typescript@5.8.3)(vue@3.4.21(typescript@5.8.3)))
+      qs:
+        specifier: 6.12.1
+        version: 6.12.1
       vue:
         specifier: ^3.4.21
         version: 3.4.21(typescript@5.8.3)
@@ -7321,6 +7327,9 @@ packages:
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
+  mp-html@2.5.2:
+    resolution: {integrity: sha512-45e8c32Qgux4YU4iC3qCSFsOh3y+RwPwZ+iz/vvLkDgSGWk+1zsL4WUzWWQc9w3AsAfkaD/QR0oIufIDngBmXA==}
+
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -8188,6 +8197,10 @@ packages:
   qrcode-terminal@0.12.0:
     resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
     hasBin: true
+
+  qs@6.12.1:
+    resolution: {integrity: sha512-zWmv4RSuB9r2mYQw3zxQuHWeU+42aKi1wWig/j4ele4ygELZ7PEO6MM7rim9oAQH2A5MWfsAVf/jPvTPgCbvUQ==}
+    engines: {node: '>=0.6'}
 
   qs@6.13.0:
     resolution: {integrity: sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==}
@@ -19774,6 +19787,8 @@ snapshots:
 
   moment@2.30.1: {}
 
+  mp-html@2.5.2: {}
+
   mri@1.2.0: {}
 
   mrmime@2.0.1: {}
@@ -20601,6 +20616,10 @@ snapshots:
   qrcode-reader@1.0.4: {}
 
   qrcode-terminal@0.12.0: {}
+
+  qs@6.12.1:
+    dependencies:
+      side-channel: 1.1.0
 
   qs@6.13.0:
     dependencies:

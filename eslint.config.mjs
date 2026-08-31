@@ -10,6 +10,17 @@ export default uniHelper({
     // 忽略原生插件目录
     '**/nativeplugins/',
     'dist',
+    // AI skills 示例文件(非项目代码,避免 lint --fix 误改)
+    '.agents/',
+    // 环境变量与脚本目录(非 lint 目标)
+    'env/',
+    'scripts/',
+    // 第三方图表组件(从旧项目带入,保持原样)
+    'src/components/qiun-*/',
+    // mp-html 富文本组件(第三方,从旧项目带入,保持原样)
+    'src/components/mp-html/',
+    // unibest 演示页面与数据
+    'src/pages-demo/',
     // unplugin-auto-import 生成的类型文件，每次提交都改变，所以加入这里吧，与 .gitignore 配合使用
     'auto-import.d.ts',
     // vite-plugin-uni-pages 生成的类型文件，每次切换分支都一堆不同的，所以直接 .gitignore
@@ -32,6 +43,8 @@ export default uniHelper({
     'jsdoc/require-returns-description': 'off',
     'ts/no-empty-object-type': 'off',
     'no-extend-native': 'off',
+    // uni-app 中 view 组件用 v-html 渲染服务端富文本(评论/免责声明/故事)是常规需求,关闭该规则
+    'vue/no-v-text-v-html-on-component': 'off',
     // uni 条件编译注释可能包裹 import，自动排序会破坏平台条件边界
     'perfectionist/sort-imports': 'off',
     'vue/singleline-html-element-content-newline': [

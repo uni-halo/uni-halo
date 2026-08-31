@@ -30,6 +30,16 @@ export enum HttpErrorType {
   Network = 'network',
 }
 
+/**
+ * 请求来源(通过请求 meta.requestFrom 标记,决定响应归一化方式)
+ * Halo: Halo 官方/插件接口,响应为原始数据(rawData),拦截器统一封装为 { code, data, message } 后透传
+ * Standard: 标准接口,响应本身即为 { code, data, message } 结构
+ */
+export enum RequestFrom {
+  Halo = 'halo',
+  Standard = 'standard',
+}
+
 export function isSuccessResultCode(code: number): boolean {
   return [ResultEnum.Success0, ResultEnum.Success200].includes(code)
 }

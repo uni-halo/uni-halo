@@ -112,7 +112,7 @@ export function getCurrentPageI18nKey() {
     subPackages?.forEach((config) => {
       config.pages?.forEach((cur) => {
         allSubPages.push({
-          ...cur,
+          ...(cur as PageMetaDatum),
           path: `/${config.root}/${cur.path}`,
         })
       })
@@ -141,9 +141,9 @@ export function getEnvBaseUrl() {
   let baseUrl = import.meta.env.VITE_SERVER_BASEURL
 
   // # 有些同学可能需要在微信小程序里面根据 develop、trial、release 分别设置上传地址，参考代码如下。
-  const  WeixinDevelopBaseUrl= import.meta.env.VITE_SERVER_BASEURL__WEIXIN_DEVELOP 
-  const WeixinTrialBaseUrl= import.meta.env.VITE_SERVER_BASEURL__WEIXIN_TRIAL  
-  const WeixinReleaseBaseUrl=import.meta.env. VITE_SERVER_BASEURL__WEIXIN_RELEASE 
+  const WeixinDevelopBaseUrl = import.meta.env.VITE_SERVER_BASEURL__WEIXIN_DEVELOP
+  const WeixinTrialBaseUrl = import.meta.env.VITE_SERVER_BASEURL__WEIXIN_TRIAL
+  const WeixinReleaseBaseUrl = import.meta.env.VITE_SERVER_BASEURL__WEIXIN_RELEASE
 
   // 微信小程序端环境区分
   if (isMpWeixin) {

@@ -1,0 +1,110 @@
+{
+  "id": "uhalo-upgrade",
+  "displayName": "uhalo 升级中心 - App",
+  "version": "1.0.0",
+  "description": "uhalo 升级中心 - 客户端检查更新（uni-upgrade-center-app 适配版，对接 Halo 插件 plugin-uni-halo 的 checkVersion 接口）",
+  "keywords": [
+    "uhalo",
+    "升级",
+    "update",
+    "wgt",
+    "halo"
+  ],
+  "repository": "",
+  "engines": {
+    "HBuilderX": "^4.31",
+    "uni-app": "^4.35"
+  },
+  "dcloudext": {
+    "sale": {
+      "regular": {
+        "price": "0.00"
+      },
+      "sourcecode": {
+        "price": "0.00"
+      }
+    },
+    "contact": {
+      "qq": ""
+    },
+    "declaration": {
+      "ads": "无",
+      "data": "插件不采集任何数据",
+      "permissions": "无"
+    },
+    "npmurl": "",
+    "type": "unicloud-template-page",
+    "darkmode": "x",
+    "i18n": "x",
+    "widescreen": "√"
+  },
+  "uni_modules": {
+    "dependencies": [
+      "uts-progressNotification"
+    ],
+    "encrypt": [],
+    "platforms": {
+      "cloud": {
+        "tcb": "√",
+        "aliyun": "√",
+        "alipay": "√"
+      },
+      "client": {
+        "uni-app": {
+          "vue": {
+            "vue2": {
+              "extVersion": "1.0.0",
+              "minVersion": ""
+            },
+            "vue3": {
+              "extVersion": "1.0.0",
+              "minVersion": ""
+            }
+          },
+          "web": {
+            "safari": "-",
+            "chrome": "-"
+          },
+          "app": {
+            "vue": {
+              "extVersion": "1.0.0",
+              "minVersion": ""
+            },
+            "nvue": {
+              "extVersion": "1.0.0",
+              "minVersion": ""
+            },
+            "android": {
+              "extVersion": "1.0.0",
+              "minVersion": "21"
+            },
+            "ios": {
+              "extVersion": "1.0.0",
+              "minVersion": "12"
+            },
+            "harmony": {
+              "extVersion": "1.0.0",
+              "minVersion": "12"
+            }
+          },
+          "mp": {
+            "weixin": "x",
+            "alipay": "x",
+            "toutiao": "x",
+            "baidu": "x",
+            "kuaishou": "x",
+            "jd": "x",
+            "harmony": "x",
+            "qq": "x",
+            "lark": "x",
+            "xhs": "-"
+          },
+          "quickapp": {
+            "huawei": "x",
+            "union": "x"
+          }
+        }
+      }
+    }
+  }
+}

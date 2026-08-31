@@ -88,7 +88,7 @@ export default defineConfig(({ command, mode }) => {
         // pages 目录为 src/pages，分包目录不能配置在pages目录下！！
         // 是个数组，可以配置多个，但是不能为pages里面的目录！！
         // "src/pages-demo" 是unibest demo 预留的，方便后续插入demo示例
-        subPackages: ['src/pages-demo'],
+        subPackages: ['src/pages-demo',"src/pages-blog"],
         dts: 'src/types/uni-pages.d.ts',
       }),
       // UniOptimization 插件需要 page.json 文件，故应在 UniPages 插件之后执行
@@ -181,6 +181,10 @@ export default defineConfig(({ command, mode }) => {
       alias: {
         '@': path.join(process.cwd(), './src'),
         '@img': path.join(process.cwd(), './src/static/images'),
+        // uni-components 3.0.0-4070620250821001 的 style/ 目录缺失 audio.css / video.css,
+        // 编译 <audio> / <video> 内置组件时按惯例引入会报 Cannot find module,此处映射到本地补件
+        '@dcloudio/uni-components/style/audio.css': path.join(process.cwd(), './src/style/uni-components/audio.css'),
+        '@dcloudio/uni-components/style/video.css': path.join(process.cwd(), './src/style/uni-components/video.css'),
       },
     },
     server: {

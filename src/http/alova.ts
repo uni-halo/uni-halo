@@ -1,119 +1,128 @@
-import type { uniappRequestAdapter } from '@alova/adapter-uniapp'
-import type { IResponse } from './types'
-import AdapterUniapp from '@alova/adapter-uniapp'
-import { createAlova } from 'alova'
-import { createServerTokenAuthentication } from 'alova/client'
-import VueHook from 'alova/vue'
-import { toLoginPage } from '@/utils/toLoginPage'
-import { ContentTypeEnum, ResultEnum, ShowMessage } from './tools/enum'
+import type { uniappRequestAdapter } from '@alova/adapter-uniapp';
+import type { IResponse } from './types';
+import AdapterUniapp from '@alova/adapter-uniapp';
+import { createAlova } from 'alova';
+import { createServerTokenAuthentication } from 'alova/client';
+import VueHook from 'alova/vue';
+import { toLoginPage } from '@/utils/toLoginPage';
+import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum';
+import { saveCommentCookies } from './tools/commentCookies';
+import { handleCategoryPasswordError } from './tools/categoryPassword';
 
 // 配置动态Tag
 export const API_DOMAINS = {
-  DEFAULT: import.meta.env.VITE_SERVER_BASEURL,
-  SECONDARY: import.meta.env.VITE_SERVER_BASEURL_SECONDARY,
-}
+	DEFAULT: import.meta.env.VITE_SERVER_BASEURL,
+	SECONDARY: import.meta.env.VITE_SERVER_BASEURL_SECONDARY
+};
 
 /**
  * 创建请求实例
  */
-const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthentication<
-  typeof VueHook,
-  typeof uniappRequestAdapter
->({
-  // 如果下面拦截不到，请使用 refreshTokenOnSuccess by 群友@琛
-  refreshTokenOnError: {
-    isExpired: (error) => {
-      return error.response?.status === ResultEnum.Unauthorized
-    },
-    handler: async () => {
-      try {
-        // await authLogin();
-      }
-      catch (error) {
-        // 切换到登录页
-        toLoginPage({ mode: 'reLaunch' })
-        throw error
-      }
-    },
-  },
-})
+const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthentication<typeof VueHook, typeof uniappRequestAdapter>({
+	// 如果下面拦截不到，请使用 refreshTokenOnSuccess by 群友@琛
+	refreshTokenOnError: {
+		isExpired: (error) => {
+			return error.response?.status === ResultEnum.Unauthorized;
+		},
+		handler: async () => {
+			try {
+				// await authLogin();
+			} catch (error) {
+				// 切换到登录页
+				toLoginPage({ mode: 'reLaunch' });
+				throw error;
+			}
+		}
+	}
+});
 
 /**
  * alova 请求实例
  */
 const alovaInstance = createAlova({
-  baseURL: API_DOMAINS.DEFAULT,
-  ...AdapterUniapp(),
-  timeout: 5000,
-  statesHook: VueHook,
+	baseURL: API_DOMAINS.DEFAULT,
+	...AdapterUniapp(),
+	timeout: 5000,
+	statesHook: VueHook,
 
-  beforeRequest: onAuthRequired((method) => {
-    // 设置默认 Content-Type
-    method.config.headers = {
-      ContentType: ContentTypeEnum.JSON,
-      Accept: 'application/json, text/plain, */*',
-      ...method.config.headers,
-    }
+	beforeRequest: onAuthRequired((method) => {
+		// 设置默认 Content-Type
+		method.config.headers = {
+			ContentType: ContentTypeEnum.JSON,
+			Accept: 'application/json, text/plain, */*',
+			...method.config.headers
+		};
 
-    const { config } = method
-    const ignoreAuth = !config.meta?.ignoreAuth
-    console.log('ignoreAuth===>', ignoreAuth)
-    // 处理认证信息   自行处理认证问题
-    if (ignoreAuth) {
-      const token = 'getToken()'
-      if (!token) {
-        throw new Error('[请求错误]：未登录')
-      }
-      // method.config.headers.token = token;
-    }
+		const { config } = method;
+		const ignoreAuth = !config.meta?.ignoreAuth;
+		console.log('ignoreAuth===>', ignoreAuth);
+		// 处理认证信息   自行处理认证问题
+		if (ignoreAuth) {
+			const token = 'getToken()';
+			if (!token) {
+				throw new Error('[请求错误]：未登录');
+			}
+			// method.config.headers.token = token;
+		}
 
-    // 处理动态域名
-    if (config.meta?.domain) {
-      method.baseURL = config.meta.domain
-      console.log('当前域名', method.baseURL)
-    }
-  }),
+		if (config.meta?.personalToken) {
+			config.headers['Authorization'] = `Bearer ${config.meta.personalToken}`;
+		}
 
-  responded: onResponseRefreshToken((response, method) => {
-    const { config } = method
-    const { requestType } = config
-    const {
-      statusCode,
-      data: rawData,
-      errMsg,
-    } = response as UniNamespace.RequestSuccessCallbackResult
+		// 处理动态域名
+		if (config.meta?.domain) {
+			method.baseURL = config.meta.domain;
+			console.log('当前域名', method.baseURL);
+		}
+	}),
 
-    // 处理特殊请求类型（上传/下载）
-    if (requestType === 'upload' || requestType === 'download') {
-      return response
-    }
+	responded: onResponseRefreshToken((response, method) => {
+		console.log('response===>', response);
+		console.log('method===>', method);
+		const { config } = method;
+		const { requestType } = config;
+		const { statusCode, data: rawData, errMsg, header } = response as UniNamespace.RequestSuccessCallbackResult;
 
-    // 处理 HTTP 状态码错误
-    if (statusCode !== 200) {
-      const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
-      console.error('errorMessage===>', errorMessage)
-      uni.showToast({
-        title: errorMessage,
-        icon: 'error',
-      })
-      throw new Error(`${errorMessage}：${errMsg}`)
-    }
+		// 处理特殊请求类型（上传/下载）
+		if (requestType === 'upload' || requestType === 'download') {
+			return response;
+		}
 
-    // 处理业务逻辑错误
-    const { code, message, data } = rawData as IResponse
-    // 0和200当做成功都很普遍，这里直接兼容两者，见 ResultEnum
-    if (code !== ResultEnum.Success0 && code !== ResultEnum.Success200) {
-      if (config.meta?.toast !== false) {
-        uni.showToast({
-          title: message,
-          icon: 'none',
-        })
-      }
-      throw new Error(`请求错误[${code}]：${message}`)
-    }
-    // 处理成功响应，返回业务数据
-    return data
-  }),
-})
+		// 保存评论验证码 cookie
+		saveCommentCookies(method.url, header as Record<string, string> | undefined);
 
-export const http = alovaInstance
+		// 分类加密密码处理（Halo 私密分类 401/403）
+		// 注意:此处需在 alova 统一 401 刷新之前消费,避免分类密码请求被误判为登录过期
+		const isCategoryConsumed = handleCategoryPasswordError(statusCode, method.url, rawData as { status?: number });
+		if (isCategoryConsumed) {
+			throw new Error('分类访问受限');
+		}
+
+		// 处理 HTTP 状态码错误
+		if (statusCode !== 200) {
+			const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`;
+			console.error('errorMessage===>', errorMessage);
+			uni.showToast({
+				title: errorMessage,
+				icon: 'error'
+			});
+			throw new Error(`${errorMessage}：${errMsg}`);
+		}
+		// 归一化响应结构:Halo 来源的原始数据统一封装为 { code, data, message },
+		// 与标准接口走同一条解析路径,保证响应模型一致
+		let responseData: IResponse;
+		if (config.meta?.requestFrom === RequestFrom.Halo) {
+			responseData = {
+				code: ResultEnum.Success200,
+				data: rawData,
+				message: '请求成功'
+			};
+		} else {
+			responseData = rawData as IResponse;
+		}
+		
+		return responseData;
+	})
+});
+
+export const http = alovaInstance;
