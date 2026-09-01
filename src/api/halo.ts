@@ -1,9 +1,5 @@
 /**
  * Halo 官方 API 接口定义
- * 覆盖官方扩展点:api.content.halo.run / api.halo.run / api.moment.halo.run /
- * api.photo.halo.run / api.link.halo.run / api.plugin.halo.run
- * 风格参考 src/api/foo-alova.ts:http.Get<IResponse<T>>(url, { params, header, meta })
- * 源自旧项目 api/v2/all.api.js(官方部分),按需命名导出
  */
 import { http } from '@/http/alova';
 import { RequestFrom } from '@/http/tools/enum';
@@ -144,6 +140,7 @@ export function getPostCommentReplyList(commentName: string, params: ICommentLis
 
 /** 新增评论(带验证码,captchaCode 转入请求头) */
 export interface IAddCommentReq {
+	allowNotification: boolean;
 	raw: string;
 	content?: string;
 	owner?: Record<string, unknown>;

@@ -28,7 +28,7 @@ const articleDetailPath = '/pages-blog/article-detail/article-detail'
 // 本地开发快速跳转页面,发布请置为 false
 const DEV_MODE = false
 const DEV_TO_TYPE = 'page' as 'page' | 'tabbar'
-const DEV_TO_PATH = '/pages-blog/data-visual/data-visual'
+const DEV_TO_PATH = articleDetailPath + '?name=01a057b2-3200-74af-8afe-28a054092e82'
 
 /* ---------------- 状态 ---------------- */
 const appConfigStore = useAppConfigStore()

@@ -5,7 +5,6 @@
  */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { getMomentList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
@@ -95,7 +94,6 @@ async function handleGetData() {
 
   try {
     const res = await getMomentList({ ...queryParams.value })
-    console.log('获取瞬间数据成功', res)
 	loading.value = 'success'
     loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
     hasNext.value = res.data.hasNext
@@ -250,7 +248,7 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen flex flex-col py-6">
+  <view class=" box-border min-h-screen w-screen flex flex-col py-6">
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"
@@ -262,14 +260,14 @@ onReachBottom(() => {
         <wd-skeleton :row="3" :animated="true" />
       </view>
 
-      <view v-else class="app-page-content">
+      <view v-else class="flex flex-col gap-y-2 p-4">
         <view v-if="dataList.length === 0" class="min-h-[70vh] w-full flex items-center justify-center content-empty">
           <wd-empty :description="t('common.empty')" />
         </view>
 
         <block v-else>
           <!-- 瞬间卡片 -->
-          <view v-for="moment in dataList" :key="moment.metadata.name" class="moment-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white shadow-sm">
+          <view v-for="moment in dataList" :key="moment.metadata.name" class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm">
             <view class="head flex items-center p-3 pb-0">
               <image class="avatar h-[66rpx] w-[66rpx] shrink-0 rounded-full" :src="moment.spec.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
               <view class="nickname ml-3">
@@ -361,19 +359,3 @@ onReachBottom(() => {
     </template>
   </view>
 </template>
-
-<style scoped lang="scss">
-.app-page {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-
-.moment-card {
-  .head {
-    .nickname {
-      .nickname-text {
-        /* 无额外样式 */
-      }
-    }
-  }
-}
-</style>

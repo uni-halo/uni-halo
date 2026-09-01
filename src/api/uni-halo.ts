@@ -284,7 +284,8 @@ export function getDoubanDetail(url: string) {
  */
 export function getCommentWidgetCaptcha() {
   return http.Get<IResponse<string>>('/apis/api.commentwidget.halo.run/v1alpha1/captcha/-/generate', {
-    meta: { requestFrom: RequestFrom.Halo },
+    cacheFor:0,
+	meta: { requestFrom: RequestFrom.Halo },
   })
 }
 

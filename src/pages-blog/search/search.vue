@@ -4,12 +4,13 @@
  * 功能:关键词搜索文章/瞬间,结果列表展示
  */
 import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
+import { onLoad, onPullDownRefresh, onShow } from '@dcloudio/uni-app'
 import { getPostListByKeyword } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePluginAvailable } from '@/utils/plugin'
 import { markdownConfig } from '@/config/markdown'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
+import { debounce } from '@/utils/debounce'
 
 definePage({
   style: {
@@ -42,6 +43,24 @@ const dataList = ref<{
   updateTimestamp?: string
 }[]>([])
 
+/* ---------------- 动画(对应旧版 mixin calcAniWait/fnResetSetAniWaitIndex) ---------------- */
+const aniWaitIndex = ref(0)
+
+function resetAniWaitIndex() {
+  aniWaitIndex.value = 0
+}
+
+/** 计算列表项动画等待(每 10 项重置一轮,每项递增 50ms) */
+function calcAniWait(index: number): number {
+  if ((index + 1) % 10 === 0) {
+    aniWaitIndex.value = 1
+  }
+  else {
+    aniWaitIndex.value += 1
+  }
+  return aniWaitIndex.value * 50
+}
+
 /* ---------------- 搜索 ---------------- */
 async function handleGetData() {
   if (calcAuditModeEnabled.value)
@@ -64,6 +83,7 @@ async function handleGetData() {
 }
 
 function handleOnSearch() {
+  resetAniWaitIndex()
   if (!queryParams.value.keyword) {
     dataList.value = []
     loading.value = 'success'
@@ -72,6 +92,11 @@ function handleOnSearch() {
     handleGetData()
   }
 }
+
+/** 实时搜索:输入防抖 400ms 后触发(对应旧版 tm-search 的 @input) */
+const handleOnInput = debounce(() => {
+  handleOnSearch()
+}, 400)
 
 function isArticle(item: { type?: string }): boolean {
   return item.type === 'post.content.halo.run'
@@ -106,14 +131,23 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
+  resetAniWaitIndex()
   uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
   if (!uniHaloPluginAvailable.value) {
     uni.stopPullDownRefresh()
     return
   }
+  // 关键词非空(如带参进入)时自动搜索,否则展示空态
   if (!queryParams.value.keyword) {
     loading.value = 'success'
   }
+  else {
+    handleGetData()
+  }
+})
+
+onShow(() => {
+  resetAniWaitIndex()
 })
 
 onPullDownRefresh(() => {
@@ -143,6 +177,7 @@ onPullDownRefresh(() => {
             class="search-field flex-1 text-[26rpx]"
             placeholder="搜索内容..."
             confirm-type="search"
+            @input="handleOnInput"
             @confirm="handleOnSearch"
           >
           <view v-if="queryParams.keyword" class="clear-btn flex items-center" @click="queryParams.keyword = ''; handleOnSearch()">
@@ -168,7 +203,13 @@ onPullDownRefresh(() => {
         </view>
 
         <block v-else>
-          <view v-for="(item, index) in dataList" :key="index" class="article-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm" @click="handleToDetail(item)">
+          <view
+            v-for="(item, index) in dataList"
+            :key="index"
+            class="article-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm fade-up"
+            :style="{ animationDelay: `${calcAniWait(index)}ms` }"
+            @click="handleToDetail(item)"
+          >
             <view class="card-head mb-3 flex items-center">
               <view class="type-tag mr-3 shrink-0 rounded-md px-1.5 py-0.5 text-[22rpx] text-white" :class="isArticle(item) ? 'bg-[#2196f3]' : 'bg-[#4caf50]'">
                 {{ isArticle(item) ? '文章' : '瞬间' }}
@@ -207,5 +248,21 @@ onPullDownRefresh(() => {
 <style scoped lang="scss">
 .app-page {
   /* 布局全部由 UnoCSS 原子类实现 */
+}
+
+/* 列表项入场动画(对应旧版 tm-translate fadeUp) */
+.fade-up {
+  animation: fade-up 0.4s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(24rpx);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 </style>

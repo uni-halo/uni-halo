@@ -114,6 +114,8 @@ export type IPostListRes = IListResult<IPost>
 /** 文章搜索请求参数(关键字) */
 export interface ISearchReq {
   keyword?: string
+  /** 返回条数上限(旧版默认 50) */
+  limit?: number
   page?: number
   size?: number
   highlightPreTag?: string
@@ -226,7 +228,7 @@ export interface IComment {
     replyCount?: number
     visibleTime?: string
   }
-  replies?: ICommentReply[]
+  replies?: IListResult<ICommentReply>
 }
 
 export interface ICommentReply {

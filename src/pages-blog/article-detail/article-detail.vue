@@ -1,12 +1,6 @@
 <script lang="ts" setup>
-/**
- * 文章详情页(源自旧项目 pagesA/article-detail/article-detail.vue,新建复刻)
- * 功能:文章头部(标题/作者/封面/统计) + 分类标签 + mp-html 内容渲染 + 受限阅读 + 点赞 + 评论
- * TODO: 投票(article-vote)、豆瓣(article-douban)、分享海报(liu-poster)待阶段2/3 补充
- */
 import { computed, ref, watch } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { getPostByName, getPostCommentReplyList, postTrackersCounter, submitUpvote } from '@/api/halo'
 import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
@@ -18,6 +12,7 @@ import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getSho
 import { getDomainOnly } from '@/utils/urlParams'
 import { markdownConfig } from '@/config/markdown'
 import type { IComment, IPost } from '@/api/types/halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 
 definePage({
   style: {
@@ -28,11 +23,11 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 const haloConfigs = computed(() => appConfigStore.configs)
 
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
 const queryName = ref('')
 const result = ref<IPost & {
   _voteIds?: string[]
@@ -137,7 +132,7 @@ function handleGetOpenid() {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
-  loading.value = 'loading'
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getPostByName(queryName.value)
     const tempResult = res.data as typeof result.value
@@ -160,12 +155,12 @@ async function handleGetData() {
     }
     result.value = tempResult
     uni.setNavigationBarTitle({ title: '文章详情' })
-    loading.value = 'success'
+    updateLoadingStatus(DataLoadingStatusEnum.Success)
     handleTrackersCounter()
   }
   catch (err) {
     console.error('获取文章失败', err)
-    loading.value = 'error'
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
     uni.hideLoading()
@@ -175,8 +170,9 @@ async function handleGetData() {
 
 /** 访问计数埋点 */
 async function handleTrackersCounter() {
-  if (!result.value)
+  if (!result.value) {
     return
+  }
   const winInfo = uni.getWindowInfo()
   const appBaseInfo = uni.getAppBaseInfo()
   const baseUrl = import.meta.env.VITE_SERVER_BASEURL || ''
@@ -310,10 +306,14 @@ async function getVerificationCode() {
 
 /* ---------------- 评论 ---------------- */
 function handleToComment() {
-  if (!result.value)
-    return
-  if (!calcIsShowComment.value)
-    return
+	console.log('calcIsShowComment.value',calcIsShowComment.value)
+	console.log('result.value',result.value)
+  if (!result.value){
+	  return
+  }
+  if (!calcIsShowComment.value){
+	  return
+  }
   if (!result.value.spec.allowComment) {
     uni.showToast({ icon: 'none', title: '文章已开启禁止评论！' })
     return
@@ -461,15 +461,15 @@ const globalAppSettings = computed(() => settingStore.settings)
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen flex flex-col pb-[120rpx]" style="background-color: #fafafd;">
+  <view class="app-page box-border min-h-screen w-screen flex flex-col pb-safe" style="background-color: #fafafd;">
     <!-- 骨架屏 -->
-    <view v-if="loading !== 'success'" class="loading-wrap bg-white p-3">
-      <wd-skeleton :row="4" :animated="true" />
+    <view v-if="loadingStatus !== 'success'" class="box-border p-4">
+      <uh-data-loading :loading-status="loadingStatus" @refresh="handleGetData()" />
     </view>
 
     <block v-else>
       <!-- 顶部信息 -->
-      <view class="head mx-6 mt-6 flex flex-col items-center rounded-xl bg-white px-6 py-9 shadow-sm">
+      <view class="head flex flex-col items-center rounded-xl bg-white p-4 shadow-sm">
         <view class="title text-center text-[36rpx] font-semibold">
           {{ result?.spec.title }}
         </view>
@@ -481,14 +481,16 @@ const globalAppSettings = computed(() => settingStore.settings)
 
           <view v-if="result?.spec.cover" class="cover mt-6 h-[280rpx] w-full">
             <image
-              class="cover-img h-full w-full rounded-xl"
-              mode="aspectFill"
+              class="cover-img h-full w-full rounded-xl" mode="aspectFill"
               :src="calcUrl(result.spec.cover)"
               @click="handlePreview(0, [{ url: calcUrl(result.spec.cover) }])"
             />
           </view>
 
-          <view class="count mt-6 flex justify-between" :class="{ 'no-thumbnail border-t-2 border-[#f2f2f2] pt-3': !result?.spec.cover }">
+          <view
+            class="count mt-6 flex justify-between"
+            :class="{ 'no-thumbnail border-t-2 border-[#f2f2f2] pt-3': !result?.spec.cover }"
+          >
             <view class="count-item flex flex-1 items-end justify-center text-[#666]">
               <text class="value text-[32rpx]">{{ result?.stats?.visit ?? 0 }}</text>
               <text class="label pl-2 text-[24rpx]">阅读</text>
@@ -497,7 +499,10 @@ const globalAppSettings = computed(() => settingStore.settings)
               <text class="value text-[32rpx]">{{ result?.stats?.upvote ?? 0 }}</text>
               <text class="label pl-2 text-[24rpx]">喜欢</text>
             </view>
-            <view v-if="calcIsShowComment" class="count-item flex flex-1 items-end justify-center text-[#666]">
+            <view
+              v-if="calcIsShowComment"
+              class="count-item flex flex-1 items-end justify-center text-[#666]"
+            >
               <text class="value text-[32rpx]">{{ result?.stats?.comment ?? 0 }}</text>
               <text class="label pl-2 text-[24rpx]">评论</text>
             </view>
@@ -510,76 +515,89 @@ const globalAppSettings = computed(() => settingStore.settings)
       </view>
 
       <!-- 分类标签 -->
-      <view class="category mx-6 mt-6 rounded-xl bg-white p-6 text-[28rpx] shadow-sm">
+      <view class="category rounded-xl bg-white p-4 text-xs">
         <view class="category-type leading-[55rpx]">
           <text class="category-label font-bold">分类：</text>
-          <text v-if="!result?.categories?.length" class="category-tag is-empty rounded-md bg-[#607d8b] px-1.5 py-0.5 text-[24rpx] text-white">未选择分类</text>
-          <text v-for="(item, index) in result?.categories" v-else :key="index" class="category-tag mr-3 rounded-md bg-[#5bb8fa] px-1.5 py-0.5 text-[24rpx] text-white" @click="handleToCate(item)">
-            {{ item.spec.displayName }}
+          <text
+            v-if="!result?.categories?.length"
+            class="text-xs"
+          >
+            未选择分类
           </text>
+          <template v-else>
+            <text
+              v-for="(item, index) in result?.categories" :key="index"
+              class="text-xs"
+              @click="handleToCate(item)"
+            >
+              {{ item.spec.displayName }}
+            </text>
+          </template>
         </view>
         <view class="category-type leading-[55rpx]">
           <text class="category-label font-bold">标签：</text>
-          <text v-if="!result?.tags?.length" class="category-tag is-empty rounded-md bg-[#607d8b] px-1.5 py-0.5 text-[24rpx] text-white">未选择标签</text>
           <text
-            v-for="(item, index) in result?.tags"
-            v-else
-            :key="index"
-            class="category-tag mr-3 rounded-md px-1.5 py-0.5 text-[24rpx] text-white"
-            :style="{ backgroundColor: item.spec.color || '#5bb8fa' }"
-            @click="handleToTag(item)"
+            v-if="!result?.tags?.length"
+            class="text-xs"
           >
-            {{ item.spec.displayName }}
+            未选择标签
           </text>
+          <template v-else>
+            <text
+              v-for="(item, index) in result?.tags" :key="index"
+              class="text-xs"
+              @click="handleToTag(item)"
+            >
+              {{ item.spec.displayName }}
+            </text>
+          </template>
         </view>
         <view v-if="originalURL" class="category-type flex leading-[55rpx]">
           <view class="original-url-left w-[84rpx] shrink-0 font-bold">
             原文：
           </view>
           <view class="original-url-right inline-flex flex-1 items-center">
-            <text class="original-url-link inline-block w-[410rpx] overflow-hidden text-ellipsis whitespace-nowrap text-[#909399]" @click.stop="handleToOriginal(originalURL)">{{ originalURL }}</text>
-            <text class="original-url-btn flex-1 text-right text-[#03a9f4]" @click.stop="handleToOriginal(originalURL)">阅读原文</text>
+            <text
+              class="original-url-link inline-block w-[410rpx] overflow-hidden text-ellipsis whitespace-nowrap text-[#909399]"
+              @click.stop="handleToOriginal(originalURL)"
+            >
+              {{ originalURL }}
+            </text>
+            <text
+              class="original-url-btn flex-1 text-right text-[#03a9f4]"
+              @click.stop="handleToOriginal(originalURL)"
+            >
+              阅读原文
+            </text>
           </view>
         </view>
       </view>
 
       <!-- 内容区域 -->
-      <view class="content mx-6 mt-6">
-        <view class="markdown-wrap overflow-hidden rounded-xl bg-white p-1.5 shadow-sm">
+      <view class="content">
+        <view class="markdown-wrap overflow-hidden rounded-xl bg-white p-1.5">
           <!-- 受限阅读 -->
           <template v-if="checkPostRestrictRead(result!)">
             <view v-if="showContentArr.length === 0">
               <uh-restrict-read-skeleton
-                :loading="true"
-                :lines="3"
+                :loading="true" :lines="3"
                 :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                :button-text="getRestrictReadTypeName(result!)"
-                button-color="#1890ff"
+                :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
                 @refresh="readMore"
               />
             </view>
             <view v-for="(showContent, showContentIndex) in showContentArr" v-else :key="showContentIndex">
               <mp-html
-                class="evan-markdown"
-                lazy-load
-                :domain="markdownConfig.domain ?? ''"
-                :loading-img="markdownConfig.loadingGif"
-                scroll-table
-                selectable
-                :tag-style="markdownConfig.tagStyle"
-                :container-style="markdownConfig.containStyle"
-                :content="showContent"
-                :markdown="true"
-                :show-line-number="true"
-                :show-language-name="true"
-                copy-by-long-press
+                class="evan-markdown" lazy-load :domain="markdownConfig.domain ?? ''"
+                :loading-img="markdownConfig.loadingGif" scroll-table selectable
+                :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+                :content="showContent" :markdown="true" :show-line-number="true"
+                :show-language-name="true" copy-by-long-press
               />
               <uh-restrict-read-skeleton
-                :loading="true"
-                :lines="3"
+                :loading="true" :lines="3"
                 :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                :button-text="getRestrictReadTypeName(result!)"
-                button-color="#1890ff"
+                :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
                 @refresh="readMore"
               />
             </view>
@@ -588,75 +606,85 @@ const globalAppSettings = computed(() => settingStore.settings)
           <!-- 正常渲染 -->
           <template v-else>
             <mp-html
-              class="evan-markdown"
-              lazy-load
-              :domain="markdownConfig.domain ?? ''"
-              :loading-img="markdownConfig.loadingGif"
-              scroll-table
-              selectable
-              :tag-style="markdownConfig.tagStyle"
-              :container-style="markdownConfig.containStyle"
-              :content="result?.content?.raw || ''"
-              :markdown="true"
-              :show-line-number="true"
-              :show-language-name="true"
-              copy-by-long-press
+              class="evan-markdown" lazy-load :domain="markdownConfig.domain ?? ''"
+              :loading-img="markdownConfig.loadingGif" scroll-table selectable
+              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+              :content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
+              :show-language-name="true" copy-by-long-press
             />
           </template>
         </view>
 
         <!-- 版权声明 -->
-        <view v-if="postDetailConfig?.copyrightEnabled" class="card-wrap mt-6 rounded-xl bg-white p-6 shadow-sm">
+        <view
+          v-if="postDetailConfig?.copyrightEnabled"
+          class="card-wrap rounded-xl bg-white p-4"
+        >
           <view class="card-title relative box-border pl-6 text-[30rpx] font-bold">
-            <text class="absolute left-0 top-2 h-[26rpx] w-2 rounded-lg bg-[#03aefc]" />
+            <text class="absolute left-0 top-1 h-[26rpx] w-1 rounded-lg bg-[#03aefc]" />
             版权声明
           </view>
           <view class="copyright-content mt-3 rounded-xl bg-[#fafafa] px-6 py-1.5">
-            <view v-if="postDetailConfig.copyrightAuthor" class="copyright-text text-[26rpx] text-[#606266] leading-[1.7]">
+            <view
+              v-if="postDetailConfig.copyrightAuthor"
+              class="copyright-text text-[26rpx] text-[#606266] leading-[1.7]"
+            >
               版权归属：{{ postDetailConfig.copyrightAuthor }}
             </view>
-            <view v-if="postDetailConfig.copyrightDesc" class="copyright-text text-[26rpx] text-[#606266] leading-[1.7]">
+            <view
+              v-if="postDetailConfig.copyrightDesc"
+              class="copyright-text text-[26rpx] text-[#606266] leading-[1.7]"
+            >
               版权说明：{{ postDetailConfig.copyrightDesc }}
             </view>
-            <view v-if="postDetailConfig.copyrightViolation" class="copyright-text text-[26rpx] text-[#f56c6c] leading-[1.7]">
+            <view
+              v-if="postDetailConfig.copyrightViolation"
+              class="copyright-text text-[26rpx] text-[#f56c6c] leading-[1.7]"
+            >
               侵权处理：{{ postDetailConfig.copyrightViolation }}
             </view>
           </view>
         </view>
 
         <!-- 评论区域 -->
-        <view v-if="calcIsShowComment && result" class="card-wrap mt-6 rounded-xl bg-white p-6 shadow-sm">
+        <view v-if="calcIsShowComment && result" class="card-wrap rounded-xl bg-white p-4">
           <uh-comment-list
-            :disallow-comment="!result.spec.allowComment"
-            :post-name="result.metadata.name"
-            :post="result"
-            @on-comment="handleOnComment"
-            @on-comment-detail="handleOnShowCommentDetail"
+            :disallow-comment="!result.spec.allowComment" :post-name="result.metadata.name"
+            :post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"
           />
         </view>
       </view>
 
       <!-- 悬浮操作 -->
-      <view class="flot-buttons fixed bottom-[100rpx] right-8 z-999 flex flex-col gap-1.5">
-        <view class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
+      <view class="flot-buttons fixed bottom-[100rpx] right-4 z-99 flex flex-col gap-1.5">
+        <view
+          class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm"
+          @click="handleToTopPage()"
+        >
           <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
         </view>
-        <view class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" :class="{ active: hasUpvoted() }" @click="handleDoLikes">
-          <wd-icon :name="hasUpvoted() ? 'heart' : 'heart-outline'" size="20px" :color="hasUpvoted() ? '#f44336' : '#03a9f4'" />
+        <view
+          class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm"
+          :class="{ active: hasUpvoted() }" @click="handleDoLikes"
+        >
+          <wd-icon
+            name="heart" size="20px"
+            :color="hasUpvoted() ? '#f44336' : '#03a9f4'"
+          />
         </view>
-        <view v-if="calcIsShowComment" class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToComment">
-          <wd-icon name="chat" size="20px" color="#4caf50" />
+        <view
+          v-if="calcIsShowComment"
+          class="fab-btn h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm"
+          @click="handleToComment()"
+        >
+          <wd-icon name="message" size="20px" color="#4caf50" />
         </view>
       </view>
     </block>
 
     <!-- 密码弹窗 -->
     <wd-dialog
-      v-model="passwordModal.show"
-      title="验证提示"
-      :show-cancel="true"
-      show-confirm-button
-      confirm-text="确定"
+      v-model="passwordModal.show" title="验证提示" :show-cancel="true" show-confirm-button confirm-text="确定"
       @confirm="restrictReadCheck"
     >
       <view class="modal-body py-4">
@@ -666,32 +694,28 @@ const globalAppSettings = computed(() => settingStore.settings)
 
     <!-- 验证码弹窗 -->
     <wd-dialog
-      v-model="verificationCodeModal.show"
-      title="验证提示"
-      :show-cancel="true"
-      confirm-text="确定"
+      v-model="verificationCodeModal.show" title="验证提示" :show-cancel="true" confirm-text="确定"
       @confirm="restrictReadCheck"
     >
       <view class="modal-body py-4">
-        <image v-if="verificationCodeModal.imgUrl" :src="verificationCodeModal.imgUrl" class="modal-code-img mb-4 h-[200rpx] w-full" mode="aspectFit" />
+        <image
+          v-if="verificationCodeModal.imgUrl" :src="verificationCodeModal.imgUrl"
+          class="modal-code-img mb-4 h-[200rpx] w-full" mode="aspectFit"
+        />
         <wd-input v-model="restrictReadInputCode" placeholder="请输入验证码" class="mt-2" />
       </view>
     </wd-dialog>
 
     <!-- 评论弹窗 -->
     <uh-comment-modal
-      v-if="commentModal.show"
-      :show="commentModal.show"
-      :is-comment="commentModal.isComment"
-      :title="commentModal.title"
-      :post-name="commentModal.postName"
-      @on-close="handleOnCommentModalClose"
+      v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
+      :title="commentModal.title" :post-name="commentModal.postName" @on-close="handleOnCommentModalClose"
     />
   </view>
 </template>
 
 <style scoped lang="scss">
-.app-page {
+	.app-page {
   display: flex;
   flex-direction: column;
 }

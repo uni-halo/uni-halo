@@ -14,24 +14,18 @@ const httpInterceptor = {
 		// 如果您使用了alova，则请把下面的代码放开注释
 		// alova 执行流程：alova beforeRequest --> 本拦截器 --> alova responded
 		// return options
-
+		
 		// 非 alova 请求，正常执行
 		// 接口请求支持通过 query 参数配置 queryString
 		if (options.query) {
 			const queryStr = stringifyQuery(options.query)
-			// const queryStr = qs.stringify(options.query, {
-			// 	allowDots: true,
-			// 	encodeValuesOnly: true,
-			// 	skipNulls: true,
-			// 	encode: true,
-			// 	arrayFormat: 'repeat'
-			// });
 			if (options.url.includes('?')) {
 				options.url += `&${queryStr}`;
 			} else {
 				options.url += `?${queryStr}`;
 			}
 		}
+		
 		// 非 http 开头需拼接地址
 		if (!options.url.startsWith('http')) {
 			// #ifdef H5

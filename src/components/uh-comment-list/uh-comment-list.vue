@@ -155,9 +155,9 @@ handleGetData()
             />
 
             <!-- 二级评论 -->
-            <template v-if="comment.replies && comment.replies.length !== 0">
+            <template v-if="comment.replies && comment.replies.items.length !== 0">
               <uh-comment-item
-                v-for="childComment in comment.replies"
+                v-for="childComment in comment.replies.items"
                 :key="childComment.metadata.name"
                 :use-content-bg="false"
                 :is-child="true"

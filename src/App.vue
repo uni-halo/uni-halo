@@ -4,6 +4,7 @@ import { getCurrentInstance, onMounted, onUnmounted } from 'vue'
 import { navigateToInterceptor } from '@/router/interceptor'
 import { tabbarStore } from '@/tabbar/store'
 import { permission } from '@/router/permission'
+import { useAppConfigStore } from '@/store/appConfig'
 
 const { proxy } = (getCurrentInstance() || {}) as any
 const router = proxy?.$router
@@ -11,6 +12,10 @@ const router = proxy?.$router
 router && permission.install(router)
 
 onLaunch((options) => {
+	
+ // 初始化获取配置
+	useAppConfigStore()	
+	
   console.log('App.vue onLaunch', options)
 })
 onShow((options) => {

@@ -18,6 +18,7 @@ definePage({
     navigationBarTitleText: '首页',
     enablePullDownRefresh: true,
     navigationStyle: 'custom',
+	backgroundColor:'#F8F8F8'
   },
 })
 
@@ -66,7 +67,7 @@ const bloggerInfo = computed(() => {
 
 const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
 
-const calcIsShowQuickNavigationEnabled = computed(() => !!haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
+const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
 
 const calcIsShowCategory = computed(() => {
   if (calcAuditModeEnabled.value)
@@ -241,7 +242,7 @@ async function handleGetArticleList() {
   loadMoreText.value = t('common.loading')
 
   try {
-    const res = await getPostList({ ...queryParams.value })
+    const res = await getPostList({ ...toRaw(queryParams.value) })
     result.value.hasNext = res.data.hasNext
     articleList.value = isLoadMore.value
       ? articleList.value.concat(res.data.items)
@@ -277,11 +278,7 @@ function handleToArticleDetail(article: IPost) {
 function handleToCategoryPage() {
   uni.switchTab({ url: '/pages/tabbar/category/category' })
 }
-
-function handleToArticlesPage() {
-  uni.navigateTo({ url: '/pages-blog/articles/articles' })
-}
-
+ 
 function handleToCategoryBy(category: ICategory) {
   if (calcAuditModeEnabled.value)
     return
@@ -291,7 +288,7 @@ function handleToCategoryBy(category: ICategory) {
 }
 
 function handleToSearch() {
-  uni.navigateTo({ url: '/pages-blog/articles/articles' })
+  uni.navigateTo({ url: '/pages-blog/search/search' })
 }
 
 function handleOnLogoToPage() {
@@ -374,7 +371,7 @@ handleQuery()
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col">
+  <view class="min-h-screen w-screen flex flex-col">
     <!-- 顶部栏 -->
     <view class="header flex items-center gap-4 px-3 py-1.5">
       <image class="logo h-[60rpx] w-[60rpx] rounded-3xl" :src="appInfo.logo" mode="scaleToFill" @click="handleOnLogoToPage" />
@@ -398,7 +395,7 @@ handleQuery()
 
     <block v-else>
       <!-- 轮播 Banner -->
-      <view v-if="bannerConfig?.enabled" class="bg-white pb-6">
+      <view v-if="bannerConfig?.enabled" class="bg-white mb-4">
         <view v-if="bannerList.length !== 0" class="banner mx-3 mt-3 overflow-hidden rounded-xl">
           <uh-swiper
             :height="bannerConfig.height"
@@ -414,11 +411,11 @@ handleQuery()
       </view>
 
       <!-- 快捷导航 -->
-      <view v-if="calcIsShowQuickNavigationEnabled && navList.filter(x => x.show).length" class="nav-box mx-6 mb-6 mt-4 overflow-hidden rounded-xl bg-white p-3">
+      <view v-if="navList.filter(x => x.show).length" class="nav-box px-4 overflow-hidden rounded-xl bg-white p-3">
         <view class="page-item-title font-bold">
           快捷导航
         </view>
-        <view class="nav-list grid grid-cols-4 mt-6 gap-6">
+        <view class="nav-list grid grid-cols-5 mt-6 gap-6">
           <template v-for="item in navList.filter(x => x.show)" :key="item.key">
             <view class="nav-item flex flex-col items-center gap-3" @click="handleClickNav(item)">
               <view class="nav-item-icon h-[88rpx] w-[88rpx] flex items-center justify-center rounded-3xl" :style="{ backgroundColor: item.bgColor }">
@@ -463,7 +460,7 @@ handleQuery()
         <view class="page-item-title font-bold">
           最新列表
         </view>
-        <view class="show-more flex items-center justify-center rounded-xl bg-white" @click="handleToArticlesPage">
+        <view class="show-more flex items-center justify-center rounded-xl bg-white" @click="handleToSearch">
           <wd-icon name="arrow-right" size="12px" color="#909399" />
         </view>
       </view>
@@ -500,61 +497,4 @@ handleQuery()
     />
   </view>
 </template>
-
-<style scoped lang="scss">
-.app-page {
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  .logo {
-    flex-shrink: 0;
-  }
-
-  .search-input {
-    .search-text {
-      margin-left: 12rpx;
-    }
-  }
-}
-
-.page-item-title {
-  position: relative;
-  padding-left: 24rpx;
-  font-size: 32rpx;
-  color: #303133;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8rpx;
-    width: 8rpx;
-    height: 30rpx;
-    background-color: rgb(33 150 243);
-    border-radius: 6rpx;
-  }
-}
-
-.show-more {
-  width: 42rpx;
-  height: 42rpx;
-  box-shadow: 0 0 24rpx rgb(0 0 0 / 3%);
-}
-
-.to-top-btn {
-  position: fixed;
-  right: 24rpx;
-  bottom: 120rpx;
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  border-radius: 50%;
-  box-shadow: 0 4rpx 16rpx rgb(0 0 0 / 10%);
-  z-index: 6;
-}
-</style>
+ 

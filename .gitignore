@@ -49,3 +49,5 @@ src/pages.json
 
 
 .docs/
+.screenshots/
+.design/

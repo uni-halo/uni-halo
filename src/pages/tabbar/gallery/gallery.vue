@@ -51,7 +51,8 @@ async function handleGetCategory() {
   }
   try {
     const res = await getPhotoGroupList({ page: 1, size: 0 })
-    category.value.list = (res.data.items || [])
+	console.log('分类数据',res.data)
+    category.value.list = (res.data || [])
       .map(item => ({
         name: item.metadata.name,
         displayName: item.spec.displayName,
@@ -134,10 +135,11 @@ function handleGetDataByCategory(index: number) {
   handleGetData(true)
 }
 
-function handleOnCategoryChange(e: { detail: { current: number } }) {
+function handleOnCategoryChange(e:{index:number,name:number}) {
+	console.log('切换分类', e)
   if (lock.value)
     return
-  handleGetDataByCategory(e.detail.current)
+  handleGetDataByCategory(e.index)
 }
 
 /* ---------------- 图片预览 ---------------- */
@@ -207,17 +209,17 @@ onReachBottom(() => {
     />
     <template v-else>
       <!-- 顶部切换 -->
-      <view v-if="category.list.length > 0" class="category-tabs fixed inset-x-0 top-0 z-6 bg-white">
-        <wd-tabs
+		<wd-tabs
+		v-if="category.list.length > 0"
           v-model="category.activeIndex"
-          :tabs="category.list.map(item => ({ title: item.displayName }))"
           align="left"
+		  sticky
+		  :offset-top="0"
           @change="handleOnCategoryChange"
-        />
-      </view>
-      <!-- 占位区域 -->
-      <view v-if="category.list.length > 0" class="h-[90rpx] w-screen" />
-
+        >
+		<wd-tab v-for="cate in category.list" :key="cate.displayName" :title="cate.displayName"></wd-tab>
+		</wd-tabs>
+   
       <!-- 骨架屏 -->
       <view v-if="loading === 'loading'" class="loading-wrap box-border p-3">
         <wd-skeleton :row="4" :animated="true" />
