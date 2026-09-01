@@ -1,0 +1,225 @@
+<script lang="ts" setup>
+/**
+ * 小程序链接申请弹窗(源自 mini-program-links-design 申请入口规划)
+ * 公开提交到 plugin-uni-halo POST /submissions,落库为待审核(受 linkConfig.submissionEnabled 开关控制)
+ */
+import { ref, watch } from 'vue'
+import { submitMiniProgramLinkApplication } from '@/api/uni-halo'
+
+const props = withDefaults(defineProps<{
+  show?: boolean
+}>(), {
+  show: false,
+})
+
+const emit = defineEmits<{
+  (e: 'on-close', data: { isSubmit: boolean, refresh: boolean }): void
+}>()
+
+const isShow = ref(false)
+
+interface IApplyForm {
+  displayName: string
+  miniProgramCode: string
+  link: string
+  authorName: string
+  avatar: string
+  website: string
+  description: string
+  applyRemark: string
+  email: string
+}
+
+const form = ref<IApplyForm>({
+  displayName: '',
+  miniProgramCode: '',
+  link: '',
+  authorName: '',
+  avatar: '',
+  website: '',
+  description: '',
+  applyRemark: '',
+  email: '',
+})
+
+const submitting = ref(false)
+
+function handleResetForm() {
+  form.value = {
+    displayName: '',
+    miniProgramCode: '',
+    link: '',
+    authorName: '',
+    avatar: '',
+    website: '',
+    description: '',
+    applyRemark: '',
+    email: '',
+  }
+}
+
+function checkIsUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url)
+}
+
+function checkIsEmail(email: string): boolean {
+  return /^[\w.-]+@[\w-]+(?:\.[\w-]+)+$/.test(email)
+}
+
+/** 提交校验 */
+function validateForm(): boolean {
+  if (!form.value.displayName.trim()) {
+    uni.showToast({ icon: 'none', title: '请填写小程序名称' })
+    return false
+  }
+  if (!form.value.miniProgramCode.trim()) {
+    uni.showToast({ icon: 'none', title: '请填写太阳码图片地址' })
+    return false
+  }
+  if (form.value.miniProgramCode.trim() && !checkIsUrl(form.value.miniProgramCode.trim())) {
+    uni.showToast({ icon: 'none', title: '太阳码地址需为 http(s) 链接' })
+    return false
+  }
+  if (form.value.link.trim() && !checkIsUrl(form.value.link.trim())) {
+    uni.showToast({ icon: 'none', title: '小程序地址需为 http(s) 链接' })
+    return false
+  }
+  if (form.value.avatar.trim() && !checkIsUrl(form.value.avatar.trim())) {
+    uni.showToast({ icon: 'none', title: '头像地址需为 http(s) 链接' })
+    return false
+  }
+  if (form.value.website.trim() && !checkIsUrl(form.value.website.trim())) {
+    uni.showToast({ icon: 'none', title: '网站地址需为 http(s) 链接' })
+    return false
+  }
+  if (form.value.email.trim() && !checkIsEmail(form.value.email.trim())) {
+    uni.showToast({ icon: 'none', title: '请输入正确的邮箱地址' })
+    return false
+  }
+  return true
+}
+
+/** 提交申请 */
+async function handleHandle() {
+  if (!validateForm())
+    return
+
+  submitting.value = true
+  uni.showLoading({ title: '正在提交...' })
+  try {
+    await submitMiniProgramLinkApplication({
+      displayName: form.value.displayName.trim(),
+      miniProgramCode: form.value.miniProgramCode.trim(),
+      link: form.value.link.trim() || undefined,
+      authorName: form.value.authorName.trim() || undefined,
+      avatar: form.value.avatar.trim() || undefined,
+      website: form.value.website.trim() || undefined,
+      description: form.value.description.trim() || undefined,
+      applyRemark: form.value.applyRemark.trim() || undefined,
+      email: form.value.email.trim() || undefined,
+    })
+    uni.showToast({ icon: 'none', title: '申请提交成功，等待审核！' })
+    handleClose(true)
+    handleResetForm()
+  }
+  catch (err) {
+    console.error('小程序链接申请提交失败', err)
+    uni.showToast({ icon: 'none', title: '提交失败，请稍后重试！' })
+  }
+  finally {
+    submitting.value = false
+    uni.hideLoading()
+  }
+}
+
+function handleOnChange(isOpen: boolean) {
+  isShow.value = isOpen
+  if (!isOpen)
+    emit('on-close', { isSubmit: false, refresh: false })
+}
+
+function handleClose(refresh = false) {
+  isShow.value = false
+  emit('on-close', { isSubmit: true, refresh })
+}
+
+watch(() => props.show, (newVal) => {
+  if (!newVal)
+    return
+  isShow.value = true
+  handleResetForm()
+})
+</script>
+
+<template>
+  <wd-popup v-model="isShow" position="center" custom-style="width:640rpx;border-radius:12rpx;">
+    <view class="uh-mini-link-apply max-h-[80vh] overflow-y-auto p-8">
+      <view class="modal-title mb-1 flex items-center justify-between">
+        <text class="text-[32rpx] font-bold">申请收录小程序</text>
+        <wd-icon name="close" size="20px" color="#999" @click="handleClose(false)" />
+      </view>
+      <view class="modal-tip mb-6 text-[24rpx] text-[#999]">
+        提交后将在后台审核，审核通过后展示在「小程序」列表中
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">名称 *</text>
+        <input v-model="form.displayName" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="请输入小程序名称">
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">太阳码 *</text>
+        <input v-model="form.miniProgramCode" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="小程序码图片链接(必填)">
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">小程序地址</text>
+        <input v-model="form.link" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="跳转链接(选填)">
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">作者昵称</text>
+        <input v-model="form.authorName" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="选填">
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">作者头像</text>
+        <input v-model="form.avatar" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="头像图片链接(选填)">
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">作者网站</text>
+        <input v-model="form.website" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="选填">
+      </view>
+
+      <view class="form-item mb-5">
+        <text class="label mb-2 block text-[26rpx] text-[#666]">描述</text>
+        <textarea v-model="form.description" class="content-input w-full rounded-xl bg-[#f5f5f5] p-5 text-[26rpx]" placeholder="介绍一下这个小程序(选填)" :maxlength="200" />
+      </view>
+
+      <view class="form-item mb-5">
+        <text class="label mb-2 block text-[26rpx] text-[#666]">申请说明</text>
+        <textarea v-model="form.applyRemark" class="content-input w-full rounded-xl bg-[#f5f5f5] p-5 text-[26rpx]" placeholder="方便管理员了解申请意图(选填)" :maxlength="200" />
+      </view>
+
+      <view class="form-item mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">邮箱</text>
+        <input v-model="form.email" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="审核结果通知(选填)">
+      </view>
+
+      <view class="submit-btn my-6">
+        <wd-button type="primary" block size="medium" :loading="submitting" @click="handleHandle">
+          提交申请
+        </wd-button>
+      </view>
+    </view>
+  </wd-popup>
+</template>
+
+<style scoped>
+.uh-mini-link-apply {
+  .content-input {
+    min-height: 140rpx;
+  }
+}
+</style>

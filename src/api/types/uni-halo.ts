@@ -62,6 +62,28 @@ export interface IAuditConfig {
   }
 }
 
+/** 审核模式数据(公开接口 GET /audit-data 返回) */
+export interface IAuditDataResult {
+  /** 审核模式开关(联动设置页 auditModeEnabled) */
+  enabled: boolean
+  /** 选中的引用 name 列表(数组顺序即展示顺序;开关关闭时为空) */
+  spec?: {
+    /** 选中的文章 Post metadata.name 列表 */
+    posts?: string[]
+    /** 选中的分类 Category metadata.name 列表 */
+    categories?: string[]
+    /** 选中的图库分组 PhotoGroup metadata.name 列表 */
+    galleryGroups?: string[]
+    /** 选中的瞬间 Moment metadata.name 列表 */
+    moments?: string[]
+    /** 选中的链接分组 LinkGroup metadata.name 列表 */
+    linkGroups?: string[]
+    /** 备注 */
+    description?: string
+    [key: string]: unknown
+  }
+}
+
 /** 应用基础配置(对应旧 DefaultAppConfigs) */
 export interface IAppConfig {
   basicConfig?: {
@@ -89,9 +111,6 @@ export interface IHaloGlobalConfig {
   shopDisabled?: boolean
   [key: string]: unknown
 }
-
-/** 审计模式模拟数据 */
-export type IMockJson = Record<string, unknown>
 
 /* ---------- plugin-uni-halo 二维码 / 检查更新 ---------- */
 
@@ -308,6 +327,98 @@ export interface ILoveStoryListReq {
   page?: number
   size?: number
   [key: string]: unknown
+}
+
+/* ---------- 小程序链接(plugin-uni-halo mini-program-links) ---------- */
+
+/** 小程序链接 spec(对齐插件 MiniProgramLinkSpec) */
+export interface IMiniProgramLinkSpec {
+  /** 小程序名称 */
+  displayName?: string
+  /** 太阳码(小程序码图片 URL,必填) */
+  miniProgramCode?: string
+  /** 小程序地址(跳转链接) */
+  link?: string
+  /** 作者昵称 */
+  authorName?: string
+  /** 作者头像(图片 URL) */
+  avatar?: string
+  /** 作者网站 */
+  website?: string
+  /** 分组(引用分组 metadata.name;空=未分组) */
+  groupName?: string
+  /** 描述 */
+  description?: string
+  /** 预览图(多图) */
+  screenshots?: string[]
+  /** 可见性(公开接口恒为 true) */
+  visible?: boolean
+  /** 来源:manual 手动 / submitted 申请 */
+  source?: string
+  /** 排序权重 */
+  priority?: number
+  [key: string]: unknown
+}
+
+/** 小程序链接 */
+export interface IMiniProgramLink {
+  metadata?: {
+    name?: string
+    creationTimestamp?: string
+    [key: string]: unknown
+  }
+  spec?: IMiniProgramLinkSpec
+}
+
+export interface IMiniProgramLinkListReq {
+  page?: number
+  size?: number
+  [key: string]: unknown
+}
+
+export type IMiniProgramLinkListRes = IMiniProgramLink[]
+
+/** grouped=true 分组返回项 */
+export interface IMiniProgramLinkGroupVo {
+  /** 分组名(空=未分组) */
+  groupName?: string
+  /** 分组显示名 */
+  displayName?: string
+  links: IMiniProgramLink[]
+}
+
+export type IMiniProgramLinkGroupedRes = IMiniProgramLinkGroupVo[]
+
+/** 分组选项(/types) */
+export interface IMiniProgramLinkGroupOption {
+  name?: string
+  displayName?: string
+}
+
+/** 提交申请表单(公开 POST /submissions,body 为 { spec: {...} }) */
+export interface IMiniProgramLinkSubmissionForm {
+  /** 小程序名称(必填) */
+  displayName: string
+  /** 太阳码图片 URL(必填) */
+  miniProgramCode: string
+  /** 小程序地址 */
+  link?: string
+  /** 作者昵称 */
+  authorName?: string
+  /** 作者头像 */
+  avatar?: string
+  /** 作者网站 */
+  website?: string
+  /** 分组 */
+  groupName?: string
+  /** 描述 */
+  description?: string
+  /** 申请说明 */
+  applyRemark?: string
+  /** 预览图 */
+  screenshots?: string[]
+  /** 申请人邮箱(非必填,填写校验格式) */
+  email?: string
 }
 
 export type ILoveStoryListRes = ILoveStory[]

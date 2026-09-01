@@ -18,7 +18,7 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
-const calcAuditModeEnabled = computed(() => !!appConfigStore.configs.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 /** 依赖插件(plugin-vote) */
 const uniHaloPluginId = 'plugin-vote'

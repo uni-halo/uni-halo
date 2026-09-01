@@ -18,7 +18,7 @@ definePage({
     navigationBarTitleText: '首页',
     enablePullDownRefresh: true,
     navigationStyle: 'custom',
-	backgroundColor:'#F8F8F8'
+    backgroundColor: '#F8F8F8',
   },
 })
 
@@ -26,7 +26,6 @@ const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
 
 const haloConfigs = computed(() => appConfigStore.configs)
-const mockJson = computed(() => appConfigStore.mockJson)
 
 /* ---------------- 状态 ---------------- */
 const loading = ref<'loading' | 'success' | 'error'>('loading')
@@ -65,7 +64,7 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
 
@@ -139,14 +138,14 @@ async function handleQuery() {
 /** 轮播图 */
 function handleGetBanner() {
   if (calcAuditModeEnabled.value) {
-    const homeMock = mockJson.value.home as { bannerList?: { title?: string, cover?: string, time?: string }[] } | undefined
-    bannerList.value = (homeMock?.bannerList || []).map(item => ({
-      id: Date.now() * Math.random(),
-      title: item.title,
-      image: checkThumbnailUrl(item.cover),
-      src: checkThumbnailUrl(item.cover),
-      type: 'custom',
-      content: '',
+    // 审核模式:轮播取选中文章前 5 条(articleList 已按 audit-data posts 过滤)
+    bannerList.value = articleList.value.slice(0, 5).map(item => ({
+      id: item.metadata.name,
+      title: item.spec.title,
+      image: checkThumbnailUrl(item.spec.cover),
+      src: checkThumbnailUrl(item.spec.cover),
+      type: 'post',
+      content: item.status?.excerpt || '',
       url: '',
     }))
     return
@@ -209,30 +208,30 @@ async function handleGetCategoryList() {
 /** 文章列表 */
 async function handleGetArticleList() {
   if (calcAuditModeEnabled.value) {
-    const homeMock = mockJson.value.home as { postList?: { title?: string, cover?: string, time?: string, desc?: string }[] } | undefined
-    articleList.value = (homeMock?.postList || []).map(item => ({
-      metadata: { name: String(Date.now() * Math.random()) },
-      spec: {
-        title: item.title || '',
-        slug: '',
-        cover: item.cover,
-        pinned: false,
-        publishTime: item.time,
-        deleted: false,
-        publish: true,
-        allowComment: true,
-        visible: 'PUBLIC' as const,
-        priority: 0,
-        categories: [],
-        tags: [],
-      },
-      status: { permalink: '', inProgress: false, excerpt: item.desc },
-      stats: { visit: 0 },
-    }))
-    loading.value = 'success'
-    loadMoreText.value = t('common.noMore')
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
+    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
+    const auditPostNames = appConfigStore.auditData.spec?.posts || []
+    try {
+      const res = await getPostList({ page: 1, size: 99999, sort: ['spec.publishTime,desc'] })
+      const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
+      const orderMap = new Map(auditPostNames.map((name, index) => [name, index]))
+      filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
+      articleList.value = filtered
+      loading.value = 'success'
+      loadMoreText.value = t('common.noMore')
+      // post 型轮播依赖文章列表,若启用则刷新
+      if (bannerConfig.value?.enabled && bannerConfig.value.type !== 'custom') {
+        handleGetBanner()
+      }
+    }
+    catch (err) {
+      console.error('获取审核文章失败', err)
+      loading.value = 'error'
+      loadMoreText.value = t('common.loadFailed')
+    }
+    finally {
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }
     return
   }
 
@@ -278,7 +277,7 @@ function handleToArticleDetail(article: IPost) {
 function handleToCategoryPage() {
   uni.switchTab({ url: '/pages/tabbar/category/category' })
 }
- 
+
 function handleToCategoryBy(category: ICategory) {
   if (calcAuditModeEnabled.value)
     return
@@ -395,7 +394,7 @@ handleQuery()
 
     <block v-else>
       <!-- 轮播 Banner -->
-      <view v-if="bannerConfig?.enabled" class="bg-white mb-4">
+      <view v-if="bannerConfig?.enabled" class="mb-4 bg-white">
         <view v-if="bannerList.length !== 0" class="banner mx-3 mt-3 overflow-hidden rounded-xl">
           <uh-swiper
             :height="bannerConfig.height"
@@ -411,7 +410,7 @@ handleQuery()
       </view>
 
       <!-- 快捷导航 -->
-      <view v-if="navList.filter(x => x.show).length" class="nav-box px-4 overflow-hidden rounded-xl bg-white p-3">
+      <view v-if="navList.filter(x => x.show).length" class="nav-box overflow-hidden rounded-xl bg-white p-3 px-4">
         <view class="page-item-title font-bold">
           快捷导航
         </view>
@@ -497,4 +496,3 @@ handleQuery()
     />
   </view>
 </template>
- 

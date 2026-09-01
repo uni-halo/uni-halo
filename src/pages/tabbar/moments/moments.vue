@@ -25,8 +25,7 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const haloConfigs = computed(() => appConfigStore.configs)
-const mockJson = computed(() => appConfigStore.mockJson)
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const calcUseTagRandomColor = computed(() => !!haloConfigs.value.pageConfig?.momentConfig?.useTagRandomColor)
 
 const bloggerInfo = computed(() => {
@@ -59,30 +58,51 @@ function removeTagLinksCompletely(htmlString: string): string {
   return htmlString.replace(regex, '')
 }
 
+/** 瞬间项映射(medium 拆分为 images/videos/audios + 内容 tag 清理) */
+function mapMomentItem(item: IMoment) {
+  const medium = (item.spec as unknown as { medium?: { type?: string, url: string }[] }).medium || []
+  return {
+    ...item,
+    spec: {
+      ...item.spec,
+      owner: {
+        displayName: bloggerInfo.value.nickname,
+        avatar: bloggerInfo.value.avatar,
+      },
+      newHtml: removeTagLinksCompletely((item.spec as unknown as { content?: { html?: string } }).content?.html || ''),
+    },
+    images: medium.filter(x => x.type === 'PHOTO').map(x => ({ ...x, url: checkThumbnailUrl(x.url, true) })),
+    videos: medium.filter(x => x.type === 'VIDEO').map(x => ({ ...x, id: generateUUID() })),
+    audios: medium.filter(x => x.type === 'AUDIO'),
+  }
+}
+
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
   if (calcAuditModeEnabled.value) {
-    const momentsMock = mockJson.value.moments as { list?: { content?: string, time?: string, images?: string[] }[] } | undefined
-    dataList.value = (momentsMock?.list || []).map(item => ({
-      metadata: { name: String(Date.now() * Math.random()) },
-      spec: {
-        content: item.content || '',
-        owner: {
-          displayName: bloggerInfo.value.nickname,
-          avatar: bloggerInfo.value.avatar,
-        },
-        visible: 'PUBLIC',
-        allowComment: true,
-        approved: true,
-        releaseTime: item.time,
-      },
-      images: (item.images || []).map(img => ({ type: 'PHOTO', url: checkThumbnailUrl(img) })),
-      videos: [],
-    }))
-    loading.value = 'success'
-    loadMoreText.value = t('common.noMore')
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
+    // 审核模式:真实瞬间按 audit-data moments 过滤(数组顺序即展示顺序)
+    const auditMomentNames = appConfigStore.auditData.spec?.moments || []
+    try {
+      const res = await getMomentList({ page: 1, size: 99999 })
+      const filtered = res.data.items
+        .filter(x => x.spec.visible === 'PUBLIC' && auditMomentNames.includes(x.metadata.name))
+      const orderMap = new Map(auditMomentNames.map((name, index) => [name, index]))
+      filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
+      const tempItems = filtered.map(mapMomentItem)
+      dataList.value = tempItems
+      nextTick(() => {
+        createVideoContexts(tempItems)
+      })
+      loading.value = 'success'
+      loadMoreText.value = t('common.noMore')
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }
+    catch (err) {
+      console.error(err)
+      loading.value = 'error'
+      loadMoreText.value = t('common.loadFailed')
+    }
     return
   }
 
@@ -94,30 +114,13 @@ async function handleGetData() {
 
   try {
     const res = await getMomentList({ ...queryParams.value })
-	loading.value = 'success'
+    loading.value = 'success'
     loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
     hasNext.value = res.data.hasNext
 
     const tempItems = res.data.items
       .filter(x => x.spec.visible === 'PUBLIC')
-      .map((item) => {
-        const medium = (item.spec as unknown as { medium?: { type?: string, url: string }[] }).medium || []
-        const newItem = {
-          ...item,
-          spec: {
-            ...item.spec,
-            owner: {
-              displayName: bloggerInfo.value.nickname,
-              avatar: bloggerInfo.value.avatar,
-            },
-            newHtml: removeTagLinksCompletely((item.spec as unknown as { content?: { html?: string } }).content?.html || ''),
-          },
-          images: medium.filter(x => x.type === 'PHOTO').map(x => ({ ...x, url: checkThumbnailUrl(x.url, true) })),
-          videos: medium.filter(x => x.type === 'VIDEO').map(x => ({ ...x, id: generateUUID() })),
-          audios: medium.filter(x => x.type === 'AUDIO'),
-        }
-        return newItem
-      })
+      .map(mapMomentItem)
 
     dataList.value = isLoadMore.value
       ? dataList.value.concat(tempItems)
@@ -248,7 +251,7 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class=" box-border min-h-screen w-screen flex flex-col py-6">
+  <view class="box-border min-h-screen w-screen flex flex-col py-6">
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"

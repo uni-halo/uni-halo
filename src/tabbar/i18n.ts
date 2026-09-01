@@ -7,10 +7,10 @@ import { isNativeTabbar, tabbarList } from './config'
 export function getI18nText(key: string) {
   // 获取 %xxx% 中的 xxx
   const match = key.match(/%(.+?)%/)
-  if (match) {
-    key = match[1]
-  }
-  console.log('设置多语言：', key)
+  // 无 %占位符% 的文本(如直接配置中文)原样返回,不进入翻译
+  if (!match)
+    return key
+  key = match[1]
   return t(key)
 }
 

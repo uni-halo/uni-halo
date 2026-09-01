@@ -23,7 +23,7 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const haloConfigs = computed(() => appConfigStore.configs)
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
 const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
 

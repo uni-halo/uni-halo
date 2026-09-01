@@ -33,6 +33,7 @@ const uniMock = {
   chooseImage: vi.fn(),
   getSystemInfoSync: vi.fn().mockReturnValue({ platform: 'devtools' }),
   getSystemInfo: vi.fn(),
+  getLocale: vi.fn().mockReturnValue('zh-Hans'),
   onNetworkStatusChange: vi.fn(),
   getNetworkType: vi.fn(),
 }

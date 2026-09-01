@@ -14,6 +14,7 @@ import { getNologinEmail, getOpenid } from '@/utils/auth'
 import { getPersonalToken } from '@/store/token'
 import type {
   IAppConfig,
+  IAuditDataResult,
   ICommentWidgetConfig,
   IDoubanDetail,
   IHaloGlobalConfig,
@@ -27,6 +28,10 @@ import type {
   ILoveStory,
   ILoveStoryListReq,
   ILoveStoryListRes,
+  IMiniProgramLink,
+  IMiniProgramLinkGroupedRes,
+  IMiniProgramLinkGroupOption,
+  IMiniProgramLinkSubmissionForm,
   IQRCodeInfo,
   IRestrictReadCheckReq,
   IRestrictReadCheckRes,
@@ -49,6 +54,15 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
  */
 export function getAppConfigs() {
   return http.Get<IResponse<IAppConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/getConfigs', {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 获取审核模式数据(公开接口;auditModeEnabled=true 时返回选中引用列表,否则 {enabled:false})
+ */
+export function getAuditData() {
+  return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/audit-data', {
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -168,6 +182,60 @@ export function getLoveStories(params: ILoveStoryListReq) {
   })
 }
 
+/* ==================== 小程序链接(plugin-uni-halo) ==================== */
+
+/**
+ * 获取小程序链接分组列表(grouped=true,仅可见,按分组聚合返回)
+ */
+export function getMiniProgramLinkGroupedList() {
+  return http.Get<IResponse<IMiniProgramLinkGroupedRes>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links',
+    {
+      params: { grouped: true },
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 获取小程序链接分组选项(/types,仅可见链接引用的分组)
+ */
+export function getMiniProgramLinkTypes() {
+  return http.Get<IResponse<IMiniProgramLinkGroupOption[]>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/types',
+    {
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 获取小程序链接详情(仅可见,不存在返回 404)
+ */
+export function getMiniProgramLinkDetail(name: string) {
+  return http.Get<IResponse<IMiniProgramLink>>(
+    `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/${name}`,
+    {
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 提交小程序链接申请(公开接口,落库为待审核;受 linkConfig.submissionEnabled 开关控制)
+ */
+export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissionForm) {
+  return http.Post<IResponse<unknown>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/submissions',
+    {
+      spec: data,
+    },
+    {
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
 /* ==================== 受限阅读(tools.muyin.site) ==================== */
 
 /**
@@ -284,8 +352,8 @@ export function getDoubanDetail(url: string) {
  */
 export function getCommentWidgetCaptcha() {
   return http.Get<IResponse<string>>('/apis/api.commentwidget.halo.run/v1alpha1/captcha/-/generate', {
-    cacheFor:0,
-	meta: { requestFrom: RequestFrom.Halo },
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo },
   })
 }
 

@@ -71,7 +71,7 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
 
@@ -306,13 +306,13 @@ async function getVerificationCode() {
 
 /* ---------------- 评论 ---------------- */
 function handleToComment() {
-	console.log('calcIsShowComment.value',calcIsShowComment.value)
-	console.log('result.value',result.value)
-  if (!result.value){
-	  return
+  console.log('calcIsShowComment.value', calcIsShowComment.value)
+  console.log('result.value', result.value)
+  if (!result.value) {
+    return
   }
-  if (!calcIsShowComment.value){
-	  return
+  if (!calcIsShowComment.value) {
+    return
   }
   if (!result.value.spec.allowComment) {
     uni.showToast({ icon: 'none', title: '文章已开启禁止评论！' })
@@ -715,7 +715,7 @@ const globalAppSettings = computed(() => settingStore.settings)
 </template>
 
 <style scoped lang="scss">
-	.app-page {
+.app-page {
   display: flex;
   flex-direction: column;
 }

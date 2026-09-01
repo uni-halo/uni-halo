@@ -8,7 +8,6 @@ import { onLoad } from '@dcloudio/uni-app'
 import { getQRCodeInfo } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePluginAvailable } from '@/utils/plugin'
-import { checkJsonAndParse } from '@/utils/json'
 
 definePage({
   // 使用 type: "home" 属性设置首页，其他页面不需要设置，默认为page
@@ -28,7 +27,7 @@ const articleDetailPath = '/pages-blog/article-detail/article-detail'
 // 本地开发快速跳转页面,发布请置为 false
 const DEV_MODE = false
 const DEV_TO_TYPE = 'page' as 'page' | 'tabbar'
-const DEV_TO_PATH = articleDetailPath + '?name=01a057b2-3200-74af-8afe-28a054092e82'
+const DEV_TO_PATH = `${articleDetailPath}?name=01a057b2-3200-74af-8afe-28a054092e82`
 
 /* ---------------- 状态 ---------------- */
 const appConfigStore = useAppConfigStore()
@@ -56,23 +55,9 @@ async function getPostIdByQRCode(key: string): Promise<string | null> {
   return null
 }
 
-/** 处理审计模式 mock 数据 */
-async function handleAuditMode(res: Record<string, unknown>) {
-  const auditConfig = (res?.auditConfig ?? {}) as {
-    auditModeEnabled?: boolean
-    auditModeData?: { jsonUrl?: string, jsonData?: string }
-  }
-  if (!auditConfig.auditModeEnabled)
-    return
-  if (auditConfig.auditModeData?.jsonUrl) {
-    await appConfigStore.fetchMockJson()
-  }
-  else {
-    const mockJson = checkJsonAndParse(auditConfig.auditModeData?.jsonData || '')
-    if (mockJson.ok) {
-      appConfigStore.setMockJson(mockJson.jsonData as Record<string, unknown>)
-    }
-  }
+/** 获取审核模式数据(公开接口 /audit-data,enabled 联动设置页开关) */
+async function handleAuditMode() {
+  await appConfigStore.fetchAuditData()
 }
 
 /** 启动页/首页分流 */
@@ -140,8 +125,8 @@ onLoad(async (options) => {
       }
     }
 
-    // 审计模式 mock
-    await handleAuditMode(res as Record<string, unknown>)
+    // 审计模式数据(公开接口 /audit-data)
+    await handleAuditMode()
 
     // 启动页分流
     handleCheckShowStarted()

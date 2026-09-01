@@ -5,7 +5,6 @@
  */
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
@@ -23,8 +22,7 @@ definePage({
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
 
-const calcAuditModeEnabled = computed(() => !!appConfigStore.configs.auditConfig?.auditModeEnabled)
-const mockJson = computed(() => appConfigStore.mockJson)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const globalAppSettings = computed(() => settingStore.settings)
 
 /* ---------------- 状态 ---------------- */
@@ -106,44 +104,26 @@ function handleUniqueCacheDatalist(list: IPost[]): IPost[] {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
   if (calcAuditModeEnabled.value) {
-    const archivesMock = mockJson.value.archives as { list?: { time?: string, cover?: string, title?: string, desc?: string }[] } | undefined
-    const dataListMock: IPost[] = (archivesMock?.list || []).map((item) => {
-      const date = new Date(item.time || Date.now())
-      const year = date.getFullYear()
-      const month = date.getMonth() + 1
-      return {
-        metadata: {
-          name: String(Date.now() * Math.random()),
-          labels: {
-            [postLabelYearKey]: String(year),
-            [postLabelMonthKey]: String(month),
-          },
-        },
-        spec: {
-          title: item.title || '',
-          slug: '',
-          cover: item.cover,
-          pinned: false,
-          publishTime: item.time,
-          deleted: false,
-          publish: true,
-          allowComment: true,
-          visible: 'PUBLIC',
-          priority: 0,
-          categories: [],
-          tags: [],
-        },
-        status: { permalink: '', inProgress: false, excerpt: item.desc },
-        stats: { visit: 0 },
-      }
-    })
-    const posts = handleGetPosts(dataListMock)
-    dataList.value = handleGetShowDataList(posts)
-    cacheDataList.value = dataListMock
-    loading.value = 'success'
-    loadMoreText.value = '呜呜，没有更多数据啦~'
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
+    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
+    const auditPostNames = appConfigStore.auditData.spec?.posts || []
+    try {
+      const res = await getPostList({ page: 1, size: 99999, sort: ['spec.publishTime,desc'] })
+      const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
+      const orderMap = new Map(auditPostNames.map((name, index) => [name, index]))
+      filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
+      const posts = handleGetPosts(filtered)
+      dataList.value = handleGetShowDataList(posts)
+      cacheDataList.value = filtered
+      loading.value = 'success'
+      loadMoreText.value = '呜呜，没有更多数据啦~'
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }
+    catch (err) {
+      console.error(err)
+      loading.value = 'error'
+      loadMoreText.value = '加载失败，请下拉刷新！'
+    }
     return
   }
 

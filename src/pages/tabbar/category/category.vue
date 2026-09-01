@@ -20,8 +20,7 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const haloConfigs = computed(() => appConfigStore.configs)
-const mockJson = computed(() => appConfigStore.mockJson)
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 const categoryConfig = computed(() => haloConfigs.value.pageConfig?.categoryConfig)
 
@@ -74,22 +73,31 @@ function handleInitPage() {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
   if (calcAuditModeEnabled.value) {
+    // 审核模式:真实分类按 audit-data categories 过滤(数组顺序即展示顺序)
     currentCategoryConfig.value.type = 'list'
-    const categoryMock = mockJson.value.category as { list?: { title?: string, cover?: string }[] } | undefined
-    dataList.value = (categoryMock?.list || []).map(item => ({
-      metadata: { name: String(Date.now() * Math.random()) },
-      spec: {
-        displayName: item.title || '',
-        slug: '',
-        priority: 0,
-        cover: checkThumbnailUrl(item.cover, true),
-      },
-      postCount: 0,
-    }))
-    loading.value = 'success'
-    loadMoreText.value = t('common.noMore')
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
+    const auditCategoryNames = appConfigStore.auditData.spec?.categories || []
+    try {
+      const res = await getCategoryList({ page: 1, size: 99999 })
+      const filtered = res.data.items
+        .filter(item => auditCategoryNames.includes(item.metadata.name))
+        .map(item => ({
+          ...item,
+          postCount: item.postCount ?? 0,
+          spec: { ...item.spec, cover: checkThumbnailUrl(item.spec.cover, true) },
+        }))
+      const orderMap = new Map(auditCategoryNames.map((name, index) => [name, index]))
+      filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
+      dataList.value = filtered
+      loading.value = 'success'
+      loadMoreText.value = t('common.noMore')
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }
+    catch (err) {
+      console.error(err)
+      loading.value = 'error'
+      loadMoreText.value = t('common.loadFailed')
+    }
     return
   }
 

@@ -10,7 +10,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { usePluginAvailable } from '@/utils/plugin'
-import type { IPhoto } from '@/api/types/halo'
+import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
 definePage({
   style: {
@@ -21,8 +21,7 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const haloConfigs = computed(() => appConfigStore.configs)
-const mockJson = computed(() => appConfigStore.mockJson)
-const calcAuditModeEnabled = computed(() => !!haloConfigs.value.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 const galleryConfig = computed(() => haloConfigs.value.pageConfig?.galleryConfig)
 
@@ -46,13 +45,39 @@ const lock = ref(false)
 /* ---------------- 数据加载 ---------------- */
 async function handleGetCategory() {
   if (calcAuditModeEnabled.value) {
-    handleGetData(true)
+    // 审核模式:仅展示所选图库分组(galleryGroups)内的照片,未分组照片不展示
+    const auditGroupNames = appConfigStore.auditData.spec?.galleryGroups || []
+    try {
+      const res = await getPhotoGroupList({ page: 1, size: 99999 })
+      const filtered = ((res.data as unknown as IPhotoGroup[] | undefined) || [])
+        .filter(item => auditGroupNames.includes(item.metadata.name))
+        .map(item => ({
+          name: item.metadata.name,
+          displayName: item.spec.displayName,
+          priority: item.spec.priority ?? 0,
+        }))
+        .sort((a, b) => a.priority - b.priority)
+      category.value.list = filtered
+      if (category.value.list.length !== 0) {
+        queryParams.value.group = category.value.list[0].name || ''
+        handleGetData(true)
+      }
+      else {
+        loading.value = 'success'
+        loadMoreText.value = t('common.noMore')
+        uni.stopPullDownRefresh()
+      }
+    }
+    catch (e) {
+      console.error(e)
+      loading.value = 'error'
+      category.value = { activeIndex: 0, list: [] }
+    }
     return
   }
   try {
     const res = await getPhotoGroupList({ page: 1, size: 0 })
-	console.log('分类数据',res.data)
-    category.value.list = (res.data || [])
+    category.value.list = ((res.data as unknown as IPhotoGroup[] | undefined) || [])
       .map(item => ({
         name: item.metadata.name,
         displayName: item.spec.displayName,
@@ -73,21 +98,9 @@ async function handleGetCategory() {
 }
 
 async function handleGetData(isClearList = false) {
-  if (calcAuditModeEnabled.value) {
-    const galleryMock = mockJson.value.gallery as { list?: string[] } | undefined
-    dataList.value = (galleryMock?.list || []).map(item => ({
-      metadata: { name: String(Date.now() * Math.random()) },
-      spec: {
-        displayName: '',
-        url: checkImageUrl(item),
-      },
-    }))
-    loading.value = 'success'
-    loadMoreText.value = t('common.noMore')
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
-    lock.value = false
-    return
+  if (isClearList) {
+    dataList.value = []
+    queryParams.value.page = 1
   }
 
   if (!isLoadMore.value) {
@@ -135,8 +148,8 @@ function handleGetDataByCategory(index: number) {
   handleGetData(true)
 }
 
-function handleOnCategoryChange(e:{index:number,name:number}) {
-	console.log('切换分类', e)
+function handleOnCategoryChange(e: { index: number, name: number }) {
+  console.log('切换分类', e)
   if (lock.value)
     return
   handleGetDataByCategory(e.index)
@@ -209,17 +222,17 @@ onReachBottom(() => {
     />
     <template v-else>
       <!-- 顶部切换 -->
-		<wd-tabs
-		v-if="category.list.length > 0"
-          v-model="category.activeIndex"
-          align="left"
-		  sticky
-		  :offset-top="0"
-          @change="handleOnCategoryChange"
-        >
-		<wd-tab v-for="cate in category.list" :key="cate.displayName" :title="cate.displayName"></wd-tab>
-		</wd-tabs>
-   
+      <wd-tabs
+        v-if="category.list.length > 0"
+        v-model="category.activeIndex"
+        align="left"
+        sticky
+        :offset-top="0"
+        @change="handleOnCategoryChange"
+      >
+        <wd-tab v-for="cate in category.list" :key="cate.displayName" :title="cate.displayName" />
+      </wd-tabs>
+
       <!-- 骨架屏 -->
       <view v-if="loading === 'loading'" class="loading-wrap box-border p-3">
         <wd-skeleton :row="4" :animated="true" />

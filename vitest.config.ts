@@ -14,6 +14,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // 生成物 src/pages.json 为 JSONC(带注释),vite:json 无法解析,测试环境映射到合法 mock
+      '@/pages.json': path.resolve(process.cwd(), 'src/test-mocks/pages.json'),
       '@': path.resolve(process.cwd(), 'src'),
       '@img': path.resolve(process.cwd(), 'src/static/images'),
     },

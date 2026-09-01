@@ -20,7 +20,7 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
-const calcAuditModeEnabled = computed(() => !!appConfigStore.configs.auditConfig?.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 /** 依赖插件(plugin-search-widget) */
 const uniHaloPluginId = 'plugin-search-widget'
@@ -206,7 +206,7 @@ onPullDownRefresh(() => {
           <view
             v-for="(item, index) in dataList"
             :key="index"
-            class="article-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm fade-up"
+            class="article-card fade-up mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm"
             :style="{ animationDelay: `${calcAniWait(index)}ms` }"
             @click="handleToDetail(item)"
           >
