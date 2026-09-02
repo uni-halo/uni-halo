@@ -34,8 +34,6 @@ export const DefaultAppConfigs: IAppConfig = {
         showIndicator: true,
         height: '400rpx',
         dotPosition: 'right',
-        type: 'post',
-        list: [],
       },
     },
     categoryConfig: {

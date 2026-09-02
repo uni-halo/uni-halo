@@ -15,6 +15,8 @@ import { getPersonalToken } from '@/store/token'
 import type {
   IAppConfig,
   IAuditDataResult,
+  IBannerPublicDetail,
+  IBannerPublicItem,
   ICommentWidgetConfig,
   IDoubanDetail,
   IHaloGlobalConfig,
@@ -63,6 +65,24 @@ export function getAppConfigs() {
  */
 export function getAuditData() {
   return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/audit-data', {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 获取首页轮播图列表(公开;按 priority 有序,脱敏不含 content)
+ */
+export function getBanners() {
+  return http.Get<IResponse<IBannerPublicItem[]>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/banners', {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 获取轮播图详情(公开;含 content 富文本 HTML)
+ */
+export function getBannerDetail(name: string) {
+  return http.Get<IResponse<IBannerPublicDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/banners/${name}`, {
     meta: { requestFrom: RequestFrom.Halo },
   })
 }

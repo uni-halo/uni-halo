@@ -8,7 +8,7 @@ import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
-import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
 import type { ICategory, IPost } from '@/api/types/halo'
 import type { IBannerItem } from '@/components/uh-swiper/uh-swiper.vue'
@@ -33,13 +33,7 @@ const isLoadMore = ref(false)
 const loadMoreText = ref(t('common.loading'))
 const articleList = ref<IPost[]>([])
 const categoryList = ref<ICategory[]>([])
-const bannerList = ref<IBannerItem[]>([])
 const result = ref<{ hasNext: boolean }>({ hasNext: false })
-
-const notify = ref({
-  show: false,
-  data: {} as IBannerItem,
-})
 
 const queryParams = ref({
   size: 5,
@@ -131,53 +125,8 @@ const navList = computed(() => {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleQuery() {
-  handleGetBanner()
+  // 轮播图数据由 uh-swiper 组件内部请求公开 banners 接口,页面不再组装
   await Promise.all([handleGetArticleList(), handleGetCategoryList()])
-}
-
-/** 轮播图 */
-function handleGetBanner() {
-  if (calcAuditModeEnabled.value) {
-    // 审核模式:轮播取选中文章前 5 条(articleList 已按 audit-data posts 过滤)
-    bannerList.value = articleList.value.slice(0, 5).map(item => ({
-      id: item.metadata.name,
-      title: item.spec.title,
-      image: checkThumbnailUrl(item.spec.cover),
-      src: checkThumbnailUrl(item.spec.cover),
-      type: 'post',
-      content: item.status?.excerpt || '',
-      url: '',
-    }))
-    return
-  }
-
-  if (!bannerConfig.value?.enabled)
-    return
-
-  if (bannerConfig.value.type === 'custom') {
-    bannerList.value = (bannerConfig.value.list as { title?: string, cover?: string, content?: string, url?: string }[]).map(item => ({
-      id: Date.now() * Math.random(),
-      title: item.title,
-      image: checkThumbnailUrl(item.cover),
-      src: checkThumbnailUrl(item.cover),
-      type: 'custom',
-      content: item.content || '',
-      url: item.url || '',
-    }))
-    return
-  }
-
-  // post 类型:取最新文章作为轮播
-  const list = articleList.value.slice(0, 5).map(item => ({
-    id: item.metadata.name,
-    title: item.spec.title,
-    image: checkThumbnailUrl(item.spec.cover),
-    src: checkThumbnailUrl(item.spec.cover),
-    type: 'post',
-    content: item.status?.excerpt || '',
-    url: '',
-  }))
-  bannerList.value = list
 }
 
 /** 精选分类 */
@@ -218,10 +167,6 @@ async function handleGetArticleList() {
       articleList.value = filtered
       loading.value = 'success'
       loadMoreText.value = t('common.noMore')
-      // post 型轮播依赖文章列表,若启用则刷新
-      if (bannerConfig.value?.enabled && bannerConfig.value.type !== 'custom') {
-        handleGetBanner()
-      }
     }
     catch (err) {
       console.error('获取审核文章失败', err)
@@ -248,10 +193,6 @@ async function handleGetArticleList() {
       : res.data.items
     loading.value = 'success'
     loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
-    // post 型轮播依赖文章列表,若启用则刷新
-    if (bannerConfig.value?.enabled && bannerConfig.value.type !== 'custom') {
-      handleGetBanner()
-    }
   }
   catch (err) {
     loading.value = 'error'
@@ -309,30 +250,22 @@ function handleToTopPage(duration = 500) {
 }
 
 function handleOnBannerClick(item: IBannerItem) {
-  if (calcAuditModeEnabled.value)
-    return
+  // 审核模式下照常展示 Banner,点击分发不拦截(详情页自行处理审核限制)
   if (item.type === 'custom') {
-    if (item.content) {
-      notify.value = { show: true, data: item }
-      return
-    }
-    if (item.url) {
+    // 自定义条目:跳转 Banner 详情页,页面内调公开详情接口展示 content/外链
+    if (item.name) {
       uni.navigateTo({
-        url: `/pages-blog/website/website?data=${JSON.stringify({
-          title: item.title || t('common.loading'),
-          url: encodeURIComponent(item.url),
-        })}`,
+        url: `/pages-blog/banner-detail/banner-detail?name=${item.name}`,
+        animationType: 'slide-in-right',
       })
     }
     return
   }
-  if (!item.id)
+  // 文章来源条目:用 postId 跳文章详情
+  const postId = item.postId || String(item.id || '')
+  if (!postId)
     return
-  handleToArticleDetail({ metadata: { name: String(item.id) } } as IPost)
-}
-
-function handleOnNotifyChange(show: boolean) {
-  notify.value.show = show
+  handleToArticleDetail({ metadata: { name: postId } } as IPost)
 }
 
 /* ---------------- 生命周期 ---------------- */
@@ -393,17 +326,15 @@ handleQuery()
     </view>
 
     <block v-else>
-      <!-- 轮播 Banner -->
+      <!-- 轮播 Banner(数据由 uh-swiper 组件内部请求公开 banners 接口) -->
       <view v-if="bannerConfig?.enabled" class="mb-4 bg-white">
-        <view v-if="bannerList.length !== 0" class="banner mx-3 mt-3 overflow-hidden rounded-xl">
+        <view class="banner mx-3 mt-3 overflow-hidden rounded-xl">
           <uh-swiper
             :height="bannerConfig.height"
             :dot-position="bannerConfig.dotPosition"
             :autoplay="true"
             :use-dot="bannerConfig.showIndicator"
-            :show-title="bannerConfig.showTitle"
-            :type="bannerConfig.type"
-            :list="bannerList"
+            :use-title="bannerConfig.showTitle"
             @on-click="handleOnBannerClick"
           />
         </view>
@@ -484,15 +415,5 @@ handleQuery()
         </view>
       </block>
     </block>
-
-    <!-- 通知弹窗 -->
-    <uh-notify-dialog
-      v-if="notify.show"
-      :show="notify.show"
-      :title="notify.data.title || ''"
-      :content="notify.data.content || ''"
-      :url="notify.data.url || ''"
-      @on-change="handleOnNotifyChange"
-    />
   </view>
 </template>

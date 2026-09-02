@@ -31,8 +31,29 @@ export interface IBannerConfig {
   showIndicator?: boolean
   height?: string
   dotPosition?: string
-  type?: string
-  list?: unknown[]
+}
+
+/** 轮播图公开条目(plugin-uni-halo Banner 归一化模型公开接口,列表脱敏不含 content) */
+export interface IBannerPublicItem {
+  /** Banner 条目 metadata.name */
+  name: string
+  title?: string
+  cover?: string
+  /** 展示日期(ISO) */
+  date?: string
+  authorName?: string
+  authorAvatar?: string
+  /** 来源:post=文章快照 / custom=自定义 */
+  source?: 'post' | 'custom'
+  /** 文章 id(source=post 时跳转文章详情) */
+  postId?: string
+  link?: string
+  priority?: number
+}
+
+/** 轮播图公开详情(含 content 富文本 HTML) */
+export interface IBannerPublicDetail extends IBannerPublicItem {
+  content?: string
 }
 
 export interface IPageConfig {
