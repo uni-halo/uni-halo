@@ -1,227 +1,227 @@
 <script lang="ts" setup>
-	import { computed, ref, watch, onMounted } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-	import { getPostList } from '@/api/halo'
-	import { useAppConfigStore } from '@/store/appConfig'
-	import { useSettingStore } from '@/store/setting'
-	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-	import { t } from '@/locale'
-	import type { IPost } from '@/api/types/halo'
+import { computed, onMounted, ref } from 'vue'
+import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { getPostList } from '@/api/halo'
+import { useAppConfigStore } from '@/store/appConfig'
+import { useSettingStore } from '@/store/setting'
+import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+import { t } from '@/locale'
+import type { IPost } from '@/api/types/halo'
 
-	definePage({
-		style: {
-			navigationBarTitleText: '首页',
-			enablePullDownRefresh: true,
-			navigationStyle: 'custom',
-		},
-	})
+definePage({
+  style: {
+    navigationBarTitleText: '首页',
+    enablePullDownRefresh: true,
+    navigationStyle: 'custom',
+  },
+})
 
-	const appConfigStore = useAppConfigStore()
-	const settingStore = useSettingStore()
+const appConfigStore = useAppConfigStore()
+const settingStore = useSettingStore()
 
-	const haloConfigs = computed(() => appConfigStore.configs)
+const haloConfigs = computed(() => appConfigStore.configs)
 
-	/* ---------------- 状态 ---------------- */
-	const loading = ref<'loading' | 'success' | 'error'>('loading')
-	const isLoadMore = ref(false)
-	const loadMoreText = ref(t('common.loading'))
-	const articleList = ref<IPost[]>([])
+/* ---------------- 状态 ---------------- */
+const loading = ref<'loading' | 'success' | 'error'>('loading')
+const isLoadMore = ref(false)
+const loadMoreText = ref(t('common.loading'))
+const articleList = ref<IPost[]>([])
 
-	const result = ref<{ hasNext : boolean }>({ hasNext: false })
+const result = ref<{ hasNext: boolean }>({ hasNext: false })
 
-	const queryParams = ref({
-		size: 5,
-		page: 1,
-		sort: ['spec.pinned,desc', 'spec.publishTime,desc'],
-	})
+const queryParams = ref({
+  size: 5,
+  page: 1,
+  sort: ['spec.pinned,desc', 'spec.publishTime,desc'],
+})
 
-	/* ---------------- 计算属性 ---------------- */
-	const appInfo = computed(() => {
-		const appInfoData = haloConfigs.value.appConfig?.appInfo as { name ?: string, logo ?: string } | undefined
-		return {
-			name: appInfoData?.name || 'uni-halo',
-			logo: checkImageUrl(appInfoData?.logo),
-		}
-	})
+/* ---------------- 计算属性 ---------------- */
+const appInfo = computed(() => {
+  const appInfoData = haloConfigs.value.appConfig?.appInfo as { name?: string, logo?: string } | undefined
+  return {
+    name: appInfoData?.name || 'uni-halo',
+    logo: checkImageUrl(appInfoData?.logo),
+  }
+})
 
-	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined
-		return {
-			nickname: blogger?.nickname || '',
-			avatar: checkAvatarUrl(blogger?.avatar),
-		}
-	})
+const bloggerInfo = computed(() => {
+  const blogger = haloConfigs.value.authorConfig?.blogger as { nickname?: string, avatar?: string } | undefined
+  return {
+    nickname: blogger?.nickname || '',
+    avatar: checkAvatarUrl(blogger?.avatar),
+  }
+})
 
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
+const globalAppSettings = computed(() => settingStore.settings)
 
-	const globalAppSettings = computed(() => settingStore.settings)
+/* ---------------- 数据加载 ---------------- */
+async function handleQuery() {
+  handleGetArticleList()
+}
 
+/** 文章列表 */
+async function handleGetArticleList() {
+  if (calcAuditModeEnabled.value) {
+    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
+    const auditPostNames = appConfigStore.auditData.spec?.posts || []
+    try {
+      const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
+      const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
+      articleList.value = filtered.map((item) => {
+        item.owner.avatar = checkAvatarUrl(item.owner.avatar)
+        return item
+      })
+      loading.value = 'success'
+      loadMoreText.value = t('common.noMore')
+    }
+    catch (err) {
+      console.error('获取审核文章失败', err)
+      loading.value = 'error'
+      loadMoreText.value = t('common.loadFailed')
+    }
+    finally {
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }
+    return
+  }
 
-	/* ---------------- 数据加载 ---------------- */
-	async function handleQuery() {
-		handleGetArticleList()
-	}
+  if (!isLoadMore.value) {
+    loading.value = 'loading'
+  }
+  loadMoreText.value = t('common.loading')
 
-	/** 文章列表 */
-	async function handleGetArticleList() {
-		if (calcAuditModeEnabled.value) {
-			// 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
-			const auditPostNames = appConfigStore.auditData.spec?.posts || []
-			try {
-				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
-				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
-				articleList.value = filtered.map((item) => {
-					item.owner.avatar = checkAvatarUrl(item.owner.avatar);
-					return item;
-				})
-				loading.value = 'success'
-				loadMoreText.value = t('common.noMore')
-			}
-			catch (err) {
-				console.error('获取审核文章失败', err)
-				loading.value = 'error'
-				loadMoreText.value = t('common.loadFailed')
-			}
-			finally {
-				uni.hideLoading()
-				uni.stopPullDownRefresh()
-			}
-			return
-		}
+  try {
+    const res = await getPostList({ ...toRaw(queryParams.value) })
+    result.value.hasNext = res.data.hasNext
+    articleList.value = (isLoadMore.value
+      ? articleList.value.concat(res.data.items)
+      : res.data.items).map((item) => {
+      item.owner.avatar = checkAvatarUrl(item.owner.avatar)
+      return item
+    })
+    loading.value = 'success'
+    loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
+  }
+  catch (err) {
+    loading.value = 'error'
+    loadMoreText.value = t('common.loadFailed')
+    console.error('获取文章失败', err)
+  }
+  finally {
+    uni.hideLoading()
+    uni.stopPullDownRefresh()
+  }
+}
 
-		if (!isLoadMore.value) {
-			loading.value = 'loading'
-		}
-		loadMoreText.value = t('common.loading')
+/* ---------------- 跳转 ---------------- */
+function handleToArticleDetail(article: IPost) {
+  uni.navigateTo({
+    url: `/pages-blog/article-detail/article-detail?name=${article.metadata.name}`,
+    animationType: 'slide-in-right',
+  })
+}
 
-		try {
-			const res = await getPostList({ ...toRaw(queryParams.value) })
-			result.value.hasNext = res.data.hasNext
-			articleList.value = (isLoadMore.value
-				? articleList.value.concat(res.data.items)
-				: res.data.items).map((item) => {
-					item.owner.avatar = checkAvatarUrl(item.owner.avatar);
-					return item;
-				})
-			loading.value = 'success'
-			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
-		}
-		catch (err) {
-			loading.value = 'error'
-			loadMoreText.value = t('common.loadFailed')
-			console.error('获取文章失败', err)
-		}
-		finally {
-			uni.hideLoading()
-			uni.stopPullDownRefresh()
-		}
-	}
+function handleToSearch() {
+  uni.navigateTo({ url: '/pages-blog/search/search' })
+}
 
-	/* ---------------- 跳转 ---------------- */
-	function handleToArticleDetail(article : IPost) {
-		uni.navigateTo({
-			url: `/pages-blog/article-detail/article-detail?name=${article.metadata.name}`,
-			animationType: 'slide-in-right',
-		})
-	}
+function handleOnLogoToPage() {
+  uni.switchTab({ url: '/pages/tabbar/about/about' })
+}
 
-	function handleToSearch() {
-		uni.navigateTo({ url: '/pages-blog/search/search' })
-	}
+function handleToTopPage(duration = 500) {
+  uni.pageScrollTo({
+    scrollTop: 0,
+    duration,
+    fail: (err) => {
+      console.error('回顶失败', err)
+    },
+  })
+}
 
-	function handleOnLogoToPage() {
-		uni.switchTab({ url: '/pages/tabbar/about/about' })
-	}
+/* ---------------- 生命周期 ---------------- */
 
-	function handleToTopPage(duration = 500) {
-		uni.pageScrollTo({
-			scrollTop: 0,
-			duration,
-			fail: (err) => {
-				console.error('回顶失败', err)
-			},
-		})
-	}
+onPullDownRefresh(() => {
+  isLoadMore.value = false
+  queryParams.value.page = 1
+  handleQuery()
+})
 
+onReachBottom(() => {
+  if (calcAuditModeEnabled.value) {
+    uni.showToast({ icon: 'none', title: t('common.noMoreData') })
+    return
+  }
+  if (result.value.hasNext) {
+    queryParams.value.page += 1
+    isLoadMore.value = true
+    handleGetArticleList()
+  }
+  else {
+    uni.showToast({ icon: 'none', title: t('common.noMoreData') })
+  }
+})
 
-
-	/* ---------------- 生命周期 ---------------- */
-
-	onPullDownRefresh(() => {
-		isLoadMore.value = false
-		queryParams.value.page = 1
-		handleQuery()
-	})
-
-	onReachBottom(() => {
-		if (calcAuditModeEnabled.value) {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
-			return
-		}
-		if (result.value.hasNext) {
-			queryParams.value.page += 1
-			isLoadMore.value = true
-			handleGetArticleList()
-		}
-		else {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
-		}
-	})
-
-	// 首次加载
-	onMounted(() => {
-		handleQuery()
-	})
+// 首次加载
+onMounted(() => {
+  handleQuery()
+})
 </script>
 
 <template>
-	<view class="bg-page min-h-screen w-screen flex flex-col">
-		<!-- 骨架屏 -->
-		<view v-if="loading !== 'success' && articleList.length === 0" class="loading-wrap px-3">
-			<wd-skeleton :row="3" :animated="true" />
-		</view>
+  <view class="min-h-screen w-screen flex flex-col bg-page">
+    <!-- 加载/错误占位(列表为空时展示,避免覆盖下拉刷新的旧内容) -->
+    <view v-if="loading !== 'success' && articleList.length === 0">
+      <uh-data-loading :loading-status="loading" @refresh="handleQuery" />
+    </view>
 
-		<block v-else>
-			<!-- 轮播-->
-			<uh-home-banner />
+    <block v-else>
+      <!-- 轮播 -->
+      <uh-home-banner />
 
-			<!-- 公告 -->
-			<uh-home-notify />
-			
-			<!-- 快捷导航 -->
-			<uh-home-quick-nav />
+      <!-- 公告 -->
+      <uh-home-notify />
 
-			<!-- 精选分类 -->
-			<uh-home-category />
+      <!-- 快捷导航 -->
+      <uh-home-quick-nav />
 
-			<!-- 最新文章 -->
-			<uh-section-title class="mb-4 px-3 box-border">
-				最新内容
-				<template #right>
-					<view class="uh-global-card-glass flex items-center justify-center rounded-md p-1 text-gray-400"
-						@click="handleToSearch()">
-						<wd-icon name="arrow-right" size="12px" />
-					</view>
-				</template>
-			</uh-section-title>
+      <!-- 精选分类 -->
+      <uh-home-category />
 
-			<view v-if="articleList.length === 0" class="article-empty py-10">
-				<wd-empty description="博主还没有发表任何内容~" />
-			</view>
-			<block v-else>
-				<view class="p-3 pt-0 flex flex-col gap-y-3" :class="globalAppSettings.layout.home">
-					<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
-						@on-click="handleToArticleDetail" />
-				</view>
-				<view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
-					{{ loadMoreText }}
-				</view>
-				<view v-if="articleList.length > 10" class="to-top-btn" @click="handleToTopPage()">
-					<wd-icon name="arrow-up" size="20px" color="#03a9f4" />
-				</view>
-			</block>
-		</block>
-	</view>
-	<uh-notify-dialog />
+      <!-- 最新文章 -->
+      <uh-section-title class="mb-4 box-border px-3">
+        最新内容
+        <template #right>
+          <view
+            class="uh-global-card-glass flex items-center justify-center rounded-md p-1 text-gray-400"
+            @click="handleToSearch()"
+          >
+            <wd-icon name="arrow-right" size="12px" />
+          </view>
+        </template>
+      </uh-section-title>
+
+      <view v-if="articleList.length === 0" class="article-empty py-10">
+        <wd-empty description="博主还没有发表任何内容~" />
+      </view>
+      <block v-else>
+        <view class="flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
+          <uh-article-card
+            v-for="(article, index) in articleList" :key="index" from="home" :article="article"
+            @on-click="handleToArticleDetail"
+          />
+        </view>
+        <view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
+          {{ loadMoreText }}
+        </view>
+        <view v-if="articleList.length > 10" class="to-top-btn" @click="handleToTopPage()">
+          <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+        </view>
+      </block>
+    </block>
+  </view>
+  <uh-notify-dialog />
 </template>

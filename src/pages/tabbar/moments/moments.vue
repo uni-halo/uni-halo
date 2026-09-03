@@ -278,14 +278,9 @@
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
 			error-text="检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员" @on-refresh="handleGetData" />
 		<template v-else>
-			<!-- 加载中 -->
-			<view v-if="loading === 'loading'" class="loading-wrap p-3">
-				<wd-skeleton :row="3" :animated="true" />
-			</view>
-
 			<!-- 加载失败(可重试) -->
-			<uh-data-loading v-else-if="loading === 'error'" :loading-status="loading" min-height="60vh"
-				error-text="瞬间加载失败，请点击重试" @refresh="handleGetData" />
+			<uh-data-loading v-if="loading !== 'success'" :loading-status="loading" min-height="60vh"
+				@refresh="handleGetData" />
 
 			<view v-else class="flex flex-col gap-3 px-4">
 				<view v-if="dataList.length === 0"

@@ -4,6 +4,7 @@ import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkThumbnailUrl } from '@/utils/url'
+import { sleep } from '@/utils/common'
 import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { ICategory } from '@/api/types/halo'
@@ -50,6 +51,8 @@ function handleInitPage() {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  // 增加延迟，提升用户体验
+  await sleep(800)
   // 审核模式
   if (calcAuditModeEnabled.value) {
     const auditCategoryNames = appConfigStore.auditData.spec?.categories || []
