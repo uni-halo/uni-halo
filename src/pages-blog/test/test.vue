@@ -9,6 +9,6 @@
 
 <template>
 	<view class="w-full h-screen">
-		<uh-data-loading :loading-status="DataLoadingStatusEnum.Empty"></uh-data-loading>
+		<uh-data-loading :loading-status="DataLoadingStatusEnum.Loading"></uh-data-loading>
 	</view>
 </template>
