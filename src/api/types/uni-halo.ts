@@ -230,27 +230,67 @@ export interface IVoteListReq {
   [key: string]: unknown
 }
 
-export interface IVoteItem {
-  name: string
-  title: string
-  description?: string
-  [key: string]: unknown
-}
-
-export type IVoteListRes = IVoteItem[]
-
-export interface IVote {
-  name: string
-  title: string
-  description?: string
-  options?: IVoteOption[]
-  [key: string]: unknown
-}
-
+/** 投票选项(插件 VoteSpec.options:{id,title}) */
 export interface IVoteOption {
-  name?: string
-  label?: string
-  count?: number
+  id?: string
+  title?: string
+  [key: string]: unknown
+}
+
+/** 投票列表项(Halo 扩展对象,标识在 metadata.name、内容在 spec) */
+export interface IVoteItem {
+  metadata?: { name?: string, [key: string]: unknown }
+  spec?: {
+    title?: string
+    remark?: string
+    type?: string
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
+/** 投票列表响应(Halo 标准 ListResult 结构,与 posts/categories 等列表接口一致) */
+export interface IVoteListRes {
+  items: IVoteItem[]
+  page?: number
+  size?: number
+  total?: number
+  hasNext?: boolean
+}
+
+/** 投票(Halo 扩展对象) */
+export interface IVote {
+  metadata: { name: string, [key: string]: unknown }
+  spec?: {
+    title?: string
+    remark?: string
+    type?: 'single' | 'multiple' | 'pk' | string
+    maxVotes?: number
+    options?: IVoteOption[]
+    timeLimit?: 'custom' | 'permanent' | 'thirty' | 'seven' | 'one' | string
+    startDate?: string
+    endDate?: string
+    owner?: string
+    hasEnded?: boolean
+    canAnonymously?: boolean
+    canSeeVoters?: boolean
+    [key: string]: unknown
+  }
+  stats?: {
+    voteCount?: number
+    voteUser?: number
+    voteDataList?: { id?: string, voteCount?: number }[]
+  }
+  [key: string]: unknown
+}
+
+/** 投票详情(插件 VoteDetail:嵌套 vote + 统计) */
+export interface IVoteDetail {
+  vote: IVote
+  voteDataList?: { id?: string, voteCount?: number }[]
+  userVoteData?: string[]
+  voteCount?: number
+  voteUser?: number
   [key: string]: unknown
 }
 

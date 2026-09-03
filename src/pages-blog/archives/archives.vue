@@ -258,9 +258,9 @@ onReachBottom(() => {
       </wd-tabs>
     </view>
 
-    <!-- 骨架屏 -->
-    <view v-if="loading !== 'success'" class="loading-wrap p-3">
-      <wd-skeleton :row="3" :animated="true" />
+    <!-- 加载/错误占位 -->
+    <view v-if="loading !== 'success'">
+      <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
     </view>
 
     <!-- 内容区域 -->

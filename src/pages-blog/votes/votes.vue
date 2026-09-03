@@ -49,10 +49,10 @@ async function handleGetData() {
   try {
     const res = await getVoteList({ ...queryParams.value })
     loading.value = 'success'
-    hasNext.value = (res.data as unknown as { hasNext?: boolean }).hasNext || false
+    hasNext.value = res.data.hasNext || false
     dataList.value = isLoadMore.value
-      ? dataList.value.concat(res.data as IVoteItem[])
-      : (res.data as IVoteItem[])
+      ? dataList.value.concat(res.data.items)
+      : res.data.items
     loadMoreText.value = hasNext.value ? '上拉加载更多' : '呜呜，没有更多数据啦~'
   }
   catch (err) {
@@ -125,8 +125,9 @@ onReachBottom(() => {
       @on-refresh="handleGetData"
     />
     <template v-else>
-      <view v-if="loading !== 'success'" class="loading-wrap p-3">
-        <wd-skeleton :row="3" :animated="true" />
+      <!-- 加载/错误占位 -->
+      <view v-if="loading !== 'success'">
+        <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
       </view>
 
       <view v-else class="content flex flex-col gap-4 p-3">
@@ -136,8 +137,8 @@ onReachBottom(() => {
         <block v-else>
           <uh-vote-card
             v-for="vote in dataList"
-            :key="vote.name"
-            :vote-name="vote.name"
+            :key="vote.metadata?.name"
+            :vote-name="vote.metadata?.name || ''"
             @on-vote-success="handleOnVoteSuccess"
           />
           <view class="load-text py-5 text-center text-[24rpx] text-gray-400">

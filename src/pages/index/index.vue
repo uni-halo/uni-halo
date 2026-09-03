@@ -1,15 +1,16 @@
 <script lang="ts" setup>
 /**
  * 入口页(源自旧项目 pages/index/index.vue,新建复刻)
- * 职责:检查插件可用性 → 获取配置 → 二维码 scene 跳文章 → 审计模式 mock → 启动页/首页分流
+ * 职责:检查插件可用性 + 维护模式 → 重定向维护页 → 获取配置 → 二维码 scene 跳文章 →
+ * 审计模式 mock → 启动页/首页分流
+ * 拦截规则(2026-09-04):主插件未激活或维护模式开启(任一命中)均跳转维护页,
+ * 不再展示 uh-plugin-unavailable 组件;维护页按 from 参数区分原因展示默认/配置文案。
  */
-import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getQRCodeInfo } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { collectSiteDefaults } from '@/utils/preference'
-import { usePluginAvailable } from '@/utils/plugin'
 
 definePage({
   // 使用 type: "home" 属性设置首页，其他页面不需要设置，默认为page
@@ -33,16 +34,8 @@ const DEV_TO_PATH = `/pages-blog/test/test`
 /* ---------------- 状态 ---------------- */
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
-const uniHaloPluginId = 'plugin-uni-halo'
-const uniHaloPluginAvailableError = '阿偶，检测到当前插件没有安装或者启用，无法启动 uni-halo 哦，请联系管理员'
-const uniHaloPluginAvailable = ref(true)
-
-/* ---------------- 逻辑 ---------------- */
-/** 检查插件可用性 */
-async function handleCheckPluginAvailable(): Promise<boolean> {
-  uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
-  return uniHaloPluginAvailable.value
-}
+/** 维护拦截(插件可用性 + 维护模式检查与跳转封装,见 hooks/use-maintenance-intercept) */
+const { interceptOrContinue } = useMaintenanceIntercept()
 
 /** 通过二维码 scene 获取文章 id */
 async function getPostIdByQRCode(key: string): Promise<string | null> {
@@ -69,8 +62,8 @@ onLoad(async (options) => {
     return
   }
 
-  // 检查插件
-  if (!(await handleCheckPluginAvailable()))
+  // 拦截:主插件未激活 或 维护模式开启(任一命中)→ 跳转维护页
+  if (await interceptOrContinue())
     return
 
   // 获取配置(统一 bootstrap: getConfigs + audit-data + love-config 并行一次;
@@ -109,13 +102,5 @@ onLoad(async (options) => {
 </script>
 
 <template>
-  <view class="app-page h-screen w-screen flex items-center justify-center" style="background-color: #fff;">
-    <uh-plugin-unavailable
-      v-if="!uniHaloPluginAvailable"
-      :plugin-id="uniHaloPluginId"
-      :error-text="uniHaloPluginAvailableError"
-      :use-border="false"
-      :use-decoration="false"
-    />
-  </view>
+  <view class="app-page h-screen w-screen flex items-center justify-center" style="background-color: #fff;" />
 </template>

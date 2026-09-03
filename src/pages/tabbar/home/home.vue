@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
@@ -18,6 +18,11 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
+
+/** 维护拦截(插件可用性 + 维护模式,任一命中跳维护页;与入口页共用 hooks) */
+const { interceptOrContinue } = useMaintenanceIntercept()
+/** 是否已被拦截(配置已带维护键时同步置位,避免首载闪跳) */
+const intercepted = ref(!!appConfigStore.configs.maintenance)
 
 const haloConfigs = computed(() => appConfigStore.configs)
 
@@ -144,6 +149,11 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 
+// 拦截:维护模式开启 / 主插件未激活(任一命中)→ 跳转维护页(tab 切回时重复检查)
+onShow(async () => {
+  intercepted.value = await interceptOrContinue()
+})
+
 onPullDownRefresh(() => {
   isLoadMore.value = false
   queryParams.value.page = 1
@@ -167,6 +177,8 @@ onReachBottom(() => {
 
 // 首次加载
 onMounted(() => {
+  if (intercepted.value)
+    return
   handleQuery()
 })
 </script>

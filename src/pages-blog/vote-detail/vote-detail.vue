@@ -5,11 +5,10 @@
  */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { calcVotePercent, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
-import type { IVote, IVoteOption } from '@/api/types/uni-halo'
+import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
 
 definePage({
   style: {
@@ -81,13 +80,15 @@ async function handleGetData() {
   pageTitle.value = '加载中...'
   try {
     const res = await getVoteDetail(name.value)
-    const tempVote = res.data as typeof vote.value
+    const detailRes = res.data as IVoteDetail
+    const tempVote = detailRes.vote as typeof vote.value
     if (tempVote) {
-      pageTitle.value = `投票详情（${VOTE_TYPES[(tempVote.spec?.type || 'SINGLE') as keyof typeof VOTE_TYPES] || tempVote.spec?.type}）`
+      const typeKey = ((tempVote.spec?.type || 'SINGLE') as string).toUpperCase()
+      pageTitle.value = `投票详情（${VOTE_TYPES[typeKey as keyof typeof VOTE_TYPES] || tempVote.spec?.type}）`
       tempVote.spec = tempVote.spec || {}
       tempVote.spec.isVoted = isVoted.value
       tempVote.spec.disabled = isVoted.value
-      tempVote.spec._uh_type = VOTE_TYPES[(tempVote.spec.type || 'SINGLE') as keyof typeof VOTE_TYPES] || tempVote.spec.type
+      tempVote.spec._uh_type = VOTE_TYPES[typeKey as keyof typeof VOTE_TYPES] || tempVote.spec.type
 
       // 计算状态
       const startTime = tempVote.spec.startDate ? new Date(tempVote.spec.startDate).getTime() : Date.now()
@@ -105,16 +106,27 @@ async function handleGetData() {
       }
 
       // 选项计算
+      // 插件选项为 {id,title},票数在 VoteDetail.voteDataList / Vote.stats.voteDataList
+      const countList = (detailRes.voteDataList || tempVote.stats?.voteDataList || []) as { id?: string, voteCount?: number }[]
+      const countMap: Record<string, number> = {}
+      countList.forEach((item) => {
+        if (item.id)
+          countMap[item.id] = item.voteCount || 0
+      })
       tempVote.spec.options = (tempVote.spec.options || []).map((option) => {
         const checked = handleCalcIsChecked(option)
-        return {
+        const optionWithCount = {
           ...option,
           value: option.id,
           label: option.title,
+          count: countMap[option.id || ''] || 0,
           isVoted: isVoted.value,
           checked,
           disabled: isVoted.value,
-          _uh_percent: calcVotePercent(tempVote, option),
+        }
+        return {
+          ...optionWithCount,
+          _uh_percent: calcVotePercent(tempVote, optionWithCount),
         }
       })
     }
@@ -258,8 +270,9 @@ onShareTimeline(() => ({
 
 <template>
   <view class="app-page box-border min-h-screen w-screen flex flex-col py-6 pb-[160rpx]" style="background-color: #fafafd;">
-    <view v-if="loading !== 'success'" class="loading-wrap min-h-screen px-6">
-      <wd-skeleton :row="4" :animated="true" />
+    <!-- 加载/错误占位 -->
+    <view v-if="loading !== 'success'">
+      <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
     </view>
 
     <block v-else>

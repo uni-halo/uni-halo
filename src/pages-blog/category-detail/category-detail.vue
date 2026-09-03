@@ -107,8 +107,9 @@ onShareTimeline(() => ({
 
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col py-6" style="background-color: #fafafd;">
-    <view v-if="loading !== 'success'" class="loading-wrap min-h-screen px-6">
-      <wd-skeleton :row="4" :animated="true" />
+    <!-- 加载/错误占位 -->
+    <view v-if="loading !== 'success'">
+      <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
     </view>
 
     <block v-else>

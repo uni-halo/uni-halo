@@ -167,12 +167,9 @@ init()
       @on-refresh="handleGetData"
     />
     <template v-else>
-      <!-- 加载/错误 -->
-      <view v-if="loading === 'loading'" class="loading-wrap p-3">
-        <wd-skeleton :row="4" :animated="true" />
-      </view>
-      <view v-else-if="loading === 'error'" class="h-[60vh] flex items-center justify-center content-empty">
-        <wd-empty description="加载异常" />
+      <!-- 加载/错误占位 -->
+      <view v-if="loading !== 'success'">
+        <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
       </view>
 
       <!-- 内容区域 -->

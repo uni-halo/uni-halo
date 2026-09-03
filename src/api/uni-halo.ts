@@ -42,7 +42,7 @@ import type {
   IRestrictReadCheckRes,
   ISubmitLinkForm,
   IUpdateCheckRes,
-  IVote,
+  IVoteDetail,
   IVoteListReq,
   IVoteListRes,
   IVoteSubmitReq,
@@ -381,7 +381,7 @@ export function getVoteList(params: IVoteListReq) {
  * 投票详情
  */
 export function getVoteDetail(name: string) {
-  return http.Get<IResponse<IVote>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/detail`, {
+  return http.Get<IResponse<IVoteDetail>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/detail`, {
     meta: { requestFrom: RequestFrom.Halo },
   })
 }

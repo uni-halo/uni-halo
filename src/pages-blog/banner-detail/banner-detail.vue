@@ -102,15 +102,9 @@ function handleOpenLink() {
 
 <template>
   <view class="app-page">
-    <!-- 加载骨架 -->
-    <view v-if="loading === 'loading'" class="p-4">
-      <wd-skeleton :row="3" :animated="true" />
-    </view>
-
-    <!-- 加载失败 -->
-    <view v-else-if="loading === 'error'" class="flex flex-col items-center gap-4 py-20">
-      <wd-empty description="详情加载失败" />
-      <wd-button size="small" @click="handleRetry">重新加载</wd-button>
+    <!-- 加载/错误占位 -->
+    <view v-if="loading !== 'success'">
+      <uh-data-loading :loading-status="loading" @refresh="handleRetry" />
     </view>
 
     <!-- 详情内容 -->
@@ -120,7 +114,7 @@ function handleOpenLink() {
 
       <view class="px-4">
         <!-- 标题 -->
-        <view class="mt-6 text-[34rpx] font-bold leading-snug text-[#303133]">
+        <view class="mt-6 text-[34rpx] text-[#303133] font-bold leading-snug">
           {{ detail.title }}
         </view>
 
@@ -143,8 +137,10 @@ function handleOpenLink() {
 
         <!-- 外链(平台差异,条件编译) -->
         <view v-if="detail.link" class="link-card mt-8 rounded-xl bg-[#f7f7f9] p-4">
-          <view class="mb-3 text-[24rpx] text-[#909399]">相关链接</view>
-          <text class="link-text block break-all text-[26rpx] leading-relaxed text-[#606266]">
+          <view class="mb-3 text-[24rpx] text-[#909399]">
+            相关链接
+          </view>
+          <text class="link-text block break-all text-[26rpx] text-[#606266] leading-relaxed">
             {{ detail.link }}
           </text>
           <!-- #ifndef APP-PLUS -->

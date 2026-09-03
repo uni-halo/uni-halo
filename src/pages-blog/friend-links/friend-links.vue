@@ -338,8 +338,9 @@ onReachBottom(() => {
         @on-refresh="handleGetLinkGroupData"
       />
       <template v-else>
-        <view v-if="loading !== 'success'" class="loading-wrap min-h-screen p-3">
-          <wd-skeleton :row="5" :animated="true" />
+        <!-- 加载/错误占位 -->
+        <view v-if="loading !== 'success'">
+          <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
         </view>
 
         <view v-else class="content pt-4">
@@ -435,8 +436,9 @@ onReachBottom(() => {
         @on-refresh="handleGetMiniProgramLinks"
       />
       <template v-else>
-        <view v-if="miniLoading !== 'success'" class="loading-wrap min-h-screen p-3">
-          <wd-skeleton :row="5" :animated="true" />
+        <!-- 加载/错误占位 -->
+        <view v-if="miniLoading !== 'success'">
+          <uh-data-loading :loading-status="miniLoading" @refresh="handleGetMiniProgramLinks" />
         </view>
 
         <view v-else class="content flex flex-1 flex-col">
