@@ -35,7 +35,11 @@ const bloggerInfo = computed(() => {
 
 const calcUseTagRandomColor = computed(() => !!haloConfigs.value.pageConfig?.momentConfig?.useTagRandomColor)
 
-const startConfig = computed(() => haloConfigs.value.appConfig?.startConfig as { title?: string } | undefined)
+/** 站点名称(原 startConfig.title 已随启动页下线,改读 appConfig.appInfo.name) */
+const siteName = computed(() => {
+  const appInfo = haloConfigs.value.appConfig?.appInfo as { name?: string } | undefined
+  return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
+})
 
 /* ---------------- 状态 ---------------- */
 const loading = ref<'loading' | 'success' | 'error'>('loading')
@@ -73,16 +77,18 @@ async function handleGetData() {
     const res = await getMomentByName(queryName.value)
     uni.setNavigationBarTitle({ title: '瞬间详情' })
 
-    const medium = (res.data.spec as unknown as { medium?: { type?: string, url: string }[] }).medium || []
+    const medium = (res.data.spec.content?.medium || [])
+      .map(x => ({ ...x, url: x.url || '' }))
+    const owner = res.data.owner
     const tempResult = {
       ...res.data,
+      // 无顶层 owner(如个别历史接口)时兜底为博主信息
+      owner: owner?.displayName
+        ? owner
+        : { displayName: bloggerInfo.value.nickname || '', name: bloggerInfo.value.nickname || '', avatar: bloggerInfo.value.avatar },
       spec: {
         ...res.data.spec,
-        owner: {
-          displayName: bloggerInfo.value.nickname,
-          avatar: bloggerInfo.value.avatar,
-        },
-        newHtml: removeTagLinksCompletely((res.data.spec as unknown as { content?: { html?: string } }).content?.html || ''),
+        newHtml: removeTagLinksCompletely(res.data.spec.content?.html || ''),
       },
       images: medium.filter(x => x.type === 'PHOTO').map(x => ({ ...x, url: checkThumbnailUrl(x.url, true) })),
       videos: medium.filter(x => x.type === 'VIDEO').map(x => ({ ...x, id: generateUUID() })),
@@ -170,11 +176,11 @@ onPullDownRefresh(() => {
 
 onShareAppMessage(() => ({
   path: `/pages-blog/moment-detail/moment-detail?name=${moment.value?.metadata.name}`,
-  title: moment.value?.spec.owner?.displayName || '',
+  title: moment.value?.owner?.displayName || '',
 }))
 
 onShareTimeline(() => ({
-  title: moment.value?.spec.owner?.displayName || '',
+  title: moment.value?.owner?.displayName || '',
   query: moment.value ? `name=${moment.value.metadata.name}` : '',
 }))
 </script>
@@ -189,13 +195,24 @@ onShareTimeline(() => ({
       <view v-if="moment" class="moment-card flex flex-col gap-6 p-6">
         <!-- 用户信息 -->
         <view class="card flex items-center rounded-xl bg-white p-6 shadow-sm">
-          <image class="avatar h-[80rpx] w-[80rpx] shrink-0 rounded-full" :src="moment.spec.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
+          <image class="avatar h-[80rpx] w-[80rpx] shrink-0 rounded-full" :src="moment.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
           <view class="nickname ml-3">
             <view class="nickname-text text-[30rpx] text-[#333] font-bold">
-              {{ moment.spec.owner?.displayName || bloggerInfo.nickname }}
+              {{ moment.owner?.displayName || bloggerInfo.nickname }}
             </view>
             <view class="release-time mt-1.5 text-[24rpx] text-[#666]">
               {{ formatTime(moment.spec.releaseTime) }}
+            </view>
+            <!-- 互动数据(点赞/评论) -->
+            <view v-if="moment.stats && ((moment.stats.totalComment ?? 0) > 0 || (moment.stats.upvote ?? 0) > 0)" class="stats mt-1.5 flex items-center gap-6 text-[24rpx] text-[#8a919e]">
+              <view class="flex items-center gap-1">
+                <wd-icon name="heart" size="13px" color="#f08585" />
+                <text>{{ moment.stats.upvote || 0 }}</text>
+              </view>
+              <view class="flex items-center gap-1">
+                <wd-icon name="message" size="13px" color="#9aa3b2" />
+                <text>{{ moment.stats.totalComment || 0 }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -255,7 +272,7 @@ onShareTimeline(() => ({
               :key="audio.url"
               :src="audio.url"
               :poster="bloggerInfo.avatar"
-              :name="`来自${startConfig?.title || bloggerInfo.nickname}的声音`"
+              :name="`来自${siteName}的声音`"
               :author="bloggerInfo.nickname"
             />
           </view>

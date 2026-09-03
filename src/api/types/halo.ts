@@ -27,6 +27,13 @@ export interface IListResult<T> {
   totalPages: number
 }
 
+export interface IOwner {
+	avatar?: string
+	displayName?: string
+	bio?: string
+	metadata:{name:string}
+}
+
 /* ---------- 文章 Post ---------- */
 
 export interface IPostSpec {
@@ -34,6 +41,7 @@ export interface IPostSpec {
   slug: string
   excerpt?: string
   cover?: string
+  owner:IOwner
   /** 发布时间(Halo 2.x 结构,旧项目直接使用) */
   publishTime?: string
   deleted: boolean
@@ -83,6 +91,7 @@ export interface IContent {
 export interface IPost {
   metadata: IMetadata
   spec: IPostSpec
+  owner: IOwner
   status?: IPostStatus
   content?: IContent
   categories?: ICategory[]
@@ -270,13 +279,28 @@ export type ICommentListRes = IListResult<IComment>
 
 export interface IMoment {
   metadata: IMetadata
+  /** 作者(公开接口在顶层返回;spec.owner 只是作者用户名) */
+  owner?: {
+    avatar?: string
+    bio?: string
+    displayName: string
+    name: string
+    [key: string]: unknown
+  }
   spec: {
-    content: string
-    owner: {
-      displayName: string
-      avatar?: string
-      website?: string
+    content: {
+      /** 正文 HTML */
+      html?: string
+      raw?: string
+      /** 多媒体(图片/视频/音频均在此,勿误读成 spec.medium) */
+      medium?: {
+        type?: 'PHOTO' | 'VIDEO' | 'AUDIO'
+        url?: string
+        [key: string]: unknown
+      }[]
+      [key: string]: unknown
     }
+    owner?: string
     visible: 'PUBLIC' | 'PRIVATE'
     allowComment: boolean
     approved: boolean
@@ -284,6 +308,13 @@ export interface IMoment {
     priority?: number
     tags?: string[]
     releaseTime?: string
+  }
+  /** 互动数据(公开接口返回:点赞/评论数) */
+  stats?: {
+    approvedComment?: number
+    totalComment?: number
+    upvote?: number
+    [key: string]: unknown
   }
   status?: {
     permalink: string

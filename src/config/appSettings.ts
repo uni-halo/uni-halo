@@ -3,8 +3,6 @@
  */
 
 export interface IAppSettings {
-  /** 是否每次启动都显示启动页 */
-  showStartPage: boolean
   /** 评论头像是否圆形 */
   isAvatarRadius: boolean
   banner: {
@@ -24,12 +22,6 @@ export interface IAppSettings {
     timeout: number
     /** 是否屏蔽广告 */
     disabled: boolean
-  }
-  /** 评论弹幕(文章详情) */
-  barrage: {
-    use: boolean
-    /** 弹幕位置(rightToLeft / leftBottom) */
-    type: string
   }
   gallery: {
     /** 是否使用瀑布流 */
@@ -55,7 +47,6 @@ export interface IAppSettings {
 }
 
 export const DefaultAppSettings: IAppSettings = {
-  showStartPage: false,
   isAvatarRadius: false,
   banner: {
     useDot: true,
@@ -68,10 +59,6 @@ export const DefaultAppSettings: IAppSettings = {
   ad: {
     timeout: 3,
     disabled: false,
-  },
-  barrage: {
-    use: false,
-    type: 'leftBottom',
   },
   gallery: {
     useWaterfull: true,

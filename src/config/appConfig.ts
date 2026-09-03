@@ -45,9 +45,5 @@ export const DefaultAppConfigs: IAppConfig = {
   },
   auditConfig: {
     auditModeEnabled: false,
-    auditModeData: {
-      jsonUrl: '',
-      jsonData: '',
-    },
   },
 }

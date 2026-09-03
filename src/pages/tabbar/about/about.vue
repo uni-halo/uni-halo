@@ -159,6 +159,15 @@ async function handleGetNavList() {
       path: '/pages-blog/about/about',
       show: !!basicConfig.value?.showAboutSystem,
     },
+    {
+      key: 'setting',
+      title: '偏好设置',
+      icon: 'settings',
+      iconColor: '#03a9f4',
+      rightText: '首页布局、卡片样式等本地偏好',
+      path: '/pages-blog/setting/setting',
+      show: true,
+    },
   ]
 }
 

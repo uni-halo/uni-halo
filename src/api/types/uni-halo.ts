@@ -77,10 +77,6 @@ export interface IPageConfig {
 /** 审计模式配置 */
 export interface IAuditConfig {
   auditModeEnabled?: boolean
-  auditModeData?: {
-    jsonUrl?: string
-    jsonData?: string
-  }
 }
 
 /** 审核模式数据(公开接口 GET /audit-data 返回) */
@@ -119,6 +115,15 @@ export interface IAppConfig {
   pluginConfig?: IPluginConfig
   pageConfig?: IPageConfig
   auditConfig?: IAuditConfig
+  /**
+   * 站点级展示偏好默认(L0,插件端 GeneralConfig.preferences 经 getConfigs additive 下发;
+   * 客户端 layout.home/cardType/isAvatarRadius 的站点默认来源,本地偏好可覆盖)
+   */
+  preferences?: {
+    homeListLayout?: string
+    articleCardType?: string
+    avatarRadius?: boolean
+  }
   [key: string]: unknown
 }
 
@@ -136,10 +141,6 @@ export interface IHaloGlobalConfig {
 /* ---------- plugin-uni-halo 二维码 / 检查更新 ---------- */
 
 export interface IQRCodeInfo {
-  [key: string]: unknown
-}
-
-export interface IQRCodeImg {
   [key: string]: unknown
 }
 

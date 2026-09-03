@@ -45,7 +45,7 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
  */
 export function getPostList(params: IPostListReq) {
   return http.Get<IResponse<IPostListRes>>('/apis/api.content.halo.run/v1alpha1/posts', {
-    params,
+    query: params,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -124,6 +124,7 @@ export function getPostByTagName(tagName: string, params: IPostListReq) {
 export function getPostCommentList(params: ICommentListReq) {
   return http.Get<IResponse<ICommentListRes>>('/apis/api.halo.run/v1alpha1/comments', {
     params,
+	cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -134,6 +135,7 @@ export function getPostCommentList(params: ICommentListReq) {
 export function getPostCommentReplyList(commentName: string, params: ICommentListReq) {
   return http.Get<IResponse<ICommentListRes>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, {
     params,
+	cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }

@@ -7,6 +7,8 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getQRCodeInfo } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useSettingStore } from '@/store/setting'
+import { collectSiteDefaults } from '@/utils/preference'
 import { usePluginAvailable } from '@/utils/plugin'
 
 definePage({
@@ -21,7 +23,6 @@ definePage({
 
 /* ---------------- 常量 ---------------- */
 const homePagePath = '/pages/tabbar/home/home'
-const startPagePath = '/pages/start/start'
 const articleDetailPath = '/pages-blog/article-detail/article-detail'
 
 // 本地开发快速跳转页面,发布请置为 false
@@ -31,6 +32,7 @@ const DEV_TO_PATH = `${articleDetailPath}?name=01a057b2-3200-74af-8afe-28a054092
 
 /* ---------------- 状态 ---------------- */
 const appConfigStore = useAppConfigStore()
+const settingStore = useSettingStore()
 const uniHaloPluginId = 'plugin-uni-halo'
 const uniHaloPluginAvailableError = '阿偶，检测到当前插件没有安装或者启用，无法启动 uni-halo 哦，请联系管理员'
 const uniHaloPluginAvailable = ref(true)
@@ -58,35 +60,6 @@ async function getPostIdByQRCode(key: string): Promise<string | null> {
 /** 获取审核模式数据(公开接口 /audit-data,enabled 联动设置页开关) */
 async function handleAuditMode() {
   await appConfigStore.fetchAuditData()
-}
-
-/** 启动页/首页分流 */
-function handleCheckShowStarted() {
-  const appConfig = (appConfigStore.configs.appConfig ?? {}) as {
-    startConfig?: { enabled?: boolean, alwaysShow?: boolean }
-  }
-  const startConfig = appConfig.startConfig
-
-  // 未开启启动页,直接进首页
-  if (!startConfig?.enabled) {
-    uni.switchTab({ url: homePagePath })
-    return
-  }
-
-  // 是否每次都显示启动页
-  if (startConfig.alwaysShow) {
-    uni.removeStorageSync('APP_HAS_STARTED')
-    uni.redirectTo({ url: startPagePath })
-    return
-  }
-
-  // 只显示一次启动页
-  if (uni.getStorageSync('APP_HAS_STARTED')) {
-    uni.switchTab({ url: homePagePath })
-  }
-  else {
-    uni.redirectTo({ url: startPagePath })
-  }
 }
 
 onLoad(async (options) => {
@@ -128,8 +101,11 @@ onLoad(async (options) => {
     // 审计模式数据(公开接口 /audit-data)
     await handleAuditMode()
 
-    // 启动页分流
-    handleCheckShowStarted()
+    // 两层偏好合并:应用站点默认(L0)到 setting store(内部合并本地差异,含旧数据迁移)
+    settingStore.applySiteDefaults(collectSiteDefaults(appConfigStore.configs))
+
+    // 启动页已下线(v2.2 ⑤):直接进首页
+    uni.switchTab({ url: homePagePath })
   }
   catch (err) {
     console.error('入口页初始化失败', err)

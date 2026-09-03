@@ -1,6 +1,0 @@
-/**
- * video 组件默认样式补件
- * 说明:@dcloudio/uni-components 3.0.0-4070620250821001 的 style/ 目录未提供 video.css,
- * vite 编译 <video> 内置组件时按惯例引入该路径会报 Cannot find module。
- * 此处以本地文件补齐(原生 video 控件样式由各平台提供,这里仅占位)。
- */

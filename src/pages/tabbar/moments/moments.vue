@@ -20,6 +20,8 @@ definePage({
   style: {
     navigationBarTitleText: '瞬间',
     enablePullDownRefresh: true,
+    // 玻璃拟态试验:下拉/回弹露出的窗口底色对齐壁纸底部色调
+    backgroundColor: '#f4efff',
   },
 })
 
@@ -36,7 +38,11 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const startConfig = computed(() => haloConfigs.value.appConfig?.startConfig as { title?: string } | undefined)
+/** 站点名称(原 startConfig.title 已随启动页下线,改读 appConfig.appInfo.name) */
+const siteName = computed(() => {
+  const appInfo = haloConfigs.value.appConfig?.appInfo as { name?: string } | undefined
+  return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
+})
 
 /** 依赖插件(plugin-moments) */
 const uniHaloPluginId = 'plugin-moments'
@@ -46,7 +52,14 @@ const uniHaloPluginAvailable = ref(true)
 const loading = ref<'loading' | 'success' | 'error'>('loading')
 const queryParams = ref({ size: 10, page: 1 })
 const hasNext = ref(false)
-const dataList = ref<(IMoment & { images?: { type?: string, url: string }[], videos?: { id?: string, url: string }[], audios?: { type?: string, url: string }[], spec: { newHtml?: string } })[]>([])
+/** 列表卡片:medium 已按类型拆为 images/videos/audios + 正文 tag 清理 */
+type MomentCard = IMoment & {
+  images?: { type?: string, url: string }[]
+  videos?: { id?: string, url: string }[]
+  audios?: { type?: string, url: string }[]
+  spec: IMoment['spec'] & { newHtml?: string }
+}
+const dataList = ref<MomentCard[]>([])
 const isLoadMore = ref(false)
 const loadMoreText = ref(t('common.loading'))
 const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
@@ -58,18 +71,20 @@ function removeTagLinksCompletely(htmlString: string): string {
   return htmlString.replace(regex, '')
 }
 
-/** 瞬间项映射(medium 拆分为 images/videos/audios + 内容 tag 清理) */
-function mapMomentItem(item: IMoment) {
-  const medium = (item.spec as unknown as { medium?: { type?: string, url: string }[] }).medium || []
+/** 瞬间项映射(spec.content.medium 拆分为 images/videos/audios + 内容 tag 清理 + 作者兜底) */
+function mapMomentItem(item: IMoment): MomentCard {
+  const medium = (item.spec.content?.medium || [])
+    .map(x => ({ ...x, url: x.url || '' }))
+  const owner = item.owner
   return {
     ...item,
+    // 无顶层 owner(如个别历史接口)时兜底为博主信息
+    owner: owner?.displayName
+      ? owner
+      : { displayName: bloggerInfo.value.nickname || '', name: bloggerInfo.value.nickname || '', avatar: bloggerInfo.value.avatar },
     spec: {
       ...item.spec,
-      owner: {
-        displayName: bloggerInfo.value.nickname,
-        avatar: bloggerInfo.value.avatar,
-      },
-      newHtml: removeTagLinksCompletely((item.spec as unknown as { content?: { html?: string } }).content?.html || ''),
+      newHtml: removeTagLinksCompletely(item.spec.content?.html || ''),
     },
     images: medium.filter(x => x.type === 'PHOTO').map(x => ({ ...x, url: checkThumbnailUrl(x.url, true) })),
     videos: medium.filter(x => x.type === 'VIDEO').map(x => ({ ...x, id: generateUUID() })),
@@ -251,7 +266,15 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col py-6">
+  <view class="moments-page relative box-border min-h-screen w-screen flex flex-col py-6">
+    <!-- 苹果风玻璃拟态试验:fixed 渐变"壁纸"(多层柔光光斑为卡片毛玻璃取色) -->
+    <view class="moments-wallpaper">
+      <view class="deco deco-blue" />
+      <view class="deco deco-pink" />
+      <view class="deco deco-lavender" />
+      <view class="deco deco-cyan" />
+      <view class="deco deco-lift" />
+    </view>
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"
@@ -263,19 +286,19 @@ onReachBottom(() => {
         <wd-skeleton :row="3" :animated="true" />
       </view>
 
-      <view v-else class="flex flex-col gap-y-2 p-4">
+      <view v-else class="flex flex-col gap-y-4 p-4">
         <view v-if="dataList.length === 0" class="min-h-[70vh] w-full flex items-center justify-center content-empty">
           <wd-empty :description="t('common.empty')" />
         </view>
 
         <block v-else>
-          <!-- 瞬间卡片 -->
-          <view v-for="moment in dataList" :key="moment.metadata.name" class="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm">
+          <!-- 瞬间卡片(玻璃) -->
+          <view v-for="moment in dataList" :key="moment.metadata.name" class="moment-glass flex flex-col overflow-hidden rounded-[32rpx]">
             <view class="head flex items-center p-3 pb-0">
-              <image class="avatar h-[66rpx] w-[66rpx] shrink-0 rounded-full" :src="moment.spec.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
+              <image class="avatar h-[66rpx] w-[66rpx] shrink-0 rounded-full" :src="moment.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
               <view class="nickname ml-3">
                 <view class="nickname-text text-[30rpx] text-[#333] font-bold">
-                  {{ moment.spec.owner?.displayName || bloggerInfo.nickname }}
+                  {{ moment.owner?.displayName || bloggerInfo.nickname }}
                 </view>
                 <view class="release-time mt-1 text-[24rpx] text-[#666]">
                   {{ formatMomentTime(moment.spec.releaseTime) }}
@@ -320,7 +343,7 @@ onReachBottom(() => {
                 :key="audio.url"
                 :src="audio.url"
                 :poster="bloggerInfo.avatar"
-                :name="`来自${startConfig?.title || bloggerInfo.nickname}的声音`"
+                :name="`来自${siteName}的声音`"
                 :author="bloggerInfo.nickname"
               />
             </view>
@@ -349,9 +372,21 @@ onReachBottom(() => {
                 {{ tag }}
               </view>
             </view>
+
+            <!-- 互动数据(点赞/评论) -->
+            <view  class="flex items-center justify-end gap-7 px-4 pb-4 text-[24rpx] text-[#8a919e]">
+              <view class="flex items-center gap-1">
+                <wd-icon name="heart" size="14px" color="#f08585" />
+                <text>{{ moment.stats.upvote || 0 }}</text>
+              </view>
+              <view class="flex items-center gap-1">
+                <wd-icon name="message" size="14px" color="#9aa3b2" />
+                <text>{{ moment.stats.totalComment || 0 }}</text>
+              </view>
+            </view>
           </view>
 
-          <view class="to-top-btn fixed bottom-[120rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
+          <view class="fixed bottom-[120rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full moment-glass" @click="handleToTopPage()">
             <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
           </view>
           <view class="load-text pb-5 text-center text-[24rpx] text-[#999]">
@@ -362,3 +397,99 @@ onReachBottom(() => {
     </template>
   </view>
 </template>
+
+<style scoped lang="scss">
+/* 苹果风玻璃拟态试验(测试点:瞬间页)
+ * 原理:页面固定一层多彩渐变"壁纸",卡片用半透明白 + backdrop-filter,
+ * 壁纸的颜色透过玻璃才看得见(纯白背景看不出毛玻璃)。
+ */
+.moments-page {
+  /* 兜底底色(壁纸固定层异常时页面不至于纯白) */
+  background-color: #eef1fd;
+}
+
+.moments-wallpaper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* 通栏渐变铺满整屏(随视口固定):顶部白衔接导航栏,中段淡蓝紫,底部淡粉回环 */
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f3f6ff 20%,
+    #edf0ff 46%,
+    #f6eeff 68%,
+    #ffeef6 88%,
+    #f4f7ff 100%
+  );
+}
+
+/* 柔光光斑:以软径向渐变直接呈现"虚化"质感(免 filter blur,低端机零开销),
+ * 分布覆盖整屏,让玻璃卡片在任何位置都有色可"取" */
+.deco {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60rpx);
+}
+
+.deco-blue {
+  width: 64%;
+  height: 64%;
+  right: -18%;
+  top: -14%;
+  background: radial-gradient(circle, rgb(255 255 255 / 85%) 0%, rgb(124 163 255 / 42%) 22%, rgb(96 140 255 / 30%) 42%, transparent 68%);
+}
+
+.deco-pink {
+  width: 48%;
+  height: 48%;
+  left: -14%;
+  top: 16%;
+  background: radial-gradient(circle, rgb(255 255 255 / 80%) 0%, rgb(255 122 176 / 32%) 26%, rgb(255 110 160 / 20%) 48%, transparent 72%);
+}
+
+.deco-lavender {
+  width: 54%;
+  height: 54%;
+  right: -10%;
+  top: 42%;
+  background: radial-gradient(circle, rgb(255 255 255 / 75%) 0%, rgb(170 132 255 / 28%) 30%, rgb(158 120 255 / 18%) 50%, transparent 72%);
+}
+
+.deco-cyan {
+  width: 60%;
+  height: 60%;
+  left: -16%;
+  bottom: -18%;
+  background: radial-gradient(circle, rgb(255 255 255 / 70%) 0%, rgb(90 216 236 / 24%) 30%, rgb(70 200 226 / 16%) 52%, transparent 72%);
+}
+
+/* 中部柔和提亮,避免大面积素色发闷 */
+.deco-lift {
+  width: 42%;
+  height: 42%;
+  left: 28%;
+  bottom: 6%;
+  background: radial-gradient(circle, rgb(255 255 255 / 55%), transparent 70%);
+}
+
+.moment-glass {
+  background-color: rgb(255 255 255 / 55%);
+  border: 1rpx solid rgb(255 255 255 / 65%);
+  box-shadow:
+    inset 0 1rpx 0 rgb(255 255 255 / 75%),
+    0 8rpx 32rpx rgb(90 105 200 / 14%);
+  backdrop-filter: blur(24rpx) saturate(160%);
+  -webkit-backdrop-filter: blur(24rpx) saturate(160%);
+
+  /* 低端安卓 WebView 不支持 backdrop-filter 的兜底:提高不透明度保证可读性 */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: rgb(255 255 255 / 88%);
+  }
+}
+</style>

@@ -2,7 +2,6 @@ import type { CustomRequestOptions } from '@/http/types';
 import { useTokenStore } from '@/store';
 import { getEnvBaseUrl } from '@/utils';
 import { stringifyQuery } from './tools/queryString';
-import qs from 'qs';
 
 // 请求基准地址
 const baseUrl = getEnvBaseUrl();

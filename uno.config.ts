@@ -94,7 +94,9 @@ export default defineConfig({
   theme: {
     colors: {
       /** 主题色，用法如: text-primary */
-      primary: 'var(--wot-color-theme,#0957DE)',
+      primary: 'var(--wot-color-theme,#B9E424)',
+      secondary: 'var(--wot-color-secondary,#D7F94C)',
+	  page: 'var(--wot-color-page,#f6f3ee)',
     },
     fontSize: {
       /** 提供更小号的字体，用法如：text-2xs */

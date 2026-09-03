@@ -5,8 +5,8 @@ export enum DataLoadingStatusEnum {
   Success = 'success',
 }
 
-export function useDataLoadingStatus() {
-  const loadingStatus = ref<DataLoadingStatusEnum>(DataLoadingStatusEnum.Loading)
+export function useDataLoadingStatus(status?:DataLoadingStatusEnum) {
+  const loadingStatus = ref<DataLoadingStatusEnum>(status??DataLoadingStatusEnum.Loading)
 
   function resetLoadingStatus() {
     loadingStatus.value = DataLoadingStatusEnum.Loading

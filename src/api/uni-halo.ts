@@ -124,15 +124,6 @@ export function getQRCodeInfo(key: string) {
   })
 }
 
-/**
- * 获取文章二维码图片
- */
-export function getQRCodeImg(postId: string) {
-  return http.Get<IResponse<unknown>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/getQRCodeImg/${postId}`, {
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
 /* ==================== 恋爱模块 ==================== */
 
 /**

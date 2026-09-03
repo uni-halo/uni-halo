@@ -12,6 +12,8 @@ import type { IAppConfig, IAuditDataResult } from '@/api/types/uni-halo'
 
 /** 个人令牌存储 key(与 src/store/token.ts 的 getPersonalToken 保持一致) */
 const APP_TOKENS_KEY = 'APP_TOKENS'
+/** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
+const APP_GLOBAL_CONFIGS_KEY = 'APP_GLOBAL_CONFIGS'
 
 export const useAppConfigStore = defineStore(
   'appConfig',
@@ -35,6 +37,10 @@ export const useAppConfigStore = defineStore(
         const body = res.data as IAppConfig | undefined
         if (body) {
           configs.value = deepMerge(JSON.parse(JSON.stringify(DefaultAppConfigs)), body)
+
+          // 合并结果写入 APP_GLOBAL_CONFIGS 缓存,供 utils/url.ts 图片兜底与
+          // api/uni-halo.ts 第三方插件授权头等按 storage 路径读取
+          setCache(APP_GLOBAL_CONFIGS_KEY, configs.value)
 
           // 存储个人令牌(供 getPersonalToken 使用,如非匿名投票)
           if (body?.basicConfig?.tokenConfig) {
