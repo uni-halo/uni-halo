@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 /**
  * 小程序链接申请弹窗(源自 mini-program-links-design 申请入口规划)
- * 公开提交到 plugin-uni-halo POST /submissions,落库为待审核(受 linkConfig.submissionEnabled 开关控制)
+ * 公开提交到 plugin-uni-halo POST /submissions,落库为待审核(受 linkConfig.submissionEnabled
+ * 开关控制);2026-09-03 接入插件防刷验证码(403+附新码 → 展示验证码行携带重试,一次性)
  */
-import { ref, watch } from 'vue'
-import { submitMiniProgramLinkApplication } from '@/api/uni-halo'
+import { computed, ref, watch } from 'vue'
+import { getPluginCaptcha, submitMiniProgramLinkApplication } from '@/api/uni-halo'
+import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 
 const props = withDefaults(defineProps<{
   show?: boolean
@@ -44,6 +46,49 @@ const form = ref<IApplyForm>({
 
 const submitting = ref(false)
 
+// 防刷验证码(服务端 403 附新码 / 点击图片刷新)
+const captchaImage = ref('')
+const captchaId = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+
+const captchaSrc = computed(() => {
+  if (!captchaImage.value)
+    return ''
+  return captchaImage.value.startsWith('data:')
+    ? captchaImage.value
+    : `data:image/png;base64,${captchaImage.value}`
+})
+
+function resetCaptcha() {
+  captchaImage.value = ''
+  captchaId.value = ''
+  captchaCode.value = ''
+}
+
+function applyCaptcha(captcha: IPluginCaptcha) {
+  captchaImage.value = captcha.imageBase64
+  captchaId.value = captcha.id
+  captchaCode.value = ''
+}
+
+async function handleRefreshCaptcha() {
+  if (captchaLoading.value)
+    return
+  captchaLoading.value = true
+  try {
+    const res = await getPluginCaptcha()
+    if (res.data)
+      applyCaptcha(res.data)
+  }
+  catch (e) {
+    console.error('获取验证码失败', e)
+  }
+  finally {
+    captchaLoading.value = false
+  }
+}
+
 function handleResetForm() {
   form.value = {
     displayName: '',
@@ -56,6 +101,7 @@ function handleResetForm() {
     applyRemark: '',
     email: '',
   }
+  resetCaptcha()
 }
 
 function checkIsUrl(url: string): boolean {
@@ -107,6 +153,9 @@ async function handleHandle() {
   submitting.value = true
   uni.showLoading({ title: '正在提交...' })
   try {
+    const captchaQuery: ICaptchaQuery | undefined = captchaImage.value
+      ? { captchaId: captchaId.value, captchaCode: captchaCode.value }
+      : undefined
     await submitMiniProgramLinkApplication({
       displayName: form.value.displayName.trim(),
       miniProgramCode: form.value.miniProgramCode.trim(),
@@ -117,14 +166,22 @@ async function handleHandle() {
       description: form.value.description.trim() || undefined,
       applyRemark: form.value.applyRemark.trim() || undefined,
       email: form.value.email.trim() || undefined,
-    })
+    }, captchaQuery)
     uni.showToast({ icon: 'none', title: '申请提交成功，等待审核！' })
     handleClose(true)
     handleResetForm()
   }
   catch (err) {
     console.error('小程序链接申请提交失败', err)
-    uni.showToast({ icon: 'none', title: '提交失败，请稍后重试！' })
+    const e = err as { code?: number, data?: { message?: string, captcha?: IPluginCaptcha } }
+    if (e.code === 403 && e.data?.captcha) {
+      // 需要/校验失败:服务端附新验证码(一次性),展示并要求重试
+      applyCaptcha(e.data.captcha)
+      uni.showToast({ icon: 'none', title: '请完成验证码后重新提交' })
+    }
+    else {
+      uni.showToast({ icon: 'none', title: '提交失败，请稍后重试！' })
+    }
   }
   finally {
     submitting.value = false
@@ -205,6 +262,22 @@ watch(() => props.show, (newVal) => {
       <view class="form-item mb-5 flex items-center">
         <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">邮箱</text>
         <input v-model="form.email" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]" placeholder="审核结果通知(选填)">
+      </view>
+
+      <!-- 防刷验证码(提交 403 后展示;点击图片可刷新) -->
+      <view v-if="captchaSrc" class="captcha-box mb-5 flex items-center">
+        <text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">验证码 *</text>
+        <image
+          :src="captchaSrc"
+          class="captcha-img h-[76rpx] w-[200rpx] shrink-0 rounded-lg"
+          mode="widthFix"
+          @click="handleRefreshCaptcha"
+        />
+        <input
+          v-model="captchaCode"
+          class="input ml-3 h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]"
+          placeholder="输入图中字符"
+        >
       </view>
 
       <view class="submit-btn my-6">

@@ -34,6 +34,9 @@ import type {
   IMiniProgramLinkGroupedRes,
   IMiniProgramLinkGroupOption,
   IMiniProgramLinkSubmissionForm,
+  INoticeDetail,
+  INoticeListRes,
+  INoticeListVo,
   IQRCodeInfo,
   IRestrictReadCheckReq,
   IRestrictReadCheckRes,
@@ -109,7 +112,7 @@ export function getCommentWidgetConfig() {
  * 检查更新(uhalo-upgrade 插件对接,插件本体引入后业务侧入口)
  */
 export function checkVersion(baseUrl: string) {
-  return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/checkVersion', {
+  return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/upgrade/checkVersion', {
     params: { baseUrl },
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -120,6 +123,68 @@ export function checkVersion(baseUrl: string) {
  */
 export function getQRCodeInfo(key: string) {
   return http.Get<IResponse<IQRCodeInfo>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/getQRCodeInfo/${key}`, {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/* ==================== 防刷验证码(plugin-uni-halo,2026-09-03 客户端接入) ==================== */
+
+/** 防刷验证码(服务端 captcha/generate 返回;受保护写接口 403 时响应体亦附带新验证码) */
+export interface IPluginCaptcha {
+  id: string
+  imageBase64: string
+}
+
+/** 受保护写接口携带的验证码 query(未触发时省略,触发后每次提交都需携带,一次性) */
+export interface ICaptchaQuery {
+  captchaId?: string
+  captchaCode?: string
+}
+
+/**
+ * 获取防刷验证码(公开;适用 POST /mini-program-links/submissions 与
+ * /love-albums/{name}/unlock;站点关闭验证码或该功能不在生效范围时无需携带)
+ */
+export function getPluginCaptcha() {
+  return http.Get<IResponse<IPluginCaptcha>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/captcha/generate', {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/** 仅当携带有效验证码时拼接 query 参数 */
+export function buildCaptchaQuery(captcha?: ICaptchaQuery | null): ICaptchaQuery | undefined {
+  if (!captcha || !captcha.captchaId || !captcha.captchaCode)
+    return undefined
+  return { captchaId: captcha.captchaId, captchaCode: captcha.captchaCode }
+}
+
+/* ==================== 通知公告(plugin-uni-halo,2026-09-03 客户端接入) ==================== */
+
+/**
+ * 公告分页列表(公开,仅已发布;脱敏不含 content,内嵌类型信息)。
+ * 注意:公开接口当前仅支持分页,类型筛选/排序由页面本地聚合处理(公告量小)。
+ */
+export function getNotices(params: { page?: number, size?: number }) {
+  return http.Get<IResponse<INoticeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices', {
+    params,
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 最新一条已发布公告(公开;无数据返回 null,供首页/我的弹窗)
+ */
+export function getNoticeLatest() {
+  return http.Get<IResponse<INoticeListVo | null>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices/latest', {
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 公告详情(公开;含 content 富文本 HTML 与内嵌类型信息;不存在/删除中返回 404)
+ */
+export function getNoticeDetail(name: string) {
+  return http.Get<IResponse<INoticeDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices/${name}`, {
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -158,13 +223,14 @@ export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
 /**
  * 密码解锁相册
  */
-export function unlockAlbum(name: string, password: string) {
+export function unlockAlbum(name: string, password: string, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<{ token: string, photos?: unknown[] }>>(
     `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums/${name}/unlock`,
     {
       password,
     },
     {
+      params: buildCaptchaQuery(captcha),
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -233,15 +299,17 @@ export function getMiniProgramLinkDetail(name: string) {
 }
 
 /**
- * 提交小程序链接申请(公开接口,落库为待审核;受 linkConfig.submissionEnabled 开关控制)
+ * 提交小程序链接申请(公开接口,落库为待审核;受 linkConfig.submissionEnabled 开关
+ * 与防刷验证码 captchaConfig 控制)
  */
-export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissionForm) {
+export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissionForm, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<unknown>>(
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/submissions',
     {
       spec: data,
     },
     {
+      params: buildCaptchaQuery(captcha),
       meta: { requestFrom: RequestFrom.Halo },
     },
   )

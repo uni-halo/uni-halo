@@ -1,41 +1,84 @@
 <script setup lang="ts">
-import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
+import type { DataLoadingStatus } from '@/hooks/useDataLoading'
 
 interface IProps {
-  loadingStatus?: DataLoadingStatusEnum
+  /** 加载状态(取值同 useDataLoading 返回的 status) */
+  loadingStatus?: DataLoadingStatus
+  /** 占位区最小高度 */
+  minHeight?: string
+  loadingText?: string
+  errorText?: string
+  emptyText?: string
 }
+
 const props = withDefaults(defineProps<IProps>(), {
-  loadingStatus: DataLoadingStatusEnum.Loading,
+  loadingStatus: 'loading',
+  minHeight: '60vh',
+  loadingText: '稍等，正在努力加载中哦...',
+  errorText: '哎呀，加载失败了呢~',
+  emptyText: '啊偶，暂时没有数据呢~',
 })
 
-const emit = defineEmits(['refresh'])
-
-function handleRefresh() {
-  emit('refresh')
-}
+const emit = defineEmits<{ (e: 'refresh'): void }>()
 </script>
 
 <template>
-  <view class="min-h-screen w-full flex items-center justify-center">
+  <view
+    class="w-full flex flex-col items-center justify-center gap-y-4 text-sm"
+    :style="{ minHeight: props.minHeight }"
+  >
     <!-- 加载中 -->
-    <wd-loading v-if="props.loadingStatus === DataLoadingStatusEnum.Loading" :size="60">
-      <view>加载中...</view>
-    </wd-loading>
+    <template v-if="props.loadingStatus === 'loading'">
+      <!-- 表情上下漂浮动画 -->
+      <text class="bob-icon">
+        <wd-icon class-prefix="uhemoji-icon" name="-happy-1" size="100rpx" />
+      </text>
+      <view class="text-primary">
+        {{ props.loadingText }}
+      </view>
+    </template>
 
-    <!-- 加载错误 -->
-    <wd-empty v-else-if="props.loadingStatus === DataLoadingStatusEnum.Error" :icon-size="60" icon="no-result">
-      <view>加载失败</view>
-      <wd-button @click="handleRefresh">
+    <!-- 加载错误(可重试) -->
+    <template v-else-if="props.loadingStatus === 'error'">
+      <!-- 表情上下漂浮动画 -->
+      <text class="bob-icon">
+        <wd-icon class-prefix="uhemoji-icon" name="-injury" size="100rpx" />
+      </text>
+      <view class="text-red-400">
+        {{ props.errorText }}
+      </view>
+      <uh-button @click="emit('refresh')">
         刷新试试
-      </wd-button>
-    </wd-empty>
+      </uh-button>
+    </template>
 
-    <!-- 加载成功 -->
-    <wd-empty v-else-if="props.loadingStatus === DataLoadingStatusEnum.Empty" :icon-size="60" icon="success">
-      <view>无数据</view>
-      <wd-button @click="handleRefresh">
-        刷新试试
-      </wd-button>
-    </wd-empty>
+    <!-- 无数据 -->
+    <template v-else>
+      <!-- 表情上下漂浮动画 -->
+      <text class="bob-icon">
+        <wd-icon class-prefix="uhemoji-icon" name="-confused" size="120rpx" />
+      </text>
+      <view class="text-gray-900">
+        {{ props.emptyText }}
+      </view>
+    </template>
   </view>
 </template>
+
+<style scoped lang="scss">
+/* 状态表情上下漂浮动画：@keyframes 无法用 UnoCSS / wot-ui 原子类表达，保留 scoped 样式 */
+@keyframes bob-icon-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18rpx);
+  }
+}
+
+.bob-icon {
+  display: inline-block;
+  animation: bob-icon-float 2s ease-in-out infinite;
+}
+</style>

@@ -91,16 +91,16 @@ defineExpose({ refresh: handleGetData })
 </script>
 
 <template>
-  <view class="uh-vote-card box-border w-full rounded-xl bg-white p-3 shadow-sm">
+  <view class="uh-vote-card uh-global-card-glass box-border w-full rounded-2xl p-4">
     <view v-if="loading" class="loading py-6">
       <wd-skeleton :row="2" :animated="true" />
     </view>
 
     <view v-else-if="voteData" class="vote-body">
-      <view class="vote-title text-[30rpx] text-[#303133] font-bold">
+      <view class="vote-title text-[30rpx] text-gray-900 font-bold">
         {{ voteData.title }}
       </view>
-      <view class="vote-desc mt-1 text-[24rpx] text-[#909399]">
+      <view class="vote-desc mt-1 text-[24rpx] text-gray-400">
         {{ voteData.description }}
       </view>
 
@@ -108,15 +108,15 @@ defineExpose({ refresh: handleGetData })
         <view
           v-for="option in voteData.options"
           :key="option.name"
-          class="option mb-4 flex flex-col border-2 border-transparent rounded-xl bg-[#f7f8fa] p-5"
-          :class="{ active: voteTypes.includes(option.name || '') }"
+          class="option mb-4 flex flex-col border-2 rounded-xl p-5"
+          :class="voteTypes.includes(option.name || '') ? 'border-[#b9e424] bg-[#f0f7d9]' : 'border-transparent bg-[#f6f3ee]'"
           @click="handleSelectOption(option)"
         >
-          <view class="option-label text-[28rpx] text-[#303133]">
+          <view class="option-label text-[28rpx] text-gray-700">
             <text>{{ option.label }}</text>
           </view>
-          <view v-if="voteState === VOTE_STATES.VOTED" class="option-bar mt-3 h-4 overflow-hidden rounded-lg bg-[#f0f0f0]">
-            <view class="option-bar-inner h-full rounded-lg" :style="{ width: `${option.count || 0}%`, background: 'linear-gradient(90deg, #03a9f4, #64b5f6)' }" />
+          <view v-if="voteState === VOTE_STATES.VOTED" class="option-bar mt-3 h-4 overflow-hidden rounded-lg bg-black/5">
+            <view class="option-bar-inner h-full rounded-lg" :style="{ width: `${option.count || 0}%`, background: 'linear-gradient(90deg, #B9E424, #D7F94C)' }" />
           </view>
         </view>
       </view>
@@ -126,20 +126,9 @@ defineExpose({ refresh: handleGetData })
           {{ voteLabel }}
         </wd-button>
       </view>
-      <view v-else class="vote-tip mt-4 text-center text-[24rpx] text-[#909399]">
+      <view v-else class="vote-tip mt-4 text-center text-[24rpx] text-gray-400">
         {{ voteLabel }}{{ voteResultLabel }}
       </view>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.uh-vote-card {
-  .option {
-    &.active {
-      border-color: #03a9f4;
-      background-color: rgb(3 169 244 / 8%);
-    }
-  }
-}
-</style>

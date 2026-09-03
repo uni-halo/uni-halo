@@ -4,8 +4,7 @@
  * 情侣信息 + 恋爱计时 + 功能导航(恋爱故事/相册/清单)
  */
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
-import { getLoveConfig } from '@/api/uni-halo'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 
@@ -70,40 +69,44 @@ const loveWrapStyle = computed(() => ({
 }))
 
 /* ---------------- 数据加载 ---------------- */
-async function handleGetLoveConfig() {
-  try {
-    const loveConfigRes = await getLoveConfig()
-    if (loveConfigRes) {
-      loveConfig.value = {
-        ...loveConfig.value,
-        ...loveConfigRes,
-      }
-    }
-    // 同时从 getConfigs 获取模块开关和图片配置
-    const appConfigs = appConfigStore.configs
-    const loveModuleConfig = appConfigs.loveConfig as Partial<ILoveConfigPage> | undefined
-    if (loveModuleConfig) {
-      loveConfig.value = {
-        ...loveConfig.value,
-        pageImages: loveModuleConfig.pageImages || loveConfig.value.pageImages,
-        ourStory: loveModuleConfig.ourStory || loveConfig.value.ourStory,
-        lovePhoto: loveModuleConfig.lovePhoto || loveConfig.value.lovePhoto,
-        loveDaily: loveModuleConfig.loveDaily || loveConfig.value.loveDaily,
-      }
-    }
-    initList()
-    handleInitLoveDayCount()
+/**
+ * 恋爱配置数据统一来自 appConfig store(静态配置一次性拉取,设计见
+ * .docs/static-config-unified-fetch-design.md):
+ * - loveConfig(公开 /love-config 内容: enabled/纪念日/恋人信息, bootstrap 已拉取)
+ * - configs.loveConfig(模块开关与页面图片, getConfigs 合成下发)
+ * 页面不再自行发起 /love-config 请求,也不再需要接口失败降级分支(store 兜底默认)。
+ */
+function syncLoveConfigFromStore() {
+  const storeLove = appConfigStore.loveConfig
+  const appConfigs = appConfigStore.configs
+
+  loveConfig.value = {
+    ...loveConfig.value,
+    ...(storeLove.loveDateTitle ? { loveDateTitle: storeLove.loveDateTitle } : {}),
+    ...(storeLove.loveDate ? { loveDate: storeLove.loveDate } : {}),
+    ...(storeLove.enabled !== undefined ? { enabled: storeLove.enabled } : {}),
+    loveInfo: {
+      ...loveConfig.value.loveInfo,
+      ...(storeLove.loveInfo || {}),
+    },
   }
-  catch (e) {
-    console.error('获取恋爱配置失败', e)
-    // 降级:从旧配置读取
-    const appConfigs = appConfigStore.configs
-    const loveModuleConfig = appConfigs.loveConfig as ILoveConfigPage | undefined
-    if (loveModuleConfig) {
-      loveConfig.value = loveModuleConfig
-      initList()
-      handleInitLoveDayCount()
+
+  // 从 getConfigs.loveConfig 取模块开关与页面图片(缺省保留默认)
+  const loveModuleConfig = appConfigs.loveConfig as Partial<ILoveConfigPage> | undefined
+  if (loveModuleConfig) {
+    loveConfig.value = {
+      ...loveConfig.value,
+      pageImages: loveModuleConfig.pageImages || loveConfig.value.pageImages,
+      ourStory: loveModuleConfig.ourStory || loveConfig.value.ourStory,
+      lovePhoto: loveModuleConfig.lovePhoto || loveConfig.value.lovePhoto,
+      loveDaily: loveModuleConfig.loveDaily || loveConfig.value.loveDaily,
     }
+  }
+
+  initList()
+  // 未配置纪念日(loveDate 为空)不启动倒计时,避免 NaN
+  if (loveConfig.value.loveDate) {
+    handleInitLoveDayCount()
   }
 }
 
@@ -169,7 +172,14 @@ function handleToPage(pageName: string) {
 /* ---------------- 生命周期 ---------------- */
 onLoad(() => {
   uni.setNavigationBarTitle({ title: '恋爱日记' })
-  handleGetLoveConfig()
+  // 先用 store 已有数据立即渲染(index 启动已 bootstrap 或持久化缓存恢复)
+  syncLoveConfigFromStore()
+})
+
+// 每次进入页面:静态配置 TTL 内不重复请求(bootstrap 内部判定),刷新后重新合成视图
+onShow(async () => {
+  await appConfigStore.bootstrap()
+  syncLoveConfigFromStore()
 })
 
 onBeforeUnmount(() => {

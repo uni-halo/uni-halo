@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 联系博主页(源自旧项目 pagesA/contact,新建复刻)
- * 展示博主社交联系方式,点击复制
+ * 数字名片式设计:Hero 名片卡(渐变光斑透卡) + 品牌色字母瓦片联系方式列表,点击复制
  */
 import { computed, ref, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
@@ -42,6 +42,20 @@ const result = ref<{ key: string, name: string, value: string }[]>([
   { key: 'email', name: '邮箱地址', value: '' },
 ])
 
+/** 平台瓦片(品牌色 + 字符);未覆盖的平台回退中性色与名称首字 */
+const platformMeta: Record<string, { color: string, letter: string }> = {
+  qq: { color: '#12b7f5', letter: 'Q' },
+  wechat: { color: '#07c160', letter: '微' },
+  github: { color: '#24292f', letter: 'G' },
+  gitee: { color: '#c71d23', letter: 'G' },
+  bilibili: { color: '#fb7299', letter: 'B' },
+  csdn: { color: '#fc5531', letter: 'C' },
+  blog: { color: '#3f51b5', letter: '博' },
+  juejin: { color: '#1e80ff', letter: '掘' },
+  weibo: { color: '#e6162d', letter: 'W' },
+  email: { color: '#f57c00', letter: '@' },
+}
+
 const calcIsNotEmpty = computed(() => result.value.some(item => item.value !== ''))
 
 function handleGetData() {
@@ -77,46 +91,55 @@ onLoad(() => {
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen flex flex-col items-center bg-white pt-[160rpx]">
-    <!-- 博主信息 -->
-    <view class="profile flex flex-col items-center p-9">
-      <view class="avatar relative box-border h-[170rpx] w-[170rpx] overflow-hidden border-6 border-white rounded-full shadow-sm">
-        <image class="avatar-img h-full w-full" :src="bloggerInfo.avatar" mode="aspectFill" />
-      </view>
-      <view class="nickname mt-6 text-[38rpx] font-bold">
-        {{ bloggerInfo.nickname }}
-      </view>
-      <view class="desc mt-6 text-center text-[26rpx] text-[#666]">
-        {{ bloggerInfo.description || '这个博主很懒，竟然没写介绍~' }}
+  <view class="app-page box-border min-h-screen w-screen overflow-hidden bg-page px-4 pb-10 pt-6">
+    <!-- Hero 名片卡(主题色光斑透过毛玻璃形成柔和渐变) -->
+    <view class="hero-wrap relative">
+      <view class="absolute h-[220rpx] w-[220rpx] rounded-full bg-[rgba(185,228,36,0.32)] -right-8 -top-8" />
+      <view class="absolute top-[150rpx] h-[180rpx] w-[180rpx] rounded-full bg-[rgba(215,249,76,0.45)] -left-10" />
+      <view class="hero-card uh-global-card-glass relative flex flex-col items-center rounded-3xl px-6 pb-6 pt-10">
+        <view class="avatar relative box-border h-[150rpx] w-[150rpx] overflow-hidden border-5 border-white/90 rounded-full shadow-lg">
+          <image class="avatar-img h-full w-full" :src="bloggerInfo.avatar" mode="aspectFill" />
+        </view>
+        <view class="nickname mt-4 text-[38rpx] text-gray-900 font-bold">
+          {{ bloggerInfo.nickname }}
+        </view>
+        <view class="desc mt-2 px-4 text-center text-[26rpx] text-gray-500 leading-relaxed">
+          {{ bloggerInfo.description || '这个博主很懒，竟然没写介绍~' }}
+        </view>
+        <view class="mt-5 w-full flex items-center justify-center gap-2 border-t border-black/5 pt-4">
+          <wd-icon name="copy" size="26rpx" color="#a8a294" />
+          <text class="text-2xs text-gray-400">点击卡片即可复制对应内容</text>
+        </view>
       </view>
     </view>
 
-    <!-- 联系方式列表 -->
-    <view class="contact box-border w-full px-12 pt-12" style="border-top: 2rpx solid #f2f2f2;">
-      <block v-if="calcIsNotEmpty">
+    <!-- 联系方式 -->
+    <block v-if="calcIsNotEmpty">
+      <uh-section-title class="mb-3 mt-6 text-[30rpx]">
+        联系方式
+      </uh-section-title>
+      <view class="flex flex-col gap-3">
         <view
           v-for="item in result.filter(i => i.value)"
           :key="item.key"
-          class="item mt-6 box-border rounded-xl bg-[#fafafa] p-4"
+          class="item uh-global-card-glass flex items-center gap-3 rounded-2xl px-4 py-3"
           @click="handleOnClick(item)"
         >
-          <view class="left box-border w-[160rpx] flex items-center">
-            <text class="name text-[24rpx] text-[#555]">{{ item.name }}</text>
+          <view class="tile h-[76rpx] w-[76rpx] flex shrink-0 items-center justify-center rounded-xl" :style="{ backgroundColor: platformMeta[item.key]?.color || '#8a8a7a' }">
+            <text class="text-[30rpx] text-white font-bold">{{ platformMeta[item.key]?.letter || item.name.slice(0, 1) }}</text>
           </view>
-          <view class="right box-border w-0 flex flex-1 flex-wrap items-center break-all pl-3 text-[24rpx] text-[#333]">
-            {{ item.value }}
+          <view class="min-w-0 flex flex-1 flex-col">
+            <text class="text-[24rpx] text-gray-400">{{ item.name }}</text>
+            <view class="mt-1 break-all text-[26rpx] text-gray-900 leading-snug">
+              {{ item.value }}
+            </view>
           </view>
+          <wd-icon name="copy" size="28rpx" color="#c8c2b4" class="shrink-0" />
         </view>
-      </block>
-      <view v-else class="empty pt-12">
-        <wd-empty description="暂无联系方式" />
       </view>
+    </block>
+    <view v-else class="pt-12">
+      <wd-empty description="暂无联系方式" />
     </view>
   </view>
 </template>
-
-<style scoped>
-.app-page {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-</style>

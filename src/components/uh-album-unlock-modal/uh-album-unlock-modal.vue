@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 /**
  * 相册密码解锁弹窗(源自旧项目 components/album-unlock-modal,新建复刻)
- * 输入密码解锁加密相册
+ * 输入密码解锁加密相册;2026-09-03 接入插件防刷验证码:
+ * 首次提交若服务端要求验证码(403+附新码)则展示验证码行,携带后重试(验证码一次性)
  */
-import { ref, watch } from 'vue'
-import { unlockAlbum } from '@/api/uni-halo'
+import { computed, ref, watch } from 'vue'
+import { getPluginCaptcha, unlockAlbum } from '@/api/uni-halo'
+import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 
 const props = withDefaults(defineProps<{
   show: boolean
@@ -24,12 +26,62 @@ const isShow = ref(false)
 const password = ref('')
 const loading = ref(false)
 
+// 防刷验证码(服务端 403 附新码 / 主动刷新)
+const captchaImage = ref('')
+const captchaId = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+
+const captchaSrc = computed(() => {
+  if (!captchaImage.value)
+    return ''
+  return captchaImage.value.startsWith('data:')
+    ? captchaImage.value
+    : `data:image/png;base64,${captchaImage.value}`
+})
+
+function resetCaptcha() {
+  captchaImage.value = ''
+  captchaId.value = ''
+  captchaCode.value = ''
+}
+
+/** 用服务端返回的验证码(403 响应体附新码)填充展示 */
+function applyCaptcha(captcha: IPluginCaptcha) {
+  captchaImage.value = captcha.imageBase64
+  captchaId.value = captcha.id
+  captchaCode.value = ''
+}
+
+/** 点击验证码图刷新 */
+async function handleRefreshCaptcha() {
+  if (captchaLoading.value)
+    return
+  captchaLoading.value = true
+  try {
+    const res = await getPluginCaptcha()
+    if (res.data)
+      applyCaptcha(res.data)
+  }
+  catch (e) {
+    console.error('获取验证码失败', e)
+  }
+  finally {
+    captchaLoading.value = false
+  }
+}
+
 watch(() => props.show, (val) => {
   isShow.value = val
+  if (val) {
+    password.value = ''
+    resetCaptcha()
+  }
 })
 
 function handleOnCancel() {
   password.value = ''
+  resetCaptcha()
   isShow.value = false
   emit('update:show', false)
 }
@@ -42,9 +94,13 @@ async function handleOnConfirm() {
 
   loading.value = true
   try {
-    const res = await unlockAlbum(props.albumKey, password.value)
+    const captchaQuery: ICaptchaQuery | undefined = captchaImage.value
+      ? { captchaId: captchaId.value, captchaCode: captchaCode.value }
+      : undefined
+    const res = await unlockAlbum(props.albumKey, password.value, captchaQuery)
     if (res.data && (res.data as { token?: string }).token) {
       password.value = ''
+      resetCaptcha()
       isShow.value = false
       emit('update:show', false)
       emit('success', {
@@ -57,8 +113,18 @@ async function handleOnConfirm() {
   }
   catch (e) {
     console.error('解锁失败', e)
-    password.value = ''
-    uni.showToast({ title: '密码错误，请重试', icon: 'none' })
+    const err = e as { code?: number, data?: { message?: string, captcha?: IPluginCaptcha } }
+    if (err.code === 403 && err.data?.captcha) {
+      // 需要/校验失败:服务端附新验证码(一次性,旧码已作废),展示并要求重试
+      applyCaptcha(err.data.captcha)
+      uni.showToast({ title: '请完成验证码后重新解锁', icon: 'none' })
+    }
+    else {
+      // 密码错误等业务失败:清空密码并复位验证码(一次性,需重新获取)
+      password.value = ''
+      resetCaptcha()
+      uni.showToast({ title: '密码错误，请重试', icon: 'none' })
+    }
   }
   finally {
     loading.value = false
@@ -96,6 +162,26 @@ async function handleOnConfirm() {
         clearable
         class="password-input mt-9"
       />
+
+      <!-- 防刷验证码(首次提交 403 后展示;点击图片可刷新) -->
+      <view v-if="captchaSrc" class="captcha-box mt-5 flex items-center justify-center gap-4">
+        <image
+          :src="captchaSrc"
+          class="captcha-img h-[76rpx] w-[200rpx] rounded-lg"
+          mode="widthFix"
+          @click="handleRefreshCaptcha"
+        />
+        <wd-input
+          v-model="captchaCode"
+          placeholder="验证码"
+          align="center"
+          clearable
+          class="captcha-input w-[240rpx]"
+        />
+      </view>
+      <view v-if="captchaSrc" class="captcha-tip mt-2 text-center text-[22rpx] text-[#aaa]">
+        点击图片刷新验证码
+      </view>
     </view>
   </wd-dialog>
 </template>

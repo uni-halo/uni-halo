@@ -27,7 +27,7 @@ const globalAppSettings = computed(() => settingStore.settings)
 
 /* ---------------- 状态 ---------------- */
 const loading = ref<'loading' | 'success' | 'error'>('loading')
-const tab = ref({ activeIndex: 0, list: ['按月份查看', '按年份查看'] })
+const activeTabIndex = ref(0)
 const queryParams = ref({ size: 10, page: 1 })
 const result = ref<{ hasNext: boolean }>({ hasNext: false })
 const cacheDataList = ref<IPost[]>([])
@@ -44,6 +44,17 @@ const loadMoreText = ref('加载中...')
 const postLabelYearKey = 'content.halo.run/archive-year'
 const postLabelMonthKey = 'content.halo.run/archive-month'
 
+/** 卡片布局偏好 → 原子类(对应旧版 cardType 样式变体) */
+const CARD_LAYOUTS: Record<string, { card: string, thumb: string, info: string }> = {
+  lr_image_text: { card: '', thumb: 'h-[170rpx] w-[200rpx]', info: 'w-0 flex-1 pl-5' },
+  lr_text_image: { card: '', thumb: 'order-2 h-[170rpx] w-[200rpx]', info: 'order-1 w-0 flex-1 pr-5' },
+  tb_image_text: { card: 'flex-col', thumb: 'h-[220rpx] w-full', info: 'w-full pt-3' },
+  tb_text_image: { card: 'flex-col', thumb: 'order-2 h-[220rpx] w-full', info: 'order-1 w-full pb-3' },
+  only_text: { card: '', thumb: 'hidden', info: 'py-1' },
+}
+
+const calcCardLayout = computed(() => CARD_LAYOUTS[globalAppSettings.value.layout.cardType] || CARD_LAYOUTS.lr_image_text)
+
 /* ---------------- 数据处理 ---------------- */
 /** 按 tab 分组文章 */
 function handleGetPosts(list: IPost[]): Record<string, IPost[]> {
@@ -51,7 +62,7 @@ function handleGetPosts(list: IPost[]): Record<string, IPost[]> {
   list.forEach((item) => {
     const labels = item.metadata.labels || {}
     let postItemKey = ''
-    if (tab.value.activeIndex === 0) {
+    if (activeTabIndex.value === 0) {
       postItemKey = `${labels[postLabelYearKey]}-${labels[postLabelMonthKey]}`
     }
     else {
@@ -78,7 +89,7 @@ function handleGetShowDataList(posts: Record<string, IPost[]>): typeof dataList.
       month: '',
       posts: posts[key],
     }
-    if (tab.value.activeIndex === 0) {
+    if (activeTabIndex.value === 0) {
       const splitDate = key.split('-')
       postData.year = splitDate[0]
       postData.month = splitDate[1]
@@ -136,13 +147,14 @@ async function handleGetData() {
   loadMoreText.value = '加载中...'
 
   try {
-    const data = await getPostList({ ...queryParams.value })
-    result.value = { hasNext: data.hasNext }
-    const posts = handleGetPosts(data.items)
+    // getPostList 返回 IResponse<IPostListRes>,数据在 .data 下
+    const res = await getPostList({ ...queryParams.value })
+    result.value = { hasNext: res.data.hasNext }
+    const posts = handleGetPosts(res.data.items)
     const showDataList = handleGetShowDataList(posts)
 
     if (isLoadMore.value) {
-      cacheDataList.value = handleUniqueCacheDatalist([...cacheDataList.value, ...data.items])
+      cacheDataList.value = handleUniqueCacheDatalist([...cacheDataList.value, ...res.data.items])
       // 合并增量数据
       showDataList.forEach((item) => {
         const find = dataList.value.find(x => x.key === item.key)
@@ -163,11 +175,11 @@ async function handleGetData() {
     }
     else {
       dataList.value = showDataList
-      cacheDataList.value = data.items
+      cacheDataList.value = res.data.items
     }
 
     loading.value = 'success'
-    loadMoreText.value = data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
+    loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
   }
   catch (err) {
     console.error(err)
@@ -180,8 +192,8 @@ async function handleGetData() {
   }
 }
 
-function handleOnTabChange(index: number) {
-  tab.value.activeIndex = index
+function handleOnTabChange(e: { index: number }) {
+  activeTabIndex.value = e.index
   queryParams.value.page = 1
   dataList.value = handleGetShowDataList(handleGetPosts(cacheDataList.value))
   uni.pageScrollTo({ scrollTop: 0, duration: 500 })
@@ -237,17 +249,14 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col" style="background-color: #fafafd;">
-    <!-- 顶部 tab -->
-    <view class="archive-tabs fixed inset-x-0 top-0 z-6 bg-white">
-      <wd-tabs
-        v-model="tab.activeIndex"
-        :tabs="tab.list.map(title => ({ title }))"
-        align="center"
-        @change="handleOnTabChange"
-      />
+  <view class="app-page min-h-screen w-screen flex flex-col bg-page">
+    <!-- 顶部 tab(玻璃吸顶,wd-tabs 需用 wd-tab 子组件声明页签) -->
+    <view class="archive-tabs uh-global-card-glass sticky top-0 z-10">
+      <wd-tabs v-model="activeTabIndex" align="center" custom-style="background: transparent;" @change="handleOnTabChange">
+        <wd-tab title="按月份查看" />
+        <wd-tab title="按年份查看" />
+      </wd-tabs>
     </view>
-    <view class="h-[90rpx] w-screen" />
 
     <!-- 骨架屏 -->
     <view v-if="loading !== 'success'" class="loading-wrap p-3">
@@ -256,105 +265,59 @@ onReachBottom(() => {
 
     <!-- 内容区域 -->
     <block v-else>
-      <view v-if="dataList.length === 0" class="list-empty h-screen w-screen flex items-center justify-center">
+      <view v-if="dataList.length === 0" class="list-empty min-h-[60vh] flex items-center justify-center">
         <wd-empty :description="calcAuditModeEnabled ? '暂无归档的内容' : '暂无归档的文章'" />
       </view>
 
-      <view v-else class="timeline mt-6 px-6">
+      <!-- 时间线 -->
+      <view v-else class="timeline px-4 pt-3">
         <view v-for="(item, index) in dataList" :key="item.key" class="timeline-item flex">
-          <view class="timeline-left w-[160rpx] flex shrink-0 flex-col items-center">
-            <view class="timeline-dot mt-1 h-6 w-6 rounded-full" style="background-color: #64b5f6; box-shadow: 0 4rpx 12rpx rgb(100 181 246 / 40%);" />
-            <view v-if="index !== dataList.length - 1" class="timeline-line mt-1 w-0.5 flex-1 bg-[#e0e0e0]" />
+          <view class="timeline-left w-[96rpx] flex shrink-0 flex-col items-center">
+            <view class="timeline-dot mt-2 h-4 w-4 rounded-full bg-secondary shadow-[0_0_0_8rpx_rgba(215,249,76,0.3)]" />
+            <view v-if="index !== dataList.length - 1" class="timeline-line mt-2 w-[2rpx] flex-1 bg-black/5" />
           </view>
-          <view class="timeline-content flex-1 pb-12 pl-6">
-            <view class="time mb-6 flex items-center font-bold">
-              <text class="time-text text-[30rpx]">{{ item.year }}年</text>
-              <text v-if="tab.activeIndex === 0" class="time-text text-[30rpx]">{{ item.month }}月</text>
-              <text class="time-count ml-3 text-[22rpx] text-[#999] font-normal">（共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}）</text>
+          <view class="timeline-content min-w-0 flex-1 pb-10 pl-5">
+            <view class="time mb-5 flex items-center gap-2">
+              <text class="text-[32rpx] text-gray-900 font-bold">{{ item.year }}年</text>
+              <text v-if="activeTabIndex === 0" class="text-[32rpx] text-gray-900 font-bold">{{ item.month }}月</text>
+              <text class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
             </view>
 
             <view v-if="item.posts.length !== 0">
               <view
                 v-for="post in item.posts"
                 :key="post.metadata.name"
-                class="post mb-6 flex rounded-xl bg-white p-6 shadow-sm"
-                :class="[globalAppSettings.layout.cardType]"
+                class="post uh-global-card-glass mb-4 flex rounded-2xl p-4"
+                :class="calcCardLayout.card"
                 @click="handleToArticleDetail(post)"
               >
-                <image class="post-thumbnail h-[170rpx] w-[200rpx] shrink-0 rounded-lg" :src="checkThumbnailUrl(post.spec.cover)" mode="aspectFill" lazy-load />
-                <view class="post-info w-0 flex-1 pl-5">
-                  <view class="post-info-title text-overflow text-[28rpx] text-[#303133] font-bold">
+                <image class="post-thumbnail shrink-0 rounded-lg" :class="calcCardLayout.thumb" :src="checkThumbnailUrl(post.spec.cover)" mode="aspectFill" lazy-load />
+                <view class="post-info min-w-0" :class="calcCardLayout.info">
+                  <view class="post-info-title overflow-hidden text-ellipsis whitespace-nowrap text-[28rpx] text-gray-900 font-bold">
                     {{ post.spec.title }}
                   </view>
-                  <view class="post-info-summary line-clamp-2 mt-3 text-[24rpx] text-[#909399]">
+                  <view class="post-info-summary line-clamp-2 mt-2 text-[24rpx] text-gray-400">
                     {{ post.status?.excerpt }}
                   </view>
-                  <view class="post-info-time mt-3 text-[24rpx] text-[#909399]">
+                  <view class="post-info-time mt-2 text-[24rpx] text-gray-400">
                     发布时间：{{ formatTime(post.spec.publishTime) }}
                   </view>
                 </view>
               </view>
             </view>
-            <view v-else class="post-empty py-6 text-[26rpx] text-[#909399]">
+            <view v-else class="post-empty py-6 text-[26rpx] text-gray-400">
               该日期下暂无归档文章！
             </view>
           </view>
         </view>
       </view>
 
-      <view class="load-text pb-6 text-center text-[24rpx] text-[#999]">
+      <view class="load-text pb-6 text-center text-[24rpx] text-gray-400">
         {{ loadMoreText }}
       </view>
-      <view class="to-top-btn fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
-        <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+      <view class="to-top-btn uh-global-card-glass fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full" @click="handleToTopPage()">
+        <wd-icon name="arrow-up" size="20px" color="#6b7280" />
       </view>
     </block>
   </view>
 </template>
-
-<style scoped lang="scss">
-.app-page {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-
-.timeline {
-  .post {
-    &.tb_image_text,
-    &.tb_text_image {
-      flex-direction: column;
-
-      .post-thumbnail {
-        width: 100%;
-        height: 220rpx;
-      }
-
-      .post-info {
-        width: 100%;
-        padding-left: 0;
-      }
-    }
-
-    &.lr_text_image {
-      .post-thumbnail {
-        order: 2;
-      }
-
-      .post-info {
-        order: 1;
-        padding-left: 0;
-        padding-right: 24rpx;
-      }
-    }
-
-    &.only_text {
-      .post-thumbnail {
-        display: none;
-      }
-
-      .post-info {
-        padding: 6rpx;
-      }
-    }
-  }
-}
-</style>

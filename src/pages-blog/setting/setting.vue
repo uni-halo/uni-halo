@@ -3,6 +3,7 @@
  * 偏好设置页(两层:站点默认 L0 + 本地差异 L1-L,设计见 .docs/config-system-v2-redesign §3-4)
  * - 每项可「跟随站点默认」(差异为空)或覆盖为具体值;改动即写本地差异(uh_pref_local_v1)即时生效;
  * - 底部「重置为站点默认」= 清空全部本地差异,回退站长在插件后台配置的默认(未配置则为内置默认)。
+ * - 风格:对齐全站设计语言(bg-page + uh-global-card-glass + uh-section-title)
  */
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
@@ -204,92 +205,107 @@ function handleResetAll() {
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen pb-[180rpx]" style="background-color: #fafafd;">
+  <view class="app-page box-border min-h-screen bg-page pb-[200rpx]">
     <!-- 说明 -->
-    <view class="pref-tip mx-6 mt-6 rounded-xl bg-white px-6 py-4 shadow-sm">
-      <text class="tip-text text-[22rpx] leading-[1.6] text-[#909399]">
+    <view class="pref-tip uh-global-card-glass mx-4 mt-4 flex items-start gap-2 rounded-xl px-4 py-3">
+      <wd-icon name="info" size="28rpx" color="#a8a294" class="mt-0.5 shrink-0" />
+      <text class="tip-text flex-1 text-2xs text-gray-400 leading-[1.6]">
         你的偏好仅保存在本机。未自定义的项自动跟随站长在插件后台配置的「站点默认」；点击底部「重置为站点默认」可清空全部本地偏好。
       </text>
     </view>
 
     <!-- 布局设置 -->
-    <view class="setting-sheet mx-6 mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-      <view class="sheet-title border-b-2 border-[#f5f5f5] px-6 py-1.5">
-        <text class="title-text text-[30rpx] text-[#303133] font-bold">布局</text>
-        <text class="title-desc ml-3 text-[22rpx] text-[#999]">应用以及文章列表布局设置</text>
-      </view>
-      <view class="sheet-content">
-        <view
-          v-for="def in layoutPrefs"
-          :key="def.key"
-          class="pick-row flex items-center justify-between border-b-2 border-[#f5f5f5] px-8 py-7"
-          @click="handleOpenEnum(def)"
-        >
-          <view class="row-left flex flex-col">
-            <text class="row-label text-[28rpx] text-[#333]">{{ def.label }}</text>
-            <text v-if="isFollowing(def)" class="row-sub mt-1 text-[20rpx] text-[#b2b6bd]">跟随站点默认</text>
-            <text v-else class="row-sub mt-1 text-[20rpx] text-[#03a9f4]">已自定义</text>
+    <uh-section-title class="mx-4 mb-3 mt-6 text-[30rpx]">
+      布局
+      <template #right>
+        <text class="text-2xs text-gray-400">应用以及文章列表布局设置</text>
+      </template>
+    </uh-section-title>
+    <view class="setting-sheet uh-global-card-glass mx-4 overflow-hidden rounded-2xl">
+      <view
+        v-for="(def, index) in layoutPrefs"
+        :key="def.key"
+        class="pick-row flex items-center justify-between px-4 py-4"
+        :class="index < layoutPrefs.length - 1 ? 'border-b border-black/5' : ''"
+        @click="handleOpenEnum(def)"
+      >
+        <view class="row-left flex flex-col gap-1">
+          <text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+          <view class="flex items-center gap-2">
+            <text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+            <view v-else class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
+              已自定义
+            </view>
           </view>
-          <view class="row-value flex items-center gap-2">
-            <text class="value-text text-[26rpx] text-[#999]">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
-            <wd-icon name="arrow-right" size="12px" color="#999" />
-          </view>
+        </view>
+        <view class="row-value flex items-center gap-2">
+          <text class="value-text text-[26rpx] text-gray-400">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
+          <wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
         </view>
       </view>
     </view>
 
     <!-- 功能设置 -->
-    <view class="setting-sheet mx-6 mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-      <view class="sheet-title border-b-2 border-[#f5f5f5] px-6 py-1.5">
-        <text class="title-text text-[30rpx] text-[#303133] font-bold">功能</text>
-        <text class="title-desc ml-3 text-[22rpx] text-[#999]">一些常用的功能性设置</text>
-      </view>
-      <view class="sheet-content">
-        <template v-for="def in featurePrefs" :key="def.key">
-          <!-- 布尔开关 -->
-          <view v-if="def.kind === 'bool'" class="switch-row flex items-center justify-between border-b-2 border-[#f5f5f5] px-8 py-5">
-            <view class="row-left flex flex-col">
-              <text class="row-label text-[28rpx] text-[#333]">{{ def.label }}</text>
-              <view class="mt-1 flex items-center gap-2">
-                <text v-if="isFollowing(def)" class="row-sub text-[20rpx] text-[#b2b6bd]">跟随站点默认</text>
-                <text v-else class="row-sub text-[20rpx] text-[#03a9f4]">已自定义</text>
-                <text
-                  v-if="!isFollowing(def)"
-                  class="revert-text text-[20rpx] text-[#909399] underline"
-                  @click.stop="handleRevert(def.path)"
-                >跟随默认</text>
-              </view>
-            </view>
-            <wd-switch :model-value="!!valueOf(def.path)" @change="handleSwitchChange(def, $event)" />
-          </view>
-          <!-- 枚举选择(指示器位置) -->
-          <view v-else class="pick-row flex items-center justify-between px-8 py-5" @click="handleOpenEnum(def)">
-            <view class="row-left flex flex-col">
-              <text class="row-label text-[28rpx] text-[#333]">{{ def.label }}</text>
-              <view class="mt-1 flex items-center gap-2">
-                <text v-if="isFollowing(def)" class="row-sub text-[20rpx] text-[#b2b6bd]">跟随站点默认</text>
-                <text v-else class="row-sub text-[20rpx] text-[#03a9f4]">已自定义</text>
-                <text
-                  v-if="!isFollowing(def)"
-                  class="revert-text text-[20rpx] text-[#909399] underline"
-                  @click.stop="handleRevert(def.path)"
-                >跟随默认</text>
-              </view>
-            </view>
-            <view class="row-value flex items-center gap-2">
-              <text class="value-text text-[26rpx] text-[#999]">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
-              <wd-icon name="arrow-right" size="12px" color="#999" />
+    <uh-section-title class="mx-4 mb-3 mt-6 text-[30rpx]">
+      功能
+      <template #right>
+        <text class="text-2xs text-gray-400">一些常用的功能性设置</text>
+      </template>
+    </uh-section-title>
+    <view class="setting-sheet uh-global-card-glass mx-4 overflow-hidden rounded-2xl">
+      <template v-for="(def, index) in featurePrefs" :key="def.key">
+        <!-- 布尔开关 -->
+        <view
+          v-if="def.kind === 'bool'"
+          class="switch-row flex items-center justify-between px-4 py-4"
+          :class="index < featurePrefs.length - 1 ? 'border-b border-black/5' : ''"
+        >
+          <view class="row-left flex flex-col gap-1">
+            <text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+            <view class="flex items-center gap-2">
+              <text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+              <template v-else>
+                <view class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
+                  已自定义
+                </view>
+                <text class="revert-text text-2xs text-gray-400 underline" @click.stop="handleRevert(def.path)">恢复默认</text>
+              </template>
             </view>
           </view>
-        </template>
-      </view>
+          <wd-switch :model-value="!!valueOf(def.path)" @change="handleSwitchChange(def, $event)" />
+        </view>
+        <!-- 枚举选择(指示器位置) -->
+        <view
+          v-else
+          class="pick-row flex items-center justify-between px-4 py-4"
+          :class="index < featurePrefs.length - 1 ? 'border-b border-black/5' : ''"
+          @click="handleOpenEnum(def)"
+        >
+          <view class="row-left flex flex-col gap-1">
+            <text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+            <view class="flex items-center gap-2">
+              <text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+              <template v-else>
+                <view class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
+                  已自定义
+                </view>
+                <text class="revert-text text-2xs text-gray-400 underline" @click.stop="handleRevert(def.path)">恢复默认</text>
+              </template>
+            </view>
+          </view>
+          <view class="row-value flex items-center gap-2">
+            <text class="value-text text-[26rpx] text-gray-400">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
+            <wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+          </view>
+        </view>
+      </template>
     </view>
 
-    <!-- 操作区域 -->
-    <view class="btn-bar fixed bottom-0 left-0 box-border w-screen bg-white p-6 shadow-sm">
-      <wd-button type="danger" size="medium" block @click="handleResetAll">
-        重置为站点默认
-      </wd-button>
+    <!-- 底部操作栏(玻璃悬浮 + 底部安全区适配) -->
+    <view class="btn-bar uh-global-card-glass fixed bottom-0 left-0 box-border w-screen px-4 pt-3 pb-safe">
+      <view class="reset-btn h-[84rpx] w-full flex items-center justify-center rounded-full bg-gray-900 active:opacity-80" @click="handleResetAll">
+        <text class="text-[28rpx] text-white font-bold">重置为站点默认</text>
+      </view>
     </view>
 
     <!-- 枚举选择底部弹层 -->
@@ -301,22 +317,22 @@ function handleResetAll() {
       @close="handleCloseEnum"
     >
       <view v-if="enumSheet.def" class="enum-sheet box-border w-full pb-[env(safe-area-inset-bottom)]">
-        <view class="enum-title border-b border-[#f5f5f5] py-6 text-center text-[30rpx] font-bold text-[#303133]">
+        <view class="enum-title py-6 text-center text-[30rpx] text-gray-900 font-bold">
           {{ enumSheet.def.label }}
         </view>
         <view
-          class="enum-item flex items-center justify-between px-8 py-6"
-          :class="isFollowing(enumSheet.def) ? 'text-[#03a9f4]' : 'text-[#333]'"
+          class="enum-item flex items-center justify-between px-6 py-5"
+          :class="isFollowing(enumSheet.def) ? 'bg-secondary text-[#4d7c0f]' : 'text-gray-900'"
           @click="handleChooseEnum(null)"
         >
           <text class="text-[28rpx]">跟随站点默认</text>
-          <wd-icon v-if="isFollowing(enumSheet.def)" name="check" size="16px" color="#03a9f4" />
+          <wd-icon v-if="isFollowing(enumSheet.def)" name="check" size="16px" color="#4d7c0f" />
         </view>
         <view
           v-for="opt in enumSheet.def.options"
           :key="opt.value"
-          class="enum-item flex items-center justify-between border-t border-[#f5f5f5] px-8 py-6"
-          :class="valueOf(enumSheet.def.path) === opt.value && !isFollowing(enumSheet.def) ? 'text-[#03a9f4]' : 'text-[#333]'"
+          class="enum-item flex items-center justify-between border-t border-[#f0ece2] px-6 py-5"
+          :class="valueOf(enumSheet.def.path) === opt.value && !isFollowing(enumSheet.def) ? 'bg-secondary text-[#4d7c0f]' : 'text-gray-900'"
           @click="handleChooseEnum(opt.value)"
         >
           <text class="text-[28rpx]">{{ opt.label }}</text>
@@ -324,18 +340,10 @@ function handleResetAll() {
             v-if="valueOf(enumSheet.def.path) === opt.value && !isFollowing(enumSheet.def)"
             name="check"
             size="16px"
-            color="#03a9f4"
+            color="#4d7c0f"
           />
         </view>
       </view>
     </wd-popup>
   </view>
 </template>
-
-<style scoped>
-.btn-bar {
-  :deep(wd-button) {
-    flex: 1;
-  }
-}
-</style>

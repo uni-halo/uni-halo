@@ -2,8 +2,7 @@
 /**
  * 瞬间详情页(源自旧项目 pagesA/moment-detail,新建复刻)
  * 展示瞬间内容(mp-html) + 图片/音频/视频附件
- * 设计:日记页(大字日期刊头 + 宽松留白),与列表页的信息流形成两种性格
- * 试点:useDataLoading 状态机接管加载四态
+ * 试点:useDataLoading 状态机接管加载四态 + 壁纸光斑玻璃卡设计
  */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
@@ -21,7 +20,7 @@ definePage({
   style: {
     navigationBarTitleText: '瞬间详情',
     enablePullDownRefresh: true,
-    // 下拉/回弹露出的窗口底色对齐页面底色
+    // 下拉/回弹露出的窗口底色对齐页面底色,壁纸光斑由页面内提供
     backgroundColor: '#f6f3ee',
   },
 })
@@ -110,17 +109,10 @@ const calcTagColors = computed(() => {
   return tags.map(() => (calcUseTagRandomColor.value ? randomTagColor() : '#4d7c0f'))
 })
 
-/** 刊头大字日期(如 09月03日) */
-const calcMastheadDate = computed(() => {
-  const time = moment.value?.spec.releaseTime
-  return time ? formatTimeUtil({ d: time, f: 'MM月dd日' }) : ''
-})
-
-/** 刊头辅助信息(如 2026年 · 星期四) */
-const calcMastheadMeta = computed(() => {
-  const time = moment.value?.spec.releaseTime
-  return time ? formatTimeUtil({ d: time, f: 'yyyy年 · 星期w' }) : ''
-})
+function formatTime(time?: string): string {
+  // 与旧项目一致:yyyy年MM月dd日 星期w
+  return time ? formatTimeUtil({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
+}
 
 /* ---------------- 视频互斥 ---------------- */
 function createVideoContexts(videos: { id?: string }[]) {
@@ -199,10 +191,19 @@ onShareTimeline(() => ({
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen bg-page px-4 pb-8 pt-4">
+  <view class="app-page relative box-border min-h-screen w-screen bg-page pb-8">
+    <!-- 壁纸(柔和光斑为卡片毛玻璃取色,固定不随滚动) -->
+    <view class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <view class="absolute h-[420rpx] w-[420rpx] rounded-full bg-[rgba(103,164,242,0.16)] -left-[120rpx] -top-[60rpx]" />
+      <view class="absolute top-[240rpx] h-[360rpx] w-[360rpx] rounded-full bg-[rgba(244,143,177,0.15)] -right-[130rpx]" />
+      <view class="absolute top-[760rpx] h-[400rpx] w-[400rpx] rounded-full bg-[rgba(179,157,219,0.14)] -left-[150rpx]" />
+      <view class="absolute top-[1220rpx] h-[380rpx] w-[380rpx] rounded-full bg-[rgba(185,228,36,0.15)] -right-[120rpx]" />
+    </view>
+
     <!-- 状态区(加载中/失败可重试/空) -->
     <uh-data-loading
       v-if="status !== 'success'"
+      class="relative z-1"
       :loading-status="status"
       min-height="60vh"
       error-text="瞬间内容加载失败"
@@ -210,34 +211,41 @@ onShareTimeline(() => ({
       @refresh="loadMoment"
     />
 
-    <!-- 瞬间内页(日记式:大字日期刊头 + 阅读正文 + 媒体 + 互动脚注) -->
-    <view v-else-if="moment" class="moment-card uh-shadow-xs overflow-hidden rounded-[28rpx] bg-white">
-      <!-- 刊头:大字日期 -->
-      <view v-if="moment.spec.releaseTime" class="px-7 pt-7">
-        <view class="text-[56rpx] text-gray-900 font-bold leading-tight">
-          {{ calcMastheadDate }}
-        </view>
-        <view class="mt-1 text-[24rpx] text-gray-400">
-          {{ calcMastheadMeta }}
-        </view>
-        <view class="mt-4 h-[8rpx] w-[96rpx] rounded-full bg-secondary" />
-      </view>
-
-      <!-- 作者 -->
-      <view class="flex items-center px-7 pt-6">
-        <image class="h-[80rpx] w-[80rpx] shrink-0 rounded-full" :src="moment.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
-        <view class="ml-3 flex flex-col">
-          <view class="text-[30rpx] text-[#5c7c0f] font-bold">
+    <!-- 瞬间内容(悬浮玻璃卡) -->
+    <view v-else-if="moment" class="moment-card uh-global-card-glass relative z-1 mx-4 mt-5 flex flex-col rounded-[32rpx] p-5">
+      <!-- 用户区 -->
+      <view class="user flex items-center gap-3">
+        <image class="h-[96rpx] w-[96rpx] shrink-0 border-4 border-white/90 rounded-full shadow-lg" :src="moment.owner?.avatar || bloggerInfo.avatar" mode="aspectFill" />
+        <view class="nickname min-w-0 flex flex-1 flex-col">
+          <view class="nickname-text text-[32rpx] text-gray-900 font-bold">
             {{ moment.owner?.displayName || bloggerInfo.nickname }}
           </view>
-          <view class="mt-0.5 text-[22rpx] text-gray-400">
-            记录了这美好的一刻
+          <view class="release-time mt-1 text-[24rpx] text-gray-400">
+            {{ formatTime(moment.spec.releaseTime) }}
+          </view>
+        </view>
+        <!-- 互动数据(点赞/评论) -->
+        <view v-if="moment.stats && ((moment.stats.totalComment ?? 0) > 0 || (moment.stats.upvote ?? 0) > 0)" class="stats flex shrink-0 items-center gap-2">
+          <view class="flex items-center gap-1 rounded-full bg-black/5 px-2.5 py-1 text-[22rpx] text-gray-500">
+            <wd-icon name="heart" size="12px" color="#f08585" />
+            <text>{{ moment.stats.upvote || 0 }}</text>
+          </view>
+          <view class="flex items-center gap-1 rounded-full bg-black/5 px-2.5 py-1 text-[22rpx] text-gray-500">
+            <wd-icon name="message" size="12px" color="#7f8ea3" />
+            <text>{{ moment.stats.totalComment || 0 }}</text>
           </view>
         </view>
       </view>
 
-      <!-- 正文 -->
-      <view class="content px-7 pt-5">
+      <!-- 标签 -->
+      <view v-if="moment.spec.tags && moment.spec.tags.length !== 0" class="tags mt-4 flex flex-wrap gap-2">
+        <view v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex" class="rounded-full bg-black/5 px-3 py-1 text-[22rpx] font-bold" :style="{ color: calcTagColors[tagIndex] }">
+          # {{ tag }}
+        </view>
+      </view>
+
+      <!-- 内容 -->
+      <view class="content mt-4">
         <mp-html
           class="evan-markdown"
           lazy-load
@@ -256,7 +264,11 @@ onShareTimeline(() => ({
       </view>
 
       <!-- 图片附件 -->
-      <view v-if="moment.images && moment.images.length !== 0" class="px-7 pt-6">
+      <view v-if="moment.images && moment.images.length !== 0" class="mt-5">
+        <view class="mb-3 flex items-center gap-2">
+          <view class="h-[24rpx] w-[6rpx] rounded-full bg-secondary" />
+          <text class="text-[26rpx] text-gray-500 font-bold">图片附件</text>
+        </view>
         <view class="images flex flex-wrap items-start">
           <view
             v-for="(image, mediumIndex) in moment.images"
@@ -275,7 +287,11 @@ onShareTimeline(() => ({
       </view>
 
       <!-- 音频附件 -->
-      <view v-if="moment.audios && moment.audios.length !== 0" class="px-7 pt-6">
+      <view v-if="moment.audios && moment.audios.length !== 0" class="mt-5">
+        <view class="mb-3 flex items-center gap-2">
+          <view class="h-[24rpx] w-[6rpx] rounded-full bg-secondary" />
+          <text class="text-[26rpx] text-gray-500 font-bold">音频附件</text>
+        </view>
         <view class="audio-list flex flex-col gap-3">
           <uh-audio-player
             v-for="audio in moment.audios"
@@ -289,7 +305,11 @@ onShareTimeline(() => ({
       </view>
 
       <!-- 视频附件 -->
-      <view v-if="moment.videos && moment.videos.length !== 0" class="px-7 pt-6">
+      <view v-if="moment.videos && moment.videos.length !== 0" class="mt-5">
+        <view class="mb-3 flex items-center gap-2">
+          <view class="h-[24rpx] w-[6rpx] rounded-full bg-secondary" />
+          <text class="text-[26rpx] text-gray-500 font-bold">视频附件</text>
+        </view>
         <view class="video-list w-full flex flex-col gap-3">
           <video
             v-for="(video, index) in moment.videos"
@@ -307,30 +327,10 @@ onShareTimeline(() => ({
           />
         </view>
       </view>
-
-      <!-- 标签 -->
-      <view v-if="moment.spec.tags && moment.spec.tags.length !== 0" class="tags flex flex-wrap gap-2 px-7 pt-6">
-        <view v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex" class="rounded-full bg-black/5 px-3 py-1 text-[22rpx] font-bold" :style="{ color: calcTagColors[tagIndex] }">
-          # {{ tag }}
-        </view>
-      </view>
-
-      <!-- 互动脚注(点赞/评论) -->
-      <view v-if="moment.stats" class="mx-7 mt-6 flex items-center justify-end gap-5 border-t border-black/5 py-4 text-[24rpx] text-gray-400">
-        <view class="flex items-center gap-1">
-          <wd-icon name="heart" size="13px" color="#f08585" />
-          <text>{{ moment.stats.upvote || 0 }}</text>
-        </view>
-        <view class="flex items-center gap-1">
-          <wd-icon name="message" size="13px" color="#9aa3b2" />
-          <text>{{ moment.stats.totalComment || 0 }}</text>
-        </view>
-      </view>
-      <view v-else class="h-7" />
     </view>
 
     <!-- 回顶 -->
-    <view class="to-top-btn uh-shadow-xs fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white" @click="handleToTopPage()">
+    <view class="to-top-btn uh-global-card-glass fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full" @click="handleToTopPage()">
       <wd-icon name="arrow-up" size="20px" color="#6b7280" />
     </view>
   </view>

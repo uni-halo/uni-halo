@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { computed, ref, watch } from 'vue'
+	import { computed, ref, watch, onMounted } from 'vue'
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -71,7 +71,7 @@
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
-				articleList.value = filtered.map((item)=>{
+				articleList.value = filtered.map((item) => {
 					item.owner.avatar = checkAvatarUrl(item.owner.avatar);
 					return item;
 				})
@@ -100,7 +100,7 @@
 			result.value.hasNext = res.data.hasNext
 			articleList.value = (isLoadMore.value
 				? articleList.value.concat(res.data.items)
-				: res.data.items).map((item)=>{
+				: res.data.items).map((item) => {
 					item.owner.avatar = checkAvatarUrl(item.owner.avatar);
 					return item;
 				})
@@ -147,13 +147,6 @@
 
 
 	/* ---------------- 生命周期 ---------------- */
-	onLoad(() => {
-		uni.setNavigationBarTitle({ title: t('page.home.title') })
-	})
-
-	watch(haloConfigs, () => {
-		// 配置就绪后重新拉取(导航显隐依赖配置)
-	}, { deep: true })
 
 	onPullDownRefresh(() => {
 		isLoadMore.value = false
@@ -177,7 +170,9 @@
 	})
 
 	// 首次加载
-	handleQuery()
+	onMounted(() => {
+		handleQuery()
+	})
 </script>
 
 <template>
@@ -191,6 +186,9 @@
 			<!-- 轮播-->
 			<uh-home-banner />
 
+			<!-- 公告 -->
+			<uh-home-notify />
+			
 			<!-- 快捷导航 -->
 			<uh-home-quick-nav />
 
@@ -207,7 +205,7 @@
 					</view>
 				</template>
 			</uh-section-title>
-			
+
 			<view v-if="articleList.length === 0" class="article-empty py-10">
 				<wd-empty description="博主还没有发表任何内容~" />
 			</view>
@@ -225,4 +223,5 @@
 			</block>
 		</block>
 	</view>
+	<uh-notify-dialog />
 </template>

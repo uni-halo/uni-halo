@@ -1,343 +1,329 @@
 <script lang="ts" setup>
-/**
+	/**
  * 关于页(源自旧项目 pages/tabbar/about/about.vue,新建复刻)
  * 功能:博主信息 + 站点统计 + 功能导航 + 版权
+ * 风格:对齐全站设计语言(bg-page + uh-global-card-glass + uh-section-title + 彩色图标块)
  */
-import { computed, ref, watch } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
-import { getBlogStatistics } from '@/api/halo'
-import { useAppConfigStore } from '@/store/appConfig'
-import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-import { checkHasAdminLogin } from '@/utils/auth'
-import { t } from '@/locale'
-import { usePluginAvailable } from '@/utils/plugin'
-import type { IBlogStats } from '@/api/types/halo'
+	import { computed, ref, watch } from 'vue'
+	import { onPullDownRefresh } from '@dcloudio/uni-app'
+	import { getBlogStatistics } from '@/api/halo'
+	import { useAppConfigStore } from '@/store/appConfig'
+	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+	import { checkHasAdminLogin } from '@/utils/auth'
+	import { t } from '@/locale'
+	import { usePluginAvailable } from '@/utils/plugin'
+	import type { IBlogStats } from '@/api/types/halo'
 
-definePage({
-  style: {
-    navigationBarTitleText: '关于',
-    enablePullDownRefresh: true,
-    navigationStyle: 'custom',
-  },
-})
+	definePage({
+		style: {
+			navigationBarTitleText: '关于',
+			enablePullDownRefresh: true,
+			navigationStyle: 'custom',
+		},
+	})
 
-const appConfigStore = useAppConfigStore()
-const haloConfigs = computed(() => appConfigStore.configs)
-const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
-const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
+	const appConfigStore = useAppConfigStore()
+	const haloConfigs = computed(() => appConfigStore.configs)
+	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+	const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
+	const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
 
-/* ---------------- 计算属性 ---------------- */
-const bloggerInfo = computed(() => {
-  const blogger = haloConfigs.value.authorConfig?.blogger as
-    | { nickname?: string, avatar?: string, description?: string }
-    | undefined
-  return {
-    nickname: blogger?.nickname || '',
-    avatar: checkAvatarUrl(blogger?.avatar),
-    description: blogger?.description || '',
-  }
-})
+	/* ---------------- 计算属性 ---------------- */
+	const bloggerInfo = computed(() => {
+		const blogger = haloConfigs.value.authorConfig?.blogger as
+			| { nickname ?: string, avatar ?: string, description ?: string }
+			| undefined
+		return {
+			nickname: blogger?.nickname || '',
+			avatar: checkAvatarUrl(blogger?.avatar),
+			description: blogger?.description || '',
+		}
+	})
 
-const pageConfig = computed(() => haloConfigs.value.pageConfig?.aboutConfig as
-  | { bgImageUrl?: string, waveImageUrl?: string }
-  | undefined)
+	const pageConfig = computed(() => haloConfigs.value.pageConfig?.aboutConfig as
+		| { bgImageUrl ?: string, waveImageUrl ?: string }
+		| undefined)
 
-const calcProfileStyle = computed(() => ({
-  backgroundImage: `url(${checkImageUrl(pageConfig.value?.bgImageUrl)})`,
-}))
+	const calcProfileStyle = computed(() => ({
+		backgroundImage: `url(${checkImageUrl(pageConfig.value?.bgImageUrl)})`,
+	}))
 
-const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
+	const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
 
-const basicConfig = computed(() => haloConfigs.value.basicConfig as
-  | {
-    copyrightConfig?: { enabled?: boolean, content?: string }
-    disclaimers?: { enabled?: boolean }
-    showAboutSystem?: boolean
-  }
-  | undefined)
+	const basicConfig = computed(() => haloConfigs.value.basicConfig as
+		| {
+			copyrightConfig ?: { enabled ?: boolean, content ?: string }
+			disclaimers ?: { enabled ?: boolean }
+			showAboutSystem ?: boolean
+		}
+		| undefined)
 
-const copyrightConfig = computed(() => basicConfig.value?.copyrightConfig)
+	const copyrightConfig = computed(() => basicConfig.value?.copyrightConfig)
 
-const loveEnabled = computed(() => !!(haloConfigs.value.loveConfig as { loveEnabled?: boolean } | undefined)?.loveEnabled)
-const socialEnabled = computed(() => !!(haloConfigs.value.authorConfig?.social as { enabled?: boolean } | undefined)?.enabled)
+	const loveEnabled = computed(() => !!(haloConfigs.value.loveConfig as { loveEnabled ?: boolean } | undefined)?.loveEnabled)
+	const socialEnabled = computed(() => !!(haloConfigs.value.authorConfig?.social as { enabled ?: boolean } | undefined)?.enabled)
 
-/* ---------------- 状态 ---------------- */
-const statisticsShowMore = ref(false)
-const statistics = ref<IBlogStats>({ post: 0, comment: 0, category: 0, visit: 0, upvote: 0 })
-const navList = ref<{
-  key: string
-  title: string
-  icon: string
-  iconColor: string
-  rightText: string
-  path: string | null
-  isAdmin?: boolean
-  openType?: string
-  show: boolean
-}[]>([])
+	/* ---------------- 状态 ---------------- */
+	const statisticsShowMore = ref(false)
+	const statistics = ref<IBlogStats>({ post: 0, comment: 0, category: 0, visit: 0, upvote: 0 })
 
-/* ---------------- 功能导航 ---------------- */
-async function handleGetNavList() {
-  let isWx = false
-  // #ifdef MP-WEIXIN
-  isWx = true
-  // #endif
+	/** 主行统计(常驻展示) */
+	const allStats = computed(() => [
+		{ key: 'post', label: '内容', value: statistics.value.post },
+		{ key: 'visit', label: '访客', value: statistics.value.visit },
+		{ key: 'category', label: '分类', value: statistics.value.category },
+		{ key: 'comment', label: '评论', value: statistics.value.comment },
+		{ key: 'upvote', label: '点赞', value: statistics.value.upvote },
+	])
 
-  const dataVisualAvailable = await usePluginAvailable('plugin-data-statistics')
+	interface INavItem {
+		key : string
+		title : string
+		icon : string
+		/** 图标块背景色(与首页快捷导航同色板,同一功能同色) */
+		bgColor : string
+		rightText : string
+		path : string | null
+		isAdmin ?: boolean
+		openType ?: string
+		show : boolean
+		/** 分组:blog=博客功能 more=更多信息 */
+		group : 'blog' | 'more'
+	}
 
-  navList.value = [
-    {
-      key: 'data-visual',
-      title: '数据看板',
-      icon: 'chart',
-      iconColor: '#2196f3',
-      rightText: '站点数据可视化',
-      path: '/pages-blog/data-visual/data-visual',
-      show: dataVisualAvailable,
-    },
-    {
-      key: 'archives',
-      title: calcAuditModeEnabled.value ? '内容归档' : '文章归档',
-      icon: 'folder',
-      iconColor: '#f44336',
-      rightText: calcAuditModeEnabled.value ? '全部已归档内容' : '全部已归档文章',
-      path: '/pages-blog/archives/archives',
-      show: true,
-    },
-    {
-      key: 'love',
-      title: '恋爱日记',
-      icon: 'heart',
-      iconColor: '#f44336',
-      rightText: '博主的恋爱日记',
-      path: '/pages-blog/love/love',
-      show: loveEnabled.value,
-    },
-    {
-      key: 'vote',
-      title: '投票中心',
-      icon: 'box',
-      iconColor: '#f44336',
-      rightText: '查看和进行投票',
-      path: '/pages-blog/votes/votes',
-      show: !calcAuditModeEnabled.value && calcVotePluginEnabled.value,
-    },
-    {
-      key: 'friend-links',
-      title: '友情链接',
-      icon: 'link',
-      iconColor: '#2196f3',
-      rightText: '看看博主朋友们吧',
-      path: '/pages-blog/friend-links/friend-links',
-      show: calcLinksPluginEnabled.value,
-    },
-    {
-      key: 'disclaimers',
-      title: '免责声明',
-      icon: 'map',
-      iconColor: '#f44336',
-      rightText: '博客内容免责声明',
-      path: '/pages-blog/disclaimers/disclaimers',
-      show: !!basicConfig.value?.disclaimers?.enabled,
-    },
-    {
-      key: 'contact-blogger',
-      title: '联系博主',
-      icon: 'message',
-      iconColor: '#ff9800',
-      rightText: '博主常用联系方式',
-      path: '/pages-blog/contact/contact',
-      show: socialEnabled.value,
-    },
-    {
-      key: 'about',
-      title: '关于项目',
-      icon: 'info',
-      iconColor: '#2196f3',
-      rightText: '小莫唐尼开源项目',
-      path: '/pages-blog/about/about',
-      show: !!basicConfig.value?.showAboutSystem,
-    },
-    {
-      key: 'setting',
-      title: '偏好设置',
-      icon: 'settings',
-      iconColor: '#03a9f4',
-      rightText: '首页布局、卡片样式等本地偏好',
-      path: '/pages-blog/setting/setting',
-      show: true,
-    },
-  ]
-}
+	const navList = ref<INavItem[]>([])
 
-/* ---------------- 数据加载 ---------------- */
-async function handleGetData() {
-  try {
-    const res = await getBlogStatistics()
-    statistics.value = res.data
-  }
-  catch (err) {
-    console.error('获取统计失败', err)
-    uni.showToast({ icon: 'none', title: t('common.loadFailedRetry') })
-  }
-  finally {
-    uni.stopPullDownRefresh()
-  }
-}
+	/** 分组渲染(过滤后空组整组隐藏) */
+	const calcNavGroups = computed(() => {
+		const visible = navList.value.filter(n => n.show)
+		const groupDefs : { key : 'blog' | 'more', title : string }[] = [
+			{ key: 'blog', title: '博客功能' },
+			{ key: 'more', title: '其他功能' },
+		]
+		return groupDefs
+			.map(def => ({ ...def, items: visible.filter(n => n.group === def.key) }))
+			.filter(group => group.items.length > 0)
+	})
 
-/* ---------------- 交互 ---------------- */
-function handleOnNav(data: { path: string | null, isAdmin?: boolean }) {
-  const { path, isAdmin } = data
-  if (!path)
-    return
+	/* ---------------- 功能导航 ---------------- */
+	async function handleGetNavList() {
+		const dataVisualAvailable = await usePluginAvailable('plugin-data-statistics')
 
-  // 拦截后台管理页面(需超管登录)
-  if (isAdmin && !checkHasAdminLogin()) {
-    uni.showModal({
-      title: '提示',
-      content: '未登录超管账号或登录状态已过期，是否立即登录？',
-      showCancel: true,
-      cancelText: '否',
-      cancelColor: '#999999',
-      confirmText: '是',
-      confirmColor: '#03a9f4',
-      success: (res) => {
-        if (res.confirm) {
-          uni.navigateTo({ url: '/pages/auth/login' })
-        }
-      },
-    })
-    return
-  }
+		navList.value = [
+			{
+				key: 'data-visual',
+				title: '数据看板',
+				icon: 'chart',
+				bgColor: 'rgba(102, 60, 201, 0.95)',
+				rightText: '站点数据可视化',
+				path: '/pages-blog/data-visual/data-visual',
+				show: dataVisualAvailable,
+				group: 'blog',
+			},
+			{
+				key: 'archives',
+				title: calcAuditModeEnabled.value ? '内容归档' : '文章归档',
+				icon: 'folder',
+				bgColor: 'rgba(3, 169, 244, 0.95)',
+				rightText: calcAuditModeEnabled.value ? '全部已归档内容' : '全部已归档文章',
+				path: '/pages-blog/archives/archives',
+				show: true,
+				group: 'blog',
+			},
+			{
+				key: 'love',
+				title: '恋爱日记',
+				icon: 'heart',
+				bgColor: 'rgba(255, 76, 103, 0.95)',
+				rightText: '博主的恋爱日记',
+				path: '/pages-blog/love/love',
+				show: loveEnabled.value,
+				// show: true,
+				group: 'blog',
+			},
+			{
+				key: 'vote',
+				title: '投票中心',
+				icon: 'box',
+				bgColor: 'rgba(0, 188, 212, 0.95)',
+				rightText: '查看和进行投票',
+				path: '/pages-blog/votes/votes',
+				show: !calcAuditModeEnabled.value && calcVotePluginEnabled.value,
+				// show: true,
+				group: 'blog',
+			},
+			{
+				key: 'friend-links',
+				title: '友情链接',
+				icon: 'link',
+				bgColor: 'rgba(0, 150, 136, 0.95)',
+				rightText: '看看博主朋友们吧',
+				path: '/pages-blog/friend-links/friend-links',
+				show: calcLinksPluginEnabled.value,
+				// show: true,
+				group: 'blog',
+			},
+			{
+				key: 'disclaimers',
+				title: '免责声明',
+				icon: 'map',
+				bgColor: 'rgba(121, 85, 72, 0.95)',
+				rightText: '博客内容免责声明',
+				path: '/pages-blog/disclaimers/disclaimers',
+				show: !!basicConfig.value?.disclaimers?.enabled,
+				// show: true,
+				group: 'more',
+			},
+			{
+				key: 'contact-blogger',
+				title: '联系博主',
+				icon: 'message',
+				bgColor: 'rgba(255, 152, 0, 0.95)',
+				rightText: '博主常用联系方式',
+				path: '/pages-blog/contact/contact',
+				show: socialEnabled.value,
+				// show: true,
+				group: 'more',
+			},
+			{
+				key: 'about',
+				title: '关于项目',
+				icon: 'info',
+				bgColor: 'rgba(96, 125, 139, 0.95)',
+				rightText: '小莫唐尼开源项目',
+				path: '/pages-blog/about/about',
+				show: !!basicConfig.value?.showAboutSystem,
+				// show: true,
+				group: 'more',
+			},
+			{
+				key: 'setting',
+				title: '偏好设置',
+				icon: 'settings',
+				bgColor: 'rgba(121, 134, 203, 0.95)',
+				rightText: '首页布局、卡片样式等本地偏好',
+				path: '/pages-blog/setting/setting',
+				show: true,
+				group: 'more',
+			},
+		]
+	}
 
-  uni.navigateTo({ url: path })
-}
+	/* ---------------- 数据加载 ---------------- */
+	async function handleGetData() {
+		try {
+			const res = await getBlogStatistics()
+			statistics.value = res.data
+		}
+		catch (err) {
+			console.error('获取统计失败', err)
+			uni.showToast({ icon: 'none', title: t('common.loadFailedRetry') })
+		}
+		finally {
+			uni.stopPullDownRefresh()
+		}
+	}
 
-/* ---------------- 生命周期 ---------------- */
-watch(haloConfigs, () => {
-  handleGetNavList()
-}, { deep: true, immediate: true })
+	/* ---------------- 交互 ---------------- */
+	function handleOnNav(data : { path : string | null, isAdmin ?: boolean }) {
+		const { path, isAdmin } = data
+		if (!path)
+			return
 
-handleGetData()
+		// 拦截后台管理页面(需超管登录)
+		if (isAdmin && !checkHasAdminLogin()) {
+			uni.showModal({
+				title: '提示',
+				content: '未登录超管账号或登录状态已过期，是否立即登录？',
+				showCancel: true,
+				cancelText: '否',
+				cancelColor: '#999999',
+				confirmText: '是',
+				confirmColor: '#03a9f4',
+				success: (res) => {
+					if (res.confirm) {
+						uni.navigateTo({ url: '/pages/auth/login' })
+					}
+				},
+			})
+			return
+		}
 
-onPullDownRefresh(() => {
-  handleGetData()
-})
+		uni.navigateTo({ url: path })
+	}
+
+	/* ---------------- 生命周期 ---------------- */
+	watch(haloConfigs, () => {
+		handleGetNavList()
+	}, { deep: true, immediate: true })
+
+	handleGetData()
+
+	onPullDownRefresh(() => {
+		handleGetData()
+	})
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen pb-6">
-    <!-- 博主信息 -->
-    <view class="blogger-info relative h-[600rpx] w-full" :style="[calcProfileStyle]">
-      <image class="avatar absolute left-1/2 top-[200rpx] z-2 h-[130rpx] w-[130rpx] border-6 border-white rounded-full -translate-x-1/2" :src="bloggerInfo.avatar" mode="aspectFill" />
-      <view class="profile absolute left-0 top-[340rpx] z-6 w-full text-center text-white">
-        <view class="author text-[34rpx] font-bold">
-          {{ bloggerInfo.nickname }}
-        </view>
-        <view class="desc mt-4 px-12 text-[26rpx] opacity-90">
-          {{ bloggerInfo.description || '这个博主很懒，竟然没写介绍~' }}
-        </view>
-      </view>
-      <image v-if="calcWaveUrl" :src="calcWaveUrl" mode="scaleToFill" class="gif-wave absolute bottom-0 left-0 z-99 h-[100rpx] w-full" style="mix-blend-mode: screen;" />
-    </view>
+	<view class="box-border bg-page min-h-screen w-screen pb-8">
+		<!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
+		<view class="blogger-info relative h-76 w-full bg-cover bg-no-repeat" :style="[calcProfileStyle]">
+			<!-- 背景遮罩 -->
+			<view class="absolute left-0 top-0 z-0 h-full w-full backdrop-blur-[2rpx] bg-black/30" />
+			<view class="relative z-6 h-full flex flex-col items-center justify-center pb-[140rpx] pt-safe">
+				<image class="uh-global-card-glass h-20 w-20 rounded-full" :src="bloggerInfo.avatar"
+					mode="aspectFill" />
+				<view class="mt-4 text-lg text-white font-bold text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]">
+					{{ bloggerInfo.nickname }}
+				</view>
+				<view
+					class="desc mt-2 px-10 text-center text-[26rpx] text-white/90 leading-relaxed text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]">
+					{{ bloggerInfo.description || '这个博主很懒，竟然没写介绍~' }}
+				</view>
+			</view>
+			<image v-if="calcWaveUrl" :src="calcWaveUrl" mode="scaleToFill"
+				class="gif-wave absolute bottom-0 left-0 z-99 h-[100rpx] w-full" style="mix-blend-mode: screen;" />
+		</view>
 
-    <!-- 统计信息 -->
-    <view class="statistics-wrap overflow-hidden rounded-b-3xl bg-white shadow-sm">
-      <view class="statistics flex pb-3 pt-3">
-        <view class="item flex-1 py-6 text-center">
-          <view class="number text-[40rpx] font-bold" style="color: #ff9800;">
-            {{ statistics.post }}
-          </view>
-          <view class="mt-1 text-center text-[24rpx] text-[#999]">
-            内容数量
-          </view>
-        </view>
-        <view class="item flex-1 py-6 text-center">
-          <view class="number text-[40rpx] font-bold" style="color: #4caf50;">
-            {{ statistics.visit }}
-          </view>
-          <view class="mt-1 text-[24rpx] text-[#999]">
-            访客数量
-          </view>
-        </view>
-        <view class="item flex-1 py-6 text-center">
-          <view class="number text-[40rpx] font-bold" style="color: #2196f3;">
-            {{ statistics.category }}
-          </view>
-          <view class="mt-1 text-center text-[24rpx] text-[#999]">
-            分类总数
-          </view>
-        </view>
-      </view>
-      <view v-if="statisticsShowMore" class="statistics flex border-t-2 border-[#fafafa] pb-3 pt-3">
-        <view class="item flex-1 py-6 text-center">
-          <view class="number text-[40rpx] font-bold" style="color: #ff9800;">
-            {{ statistics.comment }}
-          </view>
-          <view class="mt-1 text-center text-[24rpx] text-[#999]">
-            评论数量
-          </view>
-        </view>
-        <view class="item flex-1 py-6 text-center">
-          <view class="number text-[40rpx] font-bold" style="color: #2196f3;">
-            {{ statistics.upvote }}
-          </view>
-          <view class="mt-1 text-[24rpx] text-[#999]">
-            点赞数量
-          </view>
-        </view>
-      </view>
-      <view class="show-more-btn pb-4 text-center text-[24rpx] text-[#999]" @click="statisticsShowMore = !statisticsShowMore">
-        {{ statisticsShowMore ? '收起' : '展开' }}
-      </view>
-    </view>
+		<!-- 站点统计(上浮玻璃卡,与头部衔接) -->
+		<view class="uh-global-card-glass border relative flex z-100 mx-4 rounded-2xl -mt-12">
+			<view v-for="item  in allStats" :key="item.key" class="flex-1 py-6 text-center">
+				<view class="text-lg text-gray-900 font-bold">
+					{{ item.value }}
+				</view>
+				<view class="mt-1 text-xs text-gray-500">
+					{{ item.label }}
+				</view>
+			</view>
+		</view>
 
-    <!-- 功能导航 -->
-    <view class="nav-wrap mx-6 mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-      <template v-for="nav in navList.filter(n => n.show)" :key="nav.key">
-        <view class="nav-item flex items-center justify-between border-b-2 border-[#f5f5f5] px-3 py-7" @click="handleOnNav(nav)">
-          <view class="nav-left flex items-center gap-4">
-            <wd-icon :name="nav.icon" size="18px" :color="nav.iconColor" />
-            <text class="nav-title text-[28rpx] text-[#303133]">{{ nav.title }}</text>
-          </view>
-          <view class="nav-right flex items-center gap-2">
-            <text class="nav-right-text text-[24rpx] text-[#c0c4cc]">{{ nav.rightText }}</text>
-            <wd-icon name="arrow-right" size="12px" color="#c0c4cc" />
-          </view>
-        </view>
-      </template>
-    </view>
+		<!-- 功能导航(分组玻璃卡) -->
+		<template v-for="group in calcNavGroups" :key="group.key">
+			<uh-section-title class="mx-4 mb-3 mt-8">
+				{{ group.title }}
+			</uh-section-title>
+			<view class="nav-wrap uh-global-card-glass mx-4 overflow-hidden rounded-2xl">
+				<view v-for="(nav, index) in group.items" :key="nav.key"
+					class="nav-item flex items-center justify-between px-4"
+					:class="index < group.items.length - 1 ? 'border-b border-b-solid border-black/5' : ''" @click="handleOnNav(nav)">
+					<view class="nav-left flex items-center gap-3 py-3">
+						<view class="h-9 w-9 flex items-center justify-center rounded-xl"
+							:style="{ backgroundColor: nav.bgColor }">
+							<wd-icon :name="nav.icon" size="20px" color="#ffffff" />
+						</view>
+						<text class="nav-title text-sm text-gray-900 font-bold">{{ nav.title }}</text>
+					</view>
+					<view class="nav-right flex items-center gap-2">
+						<text class="nav-right-text text-xs text-gray-400">{{ nav.rightText }}</text>
+						<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+					</view>
+				</view>
+			</view>
+		</template>
 
-    <!-- 版权 -->
-    <view v-if="copyrightConfig?.enabled" class="copyright mt-10 px-6 text-center text-[22rpx] text-[#c0c4c7]">
-      <view>{{ copyrightConfig.content }}</view>
-    </view>
-  </view>
+		<!-- 版权 -->
+		<view v-if="copyrightConfig?.enabled" class="mt-6 px-6 text-center text-xs text-gray-400">
+			<view>{{ copyrightConfig.content }}</view>
+		</view>
+	</view>
 </template>
-
-<style scoped lang="scss">
-.app-page {
-  .blogger-info {
-    background-size: cover;
-    background-repeat: no-repeat;
-
-    &::before {
-      content: '';
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      background-color: rgb(0 0 0 / 30%);
-      z-index: 0;
-    }
-  }
-
-  .nav-wrap {
-    .nav-item {
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-  }
-}
-</style>

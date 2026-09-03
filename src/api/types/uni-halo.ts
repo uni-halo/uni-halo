@@ -124,6 +124,29 @@ export interface IAppConfig {
     articleCardType?: string
     avatarRadius?: boolean
   }
+  /**
+   * 维护模式(additive,2026-09-04 插件端 GeneralConfig.spec.maintenance 经 getConfigs
+   * 下发;仅 scheduled/active 时存在,键缺失=未维护或已到点自动结束)
+   */
+  maintenance?: IPublicMaintenance
+  [key: string]: unknown
+}
+
+/**
+ * getConfigs 顶层 maintenance 键(插件端输出;status 判定权威在服务端,客户端仅据此
+ *  展示维护页与倒计时,设计见插件 .docs/maintenance-config-design.md)
+ */
+export interface IPublicMaintenance {
+  /** scheduled 维护预告(倒计时至 startTime)/ active 维护中(倒计时至 endTime) */
+  status: 'scheduled' | 'active'
+  /** 维护页标题 */
+  title?: string
+  /** 维护说明(富文本 HTML,mp-html 渲染) */
+  description?: string
+  /** 维护开始时间(RFC3339 UTC 字符串) */
+  startTime?: string
+  /** 预计恢复时间(RFC3339 UTC 字符串) */
+  endTime?: string
   [key: string]: unknown
 }
 
@@ -266,6 +289,54 @@ export interface ICommentWidgetConfig {
 
 /** 评论验证码 */
 export interface ICommentCaptcha {
+  [key: string]: unknown
+}
+
+/* ---------- 通知公告(plugin-uni-halo notice,2026-09-03 客户端接入) ---------- */
+
+/** 公告公开列表项(脱敏,不含 content;内嵌类型信息 typeDisplayName/typeColor) */
+export interface INoticeListVo {
+  name?: string
+  title?: string
+  summary?: string
+  cover?: string
+  link?: string
+  typeName?: string
+  typeDisplayName?: string
+  typeColor?: string
+  priority?: number
+  /** 发布时间(spec.publishTime,ISO-8601) */
+  publishTime?: string
+}
+
+/** 公告公开分页列表响应(ListResult 形态) */
+export interface INoticeListRes {
+  page?: number
+  size?: number
+  total?: number
+  items: INoticeListVo[]
+}
+
+/** 公告详情 spec(完整 Notice + 内嵌 typeDisplayName/typeColor) */
+export interface INoticeDetailSpec {
+  title?: string
+  /** 富文本 HTML(仅详情返回) */
+  content?: string
+  summary?: string
+  cover?: string
+  link?: string
+  typeName?: string
+  status?: string
+  priority?: number
+  publishTime?: string
+  typeDisplayName?: string
+  typeColor?: string
+}
+
+/** 公告详情(完整 extension 对象: metadata + spec) */
+export interface INoticeDetail {
+  metadata?: { name?: string, [key: string]: unknown }
+  spec?: INoticeDetailSpec
   [key: string]: unknown
 }
 

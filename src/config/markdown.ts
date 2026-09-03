@@ -100,7 +100,7 @@ export const markdownConfig = {
     video: 'width: 100%',
   },
   /** 容器样式 */
-  containStyle: 'font-family: Optima-Regular, Optima, PingFangSC-light, PingFangTC-light, "PingFang SC", Cambria, Cochin, Georgia, Times, "Times New Roman", serif;padding:12px;font-size: 14px;color: #606266;word-spacing: 0.8px;letter-spacing: 0.8px;border-radius: 0px;background-color:transparent;',
+  containStyle: 'font-family: Optima-Regular, Optima, PingFangSC-light, PingFangTC-light, "PingFang SC", Cambria, Cochin, Georgia, Times, "Times New Roman", serif;padding:0;font-size: 14px;color: #606266;word-spacing: 0.8px;letter-spacing: 0.8px;border-radius: 0px;background-color:transparent;',
   /** 加载图 / 空图(来自应用配置 imagesConfig) */
   loadingGif: checkImageUrl(undefined),
   emptyGif: checkImageUrl(undefined),

@@ -117,7 +117,7 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col" style="background-color: #fafafd;">
+  <view class="app-page min-h-screen w-screen flex flex-col bg-page">
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"
@@ -129,7 +129,7 @@ onReachBottom(() => {
         <wd-skeleton :row="3" :animated="true" />
       </view>
 
-      <view v-else class="content flex flex-col gap-6 p-3">
+      <view v-else class="content flex flex-col gap-4 p-3">
         <view v-if="dataList.length === 0" class="min-h-[60vh] flex items-center justify-center content-empty">
           <wd-empty description="博主还未发布投票~" />
         </view>
@@ -140,20 +140,14 @@ onReachBottom(() => {
             :vote-name="vote.name"
             @on-vote-success="handleOnVoteSuccess"
           />
-          <view class="load-text py-5 text-center text-[24rpx] text-[#999]">
+          <view class="load-text py-5 text-center text-[24rpx] text-gray-400">
             {{ loadMoreText }}
           </view>
-          <view class="to-top-btn fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
-            <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+          <view class="to-top-btn uh-global-card-glass fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full" @click="handleToTopPage()">
+            <wd-icon name="arrow-up" size="20px" color="#6b7280" />
           </view>
         </block>
       </view>
     </template>
   </view>
 </template>
-
-<style scoped>
-.app-page {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-</style>

@@ -26,9 +26,9 @@ const homePagePath = '/pages/tabbar/home/home'
 const articleDetailPath = '/pages-blog/article-detail/article-detail'
 
 // 本地开发快速跳转页面,发布请置为 false
-const DEV_MODE = false
+const DEV_MODE = true
 const DEV_TO_TYPE = 'page' as 'page' | 'tabbar'
-const DEV_TO_PATH = `${articleDetailPath}?name=01a057b2-3200-74af-8afe-28a054092e82`
+const DEV_TO_PATH = `/pages-blog/test/test`
 
 /* ---------------- 状态 ---------------- */
 const appConfigStore = useAppConfigStore()
@@ -57,11 +57,6 @@ async function getPostIdByQRCode(key: string): Promise<string | null> {
   return null
 }
 
-/** 获取审核模式数据(公开接口 /audit-data,enabled 联动设置页开关) */
-async function handleAuditMode() {
-  await appConfigStore.fetchAuditData()
-}
-
 onLoad(async (options) => {
   // 本地开发,快速跳转页面,发布请设置 DEV_MODE = false
   if (DEV_MODE && DEV_TO_PATH) {
@@ -78,10 +73,11 @@ onLoad(async (options) => {
   if (!(await handleCheckPluginAvailable()))
     return
 
-  // 获取配置
+  // 获取配置(统一 bootstrap: getConfigs + audit-data + love-config 并行一次;
+  // TTL 内直接返回缓存。设计见 .docs/static-config-unified-fetch-design.md)
   try {
-    const res = await appConfigStore.fetchConfigs()
-    if (!res) {
+    const { ok } = await appConfigStore.bootstrap()
+    if (!ok) {
       uni.switchTab({ url: homePagePath })
       return
     }
@@ -98,10 +94,8 @@ onLoad(async (options) => {
       }
     }
 
-    // 审计模式数据(公开接口 /audit-data)
-    await handleAuditMode()
-
-    // 两层偏好合并:应用站点默认(L0)到 setting store(内部合并本地差异,含旧数据迁移)
+    // 两层偏好合并:应用站点默认(L0)到 setting store(内部合并本地差异,含旧数据迁移);
+    // 审核模式数据已随 bootstrap 拉取(auditData/auditModeEnabled 即可用)
     settingStore.applySiteDefaults(collectSiteDefaults(appConfigStore.configs))
 
     // 启动页已下线(v2.2 ⑤):直接进首页

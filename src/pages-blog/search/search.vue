@@ -4,7 +4,7 @@
  * 功能:关键词搜索文章/瞬间,结果列表展示
  */
 import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh, onShow } from '@dcloudio/uni-app'
+import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 import { getPostListByKeyword } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePluginAvailable } from '@/utils/plugin'
@@ -43,23 +43,15 @@ const dataList = ref<{
   updateTimestamp?: string
 }[]>([])
 
-/* ---------------- 动画(对应旧版 mixin calcAniWait/fnResetSetAniWaitIndex) ---------------- */
-const aniWaitIndex = ref(0)
-
-function resetAniWaitIndex() {
-  aniWaitIndex.value = 0
-}
-
-/** 计算列表项动画等待(每 10 项重置一轮,每项递增 50ms) */
-function calcAniWait(index: number): number {
-  if ((index + 1) % 10 === 0) {
-    aniWaitIndex.value = 1
-  }
-  else {
-    aniWaitIndex.value += 1
-  }
-  return aniWaitIndex.value * 50
-}
+/* ---------------- 动画(对应旧版 mixin calcAniWait) ---------------- */
+/** 预计算列表项入场延迟(每 10 项重置一轮,每项递增 50ms);必须在渲染外算好,渲染中修改响应式状态会导致递归更新 */
+const calcAniDelays = computed(() => {
+  let wait = 0
+  return dataList.value.map((_, index) => {
+    wait = (index + 1) % 10 === 0 ? 1 : wait + 1
+    return wait * 50
+  })
+})
 
 /* ---------------- 搜索 ---------------- */
 async function handleGetData() {
@@ -83,7 +75,6 @@ async function handleGetData() {
 }
 
 function handleOnSearch() {
-  resetAniWaitIndex()
   if (!queryParams.value.keyword) {
     dataList.value = []
     loading.value = 'success'
@@ -131,7 +122,6 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
-  resetAniWaitIndex()
   uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
   if (!uniHaloPluginAvailable.value) {
     uni.stopPullDownRefresh()
@@ -146,10 +136,6 @@ onLoad(async () => {
   }
 })
 
-onShow(() => {
-  resetAniWaitIndex()
-})
-
 onPullDownRefresh(() => {
   if (!uniHaloPluginAvailable.value) {
     uni.stopPullDownRefresh()
@@ -160,7 +146,7 @@ onPullDownRefresh(() => {
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col pb-6" style="background-color: #fafafd;">
+  <view class="app-page min-h-screen w-screen flex flex-col bg-page pb-6">
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"
@@ -168,36 +154,36 @@ onPullDownRefresh(() => {
       @on-refresh="handleOnSearch"
     />
     <template v-else>
-      <!-- 顶部搜索框 -->
-      <view class="search-bar fixed inset-x-0 top-0 z-6 bg-white px-3 py-2 shadow-sm">
-        <view class="search-input h-[68rpx] flex items-center gap-3 rounded-[34rpx] bg-[#f5f5f5] px-6">
-          <wd-icon name="search" size="16px" color="#999" />
+      <!-- 顶部搜索框(玻璃吸顶,呼应首页搜索条) -->
+      <view class="search-bar uh-global-card-glass sticky top-0 z-10 px-3 py-2">
+        <view class="search-input h-[72rpx] flex items-center gap-3 rounded-full bg-[#f6f3ee] px-5">
+          <wd-icon name="search" size="16px" color="#a8a294" />
           <input
             v-model="queryParams.keyword"
-            class="search-field flex-1 text-[26rpx]"
-            placeholder="搜索内容..."
+            class="search-field flex-1 text-[26rpx] text-gray-900"
+            placeholder="哈喽，想看些什么呢~"
+            placeholder-class="text-gray-400"
             confirm-type="search"
             @input="handleOnInput"
             @confirm="handleOnSearch"
           >
           <view v-if="queryParams.keyword" class="clear-btn flex items-center" @click="queryParams.keyword = ''; handleOnSearch()">
-            <wd-icon name="close" size="14px" color="#999" />
+            <wd-icon name="close" size="14px" color="#a8a294" />
           </view>
         </view>
       </view>
-      <view class="h-[100rpx] w-screen" />
 
       <!-- 骨架屏 -->
       <view v-if="loading === 'loading'" class="loading-wrap p-3">
         <wd-skeleton :row="4" :animated="true" />
       </view>
-      <view v-else-if="loading === 'error'" class="h-[60vh] flex items-center justify-center content-empty">
+      <view v-else-if="loading === 'error'" class="min-h-[60vh] flex items-center justify-center content-empty">
         <wd-empty description="搜索异常" />
       </view>
 
       <!-- 内容区域 -->
-      <view v-else class="content pt-6">
-        <view v-if="dataList.length === 0" class="h-[60vh] flex items-center justify-center content-empty">
+      <view v-else class="content pt-4">
+        <view v-if="dataList.length === 0" class="min-h-[60vh] flex items-center justify-center content-empty">
           <wd-empty v-if="!queryParams.keyword" description="请输入关键词搜索" />
           <wd-empty v-else :description="`未搜到 ${queryParams.keyword} 相关内容`" />
         </view>
@@ -206,15 +192,18 @@ onPullDownRefresh(() => {
           <view
             v-for="(item, index) in dataList"
             :key="index"
-            class="article-card fade-up mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm"
-            :style="{ animationDelay: `${calcAniWait(index)}ms` }"
+            class="article-card fade-up uh-global-card-glass mx-4 mb-4 flex flex-col overflow-hidden rounded-2xl p-4"
+            :style="{ animationDelay: `${calcAniDelays[index]}ms` }"
             @click="handleToDetail(item)"
           >
             <view class="card-head mb-3 flex items-center">
-              <view class="type-tag mr-3 shrink-0 rounded-md px-1.5 py-0.5 text-[22rpx] text-white" :class="isArticle(item) ? 'bg-[#2196f3]' : 'bg-[#4caf50]'">
+              <view
+                class="type-tag mr-3 shrink-0 rounded-md px-1.5 py-0.5 text-[20rpx] leading-none"
+                :class="isArticle(item) ? 'bg-secondary text-[#4d7c0f]' : 'bg-[#e8e3d8] text-gray-600'"
+              >
                 {{ isArticle(item) ? '文章' : '瞬间' }}
               </view>
-              <text class="card-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[28rpx] text-[#333] font-bold">{{ item.title }}</text>
+              <text class="card-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[28rpx] text-gray-900 font-bold">{{ item.title }}</text>
             </view>
             <mp-html
               class="evan-markdown"
@@ -232,12 +221,12 @@ onPullDownRefresh(() => {
               copy-by-long-press
             />
             <view class="card-foot mt-3 flex items-center">
-              <text class="text-[24rpx] text-[#888]">{{ item.updateTimestamp ? `最近更新：${formatTimeUtil({ d: item.updateTimestamp, f: 'yyyy年MM月dd日 HH点mm分ss秒' })}` : '' }}</text>
+              <text class="text-[24rpx] text-gray-400">{{ item.updateTimestamp ? `最近更新：${formatTimeUtil({ d: item.updateTimestamp, f: 'yyyy年MM月dd日 HH点mm分ss秒' })}` : '' }}</text>
             </view>
           </view>
 
-          <view class="to-top-btn fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
-            <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+          <view class="to-top-btn uh-global-card-glass fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full" @click="handleToTopPage()">
+            <wd-icon name="arrow-up" size="20px" color="#6b7280" />
           </view>
         </block>
       </view>
@@ -246,11 +235,7 @@ onPullDownRefresh(() => {
 </template>
 
 <style scoped lang="scss">
-.app-page {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-
-/* 列表项入场动画(对应旧版 tm-translate fadeUp) */
+/* 列表项入场动画(对应旧版 tm-translate fadeUp):@keyframes 无法用原子类表达,保留 scoped 样式 */
 .fade-up {
   animation: fade-up 0.4s ease-out both;
 
