@@ -31,13 +31,29 @@ const settingStore = useSettingStore()
 const haloPluginConfigs = computed(() => appConfigStore.configs.pluginConfig)
 const globalAppSettings = computed(() => settingStore.settings)
 
-/* ---------------- 依赖插件 ---------------- */
-/** 站点 tab:plugin-links */
-const sitePluginId = NeedPluginIds.PluginLinks
-const { available: sitePluginAvailable, check: checkSitePluginAvailable } = usePluginAvailable(sitePluginId)
+/* ---------------- 依赖插件(参考 gallery 对象传参模式) ---------------- */
+/** 站点 tab:PluginLinks */
+const { pluginId: sitePluginId, checking: siteChecking, tips: siteTips, available: sitePluginAvailable, check: checkSitePluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginLinks,
+  tips: '检测到当前插件没有安装或者启用，无法使用友情链接功能哦，请联系管理员',
+})
 /** 小程序 tab:plugin-uni-halo */
-const miniPluginId = NeedPluginIds.PluginUniHalo
-const { available: miniPluginAvailable, check: checkMiniPluginAvailable } = usePluginAvailable(miniPluginId)
+const { pluginId: miniPluginId, checking: miniChecking, tips: miniTips, available: miniPluginAvailable, check: checkMiniPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginUniHalo,
+  tips: '检测到当前插件没有安装或者启用，无法使用小程序链接功能哦，请联系管理员',
+})
+
+/** 重新检测站点插件:可用则拉取友链数据(供 uh-plugin-unavailable 刷新按钮) */
+async function handleSitePluginRefresh() {
+  if (await checkSitePluginAvailable())
+    handleGetLinkGroupData()
+}
+
+/** 重新检测小程序插件:可用则拉取小程序链接数据(供 uh-plugin-unavailable 刷新按钮) */
+async function handleMiniPluginRefresh() {
+  if (await checkMiniPluginAvailable())
+    handleGetMiniProgramLinks()
+}
 
 /* ---------------- tabs ---------------- */
 const activeTabIndex = ref(0)
@@ -357,8 +373,9 @@ onReachBottom(() => {
       <uh-plugin-unavailable
         v-if="!sitePluginAvailable"
         :plugin-id="sitePluginId"
-        error-text="检测到当前插件没有安装或者启用，无法使用友情链接功能哦，请联系管理员"
-        @on-refresh="handleGetLinkGroupData"
+        :error-text="siteTips"
+        :checking="siteChecking"
+        @on-refresh="handleSitePluginRefresh"
       />
       <template v-else>
         <!-- 加载/错误/空占位(状态机) -->
@@ -455,8 +472,9 @@ onReachBottom(() => {
       <uh-plugin-unavailable
         v-if="!miniPluginAvailable"
         :plugin-id="miniPluginId"
-        error-text="检测到当前插件没有安装或者启用，无法使用小程序链接功能哦，请联系管理员"
-        @on-refresh="handleGetMiniProgramLinks"
+        :error-text="miniTips"
+        :checking="miniChecking"
+        @on-refresh="handleMiniPluginRefresh"
       />
       <template v-else>
         <!-- 加载/错误/空占位(状态机) -->

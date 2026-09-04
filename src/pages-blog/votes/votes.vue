@@ -7,6 +7,7 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getVoteList } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import { useAppConfigStore } from '@/store/appConfig'
 import type { IVoteItem } from '@/api/types/uni-halo'
 
@@ -21,9 +22,17 @@ definePage({
 const appConfigStore = useAppConfigStore()
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-/** 依赖插件(plugin-vote) */
-const uniHaloPluginId = 'plugin-vote'
-const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
+/** 依赖插件(plugin-vote,参考 gallery 对象传参模式) */
+const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginVote,
+  tips: '检测到当前插件没有安装或者启用，无法使用投票功能哦，请联系管理员',
+})
+
+/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
+async function handlePluginRefresh() {
+  if (await checkPluginAvailable())
+    handleGetData()
+}
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -128,9 +137,10 @@ onReachBottom(() => {
 
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
-      :plugin-id="uniHaloPluginId"
-      error-text="检测到当前插件没有安装或者启用，无法使用投票功能哦，请联系管理员"
-      @on-refresh="handleGetData"
+      :plugin-id="pluginId"
+      :error-text="tips"
+      :checking="checking"
+      @on-refresh="handlePluginRefresh"
     />
     <template v-else>
       <!-- 加载/错误/空占位(状态机) -->

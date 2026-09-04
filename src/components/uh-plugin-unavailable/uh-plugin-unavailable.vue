@@ -16,13 +16,7 @@
 
 	/** 插件信息(未在清单中时兜底) */
 	const pluginInfo = computed(() => {
-		const info = NeedPlugins.get(props.pluginId)
-		return info || {
-			id: props.pluginId,
-			name: props.name,
-			desc: '',
-			url: '',
-		}
+		return NeedPlugins.get(props.pluginId) ?? {pluginId:props.pluginId, name: '未找到插件' }
 	})
 
 	function handleRefresh() {
@@ -32,7 +26,7 @@
 </script>
 
 <template>
-	<view v-if="pluginInfo" class="mx-auto my-auto box-border flex flex-col items-center justify-center gap-6 text-sm">
+	<view v-if="pluginInfo" class="max-w-3/5 mx-auto my-auto box-border flex flex-col items-center justify-center gap-6 text-sm">
 
 		<wd-icon class-prefix="uhemoji-icon" name="-cry" size="160rpx"></wd-icon>
 

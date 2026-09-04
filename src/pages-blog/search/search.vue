@@ -8,8 +8,8 @@ import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 import { getPostListByKeyword } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import { markdownConfig } from '@/config/markdown'
-import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { debounce } from '@/utils/debounce'
 
 definePage({
@@ -23,9 +23,17 @@ definePage({
 const appConfigStore = useAppConfigStore()
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-/** 依赖插件(plugin-search-widget) */
-const uniHaloPluginId = 'plugin-search-widget'
-const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
+/** 依赖插件(plugin-search-widget,参考 gallery 对象传参模式) */
+const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginSearchWidget,
+  tips: '检测到当前插件没有安装或者启用，无法使用搜索功能哦，请联系管理员',
+})
+
+/** 重新检测插件:可用则重新搜索(供 uh-plugin-unavailable 刷新按钮) */
+async function handlePluginRefresh() {
+  if (await checkPluginAvailable())
+    handleOnSearch()
+}
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -160,9 +168,10 @@ onPullDownRefresh(() => {
 
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
-      :plugin-id="uniHaloPluginId"
-      error-text="检测到当前插件没有安装或者启用，无法使用搜索功能哦，请联系管理员"
-      @on-refresh="handleOnSearch"
+      :plugin-id="pluginId"
+      :error-text="tips"
+      :checking="checking"
+      @on-refresh="handlePluginRefresh"
     />
 	
     <template v-else>

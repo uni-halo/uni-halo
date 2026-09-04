@@ -15,15 +15,16 @@
 	type ViewState = 'loading' | 'normal' | 'error' | 'maintenance'
 	type FromReason = 'plugin' | 'maintenance'
 
-	const uniHaloPluginId = 'plugin-uni-halo'
 	/** 默认维护标题(拦截场景未配置维护信息时展示) */
 	const DEFAULT_MAINTENANCE_TITLE = '我们正在加油升级！'
 	/** 恢复检测轮询间隔(ms):插件激活/维护结束探测 */
 	const RECOVERY_POLL_INTERVAL = 30 * 1000
 
 	const store = useAppConfigStore()
-	/** 插件可用性(拦截恢复检测用) */
-	const { check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
+	/** 插件可用性(拦截恢复检测用,参考 gallery 对象传参模式) */
+	const { check: checkPluginAvailable } = usePluginAvailable({
+	 pluginId: 'plugin-uni-halo',
+	})
 
 	const viewState = ref<ViewState>('loading')
 	const maintenance = ref<IPublicMaintenance | null>(null)

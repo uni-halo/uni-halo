@@ -8,6 +8,7 @@
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { useFavoritesStore } from '@/store/favorites'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
@@ -46,9 +47,17 @@
 		return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 	})
 
-	/** 依赖插件(plugin-moments) */
-	const uniHaloPluginId = 'plugin-moments'
-	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
+	/** 依赖插件(plugin-moments,参考 gallery 对象传参模式) */
+	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+		pluginId: NeedPluginIds.PluginMoments,
+		tips: '检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员',
+	})
+
+	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
+	async function handlePluginRefresh() {
+		if (await checkPluginAvailable())
+			handleGetData()
+	}
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -279,8 +288,8 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page py-3">
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
-			error-text="检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员" @on-refresh="handleGetData" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+			:checking="checking" @on-refresh="handlePluginRefresh" />
 		<template v-else>
 			<!-- 加载失败(可重试) -->
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"

@@ -9,6 +9,7 @@
 	import { getBlogStatistics } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useFavoritesStore } from '@/store/favorites'
+	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { checkHasAdminLogin } from '@/utils/auth'
 	import { t } from '@/locale'
@@ -28,8 +29,10 @@
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
 	const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
-	/** 数据看板插件可用性(供导航项显隐判断) */
-	const { check: checkDataVisualPlugin } = usePluginAvailable('plugin-data-statistics')
+	/** 数据看板插件可用性(供导航项显隐判断,参考 gallery 对象传参模式) */
+	const { check: checkDataVisualPlugin } = usePluginAvailable({
+		pluginId: NeedPluginIds.PluginDataStatistics,
+	})
 
 	/* ---------------- 计算属性 ---------------- */
 	const bloggerInfo = computed(() => {

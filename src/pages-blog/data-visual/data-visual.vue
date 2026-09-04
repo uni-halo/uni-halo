@@ -3,6 +3,7 @@
 	import { onPullDownRefresh } from '@dcloudio/uni-app'
 	import { getChartData } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import type { IDataStatistics } from '@/api/uni-halo'
 
 	definePage({
@@ -13,9 +14,17 @@
 		},
 	})
 
-	/** 依赖插件(plugin-data-statistics) */
-	const uniHaloPluginId = 'plugin-data-statistics'
-	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
+	/** 依赖插件(plugin-data-statistics,参考 gallery 对象传参模式) */
+	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+		pluginId: NeedPluginIds.PluginDataStatistics,
+		tips: '阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员',
+	})
+
+	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
+	async function handlePluginRefresh() {
+		if (await checkPluginAvailable())
+			handleGetData()
+	}
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -163,8 +172,8 @@
 		<!-- 自定义导航 -->
 		<uh-navbar default-title="数据看板" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
-			error-text="阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员" @on-refresh="handleGetData" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+			:checking="checking" @on-refresh="handlePluginRefresh" />
 		<template v-else>
 			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" empty-text="暂无统计数据" @refresh="handleGetData" />
 
