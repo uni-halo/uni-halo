@@ -3,7 +3,6 @@
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
-	import { markdownConfig } from '@/config/markdown'
 	import { usePluginAvailable } from '@/utils/plugin'
 	import type { IPublicMaintenance } from '@/api/types/uni-halo'
 
@@ -34,6 +33,8 @@
 	const spinning = ref(false)
 	/** Toast 文案(空 = 隐藏) */
 	const toast = ref('')
+	/** 「维护详情」弹窗显隐 */
+	const showDetail = ref(false)
 	let timer : ReturnType<typeof setInterval> | null = null
 	let recoveryTimer : ReturnType<typeof setInterval> | null = null
 	let toastTimer : ReturnType<typeof setTimeout> | null = null
@@ -42,8 +43,10 @@
 	const isIntercepted = computed(() => !!fromReason.value)
 	const isScheduled = computed(() => maintenance.value?.status === 'scheduled')
 	const title = computed(() => maintenance.value?.title || DEFAULT_MAINTENANCE_TITLE)
-	/** 配置的富文本说明(未配置时展示设计稿默认文案) */
-	const description = computed(() => maintenance.value?.description || '')
+	/** 维护详情(富文本 HTML;小程序端「维护详情」弹窗内 mp-html 渲染) */
+	const detailHtml = computed(() => maintenance.value?.description || '')
+	/** 维护说明(纯文本;标题下方按行直接展示,留空展示设计稿默认文案) */
+	const noticeLines = computed(() => (maintenance.value?.notice || '').split('\n'))
 
 	/** 应用信息 logo(相对插件内置资源路径 → BASE_API 补全) */
 	const appLogo = computed(() => {
@@ -137,7 +140,8 @@
 	 * 拉取失败(服务器停机)保持维护页不打扰。
 	 */
 	async function silentCheck() {
-		if (refreshing) { return }
+		if (refreshing)
+			return
 		refreshing = true
 		try {
 			await store.bootstrap({ force: true })
@@ -189,14 +193,12 @@
 					startRecoveryCheck()
 			}
 			else if (isIntercepted.value) {
-				// 拦截场景无维护信息(插件未激活/未配置)→ 默认文案
 				maintenance.value = null
 				viewState.value = 'maintenance'
 				startRecoveryCheck()
 			}
 			else if (ok) {
-				// 拉取成功但无 maintenance 键:未维护(或已到点自动结束)→ 服务正常
-				viewState.value = 'normal'
+				goIndex()
 			}
 			else {
 				viewState.value = 'error'
@@ -251,7 +253,7 @@
 	onLoad((options) => {
 		const from = options?.from
 		fromReason.value = from === 'plugin' || from === 'maintenance' ? from : null
-		void load()
+		load()
 	})
 
 	onUnload(() => {
@@ -264,142 +266,153 @@
 </script>
 
 <template>
-	<view class="maintenance-page">
-		<!-- 加载中 -->
-		<view v-if="viewState === 'loading'" class="flex flex-col items-center justify-center py-48">
-			<text class="text-[26rpx] text-[#999]">
-				加载中...
-			</text>
+	<view class="relative min-h-screen flex flex-col justify-center bg-[#f5fae8]">
+		<!-- 背景 -->
+		<view class="absolute lef-0 top-0  w-full h-[46vh] from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b">
 		</view>
 
-		<!-- 服务正常(未维护,手动进入时) -->
-		<view v-else-if="viewState === 'normal'"
-			class="flex flex-col items-center justify-center px-10 py-48 text-center">
-			<text class="text-[64rpx]">
-				✅
-			</text>
-			<text class="mt-6 text-[28rpx] text-[#333]">
-				当前服务正常，无需维护
-			</text>
-			<text class="mt-2 text-[24rpx] text-[#999]">
-				如果仍然无法访问，请稍后重试或联系站长
-			</text>
-			<view class="mt-10">
-				<wd-button type="primary" round @click="goIndex">
-					返回首页
-				</wd-button>
-			</view>
-		</view>
+		<!-- 刷新 -->
+		<uh-data-loading v-if="viewState === 'loading'" />
 
 		<!-- 拉取失败(手动进入,通常为服务器停机中) -->
 		<view v-else-if="viewState === 'error'"
-			class="flex flex-col items-center justify-center px-10 py-48 text-center">
+			class="relative z-10 flex flex-col items-center justify-center px-10 py-48 text-center">
 			<text class="text-[64rpx]">
-				⚠️
+				<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="120rpx" />
 			</text>
-			<text class="mt-6 text-[28rpx] text-[#333]">
+			<text class="mt-6 text-md text-gray-900 font-bold">
 				服务暂时无法访问
 			</text>
-			<text class="mt-2 text-[24rpx] text-[#999]">
+			<text class="mt-3 text-xs text-gray-500">
 				站点可能正在维护中，请稍后重试
 			</text>
 			<view class="mt-10">
-				<wd-button type="primary" plain round @click="load(true)">
-					重新加载
-				</wd-button>
+				<uh-button custom-class="uh-global-card-glass border flex-1 py-2 !px-8 !rounded-full font-semibold"
+					@click="load(true)">刷新试试</uh-button>
 			</view>
 		</view>
 
-		<!-- 维护页(参考 .design/维护页面.html) -->
-		<view v-else class="app-container">
-			<!-- ===== Hero(无边界淡出) ===== -->
-			<view class="hero">
-				<view class="blob breathe hero-blob-1 b-white" />
-				<view class="blob b-acc hero-blob-2" />
-				<view class="blob hero-blob-3 b-white" />
+		<!-- 维护页-->
+		<view v-else class="relative z-10 w-full min-h-screen flex items-center justify-center flex-col ">
+			<view
+				class="w-full relative overflow-hidden px-[40rpx] pb-[64rpx] pt-[calc(var(--status-bar-height)+76rpx)] text-center">
+				<view
+					class="breathe pointer-events-none absolute left-[-60rpx] top-[104rpx] z-0 h-[260rpx] w-[260rpx] rounded-full bg-white/40 blur-[52rpx]" />
+				<view
+					class="pointer-events-none absolute right-[-48rpx] top-[40rpx] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[rgba(184,236,63,0.28)] blur-[52rpx]" />
+				<view
+					class="pointer-events-none absolute bottom-[-40rpx] right-[72rpx] z-0 h-[160rpx] w-[160rpx] rounded-full bg-white/40 blur-[52rpx]" />
 
-				<view class="medal">
-					<view class="medal-bg" />
-					<image v-if="appLogo" class="medal-img" :src="appLogo" mode="aspectFill" />
-					<wd-icon v-else class="medal-emoji" name="tool" size="52px" />
-					<view class="gear gear-1">
+				<view class="relative z-2 mx-auto mt-[44rpx] h-[236rpx] w-[236rpx]">
+					<view
+						class="bob flex items-center justify-center absolute inset-0 rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br shadow-[0_0_0_12rpx_#fff,0_28rpx_60rpx_rgba(98,124,44,0.22)]">
+						<image v-if="appLogo" class="h-full w-full rounded-full" :src="appLogo" mode="aspectFill" />
+						<wd-icon v-else class="flex items-center justify-center text-gray-900" name="tool"
+							size="120rpx" />
+					</view>
+					<view
+						class="gear-spin absolute right-[-28rpx] top-[-16rpx] h-[68rpx] w-[68rpx] flex items-center justify-center">
 						<wd-icon name="settings" size="24px" />
 					</view>
-					<view class="gear gear-2">
+					<view
+						class="gear-spin-reverse absolute bottom-[16rpx] left-[-32rpx] h-[48rpx] w-[48rpx] flex items-center justify-center">
 						<wd-icon name="settings" size="16px" />
 					</view>
-					<view class="sticker st-acc medal-st">
+					<view
+						class="absolute bottom-[-28rpx] left-1/2 inline-flex items-center whitespace-nowrap border-2 border-solid border-[#ebfabf] rounded-full bg-[#ebfabf] px-[24rpx] py-[12rpx] text-[22rpx] font-extrabold leading-none shadow-[0_10rpx_28rpx_rgba(90,110,45,0.18)] -translate-x-1/2 -rotate-5">
 						MAINTENANCE
 					</view>
 				</view>
 
-				<view class="hero-h1">
+				<view class="relative z-2 mt-[64rpx] text-[54rpx] font-black leading-[64rpx]">
 					{{ title }}
 				</view>
-				<view class="doodle" />
+				<view
+					class="relative z-2 mx-auto mt-[8rpx] h-[8rpx] w-[224rpx] rounded-full from-transparent via-[#a7e93b] to-transparent bg-gradient-to-r" />
 
-				<view class="hero-sub">
-					<mp-html v-if="description" :content="description" lazy-load :domain="markdownConfig.domain ?? ''"
-						scroll-table selectable :tag-style="markdownConfig.tagStyle"
-						:container-style="markdownConfig.containStyle" copy-by-long-press />
+				<view
+					class="relative z-2 mt-[20rpx] px-[16rpx] text-[25rpx] text-[rgba(23,24,26,0.55)] font-medium leading-[1.7]">
+					<template v-if="noticeLines.length > 0">
+						<text v-for="(line, index) in noticeLines" :key="index" class="block">{{ line }}</text>
+					</template>
 					<template v-else>
 						<text>为了给你带来更好的体验，站点正在维护升级中</text>
 						<text class="block">
-							别担心，你的数据都安然无恙 💚
+							别担心，我们很快就回来！
 						</text>
 					</template>
 				</view>
 			</view>
 
 			<!-- ===== 内容区 ===== -->
-			<view class="layer">
-				<view class="bridge bridge-1" />
-				<view class="bridge bridge-2" />
+			<view class="relative z-10 w-full">
+				<view
+					class="pointer-events-none absolute left-[64rpx] top-[-52rpx] z-0 h-[192rpx] w-[192rpx] rounded-full bg-[#ebfabf] opacity-90 blur-[44rpx]" />
+				<view
+					class="pointer-events-none absolute right-[-52rpx] top-[300rpx] z-0 h-[168rpx] w-[168rpx] rounded-full bg-[#ffd53d] opacity-20 blur-[44rpx]" />
 
-				<view class="content">
+				<view
+					class="relative box-border w-full z-1 flex flex-col items-center gap-[28rpx] px-6 pb-[68rpx] pt-[32rpx]">
 					<!-- 恢复倒计时 -->
-					<view v-if="countdownParts" class="eta-card">
-						<view class="eta-wm">
+					<view v-if="countdownParts"
+						class="relative w-full uh-global-card-glass overflow-hidden border rounded-2xl  p-[32rpx] text-center shadow-[0_4rpx_24rpx_rgba(98,124,44,0.08)]">
+						<view
+							class="absolute bottom-[-48rpx] right-[-12rpx] text-[176rpx] text-[#a7e93b] font-black leading-none opacity-10">
 							GO!
 						</view>
-						<view class="eta-k">
-							<wd-icon name="clock-circle" size="14px" />
+						<view
+							class="inline-flex items-center justify-center text-xs text-gray-500 font-extrabold tracking-[4rpx]">
 							{{ countdownPrefix }}
 						</view>
-						<view class="eta-clock">
-							<view class="eta-cell hot">
-								<text class="cell-num">{{ countdownParts.days }}</text>
-								<text class="cell-unit">天 DAY</text>
+						<view class="mt-4 w-full flex justify-center gap-4">
+							<view class="flex-1 rounded-[24rpx] bg-[#f4fbe0] px-[8rpx] pb-[16rpx] pt-[18rpx]">
+								<text
+									class="block text-[42rpx] text-[#17181a] font-black leading-none tabular-nums">{{ countdownParts.days }}</text>
+								<text
+									class="mt-[10rpx] block text-[18rpx] text-[#8a9099] font-extrabold tracking-[1px]">天
+									DAY</text>
 							</view>
-							<view class="eta-cell">
-								<text class="cell-num">{{ countdownParts.hours }}</text>
-								<text class="cell-unit">时 HR</text>
+							<view class="flex-1 rounded-[24rpx] bg-[#f4fbe0] px-[8rpx] pb-[16rpx] pt-[18rpx]">
+								<text
+									class="block text-[42rpx] text-primary font-black leading-none tabular-nums">{{ countdownParts.hours }}</text>
+								<text
+									class="mt-[10rpx] block text-[18rpx] text-[#8a9099] font-extrabold tracking-[1px]">时
+									HR</text>
 							</view>
-							<view class="eta-cell">
-								<text class="cell-num">{{ countdownParts.minutes }}</text>
-								<text class="cell-unit">分 MIN</text>
+							<view class="flex-1 rounded-[24rpx] bg-[#f4fbe0] px-[8rpx] pb-[16rpx] pt-[18rpx]">
+								<text
+									class="block text-[42rpx] text-[#17181a] font-black leading-none tabular-nums">{{ countdownParts.minutes }}</text>
+								<text
+									class="mt-[10rpx] block text-[18rpx] text-[#8a9099] font-extrabold tracking-[1px]">分
+									MIN</text>
 							</view>
-							<view class="eta-cell">
-								<text class="cell-num">{{ countdownParts.seconds }}</text>
-								<text class="cell-unit">秒 SEC</text>
+							<view class="flex-1 rounded-[24rpx] bg-[#f4fbe0] px-[8rpx] pb-[16rpx] pt-[18rpx]">
+								<text
+									class="block text-[42rpx] text-[#17181a] font-black leading-none tabular-nums">{{ countdownParts.seconds }}</text>
+								<text
+									class="mt-[10rpx] block text-[18rpx] text-[#8a9099] font-extrabold tracking-[1px]">秒
+									SEC</text>
 							</view>
 						</view>
-						<view v-if="etaNote" class="eta-note">
+						<view v-if="etaNote" class="mt-[24rpx] text-[21rpx] text-primary font-medium">
 							{{ etaNote }}
 						</view>
 					</view>
 
 					<!-- 操作 -->
-					<view class="cta-row">
-						<view class="btn-refresh ink-btn press" @click="handleRefresh">
-							<wd-icon class="refresh-ic" :class="{ spinning }" name="refresh" size="17px" />
-							<text>刷新看看</text>
+					<view class="mt-2 w-full flex flex-col gap-4">
+						<uh-button custom-class="uh-global-card-glass border flex-1 py-3 !rounded-full font-semibold"
+							@click="handleRefresh">刷新看看</uh-button>
+						<view v-if="detailHtml"
+							class="uh-global-card-glass py-2 flex flex-1 items-center justify-center rounded-full bg-white text-sm text-primary font-extrabold uh-shadow-xs"
+							@click="showDetail = true">
+							维护详情
 						</view>
 					</view>
 
 					<!-- 页脚 -->
-					<view class="foot">
-						<view class="foot-text">
+					<view class="mt-[12rpx] flex flex-col items-center">
+						<view class="mt-[18rpx] text-center text-[21rpx] text-[#c9cdd4] font-medium leading-[1.7]">
 							升级期间给你带来不便，非常抱歉
 							<text class="block">
 								去喝杯奶茶等等吧～
@@ -410,70 +423,19 @@
 			</view>
 
 			<!-- Toast -->
-			<view v-if="toast" class="toast">
+			<view v-if="toast"
+				class="uh-global-card-glass border fixed bottom-[calc(72rpx+env(safe-area-inset-bottom))] left-1/2 z-60 whitespace-nowrap rounded-full px-6 py-2 text-xs font-bold -translate-x-1/2">
 				{{ toast }}
 			</view>
+
+			<!-- 维护详情弹窗(复用封装组件,见 components/uh-maintenance-detail) -->
+			<uh-maintenance-detail v-model="showDetail" :content="detailHtml" />
 		</view>
 	</view>
 </template>
 
 <style scoped lang="scss">
-	$ink: #17181a;
-	$ink2: #8a9099;
-	$ink3: #c9cdd4;
-	$sun: #ffd53d;
-	$acc: #b8ec3f;
-	$acc-deep: #a7e93b;
-	$acc-soft: #ebfabf;
-	$acc-pale: #f4fbe0;
-	$acc-ink: #63a002;
-	$hero: linear-gradient(175deg, #d9f77f 0%, #e8fbaf 52%, #f5fae8 100%);
-	$page: #f7f9f1;
-	$glow: rgba(168, 232, 52, 0.5);
-
-	.maintenance-page {
-		min-height: 100vh;
-		background: #e9edf1;
-	}
-
-	/* ========== 应用容器 ========== */
-	.app-container {
-		max-width: 960rpx;
-		margin: 0 auto;
-		min-height: 100vh;
-		display: flex;
-		flex-direction: column;
-		background: $page;
-		box-shadow: 0 0 60rpx rgba(50, 60, 25, 0.12);
-	}
-
-	/* ========== Hero ========== */
-	.hero {
-		position: relative;
-		overflow: hidden;
-		flex-shrink: 0;
-		padding: calc(var(--status-bar-height) + 76rpx) 40rpx 64rpx;
-		background: $hero;
-		text-align: center;
-	}
-
-	.blob {
-		position: absolute;
-		border-radius: 50%;
-		filter: blur(52rpx);
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.b-white {
-		background: rgba(255, 255, 255, 0.4);
-	}
-
-	.b-acc {
-		background: $acc;
-		opacity: 0.28;
-	}
-
+	/* 光斑呼吸 */
 	.breathe {
 		animation: breathe 5s ease-in-out infinite;
 	}
@@ -492,63 +454,9 @@
 		}
 	}
 
-	.hero-blob-1 {
-		left: -60rpx;
-		top: 104rpx;
-		width: 260rpx;
-		height: 260rpx;
-	}
-
-	.hero-blob-2 {
-		right: -48rpx;
-		top: 40rpx;
-		width: 200rpx;
-		height: 200rpx;
-	}
-
-	.hero-blob-3 {
-		right: 72rpx;
-		bottom: -40rpx;
-		width: 160rpx;
-		height: 160rpx;
-	}
-
-	/* 勋章 */
-	.medal {
-		position: relative;
-		width: 236rpx;
-		height: 236rpx;
-		margin: 44rpx auto 0;
-		z-index: 2;
-	}
-
-	.medal-bg {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		background: linear-gradient(135deg, $acc-soft, $acc);
-		box-shadow:
-			0 0 0 12rpx #fff,
-			0 28rpx 60rpx rgba(98, 124, 44, 0.22);
+	/* 勋章浮动 */
+	.bob {
 		animation: bob 3.2s ease-in-out infinite;
-	}
-
-	.medal-img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		border-radius: 50%;
-		z-index: 1;
-	}
-
-	.medal-emoji {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: $ink;
 	}
 
 	@keyframes bob {
@@ -563,12 +471,13 @@
 		}
 	}
 
-	.gear {
-		position: absolute;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	/* 齿轮旋转(正/反两档;keyframes 会被 scoped 重命名,须自定义承载类) */
+	.gear-spin {
 		animation: spin 6s linear infinite;
+	}
+
+	.gear-spin-reverse {
+		animation: spin 4.5s linear infinite reverse;
 	}
 
 	@keyframes spin {
@@ -577,237 +486,7 @@
 		}
 	}
 
-	.gear-1 {
-		width: 68rpx;
-		height: 68rpx;
-		right: -28rpx;
-		top: -16rpx;
-	}
-
-	.gear-2 {
-		width: 48rpx;
-		height: 48rpx;
-		left: -32rpx;
-		bottom: 16rpx;
-		animation-duration: 4.5s;
-		animation-direction: reverse;
-	}
-
-	.sticker {
-		display: inline-flex;
-		align-items: center;
-		background: #fff;
-		border: 4rpx solid #fff;
-		border-radius: 999rpx;
-		box-shadow: 0 10rpx 28rpx rgba(90, 110, 45, 0.18);
-		font-weight: 800;
-		line-height: 1;
-		white-space: nowrap;
-		position: relative;
-		z-index: 2;
-	}
-
-	.st-acc {
-		background: $acc-soft;
-		border-color: $acc-soft;
-	}
-
-	.medal-st {
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%) rotate(-5deg);
-		bottom: -28rpx;
-		font-size: 22rpx;
-		padding: 12rpx 24rpx;
-	}
-
-	.rot-l {
-		transform: rotate(-7deg);
-	}
-
-	/* 标题与副标题 */
-	.hero-h1 {
-		margin-top: 64rpx;
-		font-size: 54rpx;
-		line-height: 64rpx;
-		font-weight: 900;
-		position: relative;
-		z-index: 2;
-	}
-
-	.doodle {
-		width: 224rpx;
-		height: 8rpx;
-		margin: 8rpx auto 0;
-		border-radius: 999rpx;
-		background: linear-gradient(90deg, transparent, $acc-deep, transparent);
-		position: relative;
-		z-index: 2;
-	}
-
-	.hero-sub {
-		margin-top: 20rpx;
-		font-size: 25rpx;
-		font-weight: 500;
-		color: rgba(23, 24, 26, 0.55);
-		position: relative;
-		z-index: 2;
-		line-height: 1.7;
-	}
-
-	/* ========== 内容区 ========== */
-	.layer {
-		position: relative;
-		flex: 1;
-	}
-
-	.layer> :not(.bridge) {
-		position: relative;
-		z-index: 1;
-	}
-
-	.bridge {
-		position: absolute;
-		border-radius: 999rpx;
-		filter: blur(44rpx);
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.bridge-1 {
-		top: -52rpx;
-		left: 64rpx;
-		width: 192rpx;
-		height: 192rpx;
-		background: $acc-soft;
-		opacity: 0.9;
-	}
-
-	.bridge-2 {
-		top: 300rpx;
-		right: -52rpx;
-		width: 168rpx;
-		height: 168rpx;
-		background: $sun;
-		opacity: 0.2;
-	}
-
-	.content {
-		padding: 32rpx 32rpx 68rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 28rpx;
-		align-items: center;
-	}
-
-	/* 倒计时卡 */
-	.eta-card {
-		border-radius: 36rpx;
-		padding: 36rpx 32rpx;
-		text-align: center;
-		position: relative;
-		overflow: hidden;
-		width: 100%;
-		background: #fff;
-		border: 1rpx solid rgba(112, 138, 42, 0.08);
-		box-shadow: 0 4rpx 24rpx rgba(98, 124, 44, 0.08);
-	}
-
-	.eta-wm {
-		position: absolute;
-		right: -12rpx;
-		bottom: -48rpx;
-		font-size: 176rpx;
-		font-weight: 900;
-		color: $acc-deep;
-		opacity: 0.1;
-		line-height: 1;
-		pointer-events: none;
-	}
-
-	.eta-k {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8rpx;
-		font-size: 20rpx;
-		font-weight: 800;
-		letter-spacing: 2px;
-		color: $ink2;
-	}
-
-	.eta-clock {
-		margin-top: 22rpx;
-		display: flex;
-		justify-content: center;
-		gap: 10rpx;
-	}
-
-	.eta-cell {
-		min-width: 118rpx;
-		padding: 18rpx 8rpx 16rpx;
-		border-radius: 24rpx;
-		background: $acc-pale;
-	}
-
-	.cell-num {
-		display: block;
-		font-size: 42rpx;
-		font-weight: 900;
-		line-height: 1;
-		color: $ink;
-		font-variant-numeric: tabular-nums;
-	}
-
-	.eta-cell.hot .cell-num {
-		color: $acc-ink;
-	}
-
-	.cell-unit {
-		display: block;
-		margin-top: 10rpx;
-		font-size: 18rpx;
-		font-weight: 800;
-		color: $ink2;
-		letter-spacing: 1px;
-	}
-
-	.eta-note {
-		margin-top: 24rpx;
-		font-size: 21rpx;
-		color: $ink3;
-		font-weight: 500;
-	}
-
-	/* 操作区 */
-	.cta-row {
-		display: flex;
-		gap: 20rpx;
-		width: 100%;
-		margin-top: 4rpx;
-	}
-
-	.btn-refresh {
-		flex: 1;
-		height: 100rpx;
-		border-radius: 999rpx;
-		font-size: 28rpx;
-		font-weight: 800;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 16rpx;
-	}
-
-	.ink-btn {
-		color: #fff;
-		background: linear-gradient(150deg, #3a3e44 0%, #1d1f22 55%, #151619 100%);
-		box-shadow:
-			0 10rpx 28rpx -10rpx rgba(21, 23, 25, 0.4),
-			0 12rpx 36rpx -10rpx $glow,
-			inset 0 2rpx 0 rgba(255, 255, 255, 0.16);
-	}
-
+	/* 刷新图标点击转圈 */
 	.refresh-ic {
 		display: inline-block;
 	}
@@ -816,58 +495,12 @@
 		animation: spin 0.7s linear;
 	}
 
+	/* 按压反馈 */
 	.press {
 		transition: transform 0.12s ease;
 	}
 
 	.press:active {
 		transform: scale(0.94);
-	}
-
-	/* 页脚 */
-	.foot {
-		margin-top: 12rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.foot .sticker {
-		font-size: 44rpx;
-		padding: 14rpx 22rpx;
-	}
-
-	.foot-text {
-		margin-top: 18rpx;
-		font-size: 21rpx;
-		color: $ink3;
-		font-weight: 500;
-		text-align: center;
-		line-height: 1.7;
-	}
-
-	/* Toast */
-	.toast {
-		position: fixed;
-		left: 50%;
-		bottom: calc(72rpx + env(safe-area-inset-bottom));
-		transform: translateX(-50%);
-		padding: 18rpx 36rpx;
-		border-radius: 999rpx;
-		font-size: 24rpx;
-		font-weight: 700;
-		color: #fff;
-		background: linear-gradient(150deg, #3a3e44 0%, #1d1f22 55%, #151619 100%);
-		box-shadow:
-			0 10rpx 28rpx -10rpx rgba(21, 23, 25, 0.4),
-			0 12rpx 36rpx -10rpx $glow,
-			inset 0 2rpx 0 rgba(255, 255, 255, 0.16);
-		white-space: nowrap;
-		z-index: 60;
-	}
-
-	:deep(img) {
-		max-width: 100%;
-		border-radius: 8rpx;
 	}
 </style>

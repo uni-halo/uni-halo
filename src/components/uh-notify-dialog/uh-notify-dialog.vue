@@ -1,12 +1,4 @@
 <script lang="ts" setup>
-/**
- * 通知/最新公告弹窗(源自旧项目 components/notify-dialog,2026-09-03 改造为
- * plugin-uni-halo 最新公告自治宿主):挂载后自动拉取 GET /notices/latest,
- * 「今日已看」命中(键 notice_latest_{name}_{yyyyMMdd})则不打扰;
- * 「不再提醒/查看全文」写今日键;查看全文跳公告详情页。
- * 放置:页面模板中直接 <uh-notify-dialog /> 即可(easycom)。
- * UIUX 见 .docs/notice-module-client-design.md
- */
 import { onMounted, ref } from 'vue'
 import { getNoticeLatest } from '@/api/uni-halo'
 import { getCache, setCache } from '@/utils/storage'
@@ -89,23 +81,23 @@ onMounted(() => {
   <wd-popup
     v-model="isShow"
     position="center"
-    width="80vw"
-    custom-style="border-radius:16rpx;"
+    custom-class="rounded-xl"
+	z-index="9999"
     @close="handleClose"
   >
-    <view v-if="notice" class="uh-notify-dialog box-border w-[80vw] p-6">
+    <view v-if="notice" class="box-border w-[80vw] p-6">
       <!-- 头部:标题 + 关闭 -->
       <view class="flex items-center justify-between">
         <view class="flex items-center gap-2">
-          <text class="text-[28rpx]">
+          <text class="text-sm">
             📢
           </text>
-          <text class="text-[30rpx] font-bold text-[#333]">
+          <text class="text-md font-bold text-gray-900">
             最新公告
           </text>
           <view
             v-if="notice.typeDisplayName"
-            class="rounded px-1.5 py-0.5 text-[20rpx]"
+            class="rounded px-1.5 py-0.5 text-xs"
             :style="{
               color: notice.typeColor || '#f83856',
               backgroundColor: notice.typeColor ? `${notice.typeColor}1a` : '#fdeef1',
@@ -114,7 +106,7 @@ onMounted(() => {
             {{ notice.typeDisplayName }}
           </view>
         </view>
-        <view class="flex h-8 w-8 items-center justify-center text-[#bbb]" @click="handleClose">
+        <view class="flex h-8 w-8 items-center justify-center text-gray-500" @click="handleClose">
           <wd-icon name="close" size="16px" />
         </view>
       </view>
@@ -124,29 +116,23 @@ onMounted(() => {
         <view class="text-[32rpx] font-bold leading-snug text-[#222]">
           {{ notice.title }}
         </view>
-        <view v-if="notice.summary" class="mt-3 text-[26rpx] leading-relaxed text-[#666]">
+        <view v-if="notice.summary" class="mt-3 text-[26rpx] leading-relaxed text-gray-500">
           {{ notice.summary }}
         </view>
-        <view v-if="notice.publishTime" class="mt-3 text-[22rpx] text-[#bbb]">
-          {{ formatDate(notice.publishTime) }}
+        <view v-if="notice.publishTime" class="mt-3 text-[22rpx] text-gray-400">
+          日期：{{ formatDate(notice.publishTime) }}
         </view>
       </view>
 
       <!-- 操作 -->
-      <view class="mt-6 flex items-center justify-between border-t border-[#f5f5f5] pt-4">
-        <view class="text-[24rpx] text-[#999]" @click="handleDismissForever">
+      <view class="box-border mt-4 flex items-center justify-between pt-4">
+        <view class="text-xs text-gray-600 " @click="handleDismissForever">
           今日不再提醒
         </view>
-        <wd-button size="small" type="primary" round @click="handleViewAll">
+        <uh-button custom-class="font-semibold text-xs" @click="handleViewAll">
           查看全文 →
-        </wd-button>
+        </uh-button>
       </view>
     </view>
   </wd-popup>
 </template>
-
-<style scoped lang="scss">
-.uh-notify-dialog {
-  /* 布局全部由 UnoCSS 原子类实现 */
-}
-</style>

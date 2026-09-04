@@ -141,7 +141,9 @@ export interface IPublicMaintenance {
   status: 'scheduled' | 'active'
   /** 维护页标题 */
   title?: string
-  /** 维护说明(富文本 HTML,mp-html 渲染) */
+  /** 维护说明(纯文本,维护页标题下方直接展示,留空展示默认文案) */
+  notice?: string
+  /** 维护详情(富文本 HTML,「维护详情」弹窗内 mp-html 渲染) */
   description?: string
   /** 维护开始时间(RFC3339 UTC 字符串) */
   startTime?: string

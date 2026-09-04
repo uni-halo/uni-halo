@@ -274,7 +274,7 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page py-4">
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page py-3">
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
 			error-text="检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员" @on-refresh="handleGetData" />
 		<template v-else>
@@ -282,7 +282,7 @@
 			<uh-data-loading v-if="loading !== 'success'" :loading-status="loading" min-height="60vh"
 				@refresh="handleGetData" />
 
-			<view v-else class="flex flex-col gap-3 px-4">
+			<view v-else class="flex flex-col gap-3 px-3">
 				<view v-if="dataList.length === 0"
 					class="min-h-[70vh] w-full flex items-center justify-center content-empty">
 					<wd-empty :description="t('common.empty')" />
@@ -290,7 +290,7 @@
 
 				<block v-else>
 					<!-- 瞬间卡片(社交信息流:着色昵称 + 朋友圈式不缩进正文 + 媒体九宫格 + 内嵌互动脚注) -->
-					<view v-for="(moment, mIndex) in dataList" :key="moment.metadata.name"
+					<view v-for="moment in dataList" :key="moment.metadata.name"
 						class="moment-card uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white">
 						<!-- 作者 -->
 						<view class="box-border flex items-center px-4 pt-4">
@@ -313,22 +313,15 @@
 						</view>
 
 						<!-- 正文-->
-						<view class="moment-content px-4 pt-3 ">
-
-							<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
-								class="mb-3 flex flex-wrap gap-x-2">
-								<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
-									class="py-1 px-2 text-xs rounded-xl bg-secondary">
-									# {{ tag }}
-								</text>
+						<view class="box-border px-4 pt-3">
+							<view class="relative box-border bg-gray-100 p-2 rounded-lg">
+								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+									:loading-img="markdownConfig.loadingGif" scroll-table selectable
+									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+									:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
+									:show-language-name="true" copy-by-long-press
+									@click.stop="handleToMomentDetail(moment)" />
 							</view>
-
-							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-								:loading-img="markdownConfig.loadingGif" scroll-table selectable
-								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-								:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
-								:show-language-name="true" copy-by-long-press
-								@click.stop="handleToMomentDetail(moment)" />
 						</view>
 
 						<!-- 图片 -->
@@ -360,19 +353,30 @@
 								@ended="onVideoEnded" />
 						</view>
 
+						<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
+							class="box-border px-4 mt-4 flex flex-wrap gap-2">
+							<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
+								class="py-1 px-2 text-xs rounded-xl bg-secondary">
+								# {{ tag }}
+							</text>
+						</view>
+
 						<!--  (点赞/评论) -->
 						<view
-							class="mt-3 mb-1 box-border w-full flex items-center justify-center gap-x-12 border-t border-black/5 py-3 text-xs text-gray-400">
-							<view class="flex items-center gap-x-2">
+							class="mt-2 mb-1 box-border w-full flex items-center justify-between gap-x-12 border-t border-black/5 py-3 px-4 text-xs text-gray-400">
+							<view class="flex items-center gap-x-1">
 								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
 								<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
 							</view>
-							<view class="flex items-center gap-x-2">
+							<view class="flex items-center gap-x-1">
 								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
 								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
 							</view>
+							<view class="flex items-center gap-x-1">
+								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
+								<text class="text-sm text-gray-600">收藏</text>
+							</view>
 						</view>
-
 					</view>
 
 					<view class="load-text pb-5 pt-1 text-center text-xs text-gray-500">

@@ -6,6 +6,7 @@
 	import { useSettingStore } from '@/store/setting'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { t } from '@/locale'
+	import { useMaintenanceIntercept } from '@/hooks/useMaintenanceIntercept'
 	import type { IPost } from '@/api/types/halo'
 
 	definePage({
@@ -146,12 +147,20 @@
 			},
 		})
 	}
-
+	
+	function init(){
+		if (!intercepted.value) {
+			handleQuery()
+		}
+	}
+	init()
+	
 	/* ---------------- 生命周期 ---------------- */
 
 	// 维护检查
 	onShow(async () => {
 		intercepted.value = await interceptOrContinue()
+		console.log('拦截状态', intercepted.value)
 	})
 
 	onPullDownRefresh(() => {
@@ -175,13 +184,6 @@
 		}
 	})
 
-	// 首次加载
-	onMounted(() => {
-		if (intercepted.value) {
-			return
-		}
-		handleQuery()
-	})
 </script>
 
 <template>

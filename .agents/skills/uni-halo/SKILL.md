@@ -534,7 +534,7 @@ function handleSubmit() {
   投票状态、自己提交投票，页面只传 `vote-name`、监听 `on-vote-success` 提示
 - **页面尽量薄**：页面只负责数据请求编排（hooks）、跳转、传参给组件
 - **能抽 hooks 的就抽 hooks**：跨页面复用的业务逻辑放 `src/hooks/`（如
-  `use-maintenance-intercept`、`useScroll`、`useUpload`），auto-import 免 import 直接调用
+  `useMaintenanceIntercept`、`useScroll`、`useUpload`），auto-import 免 import 直接调用
 - 组件不直接依赖 store 的散装字段，通过 props 传入、events 传出，降低耦合
 
 ---

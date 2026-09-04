@@ -10,7 +10,7 @@
 </script>
 
 <template>
-	<view v-bind="attrs" class="bg-primary uh-shadow-xs text-black text-sm px-4 py-1.5 rounded-lg" :class="props.customClass">
+	<view v-bind="attrs" class="bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg" :class="props.customClass">
 		<slot></slot>
 	</view>
 </template>
