@@ -56,9 +56,12 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
 
 /**
  * 获取应用配置
+ * 注意:cacheFor: 0 绕过 alova 内存缓存——维护模式/配置变更后需即时生效
+ * (维护页刷新、入口/首页拦截均依赖本接口的最新状态)
  */
 export function getAppConfigs() {
   return http.Get<IResponse<IAppConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/getConfigs', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -68,6 +71,7 @@ export function getAppConfigs() {
  */
 export function getAuditData() {
   return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/audit-data', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -196,6 +200,7 @@ export function getNoticeDetail(name: string) {
  */
 export function getLoveConfig() {
   return http.Get<IResponse<ILoveConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-config', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }

@@ -124,7 +124,7 @@ export function getPostByTagName(tagName: string, params: IPostListReq) {
 export function getPostCommentList(params: ICommentListReq) {
   return http.Get<IResponse<ICommentListRes>>('/apis/api.halo.run/v1alpha1/comments', {
     params,
-	cacheFor: 0,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -135,7 +135,7 @@ export function getPostCommentList(params: ICommentListReq) {
 export function getPostCommentReplyList(commentName: string, params: ICommentListReq) {
   return http.Get<IResponse<ICommentListRes>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, {
     params,
-	cacheFor: 0,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -294,6 +294,7 @@ export function postTrackersCounter(data: ITrackerCounterReq) {
  */
 export function checkPluginAvailable(name: string) {
   return http.Get<IResponse<IPluginAvailable>>(`/apis/api.plugin.halo.run/v1alpha1/plugins/${name}/available`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
