@@ -6,6 +6,7 @@
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getVoteList } from '@/api/uni-halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { useAppConfigStore } from '@/store/appConfig'
 import type { IVoteItem } from '@/api/types/uni-halo'
 
@@ -13,6 +14,7 @@ definePage({
   style: {
     navigationBarTitleText: '投票中心',
     enablePullDownRefresh: true,
+    navigationStyle: 'custom',
   },
 })
 
@@ -24,7 +26,7 @@ const uniHaloPluginId = 'plugin-vote'
 const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const dataList = ref<IVoteItem[]>([])
 const hasNext = ref(false)
 const queryParams = ref({ page: 1, size: 10 })
@@ -33,7 +35,9 @@ const loadMoreText = ref('加载中...')
 
 async function handleGetData() {
   if (calcAuditModeEnabled.value) {
-    loading.value = 'success'
+    updateLoadingStatus(
+      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+    )
     loadMoreText.value = '呜呜，没有更多数据啦~'
     uni.stopPullDownRefresh()
     return
@@ -41,22 +45,24 @@ async function handleGetData() {
 
   uni.showLoading({ mask: true, title: '加载中...' })
   if (!isLoadMore.value) {
-    loading.value = 'loading'
+    updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
   loadMoreText.value = '加载中...'
 
   try {
     const res = await getVoteList({ ...queryParams.value })
-    loading.value = 'success'
     hasNext.value = res.data.hasNext || false
     dataList.value = isLoadMore.value
       ? dataList.value.concat(res.data.items)
       : res.data.items
+    updateLoadingStatus(
+      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+    )
     loadMoreText.value = hasNext.value ? '上拉加载更多' : '呜呜，没有更多数据啦~'
   }
   catch (err) {
     console.error(err)
-    loading.value = 'error'
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
     loadMoreText.value = '加载失败，请下拉刷新！'
   }
   finally {
@@ -117,6 +123,9 @@ onReachBottom(() => {
 
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col bg-page">
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="投票中心" title-color="text-gray-900" />
+
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable"
       :plugin-id="uniHaloPluginId"
@@ -124,16 +133,17 @@ onReachBottom(() => {
       @on-refresh="handleGetData"
     />
     <template v-else>
-      <!-- 加载/错误占位 -->
-      <view v-if="loading !== 'success'">
-        <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
+      <!-- 加载/错误/空占位(状态机) -->
+      <view v-if="loadingStatus !== 'success'">
+        <uh-data-loading
+          :loading-status="loadingStatus"
+          empty-text="博主还未发布投票~"
+          @refresh="handleGetData"
+        />
       </view>
 
       <view v-else class="content flex flex-col gap-4 p-3">
-        <view v-if="dataList.length === 0" class="min-h-[60vh] flex items-center justify-center content-empty">
-          <wd-empty description="博主还未发布投票~" />
-        </view>
-        <block v-else>
+        <block v-if="dataList.length !== 0">
           <uh-vote-card
             v-for="vote in dataList"
             :key="vote.metadata?.name"

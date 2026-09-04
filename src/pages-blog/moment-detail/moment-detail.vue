@@ -16,13 +16,14 @@ import { generateUUID } from '@/utils/uuid'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { randomTagColor } from '@/utils/random'
 import { markdownConfig } from '@/config/markdown'
-import { useDataLoading } from '@/hooks/useDataLoading'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IMoment } from '@/api/types/halo'
 
 definePage({
   style: {
     navigationBarTitleText: '瞬间详情',
     enablePullDownRefresh: true,
+    navigationStyle: 'custom',
     // 下拉/回弹露出的窗口底色对齐页面底色
     backgroundColor: '#f6f3ee',
   },
@@ -88,24 +89,29 @@ function buildMomentCard(res: IMoment): MomentCard {
   }
 }
 
-/* ---------------- 数据加载(useDataLoading 试点:状态由 hook 接管) ---------------- */
-const { data: moment, status, run: loadMoment } = useDataLoading(
-  async (): Promise<MomentCard> => {
+/* ---------------- 数据加载(useDataLoadingStatus 状态机接管) ---------------- */
+const moment = ref<MomentCard | null>(null)
+const { loadingStatus: status, updateLoadingStatus } = useDataLoadingStatus()
+
+async function loadMoment() {
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  try {
     const res = await getMomentByName(queryName.value)
-    uni.setNavigationBarTitle({ title: '瞬间详情' })
-    return buildMomentCard(res.data)
-  },
-  {
-    onSuccess: (card) => {
-      nextTick(() => {
-        createVideoContexts(card.videos || [])
-      })
-    },
-    onError: () => {
-      uni.setNavigationBarTitle({ title: '瞬间详情' })
-    },
-  },
-)
+    const card = buildMomentCard(res.data)
+    moment.value = card
+    // 对象无键视为空 → 空态(与原 useDataLoading 默认判空一致)
+    updateLoadingStatus(
+      Object.keys(card).length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+    )
+    nextTick(() => {
+      createVideoContexts(card.videos || [])
+    })
+  }
+  catch (err) {
+    console.error('[moment-detail] 加载失败', err)
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
+  }
+}
 
 /** 标签颜色(随机模式下按数据稳定,避免每次渲染重新随机变色) */
 const calcTagColors = computed(() => {
@@ -255,7 +261,6 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad((options) => {
-  uni.setNavigationBarTitle({ title: '瞬间加载中...' })
   queryName.value = options?.name || ''
   loadMoment()
 })
@@ -280,6 +285,9 @@ onShareTimeline(() => ({
 
 <template>
   <view class="app-page box-border min-h-screen w-screen bg-page px-4 pb-8 pt-4">
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="瞬间详情" title-color="text-gray-900" />
+
     <!-- 状态区(加载中/失败可重试/空) -->
     <uh-data-loading
       v-if="status !== 'success'"

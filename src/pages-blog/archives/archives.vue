@@ -8,6 +8,7 @@ import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IPost } from '@/api/types/halo'
@@ -16,6 +17,7 @@ definePage({
   style: {
     navigationBarTitleText: '归档',
     enablePullDownRefresh: true,
+    navigationStyle: 'custom',
   },
 })
 
@@ -26,7 +28,7 @@ const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const globalAppSettings = computed(() => settingStore.settings)
 
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const activeTabIndex = ref(0)
 const queryParams = ref({ size: 10, page: 1 })
 const result = ref<{ hasNext: boolean }>({ hasNext: false })
@@ -125,14 +127,16 @@ async function handleGetData() {
       const posts = handleGetPosts(filtered)
       dataList.value = handleGetShowDataList(posts)
       cacheDataList.value = filtered
-      loading.value = 'success'
+      updateLoadingStatus(
+        dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
       loadMoreText.value = '呜呜，没有更多数据啦~'
       uni.hideLoading()
       uni.stopPullDownRefresh()
     }
     catch (err) {
       console.error(err)
-      loading.value = 'error'
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
       loadMoreText.value = '加载失败，请下拉刷新！'
     }
     return
@@ -142,7 +146,7 @@ async function handleGetData() {
     uni.showLoading({ title: '加载中...' })
   }
   else {
-    loading.value = 'loading'
+    updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
   loadMoreText.value = '加载中...'
 
@@ -178,12 +182,14 @@ async function handleGetData() {
       cacheDataList.value = res.data.items
     }
 
-    loading.value = 'success'
+    updateLoadingStatus(
+      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+    )
     loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
   }
   catch (err) {
     console.error(err)
-    loading.value = 'error'
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
     loadMoreText.value = '加载失败，请下拉刷新！'
   }
   finally {
@@ -191,6 +197,12 @@ async function handleGetData() {
     uni.stopPullDownRefresh()
   }
 }
+
+/** 顶部 tab 定义(同收藏页胶囊 chip) */
+const archiveTabs = [
+  { key: 'month', label: '按月份查看' },
+  { key: 'year', label: '按年份查看' },
+]
 
 function handleOnTabChange(e: { index: number }) {
   activeTabIndex.value = e.index
@@ -250,27 +262,38 @@ onReachBottom(() => {
 
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col bg-page">
-    <!-- 顶部 tab(玻璃吸顶,wd-tabs 需用 wd-tab 子组件声明页签) -->
-    <view class="archive-tabs uh-global-card-glass sticky top-0 z-10">
-      <wd-tabs v-model="activeTabIndex" align="center" custom-style="background: transparent;" @change="handleOnTabChange">
-        <wd-tab title="按月份查看" />
-        <wd-tab title="按年份查看" />
-      </wd-tabs>
-    </view>
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="归档" title-color="text-gray-900" />
 
-    <!-- 加载/错误占位 -->
-    <view v-if="loading !== 'success'">
-      <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
+    <!-- 顶部 tab(吸顶玻璃胶囊 chip,同收藏页) -->
+    <wd-sticky>
+      <scroll-view scroll-x class="w-full whitespace-nowrap">
+        <view class="flex gap-2 px-3 pb-1 pt-3">
+          <view
+            v-for="(tab, index) in archiveTabs" :key="tab.key"
+            class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-1.5 text-sm"
+            :class="activeTabIndex === index ? 'bg-primary font-bold' : 'text-gray-500'"
+            @click="handleOnTabChange({ index })"
+          >
+            {{ tab.label }}
+          </view>
+        </view>
+      </scroll-view>
+    </wd-sticky>
+
+    <!-- 加载/错误/空占位(状态机) -->
+    <view v-if="loadingStatus !== 'success'">
+      <uh-data-loading
+        :loading-status="loadingStatus"
+        :empty-text="calcAuditModeEnabled ? '暂无归档的内容' : '暂无归档的文章'"
+        @refresh="handleGetData"
+      />
     </view>
 
     <!-- 内容区域 -->
     <block v-else>
-      <view v-if="dataList.length === 0" class="list-empty min-h-[60vh] flex items-center justify-center">
-        <wd-empty :description="calcAuditModeEnabled ? '暂无归档的内容' : '暂无归档的文章'" />
-      </view>
-
       <!-- 时间线 -->
-      <view v-else class="timeline px-4 pt-3">
+      <view class="timeline px-4 pt-3">
         <view v-for="(item, index) in dataList" :key="item.key" class="timeline-item flex">
           <view class="timeline-left w-[96rpx] flex shrink-0 flex-col items-center">
             <view class="timeline-dot mt-2 h-4 w-4 rounded-full bg-secondary shadow-[0_0_0_8rpx_rgba(215,249,76,0.3)]" />

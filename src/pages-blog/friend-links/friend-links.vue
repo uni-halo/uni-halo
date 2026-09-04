@@ -11,6 +11,7 @@ import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo'
 import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { ILink, ILinkGroup } from '@/api/types/halo'
@@ -20,6 +21,7 @@ definePage({
   style: {
     navigationBarTitleText: '友情链接',
     enablePullDownRefresh: true,
+    navigationStyle: 'custom',
   },
 })
 
@@ -40,6 +42,12 @@ const { available: miniPluginAvailable, check: checkMiniPluginAvailable } = useP
 /* ---------------- tabs ---------------- */
 const activeTabIndex = ref(0)
 
+/** 顶部 tab 定义(同收藏页胶囊 chip;审核模式下小程序 tab 隐藏) */
+const friendLinkTabs = computed(() => [
+  { key: 'site', label: '站点' },
+  ...(appConfigStore.auditModeEnabled ? [] : [{ key: 'mini', label: '小程序' }]),
+])
+
 function handleOnTabChange(e: { index: number }) {
   activeTabIndex.value = e.index
 }
@@ -52,7 +60,7 @@ watch(() => appConfigStore.auditModeEnabled, (enabled) => {
 
 /* ==================== 站点 tab(plugin-links) ==================== */
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
+const { loadingStatus: siteLoadingStatus, updateLoadingStatus: updateSiteLoadingStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 1 })
 const detail = ref<{ show: boolean, data: ILink | null }>({ show: false, data: null })
 const hasNext = ref(false)
@@ -77,13 +85,13 @@ async function handleGetLinkGroupData() {
   }
   catch (err) {
     console.error(err)
-    loading.value = 'error'
+    updateSiteLoadingStatus(DataLoadingStatusEnum.Error)
   }
 }
 
 async function handleGetData() {
   if (!isLoadMore.value) {
-    loading.value = 'loading'
+    updateSiteLoadingStatus(DataLoadingStatusEnum.Loading)
   }
   loadMoreText.value = ''
 
@@ -106,13 +114,15 @@ async function handleGetData() {
     }))
     dataList.value = dataList.value.concat(list)
     setTimeout(() => {
-      loading.value = 'success'
+      updateSiteLoadingStatus(
+        dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
       loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
     }, 500)
   }
   catch (err) {
     console.error(err)
-    loading.value = 'error'
+    updateSiteLoadingStatus(DataLoadingStatusEnum.Error)
     loadMoreText.value = '加载失败，请下拉刷新！'
   }
   finally {
@@ -163,24 +173,26 @@ function calcSiteThumbnail(val?: string): string {
 
 /* ==================== 小程序 tab(plugin-uni-halo) ==================== */
 /* ---------------- 状态 ---------------- */
-const miniLoading = ref<'loading' | 'success' | 'error'>('loading')
+const { loadingStatus: miniLoadingStatus, updateLoadingStatus: updateMiniLoadingStatus } = useDataLoadingStatus()
 const miniGroups = ref<IMiniProgramLinkGroupVo[]>([])
 const miniDetail = ref<{ show: boolean, data: IMiniProgramLink | null }>({ show: false, data: null })
 const applyShow = ref(false)
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetMiniProgramLinks() {
-  miniLoading.value = 'loading'
+  updateMiniLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getMiniProgramLinkGroupedList()
     miniGroups.value = res.data || []
     setTimeout(() => {
-      miniLoading.value = 'success'
+      updateMiniLoadingStatus(
+        miniGroups.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
     }, 500)
   }
   catch (err) {
     console.error(err)
-    miniLoading.value = 'error'
+    updateMiniLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
     setTimeout(() => {
@@ -321,13 +333,24 @@ onReachBottom(() => {
 
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col bg-page">
-    <!-- 顶部 tabs -->
-    <view class="tabs-wrap uh-global-card-glass sticky top-0 z-10 px-6">
-      <wd-tabs v-model="activeTabIndex" align="left" custom-style="background: transparent;" @change="handleOnTabChange">
-        <wd-tab title="站点" />
-        <wd-tab v-if="!appConfigStore.auditModeEnabled" title="小程序" />
-      </wd-tabs>
-    </view>
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="友情链接" title-color="text-gray-900" />
+
+    <!-- 顶部 tab(吸顶玻璃胶囊 chip,同收藏页) -->
+    <wd-sticky>
+      <scroll-view scroll-x class="w-full whitespace-nowrap">
+        <view class="flex gap-2 px-3 pb-1 pt-3">
+          <view
+            v-for="(tab, index) in friendLinkTabs" :key="tab.key"
+            class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-1.5 text-sm"
+            :class="activeTabIndex === index ? 'bg-primary font-bold' : 'text-gray-500'"
+            @click="handleOnTabChange({ index })"
+          >
+            {{ tab.label }}
+          </view>
+        </view>
+      </scroll-view>
+    </wd-sticky>
 
     <!-- ==================== 站点 tab ==================== -->
     <template v-if="activeTabIndex === 0">
@@ -338,18 +361,18 @@ onReachBottom(() => {
         @on-refresh="handleGetLinkGroupData"
       />
       <template v-else>
-        <!-- 加载/错误占位 -->
-        <view v-if="loading !== 'success'">
-          <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
+        <!-- 加载/错误/空占位(状态机) -->
+        <view v-if="siteLoadingStatus !== 'success'">
+          <uh-data-loading
+            :loading-status="siteLoadingStatus"
+            empty-text="啊偶,博主还没有朋友呢~"
+            @refresh="handleGetData"
+          />
         </view>
 
         <view v-else class="content pt-4">
-          <view v-if="dataList.length === 0" class="h-[60vh] flex items-center justify-center content-empty">
-            <wd-empty description="啊偶,博主还没有朋友呢~" />
-          </view>
-
           <!-- 友链列表 -->
-          <view v-else class="link-list flex flex-col gap-4 px-4 pb-4">
+          <view class="link-list flex flex-col gap-4 px-4 pb-4">
             <view v-for="link in dataList" :key="link.metadata?.name || link.spec.displayName">
               <!-- 色彩版 -->
               <view
@@ -436,19 +459,18 @@ onReachBottom(() => {
         @on-refresh="handleGetMiniProgramLinks"
       />
       <template v-else>
-        <!-- 加载/错误占位 -->
-        <view v-if="miniLoading !== 'success'">
-          <uh-data-loading :loading-status="miniLoading" @refresh="handleGetMiniProgramLinks" />
+        <!-- 加载/错误/空占位(状态机) -->
+        <view v-if="miniLoadingStatus !== 'success'">
+          <uh-data-loading
+            :loading-status="miniLoadingStatus"
+            empty-text="还没有收录的小程序呢~"
+            @refresh="handleGetMiniProgramLinks"
+          />
         </view>
 
         <view v-else class="content flex flex-1 flex-col">
-          <!-- 空态 -->
-          <view v-if="miniGroups.length === 0" class="h-[60vh] flex items-center justify-center content-empty">
-            <wd-empty description="还没有收录的小程序呢~" />
-          </view>
-
           <!-- 分组列表 -->
-          <view v-else class="mini-link-list flex-1 px-6 py-4">
+          <view class="mini-link-list flex-1 px-6 py-4">
             <view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-8">
               <view class="group-title mb-4 flex items-center">
                 <text class="mr-2 inline-block h-[28rpx] w-[8rpx] rounded-full bg-secondary" />

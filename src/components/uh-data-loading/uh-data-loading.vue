@@ -18,7 +18,7 @@ interface IProps {
 
 const props = withDefaults(defineProps<IProps>(), {
   loadingStatus: 'loading',
-  minHeight: '75vh',
+  minHeight: '80vh',
   loadingText: '稍等，正在加载中哦',
   errorText: '哎呀，加载失败了呢~',
   emptyText: '啊偶，暂时没有数据呢~',

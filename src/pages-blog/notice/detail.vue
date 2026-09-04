@@ -8,6 +8,7 @@
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getNoticeDetail } from '@/api/uni-halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkIsUrl } from '@/utils/url'
 import { markdownConfig } from '@/config/markdown'
 import type { INoticeDetail } from '@/api/types/uni-halo'
@@ -15,11 +16,12 @@ import type { INoticeDetail } from '@/api/types/uni-halo'
 definePage({
   style: {
     navigationBarTitleText: '公告详情',
+    navigationStyle: 'custom',
   },
 })
 
-const loading = ref(true)
-const notFound = ref(false)
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const name = ref('')
 const detail = ref<INoticeDetail | null>(null)
 
 const spec = computed(() => detail.value?.spec)
@@ -41,17 +43,6 @@ function formatDate(value?: string): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-function handleBack() {
-  const pages = getCurrentPages()
-  if (pages.length > 1) {
-    uni.navigateBack()
-  }
-  else {
-    uni.switchTab({ url: '/pages/tabbar/home/home' })
-  }
-}
-
-/** 外链 → 复用 website 承载页 */
 function handleToExternal() {
   if (!spec.value?.link)
     return
@@ -63,57 +54,44 @@ function handleToExternal() {
   })
 }
 
-onLoad(async (options) => {
-  const name = options?.name || ''
-  if (!name) {
-    notFound.value = true
-    loading.value = false
+/** 加载公告详情(状态机;404/无数据 → 空态,其余错误 → error 态,可重试) */
+async function loadDetail() {
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  if (!name.value) {
+    updateLoadingStatus(DataLoadingStatusEnum.Empty)
     return
   }
   try {
-    const res = await getNoticeDetail(name)
+    const res = await getNoticeDetail(name.value)
     detail.value = res.data || null
-    if (!detail.value?.spec) {
-      notFound.value = true
-    }
+    updateLoadingStatus(
+      detail.value?.spec ? DataLoadingStatusEnum.Success : DataLoadingStatusEnum.Empty,
+    )
   }
   catch (err) {
     console.error('公告详情加载失败', err)
     const code = (err as { code?: number }).code
-    notFound.value = code === 404
-    if (code !== 404) {
-      uni.showToast({ icon: 'none', title: '公告加载失败' })
-    }
+    updateLoadingStatus(code === 404 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Error)
   }
-  finally {
-    loading.value = false
-  }
+}
+
+onLoad((options) => {
+  name.value = options?.name || ''
+  loadDetail()
 })
 </script>
 
 <template>
   <view class="notice-detail min-h-screen w-screen bg-white pb-12">
-    <!-- 加载中 -->
-    <view v-if="loading" class="flex flex-col items-center justify-center py-40">
-      <text class="text-[26rpx] text-[#999]">
-        加载中...
-      </text>
-    </view>
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="公告详情" title-color="text-gray-900" />
 
-    <!-- 不存在/已下线 -->
-    <view v-else-if="notFound" class="flex flex-col items-center justify-center py-40">
-      <text class="text-[60rpx]">
-        🕳️
-      </text>
-      <text class="mt-6 text-[26rpx] text-[#999]">
-        公告不存在或已下线
-      </text>
-      <view class="mt-10">
-        <wd-button size="small" type="primary" plain @click="handleBack">
-          返回
-        </wd-button>
-      </view>
-    </view>
+    <!-- 加载/错误/空态(状态机) -->
+    <uh-data-loading
+      v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="55vh"
+      error-text="公告加载失败" empty-text="公告不存在或已下线" empty-sub-text=""
+      @refresh="loadDetail"
+    />
 
     <!-- 正文 -->
     <view v-else class="px-6 py-6">

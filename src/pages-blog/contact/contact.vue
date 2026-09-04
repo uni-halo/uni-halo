@@ -3,14 +3,15 @@
  * 联系博主页(源自旧项目 pagesA/contact,新建复刻)
  * 数字名片式设计:Hero 名片卡(渐变光斑透卡) + 品牌色字母瓦片联系方式列表,点击复制
  */
-import { computed, ref, watch } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkAvatarUrl } from '@/utils/url'
 
 definePage({
   style: {
     navigationBarTitleText: '联系博主',
+    navigationStyle: 'custom',
   },
 })
 
@@ -58,6 +59,12 @@ const platformMeta: Record<string, { color: string, letter: string }> = {
 
 const calcIsNotEmpty = computed(() => result.value.some(item => item.value !== ''))
 
+/* ---------------- 加载状态机(本地配置,状态直接推导) ---------------- */
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+watchEffect(() => {
+  updateLoadingStatus(calcIsNotEmpty.value ? DataLoadingStatusEnum.Success : DataLoadingStatusEnum.Empty)
+})
+
 function handleGetData() {
   for (const key in socialConfig.value) {
     if (key === 'enabled')
@@ -84,14 +91,13 @@ function handleOnClick(item: { value: string, name: string }) {
 watch(socialConfig, () => {
   handleGetData()
 }, { deep: true, immediate: true })
-
-onLoad(() => {
-  uni.setNavigationBarTitle({ title: '联系博主' })
-})
 </script>
 
 <template>
   <view class="app-page box-border min-h-screen w-screen overflow-hidden bg-page px-4 pb-10 pt-6">
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="联系博主" title-color="text-gray-900" />
+
     <!-- Hero 名片卡(主题色光斑透过毛玻璃形成柔和渐变) -->
     <view class="hero-wrap relative">
       <view class="absolute h-[220rpx] w-[220rpx] rounded-full bg-[rgba(185,228,36,0.32)] -right-8 -top-8" />
@@ -113,8 +119,12 @@ onLoad(() => {
       </view>
     </view>
 
-    <!-- 联系方式 -->
-    <block v-if="calcIsNotEmpty">
+    <!-- 联系方式(状态机:无联系方式 → empty 态) -->
+    <uh-data-loading
+      v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="30vh"
+      empty-text="暂无联系方式" empty-sub-text="" @refresh="handleGetData"
+    />
+    <template v-else>
       <uh-section-title class="mb-3 mt-6 text-[30rpx]">
         联系方式
       </uh-section-title>
@@ -137,9 +147,6 @@ onLoad(() => {
           <wd-icon name="copy" size="28rpx" color="#c8c2b4" class="shrink-0" />
         </view>
       </view>
-    </block>
-    <view v-else class="pt-12">
-      <wd-empty description="暂无联系方式" />
-    </view>
+    </template>
   </view>
 </template>

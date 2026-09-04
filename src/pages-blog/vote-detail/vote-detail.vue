@@ -6,6 +6,7 @@
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { calcVotePercent, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
@@ -14,11 +15,12 @@ definePage({
   style: {
     navigationBarTitleText: '投票详情',
     enablePullDownRefresh: true,
+    navigationStyle: 'custom',
   },
 })
 
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const submitLoading = ref(false)
 const pageTitle = ref('加载中...')
 const safeAreaBottom = ref(24)
@@ -76,7 +78,7 @@ function handleCalcIsChecked(option: { id?: string }): boolean {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
-  loading.value = 'loading'
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   pageTitle.value = '加载中...'
   try {
     const res = await getVoteDetail(name.value)
@@ -133,19 +135,20 @@ async function handleGetData() {
     vote.value = tempVote
     detail.value = res
     setTimeout(() => {
-      loading.value = 'success'
+      updateLoadingStatus(
+        tempVote ? DataLoadingStatusEnum.Success : DataLoadingStatusEnum.Empty,
+      )
     }, 200)
   }
   catch (err) {
     console.error(err)
-    loading.value = 'error'
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
     pageTitle.value = '加载失败，请重试...'
   }
   finally {
     setTimeout(() => {
       uni.hideLoading()
       uni.stopPullDownRefresh()
-      uni.setNavigationBarTitle({ title: pageTitle.value })
     }, 200)
   }
 }
@@ -269,18 +272,21 @@ onShareTimeline(() => ({
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen flex flex-col py-6 pb-[160rpx]" style="background-color: #fafafd;">
-    <!-- 加载/错误占位 -->
-    <view v-if="loading !== 'success'">
-      <uh-data-loading :loading-status="loading" @refresh="handleGetData" />
+  <view class="app-page box-border min-h-screen w-screen flex flex-col pb-[160rpx]" style="background-color: #fafafd;">
+    <!-- 自定义导航 -->
+    <uh-navbar :default-title="pageTitle" title-color="text-gray-900" />
+
+    <!-- 加载/错误/空占位(状态机) -->
+    <view v-if="loadingStatus !== 'success'">
+      <uh-data-loading
+        :loading-status="loadingStatus"
+        empty-text="未查询到数据"
+        @refresh="handleGetData"
+      />
     </view>
 
     <block v-else>
-      <view v-if="!vote" class="empty h-[60vh] flex items-center justify-center">
-        <wd-empty description="未查询到数据" />
-      </view>
-
-      <block v-else>
+      <template v-if="vote">
         <!-- 投票信息 -->
         <view class="vote-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm">
           <view class="sub-title relative box-border pl-6 text-[30rpx]">
@@ -392,7 +398,7 @@ onShareTimeline(() => ({
             提交投票
           </wd-button>
         </view>
-      </block>
+      </template>
     </block>
   </view>
 </template>

@@ -121,10 +121,9 @@
 			return
 		}
 		uni.navigateTo({
-			url: `/pages-blog/category-detail/category-detail?name=${category.metadata.name}&title=${category.spec.displayName}`,
+			url: `/pages-blog/category-articles/category-articles?name=${category.metadata.name}&title=${category.spec.displayName}`,
 		})
 	}
-
 
 	onMounted(() => {
 		handleInitPage()

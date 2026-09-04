@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-	/**
- * 图库页(源自旧项目 pages/tabbar/gallery/gallery.vue,新建复刻)
- * 功能:相册分组切换 + 图片列表(瀑布流/网格) + 图片预览
- */
 	import { computed, ref, watch } from 'vue'
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
@@ -25,9 +21,19 @@
 
 	const galleryConfig = computed(() => haloConfigs.value.pageConfig?.galleryConfig)
 
-	/** 依赖插件(plugin-photos) */
-	const uniHaloPluginId = 'plugin-photos'
-	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId, false)
+	/** 依赖插件(PluginPhotos) */
+	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+		pluginId: 'PluginPhotos',
+		tips: '很抱歉，功能正在维护中...',
+		callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleGetCategory()
+		}
+	})
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -152,11 +158,9 @@
 			uni.stopPullDownRefresh()
 			return
 		}
-		
-		// 开始正常数据请求
 		handleGetCategory()
 	})
- 
+
 	onPullDownRefresh(() => {
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()
@@ -169,8 +173,7 @@
 	})
 
 	onReachBottom(() => {
-		if (!uniHaloPluginAvailable.value)
-			return
+		if (!uniHaloPluginAvailable.value) { return }
 		if (calcAuditModeEnabled.value) {
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 			return
@@ -188,8 +191,8 @@
 
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page pb-6">
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
-			error-text="检测到当前插件没有安装或者启用，无法使用图库功能哦，请联系管理员" @on-refresh="handleGetCategory" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+			:checking="checking" @on-refresh="checkPluginAvailable" />
 		<template v-else>
 			<wd-sticky v-if="category.list.length!==0">
 				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-3">

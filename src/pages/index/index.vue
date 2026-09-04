@@ -28,7 +28,7 @@
 	const appConfigStore = useAppConfigStore()
 	const settingStore = useSettingStore()
 	// 维护拦截
-	const { interceptOrContinue, redirectToMaintenance } = useMaintenanceIntercept()
+	const { reason, interceptOrContinue, redirectToMaintenance } = useMaintenanceIntercept()
 
 	/** 通过二维码 scene 获取文章 id */
 	async function getPostIdByQRCode(key : string) : Promise<string | null> {
@@ -84,7 +84,7 @@
 		}
 		catch (err) {
 			console.error('入口页初始化失败', err)
-			redirectToMaintenance()
+			redirectToMaintenance(reason.value)
 		}
 	})
 </script>

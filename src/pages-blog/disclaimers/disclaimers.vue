@@ -8,6 +8,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 definePage({
   style: {
     navigationBarTitleText: '免责声明',
+    navigationStyle: 'custom',
   },
 })
 
@@ -40,6 +41,9 @@ function copyText(content: string, tips = '复制成功') {
 
 <template>
   <view class="app-page box-border min-h-screen bg-white p-12 text-[30rpx] text-[#303133] leading-[1.65]">
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="免责声明" title-color="text-gray-900" />
+
     <!-- 通过配置 -->
     <view v-if="disclaimersContent" style="min-height: 100%;" v-html="disclaimersContent" />
 

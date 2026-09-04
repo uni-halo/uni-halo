@@ -2,12 +2,14 @@
 	import { ref } from 'vue'
 	import { onPullDownRefresh } from '@dcloudio/uni-app'
 	import { getChartData } from '@/api/uni-halo'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IDataStatistics } from '@/api/uni-halo'
 
 	definePage({
 		style: {
 			navigationBarTitleText: '数据看板',
 			enablePullDownRefresh: true,
+			navigationStyle: 'custom',
 		},
 	})
 
@@ -16,7 +18,7 @@
 	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 	/* ---------------- 状态 ---------------- */
-	const loading = ref<'loading' | 'success' | 'error'>('loading')
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const statistics = ref<IDataStatistics>({
 		tags: [],
 		categories: [],
@@ -109,7 +111,7 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
 		uni.showLoading({ mask: true, title: '加载中...' })
-		loading.value = 'loading'
+		updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		try {
 			const res = await getChartData()
 			statistics.value = res.data
@@ -118,11 +120,14 @@
 			handleTrendArticlesChart()
 			handleUserCommentsChart()
 			handleTop10ArticlesChart()
-			loading.value = 'success'
+			// 五类统计数据全部为空 → 空态
+			const hasData = [res.data.tags, res.data.categories, res.data.articles, res.data.comments, res.data.top10Articles]
+				.some(list => list.length > 0)
+			updateLoadingStatus(hasData ? DataLoadingStatusEnum.Success : DataLoadingStatusEnum.Empty)
 		}
 		catch (err) {
 			console.error(err)
-			loading.value = 'error'
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
 		}
 		finally {
 			setTimeout(() => {
@@ -155,10 +160,13 @@
 
 <template>
 	<view class="bg-page box-border min-h-screen w-screen p-3">
+		<!-- 自定义导航 -->
+		<uh-navbar default-title="数据看板" title-color="text-gray-900" />
+
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="uniHaloPluginId"
 			error-text="阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员" @on-refresh="handleGetData" />
 		<template v-else>
-			<uh-data-loading v-if="loading !== 'success'" :loading-status="loading" @refresh="handleGetData" />
+			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" empty-text="暂无统计数据" @refresh="handleGetData" />
 
 			<!-- 内容区域 -->
 			<view v-else class="content flex flex-col gap-3">

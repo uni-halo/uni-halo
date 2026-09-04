@@ -124,15 +124,9 @@
 	}
 
 	/* ---------------- 跳转 ---------------- */
-	function handleToArticleDetail(article : IPost) {
-		uni.navigateTo({
-			url: `/pages-blog/article-detail/article-detail?name=${article.metadata.name}`,
-			animationType: 'slide-in-right',
-		})
-	}
-
-	function handleToSearch() {
-		uni.navigateTo({ url: '/pages-blog/search/search' })
+	
+	function handleToArticles() {
+		uni.navigateTo({ url: '/pages-blog/articles/articles' })
 	}
 
 	function handleOnLogoToPage() {
@@ -202,10 +196,10 @@
 
 		<!-- 最新文章 -->
 		<uh-section-title class="mb-4 box-border px-3">
-			最新内容
+			最新推荐
 			<template #right>
-				<view class="uh-global-card-glass flex items-center justify-center rounded-md p-1 text-gray-400"
-					@click="handleToSearch()">
+				<view class="uh-global-card-glass flex items-center justify-center  gap-x-1 rounded-md p-1 text-gray-400"
+					@click="handleToArticles()">
 					<wd-icon name="arrow-right" size="12px" />
 				</view>
 			</template>
@@ -217,8 +211,9 @@
 
 		<block v-else>
 			<view class="flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
-				<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
-					@on-click="handleToArticleDetail" />
+				<uh-article-card v-for="(article, index) in articleList" :key="index"
+				 from="home" :article="article" :audit-mode="calcAuditModeEnabled"
+				 />
 			</view>
 			<view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
 				{{ loadMoreText }}

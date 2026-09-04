@@ -24,7 +24,6 @@ import type {
   IPhotoGroupListRes,
   IPhotoListReq,
   IPhotoListRes,
-  IPluginAvailable,
   IPost,
   IPostListReq,
   IPostListRes,
@@ -293,7 +292,7 @@ export function postTrackersCounter(data: ITrackerCounterReq) {
  * 检查插件是否可用
  */
 export function checkPluginAvailable(name: string) {
-  return http.Get<IResponse<IPluginAvailable>>(`/apis/api.plugin.halo.run/v1alpha1/plugins/${name}/available`, {
+  return http.Get<IResponse<boolean>>(`/apis/api.plugin.halo.run/v1alpha1/plugins/${name}/available`, {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })

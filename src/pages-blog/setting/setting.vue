@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { ref } from 'vue'
+	import { computed, ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import { DefaultAppSettings } from '@/config/appSettings'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -157,6 +157,32 @@
 		handleCloseEnum()
 	}
 
+	/* ---------------- wd-picker 弹层数据 ---------------- */
+	/** 枚举弹层列(首项「跟随站点默认」,空串哨兵映射 null) */
+	const enumColumns = computed(() => {
+		const def = enumSheet.value.def
+		if (!def)
+			return []
+		return [
+			{ label: '跟随站点默认', value: '' },
+			...(def.options || []).map(opt => ({ label: opt.label, value: opt.value })),
+		]
+	})
+
+	/** 当前选中列值(单列;跟随站点默认时为空串) */
+	const enumValue = computed(() => {
+		const def = enumSheet.value.def
+		if (!def)
+			return ['']
+		return [isFollowing(def) ? '' : String(valueOf(def.path) ?? '')]
+	})
+
+	/** wd-picker 确认:空串哨兵还原为「跟随站点默认」 */
+	function handlePickerConfirm(payload: { value: (string | number)[] }) {
+		const picked = String(payload.value[0] ?? '')
+		handleChooseEnum(picked === '' ? null : picked)
+	}
+
 	/** 当前枚举项是否处于「跟随站点默认」 */
 	function isFollowing(def : PrefDef) : boolean {
 		return !isOverridden(def.path)
@@ -247,7 +273,7 @@
 									</template>
 								</view>
 							</view>
-							<wd-switch :model-value="def.path" @change="handleSwitchChange(def, $event)" />
+							<wd-switch :model-value="valueOf(def.path) === true" @change="handleSwitchChange(def, $event)" />
 						</view>
 						<!-- 枚举选择(指示器位置) -->
 						<view v-else class="pick-row flex items-center justify-between px-4 py-4"
@@ -276,34 +302,17 @@
 					</template>
 				</view>
 			</view>
-			<!-- 底部操作栏(玻璃悬浮-->
+			<!-- 底部操作栏(玻璃悬浮) -->
 			<view class="box-border w-full px-2">
 				<uh-button custom-class="uh-global-card-glass py-2 !rounded-full"
 					@click="handleResetAll">恢复默认</uh-button>
 			</view>
 		</view>
-		<!-- 枚举选择底部弹层 -->
-		<wd-popup v-model="enumSheet.show" position="bottom" closable custom-style="border-radius: 24rpx 24rpx 0 0;"
-			@close="handleCloseEnum">
-			<view v-if="enumSheet.def" class="enum-sheet box-border w-full pb-[env(safe-area-inset-bottom)]">
-				<view class="enum-title py-6 text-center text-[30rpx] text-gray-900 font-bold">
-					{{ enumSheet.def.label }}
-				</view>
-				<view class="enum-item flex items-center justify-between px-6 py-5"
-					:class="isFollowing(enumSheet.def) ? 'bg-secondary text-[#4d7c0f]' : 'text-gray-900'"
-					@click="handleChooseEnum(null)">
-					<text class="text-[28rpx]">跟随站点默认</text>
-					<wd-icon v-if="isFollowing(enumSheet.def)" name="check" size="16px" color="#4d7c0f" />
-				</view>
-				<view v-for="opt in enumSheet.def.options" :key="opt.value"
-					class="enum-item flex items-center justify-between border-t border-[#f0ece2] px-6 py-5"
-					:class="valueOf(enumSheet.def.path) === opt.value && !isFollowing(enumSheet.def) ? 'bg-secondary text-[#4d7c0f]' : 'text-gray-900'"
-					@click="handleChooseEnum(opt.value)">
-					<text class="text-[28rpx]">{{ opt.label }}</text>
-					<wd-icon v-if="valueOf(enumSheet.def.path) === opt.value && !isFollowing(enumSheet.def)"
-						name="check" size="16px" color="#4d7c0f" />
-				</view>
-			</view>
-		</wd-popup>
+		<!-- 枚举选择弹层(wd-picker 自带底部弹层与工具栏) -->
+		<wd-picker
+			v-model:visible="enumSheet.show" :title="enumSheet.def?.label || ''" :columns="enumColumns"
+			:model-value="enumValue" confirm-button-text="确定" cancel-button-text="取消"
+			@confirm="handlePickerConfirm"
+		/>
 	</view>
 </template>

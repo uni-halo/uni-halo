@@ -456,10 +456,3 @@ export interface IUpvoteReq {
   name: string
   plural?: string
 }
-
-/* ---------- 插件可用性 ---------- */
-
-export interface IPluginAvailable {
-  available: boolean
-  reason?: string
-}

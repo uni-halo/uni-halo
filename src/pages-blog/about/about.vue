@@ -8,6 +8,7 @@ import { onLoad } from '@dcloudio/uni-app'
 definePage({
   style: {
     navigationBarTitleText: '关于项目',
+    navigationStyle: 'custom',
   },
 })
 
@@ -37,6 +38,9 @@ onLoad(() => {
 
 <template>
   <view class="app-page box-border min-h-screen w-screen flex flex-col overflow-hidden bg-page px-4 pb-8 pt-6">
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="关于项目" title-color="text-gray-900" />
+
     <!-- Hero 名片卡(主题色光斑透过毛玻璃形成柔和渐变) -->
     <view class="hero-wrap relative">
       <view class="absolute h-[220rpx] w-[220rpx] rounded-full bg-[rgba(185,228,36,0.32)] -right-8 -top-8" />
@@ -68,7 +72,7 @@ onLoad(() => {
         :class="index < links.length - 1 ? 'border-b border-black/5' : ''"
         @click="copyText(link.copy, link.tip)"
       >
-        <view class="tile h-[76rpx] w-[76rpx] flex shrink-0 items-center justify-center rounded-xl border border-black/5" :style="{ backgroundColor: link.tileColor + '1A' }">
+        <view class="tile h-[76rpx] w-[76rpx] flex shrink-0 items-center justify-center rounded-xl border border-black/5" :style="{ backgroundColor: `${link.tileColor}1A` }">
           <text class="text-[30rpx] font-bold" :style="{ color: link.tileColor }">{{ link.tileLetter }}</text>
         </view>
         <view class="min-w-0 flex flex-1 flex-col">
