@@ -7,7 +7,6 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 import { getPostListByKeyword } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
-import { usePluginAvailable } from '@/utils/plugin'
 import { markdownConfig } from '@/config/markdown'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { debounce } from '@/utils/debounce'
@@ -24,7 +23,7 @@ const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 /** 依赖插件(plugin-search-widget) */
 const uniHaloPluginId = 'plugin-search-widget'
-const uniHaloPluginAvailable = ref(true)
+const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 /* ---------------- 状态 ---------------- */
 const loading = ref<'loading' | 'success' | 'error'>('loading')
@@ -122,7 +121,7 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
-  uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
+  await checkPluginAvailable()
   if (!uniHaloPluginAvailable.value) {
     uni.stopPullDownRefresh()
     return

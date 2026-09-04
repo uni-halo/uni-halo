@@ -7,9 +7,11 @@
  */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getMomentByName } from '@/api/halo'
+import { getMomentByName, submitUpvote } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useFavoritesStore } from '@/store/favorites'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { generateUUID } from '@/utils/uuid'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { randomTagColor } from '@/utils/random'
@@ -27,6 +29,7 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
+const favoritesStore = useFavoritesStore()
 const haloConfigs = computed(() => appConfigStore.configs)
 
 const bloggerInfo = computed(() => {
@@ -121,6 +124,83 @@ const calcMastheadMeta = computed(() => {
   const time = moment.value?.spec.releaseTime
   return time ? formatTimeUtil({ d: time, f: 'yyyy年 · 星期w' }) : ''
 })
+
+/* ---------------- 收藏 ---------------- */
+/** 当前瞬间是否已收藏(悬浮胶囊高亮) */
+const momentFavorited = computed(() => {
+  const name = moment.value?.metadata.name
+  return !!name && favoritesStore.isFavorite('moment', name)
+})
+
+/** 切换收藏(收藏/取消),收藏时按当前详情内容生成快照入库 */
+function handleToggleMomentFavorite() {
+  const card = moment.value
+  if (!card)
+    return
+  const favorited = favoritesStore.toggle(buildMomentFavoriteItem(card))
+  uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
+}
+
+/* ---------------- 点赞 ---------------- */
+const upvotedNames = ref<string[]>([])
+
+function hasUpvoted(): boolean {
+  return upvotedNames.value.includes(moment.value?.metadata.name || '')
+}
+
+async function handleDoLikes() {
+  const current = moment.value
+  if (!current)
+    return
+  if (hasUpvoted()) {
+    uni.showToast({ icon: 'none', title: '已经点过赞啦!' })
+    return
+  }
+  try {
+    await submitUpvote({
+      group: 'content.halo.run',
+      plural: 'moments',
+      name: current.metadata.name,
+    })
+    uni.showToast({ icon: 'none', title: '点赞成功!' })
+    upvotedNames.value.push(current.metadata.name)
+    if (current.stats) {
+      current.stats.upvote = (current.stats.upvote || 0) + 1
+    }
+  }
+  catch (err) {
+    console.error('点赞失败', err)
+    uni.showToast({ icon: 'none', title: '点赞失败' })
+  }
+}
+
+/* ---------------- 评论 ---------------- */
+const commentModal = ref({
+  show: false,
+  isComment: false,
+  postName: '',
+  title: '',
+})
+
+function handleToComment() {
+  const current = moment.value
+  if (!current)
+    return
+  if (!current.spec.allowComment) {
+    uni.showToast({ icon: 'none', title: '瞬间已开启禁止评论！' })
+    return
+  }
+  commentModal.value = {
+    show: true,
+    isComment: true,
+    postName: current.metadata.name,
+    title: '新增评论',
+  }
+}
+
+function handleOnCommentModalClose(data: { refresh: boolean, isSubmit: boolean }) {
+  commentModal.value.show = false
+}
 
 /* ---------------- 视频互斥 ---------------- */
 function createVideoContexts(videos: { id?: string }[]) {
@@ -329,9 +409,49 @@ onShareTimeline(() => ({
       <view v-else class="h-7" />
     </view>
 
+    <!-- 悬浮操作(与文章详情一致:点赞/评论/收藏) -->
+    <view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
+      <view
+        class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
+      >
+        <!-- 点赞 -->
+        <view
+          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          :class="{ active: hasUpvoted() }" @click="handleDoLikes"
+        >
+          <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
+          <text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
+        </view>
+        <!-- 评论 -->
+        <view
+          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleToComment()"
+        >
+          <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
+          <text class="shrink-0 text-sm text-gray-900 font-semibold">评论</text>
+        </view>
+        <!-- 收藏 -->
+        <view
+          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleToggleMomentFavorite"
+        >
+          <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
+          <text class="shrink-0 text-sm text-gray-900 font-semibold"
+            :style="momentFavorited ? { color: '#ffb300' } : ''">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 回顶 -->
     <view class="to-top-btn uh-shadow-xs fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white" @click="handleToTopPage()">
       <wd-icon name="arrow-up" size="20px" color="#6b7280" />
     </view>
+
+    <!-- 评论弹窗 -->
+    <uh-comment-modal
+      v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
+      :title="commentModal.title" :post-name="commentModal.postName" subject-kind="Moment"
+      @on-close="handleOnCommentModalClose"
+    />
   </view>
 </template>

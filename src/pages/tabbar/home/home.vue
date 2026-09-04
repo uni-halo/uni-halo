@@ -7,6 +7,7 @@
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { t } from '@/locale'
 	import { useMaintenanceIntercept } from '@/hooks/useMaintenanceIntercept'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IPost } from '@/api/types/halo'
 
 	definePage({
@@ -28,7 +29,7 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 
 	/* ---------------- 状态 ---------------- */
-	const loading = ref<'loading' | 'success' | 'error'>('loading')
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const isLoadMore = ref(false)
 	const loadMoreText = ref(t('common.loading'))
 	const articleList = ref<IPost[]>([])
@@ -79,12 +80,12 @@
 					item.owner.avatar = checkAvatarUrl(item.owner.avatar)
 					return item
 				})
-				loading.value = 'success'
+				updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 				loadMoreText.value = t('common.noMore')
 			}
 			catch (err) {
 				console.error('获取审核文章失败', err)
-				loading.value = 'error'
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
 				loadMoreText.value = t('common.loadFailed')
 			}
 			finally {
@@ -95,7 +96,7 @@
 		}
 
 		if (!isLoadMore.value) {
-			loading.value = 'loading'
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
 		loadMoreText.value = t('common.loading')
 
@@ -108,11 +109,11 @@
 					item.owner.avatar = checkAvatarUrl(item.owner.avatar)
 					return item
 				})
-			loading.value = 'success'
+			updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
 		}
 		catch (err) {
-			loading.value = 'error'
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
 			loadMoreText.value = t('common.loadFailed')
 			console.error('获取文章失败', err)
 		}
@@ -147,14 +148,14 @@
 			},
 		})
 	}
-	
-	function init(){
+
+	function init() {
 		if (!intercepted.value) {
 			handleQuery()
 		}
 	}
 	init()
-	
+
 	/* ---------------- 生命周期 ---------------- */
 
 	// 维护检查
@@ -183,55 +184,48 @@
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 		}
 	})
-
 </script>
 
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page">
+		<!-- 轮播 -->
+		<uh-home-banner />
+
+		<!-- 公告 -->
+		<uh-home-notify />
+
+		<!-- 快捷导航 -->
+		<uh-home-quick-nav />
+
+		<!-- 精选分类 -->
+		<uh-home-category />
+
+		<!-- 最新文章 -->
+		<uh-section-title class="mb-4 box-border px-3">
+			最新内容
+			<template #right>
+				<view class="uh-global-card-glass flex items-center justify-center rounded-md p-1 text-gray-400"
+					@click="handleToSearch()">
+					<wd-icon name="arrow-right" size="12px" />
+				</view>
+			</template>
+		</uh-section-title>
+
 		<!-- 加载/错误占位 -->
-		<uh-data-loading v-if="loading !== 'success' && articleList.length === 0" :loading-status="loading"
-			@refresh="handleQuery" />
+		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+			min-height="36vh" @refresh="handleQuery" />
 
-		<!-- 内容区域 -->
 		<block v-else>
-			<!-- 轮播 -->
-			<uh-home-banner />
-
-			<!-- 公告 -->
-			<uh-home-notify />
-
-			<!-- 快捷导航 -->
-			<uh-home-quick-nav />
-
-			<!-- 精选分类 -->
-			<uh-home-category />
-
-			<!-- 最新文章 -->
-			<uh-section-title class="mb-4 box-border px-3">
-				最新内容
-				<template #right>
-					<view class="uh-global-card-glass flex items-center justify-center rounded-md p-1 text-gray-400"
-						@click="handleToSearch()">
-						<wd-icon name="arrow-right" size="12px" />
-					</view>
-				</template>
-			</uh-section-title>
-
-			<view v-if="articleList.length === 0" class="article-empty py-10">
-				<wd-empty description="博主还没有发表任何内容~" />
+			<view class="flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
+				<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
+					@on-click="handleToArticleDetail" />
 			</view>
-			<block v-else>
-				<view class="flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
-					<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
-						@on-click="handleToArticleDetail" />
-				</view>
-				<view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
-					{{ loadMoreText }}
-				</view>
-				<view v-if="articleList.length > 10" class="to-top-btn" @click="handleToTopPage()">
-					<wd-icon name="arrow-up" size="20px" color="#03a9f4" />
-				</view>
-			</block>
+			<view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
+				{{ loadMoreText }}
+			</view>
+			<view v-if="articleList.length > 10" class="to-top-btn" @click="handleToTopPage()">
+				<wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+			</view>
 		</block>
 	</view>
 	<uh-notify-dialog />

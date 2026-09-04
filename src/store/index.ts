@@ -16,6 +16,7 @@ setActivePinia(store)
 export default store
 
 export * from './appConfig'
+export * from './favorites'
 export * from './halo'
 export * from './setting'
 // 模块统一导出

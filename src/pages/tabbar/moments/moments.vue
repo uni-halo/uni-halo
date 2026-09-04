@@ -8,12 +8,14 @@
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { useFavoritesStore } from '@/store/favorites'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+	import { buildMomentFavoriteItem } from '@/utils/favorite'
 	import { generateUUID } from '@/utils/uuid'
-	import { formatTime as formatTimeUtil } from '@/utils/formatTime'
+	import { formatTime } from '@/utils/formatTime'
 	import { randomTagColor } from '@/utils/random'
 	import { t } from '@/locale'
-	import { usePluginAvailable } from '@/utils/plugin'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { markdownConfig } from '@/config/markdown'
 	import type { IMoment } from '@/api/types/halo'
 
@@ -21,12 +23,11 @@
 		style: {
 			navigationBarTitleText: '瞬间',
 			enablePullDownRefresh: true,
-			// 下拉/回弹露出的窗口底色对齐页面底色
-			backgroundColor: '#f6f3ee',
 		},
 	})
 
 	const appConfigStore = useAppConfigStore()
+	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcUseTagRandomColor = computed(() => !!haloConfigs.value.pageConfig?.momentConfig?.useTagRandomColor)
@@ -47,13 +48,13 @@
 
 	/** 依赖插件(plugin-moments) */
 	const uniHaloPluginId = 'plugin-moments'
-	const uniHaloPluginAvailable = ref(true)
+	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 	/* ---------------- 状态 ---------------- */
-	const loading = ref<'loading' | 'success' | 'error'>('loading')
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const queryParams = ref({ size: 10, page: 1 })
 	const hasNext = ref(false)
-	/** 列表卡片:medium 已按类型拆为 images/videos/audios + 正文 tag 清理 */
+	/** 列表卡片 */
 	type MomentCard = IMoment & {
 		images ?: { type ?: string, url : string }[]
 		videos ?: { id ?: string, url : string }[]
@@ -65,13 +66,6 @@
 	const loadMoreText = ref(t('common.loading'))
 	const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
 	const currentVideoId = ref<string | null>(null)
-
-	/** 标签颜色(随机模式下按数据稳定,避免每次渲染重新随机变色) */
-	const calcTagColors = computed(() => {
-		return dataList.value.map(moment =>
-			(moment.spec.tags || []).map(() => (calcUseTagRandomColor.value ? randomTagColor() : '#4d7c0f')),
-		)
-	})
 
 	/** 移除内容中的 tag 链接 */
 	function removeTagLinksCompletely(htmlString : string) : string {
@@ -116,14 +110,14 @@
 				nextTick(() => {
 					createVideoContexts(tempItems)
 				})
-				loading.value = 'success'
+				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 				loadMoreText.value = t('common.noMore')
 				uni.hideLoading()
 				uni.stopPullDownRefresh()
 			}
 			catch (err) {
 				console.error(err)
-				loading.value = 'error'
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
 				loadMoreText.value = t('common.loadFailed')
 			}
 			return
@@ -131,13 +125,12 @@
 
 		uni.showLoading({ mask: true, title: t('common.loading') })
 		if (!isLoadMore.value) {
-			loading.value = 'loading'
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
 		loadMoreText.value = t('common.loading')
 
 		try {
 			const res = await getMomentList({ ...queryParams.value })
-			loading.value = 'success'
 			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
 			hasNext.value = res.data.hasNext
 
@@ -148,6 +141,7 @@
 			dataList.value = isLoadMore.value
 				? dataList.value.concat(tempItems)
 				: tempItems
+			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 
 			nextTick(() => {
 				createVideoContexts(tempItems)
@@ -155,7 +149,7 @@
 		}
 		catch (err) {
 			console.error(err)
-			loading.value = 'error'
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
 			loadMoreText.value = t('common.loadFailed')
 		}
 		finally {
@@ -216,6 +210,18 @@
 		})
 	}
 
+	/** 是否已收藏该瞬间(卡片收藏格高亮) */
+	function isMomentFavorite(moment : IMoment) : boolean {
+		return favoritesStore.isFavorite('moment', moment.metadata.name)
+	}
+
+	/** 切换收藏(收藏/取消),收藏时按当前卡片内容生成快照入库 */
+	function handleToggleMomentFavorite(moment : MomentCard) {
+		if (!moment) { return }
+		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(moment))
+		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
+	}
+
 	function handleToTopPage(duration = 500) {
 		uni.pageScrollTo({
 			scrollTop: 0,
@@ -228,14 +234,13 @@
 
 	/** 格式化瞬间时间 */
 	function formatMomentTime(time ?: string) : string {
-		// 与旧项目一致:yyyy年MM月dd日 星期w
-		return time ? formatTimeUtil({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
+		return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
 	}
 
 	/* ---------------- 生命周期 ---------------- */
 	onLoad(async () => {
 		uni.setNavigationBarTitle({ title: t('page.moments.title') })
-		uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
+		await checkPluginAvailable()
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()
 			return
@@ -256,8 +261,7 @@
 	})
 
 	onReachBottom(() => {
-		if (!uniHaloPluginAvailable.value)
-			return
+		if (!uniHaloPluginAvailable.value) { return }
 		if (calcAuditModeEnabled.value) {
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 			return
@@ -279,8 +283,8 @@
 			error-text="检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员" @on-refresh="handleGetData" />
 		<template v-else>
 			<!-- 加载失败(可重试) -->
-			<uh-data-loading v-if="loading !== 'success'" :loading-status="loading" min-height="60vh"
-				@refresh="handleGetData" />
+			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+				min-height="60vh" @refresh="handleGetData" />
 
 			<view v-else class="flex flex-col gap-3 px-3">
 				<view v-if="dataList.length === 0"
@@ -289,7 +293,7 @@
 				</view>
 
 				<block v-else>
-					<!-- 瞬间卡片(社交信息流:着色昵称 + 朋友圈式不缩进正文 + 媒体九宫格 + 内嵌互动脚注) -->
+					<!-- 瞬间卡片-->
 					<view v-for="moment in dataList" :key="moment.metadata.name"
 						class="moment-card uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white">
 						<!-- 作者 -->
@@ -372,9 +376,10 @@
 								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
 								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
 							</view>
-							<view class="flex items-center gap-x-1">
-								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
-								<text class="text-sm text-gray-600">收藏</text>
+							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
+								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
+								<text class="text-sm text-gray-600"
+									:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}</text>
 							</view>
 						</view>
 					</view>

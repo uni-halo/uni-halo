@@ -18,8 +18,8 @@ interface IProps {
 
 const props = withDefaults(defineProps<IProps>(), {
   loadingStatus: 'loading',
-  minHeight: '60vh',
-  loadingText: '稍等，正在加载中哦...',
+  minHeight: '75vh',
+  loadingText: '稍等，正在加载中哦',
   errorText: '哎呀，加载失败了呢~',
   emptyText: '啊偶，暂时没有数据呢~',
   loadingSubText: '',
@@ -63,7 +63,7 @@ const statusScene = computed(() => {
 
 <template>
   <view
-    class="w-full flex flex-col items-center justify-center gap-y-8 text-sm"
+    class="w-full flex flex-col items-center justify-center gap-y-4 text-sm"
     :style="{ minHeight: props.minHeight }"
   >
     <!-- 状态舞台:光晕 + 漂浮装饰点 + 毛玻璃表情珠 -->
@@ -83,8 +83,8 @@ const statusScene = computed(() => {
       <view class="flex items-center justify-center text-[28rpx] font-bold" :class="statusScene.mainTextClass">
         <text>{{ statusScene.mainText }}</text>
         <!-- 加载中三点跳动 -->
-        <view v-if="isLoading" class="ml-3 flex items-end gap-1">
-          <view v-for="n in 3" :key="n" class="typing-dot" />
+        <view v-if="isLoading" class="ml-1 flex items-end gap-1">
+          <view v-for="n in 3" :key="n" class="typing-dot bg-primary" />
         </view>
       </view>
       <text v-if="statusScene.subText" class="mt-3 text-[24rpx] text-gray-400">
@@ -98,9 +98,6 @@ const statusScene = computed(() => {
 </template>
 
 <style scoped lang="scss">
-/* 氛围化状态占位：keyframes/状态配色无法用原子类表达,保留 scoped 样式 */
-
-/* —— 毛玻璃表情珠(三态共用,缓慢上下漂浮) —— */
 .bubble {
   animation: bubble-float 2s ease-in-out infinite;
 }
@@ -109,7 +106,6 @@ const statusScene = computed(() => {
   display: inline-block;
 }
 
-/* —— 光晕(状态色,缓慢呼吸) —— */
 .glow {
   animation: glow-pulse 2.4s ease-in-out infinite;
 }
@@ -126,7 +122,6 @@ const statusScene = computed(() => {
   background: rgba(217, 249, 157, 0.5);
 }
 
-/* —— 漂浮装饰点(品牌双色,错峰漂浮) —— */
 .deco-dot {
   animation: deco-float 2s ease-in-out infinite;
 }
@@ -167,8 +162,7 @@ const statusScene = computed(() => {
 .typing-dot {
   width: 10rpx;
   height: 10rpx;
-  border-radius: 50%;
-  background: rgba(163, 230, 53, 0.95);
+  border-radius: 50%; 
   animation: dot-jump 1s ease-in-out infinite;
 
   &:nth-child(2) {

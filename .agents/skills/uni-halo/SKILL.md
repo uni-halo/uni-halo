@@ -16,7 +16,7 @@ license: Complete terms in LICENSE.txt
 - **定义或修改 API**（约定使用 alova，格式、`meta` 传参、类型文件位置）
 - **定义或修改类型**（`src/api/types/` 下的接口与请求/响应类型）
 - **使用通用配置**（`src/config/` 的 appConfig / appSettings / haloGlobal / markdown）
-- **页面数据请求**（`useDataLoading` / `useRequest` hooks + `uh-data-loading` 组件）
+- **页面数据请求**（`useDataLoadingStatus` + `updateLoadingStatus` 管理四态 + `uh-data-loading` 组件）
 - **处理多平台差异**（H5 / 微信小程序 / APP，条件编译）
 
 ## 三条铁律（先记住）
@@ -295,81 +295,128 @@ onLoad(() => {
 - 页面根节点用 `app-page` 类 + 主题底色：`<view class="app-page min-h-screen w-screen flex flex-col bg-page">`
 - 页面标题 `navigationBarTitleText` 写中文；下拉刷新 `enablePullDownRefresh: true`
 
-### 5.4 页面数据请求（统一 hooks + uh-data-loading 组件）
+### 5.4 页面数据请求（统一 updateLoadingStatus + uh-data-loading 组件）
 
-**数据加载四态**：`loading / error / empty / success`，由 `useDataLoading` hook 接管，
-页面只提供请求函数，**取代「手工 ref + try/catch 逐个搬运状态」的写法**。
+**数据加载四态**：`loading / error / empty / success`，统一用
+`useDataLoadingStatus`（`src/hooks/useDataLoadingStatus.ts`）的
+`updateLoadingStatus(DataLoadingStatusEnum.Xxx)` 管理，**取代「手工 ref + try/catch 逐个搬运状态」的写法**。
+首页、图库、瞬间、分类等 tabbar 页面均为此写法（参考 `src/pages/tabbar/category/category.vue`），
+**后续所有页面请求状态一律照此管理**。
 
 ```vue
 <script lang="ts" setup>
-import { onLoad } from '@dcloudio/uni-app'
-import { getMomentByName } from '@/api/halo'
-import { useDataLoading } from '@/hooks/useDataLoading'
-import type { IMoment } from '@/api/types/halo'
+import { computed, ref } from 'vue'
+import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { getCategoryList } from '@/api/halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import type { ICategory } from '@/api/types/halo'
 
 definePage({
   style: {
-    navigationBarTitleText: '瞬间详情',
+    navigationBarTitleText: '分类',
     enablePullDownRefresh: true,
-    backgroundColor: '#f6f3ee', // 下拉露出的窗口底色对齐页面底色
+    backgroundColor: '#f6f3ee',
   },
 })
 
-const { data: moment, status, run: loadMoment } = useDataLoading(
-  async (): Promise<IMoment> => {
-    const res = await getMomentByName(queryName.value)
-    return res.data
-  },
-  {
-    onSuccess: (data) => {
-      // 数据就绪后的处理
-    },
-    onError: () => {
-      // 失败处理（run 已捕获异常，不会向外抛出）
-    },
-  },
-)
+/* ---------------- 状态 ---------------- */
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const queryParams = ref({ size: 20, page: 1 })
+const hasNext = ref(false)
+const dataList = ref<ICategory[]>([])
+const isLoadMore = ref(false)
+const loadMoreText = ref(t('common.loading'))
 
-onLoad(() => {
-  loadMoment()
+/* ---------------- 数据加载 ---------------- */
+async function handleGetData() {
+  updateLoadingStatus(DataLoadingStatusEnum.Loading) // 请求开始
+  if (!isLoadMore.value) {
+    updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  }
+  loadMoreText.value = t('common.loading')
+
+  try {
+    const res = await getCategoryList({ ...queryParams.value })
+    hasNext.value = res.data.hasNext
+    dataList.value = isLoadMore.value
+      ? dataList.value.concat(res.data.items)
+      : res.data.items
+    // 请求结束：按数据是否为空区分 success / empty
+    updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+  }
+  catch (err) {
+    console.error(err)
+    updateLoadingStatus(DataLoadingStatusEnum.Error) // 失败
+    loadMoreText.value = t('common.loadFailed')
+  }
+  finally {
+    setTimeout(() => {
+      uni.hideLoading()
+      uni.stopPullDownRefresh()
+    }, 500)
+  }
+}
+
+function handleResetInit() {
+  dataList.value = []
+  queryParams.value.page = 1
+  hasNext.value = false
+  isLoadMore.value = false
+  loadMoreText.value = t('common.loading')
+}
+
+onMounted(() => {
+  handleResetInit()
+  handleGetData()
 })
 
-onPullDownRefresh(async () => {
-  await loadMoment()
-  uni.stopPullDownRefresh()
+onPullDownRefresh(() => {
+  handleResetInit()
+  handleGetData()
+})
+
+onReachBottom(() => {
+  if (hasNext.value) {
+    queryParams.value.page += 1
+    isLoadMore.value = true
+    handleGetData()
+  }
+  else {
+    uni.showToast({ icon: 'none', title: t('common.noMoreData') })
+  }
 })
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen bg-page px-4 pb-8 pt-4">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page p-3">
     <!-- 状态区：loading/error/empty 由 uh-data-loading 展示，refresh 触发重新请求 -->
-    <uh-data-loading
-      v-if="status !== 'success'"
-      :loading-status="status"
-      min-height="60vh"
-      error-text="瞬间内容加载失败"
-      empty-text="瞬间不存在或已被删除"
-      @refresh="loadMoment"
-    />
+    <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
 
     <!-- 成功态：渲染数据 -->
-    <template v-else>
-      <view>{{ moment?.spec.releaseTime }}</view>
-    </template>
+    <block v-else>
+      <view v-for="item in dataList" :key="item.metadata.name" class="uh-global-card-glass rounded-xl p-4">
+        {{ item.spec.displayName }}
+      </view>
+      <view class="w-full py-5 text-center text-xs text-gray-400">
+        {{ loadMoreText }}
+      </view>
+    </block>
   </view>
 </template>
 ```
 
 **要点**：
 
-- `useDataLoading(fetcher, { isEmpty, onSuccess, onError })` 返回 `{ data, status, run }`
-  - `isEmpty` 自定义判空（默认：数组看长度、对象看键数、空值视为空）
-  - `run` 已捕获异常，失败置 `status='error'`，不会向外抛出
-- 模板里 `v-if="status !== 'success'"` 显示 `<uh-data-loading>`，否则渲染数据
+- `useDataLoadingStatus()` 返回 `{ loadingStatus, updateLoadingStatus }`；`DataLoadingStatusEnum` 四态：
+  `Loading / Error / Empty / Success`
+- 请求开始置 `DataLoadingStatusEnum.Loading`；成功按数据是否为空置 `Success` / `Empty`；失败置 `Error`
+- 模板里 `v-if="loadingStatus !== DataLoadingStatusEnum.Success"` 显示 `<uh-data-loading>`，否则渲染数据
 - `<uh-data-loading>` 常用 props：`loading-status`（必传）、`min-height`、`loading-text`、
   `error-text`、`empty-text`（留空显示默认文案）；`@refresh` 绑重试函数
-- **旧页面**用的 `useDataLoadingStatus`（`DataLoadingStatusEnum`）已标记 `@deprecated`，
-  新代码一律用 `useDataLoading`
+- 首页特例：入口拦截 + 文章列表空时用 `v-if="loadingStatus !== Success && articleList.length === 0"`，
+  避免轮播/公告区被占位组件顶掉
+- 详情页等单数据场景（如 `moment-detail`）可用 `useDataLoading` 状态机（返回 `{ data, status, run }`），
+  列表页/四态展示优先 `updateLoadingStatus` 写法
 - 简单场景也可用 `useRequest(fn, { immediate })`：返回 `{ loading, error, data, run }`
 
 ### 5.5 列表页（分页加载）
@@ -640,7 +687,7 @@ loadMoreText.value = t('common.loadMore')
 
 - 新 hooks 放 `src/hooks/`，auto-import（`unplugin-auto-import` 已配 `dirs: ['src/hooks']`），页面**免 import 直接调用**
 - 命名 `useXxx`；有配套单测的写 `xxx.test.ts`（如 `useDataLoading.test.ts`、`useRequest.test.ts`）
-- 参考既有实现风格：`useDataLoading`（状态机四态）、`useScroll`、`useUpload`（平台条件编译处理）
+- 参考既有实现风格：`useDataLoadingStatus`（页面四态管理，见 §5.4）、`useDataLoading`（详情页单数据状态机）、`useScroll`、`useUpload`（平台条件编译处理）
 
 ### 8.6 Git 提交与合入
 

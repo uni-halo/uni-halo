@@ -1,6 +1,21 @@
 /**
- * 插件清单与可用性检查(源自旧项目 utils/plugin.js,TS 化)
+ * 插件清单与可用性 hook
+ * 源自旧项目 utils/plugin.js(TS 化)与 utils/plugin.ts,整体迁移至 hooks 目录。
+ * 提供:
+ * - 依赖插件 ID 常量(NeedPluginIds)与插件清单(NeedPlugins)
+ * - 底层可用性检查(checkNeedPluginAvailable)
+ * - 响应式 hook(usePluginAvailable):available 状态 + check 校验函数,页面免 import 直接调用
+ *   (auto-import 已配置 src/hooks,无需手写 import)
+ *
+ * @example
+ * const { available, check } = usePluginAvailable('plugin-vote')
+ * onLoad(async () => {
+ *   await check()
+ *   if (!available.value) return
+ *   handleGetData()
+ * })
  */
+import { ref } from 'vue'
 import { checkPluginAvailable } from '@/api/halo'
 import { checkUrl } from '@/utils/url'
 
@@ -124,10 +139,26 @@ export async function checkNeedPluginAvailable(pluginId: string): Promise<boolea
   }
 }
 
-/**
- * 检查插件可用性(供页面 onLoad 使用,源自 uh-plugin-unavailable 组件,移出避免 script setup export)
- * @param pluginId 插件 id
- */
-export async function usePluginAvailable(pluginId: string): Promise<boolean> {
-  return checkNeedPluginAvailable(pluginId)
+export function usePluginAvailable(pluginId: string, initial = true) {
+  /** 插件是否可用(默认 true,避免首帧闪现插件不可用占位;需要先置 false 的页面传 initial=false) */
+  const available = ref(initial)
+  /** 是否校验中 */
+  const checking = ref(false)
+
+  /**
+   * 执行插件可用性校验(刷新 available)
+   * @returns 当前是否可用(与 available.value 一致,便于一次性调用方直接取返回值)
+   */
+  async function check(): Promise<boolean> {
+    checking.value = true
+    try {
+      available.value = await checkNeedPluginAvailable(pluginId)
+      return available.value
+    }
+    finally {
+      checking.value = false
+    }
+  }
+
+  return { available, checking, check }
 }

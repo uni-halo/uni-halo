@@ -7,7 +7,6 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getVoteList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
-import { usePluginAvailable } from '@/utils/plugin'
 import type { IVoteItem } from '@/api/types/uni-halo'
 
 definePage({
@@ -22,7 +21,7 @@ const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
 /** 依赖插件(plugin-vote) */
 const uniHaloPluginId = 'plugin-vote'
-const uniHaloPluginAvailable = ref(true)
+const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 /* ---------------- 状态 ---------------- */
 const loading = ref<'loading' | 'success' | 'error'>('loading')
@@ -84,7 +83,7 @@ function handleToTopPage(duration = 500) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
-  uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
+  await checkPluginAvailable()
   if (!uniHaloPluginAvailable.value) {
     uni.stopPullDownRefresh()
     return

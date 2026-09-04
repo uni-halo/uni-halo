@@ -5,8 +5,10 @@ import { getPostByName, getPostCommentReplyList, postTrackersCounter, submitUpvo
 import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useFavoritesStore } from '@/store/favorites'
 import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+import { buildPostFavoriteItem } from '@/utils/favorite'
 import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
 import { getDomainOnly } from '@/utils/urlParams'
 import { markdownConfig } from '@/config/markdown'
@@ -23,6 +25,7 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
+const favoritesStore = useFavoritesStore()
 const settingStore = useSettingStore()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
@@ -215,6 +218,22 @@ async function handleDoLikes() {
     console.error('点赞失败', err)
     uni.showToast({ icon: 'none', title: '点赞失败' })
   }
+}
+
+/* ---------------- 收藏 ---------------- */
+/** 当前文章是否已收藏 */
+function hasFavorited(): boolean {
+  const name = result.value?.metadata.name
+  return !!name && favoritesStore.isFavorite('post', name)
+}
+
+/** 切换收藏(收藏/取消),收藏时按当前文章内容生成快照入库 */
+function handleTogglePostFavorite() {
+  const post = result.value
+  if (!post)
+    return
+  const favorited = favoritesStore.toggle(buildPostFavoriteItem(post))
+  uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 }
 
 /* ---------------- 受限阅读 ---------------- */
@@ -613,10 +632,11 @@ const globalAppSettings = computed(() => settingStore.settings)
           </view>
           <view
             class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            @click="handleToComment()"
+            @click="handleTogglePostFavorite"
           >
             <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-            <text class="shrink-0 text-sm text-gray-900 font-semibold">收藏</text>
+            <text class="shrink-0 text-sm text-gray-900 font-semibold"
+              :style="hasFavorited() ? { color: '#ffb300' } : ''">{{ hasFavorited() ? '已收藏' : '收藏' }}</text>
           </view>
         </view>
       </view>

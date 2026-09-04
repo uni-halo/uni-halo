@@ -5,13 +5,13 @@
  * 风格:对齐全站设计语言(bg-page + uh-global-card-glass + uh-section-title + 彩色图标块)
  */
 import { computed, ref, watch } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
 import { getBlogStatistics } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useFavoritesStore } from '@/store/favorites'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { checkHasAdminLogin } from '@/utils/auth'
 import { t } from '@/locale'
-import { usePluginAvailable } from '@/utils/plugin'
 import type { IBlogStats } from '@/api/types/halo'
 
 definePage({
@@ -23,10 +23,13 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
+const favoritesStore = useFavoritesStore()
 const haloConfigs = computed(() => appConfigStore.configs)
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
 const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
+/** 数据看板插件可用性(供导航项显隐判断) */
+const { check: checkDataVisualPlugin } = usePluginAvailable('plugin-data-statistics')
 
 /* ---------------- 计算属性 ---------------- */
 const bloggerInfo = computed(() => {
@@ -116,10 +119,28 @@ function toSolidColor(rgba: string) {
   return rgba.replace('0.95)', '1)')
 }
 
+/** 收藏导航项右侧文案跟随收藏总数(收藏页返回/切回时刷新) */
+function syncFavoritesNavText() {
+  const nav = navList.value.find(n => n.key === 'favorites')
+  if (nav) {
+    nav.rightText = `共 ${favoritesStore.counts.total} 条收藏`
+  }
+}
+
 async function handleGetNavList() {
-  const dataVisualAvailable = await usePluginAvailable('plugin-data-statistics')
+  const dataVisualAvailable = await checkDataVisualPlugin()
 
   navList.value = [
+    {
+      key: 'favorites',
+      title: '我的收藏',
+      icon: 'star',
+      bgColor: 'rgba(255, 179, 0, 0.95)',
+      rightText: '',
+      path: '/pages-blog/favorites/favorites',
+      show: true,
+      group: 'blog',
+    },
     {
       key: 'data-visual',
       title: '数据看板',
@@ -217,6 +238,7 @@ async function handleGetNavList() {
       group: 'more',
     },
   ]
+  syncFavoritesNavText()
 }
 
 /* ---------------- 数据加载 ---------------- */
@@ -268,6 +290,11 @@ watch(haloConfigs, () => {
 }, { deep: true, immediate: true })
 
 handleGetData()
+
+// 从收藏页返回/切回时刷新收藏数文案
+onShow(() => {
+  syncFavoritesNavText()
+})
 
 onPullDownRefresh(() => {
   handleGetData()

@@ -9,7 +9,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
 	import { t } from '@/locale'
-	import { usePluginAvailable } from '@/utils/plugin'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
 	definePage({
@@ -27,10 +27,10 @@
 
 	/** 依赖插件(plugin-photos) */
 	const uniHaloPluginId = 'plugin-photos'
-	const uniHaloPluginAvailable = ref(true)
+	const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId, false)
 
 	/* ---------------- 状态 ---------------- */
-	const loading = ref<'loading' | 'success' | 'error' | 'empty'>('loading')
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const category = ref<{ activeIndex : number, list : IPhotoGroup[] }>({
 		activeIndex: 0,
 		list: [],
@@ -58,14 +58,12 @@
 					handleGetData(true)
 				}
 				else {
-					loading.value = 'success'
 					loadMoreText.value = t('common.noMore')
 					uni.stopPullDownRefresh()
 				}
 			}
 			catch (e) {
 				console.error(e)
-				loading.value = 'error'
 				category.value = { activeIndex: 0, list: [] }
 			}
 			return
@@ -82,7 +80,6 @@
 		}
 		catch (e) {
 			console.error(e)
-			loading.value = 'error'
 			category.value = { activeIndex: 0, list: [] }
 		}
 	}
@@ -94,7 +91,7 @@
 		}
 
 		if (!isLoadMore.value) {
-			loading.value = 'loading'
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
 		loadMoreText.value = ''
 
@@ -110,12 +107,12 @@
 					? dataList.value.concat(list)
 					: list
 			}
-			loading.value = dataList.value.length !== 0 ? 'success' : 'empty'
+			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
 		}
 		catch (err) {
 			console.error(err)
-			loading.value = 'error'
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
 			loadMoreText.value = t('common.loadFailed')
 		}
 		finally {
@@ -150,20 +147,18 @@
 	/* ---------------- 生命周期 ---------------- */
 	onLoad(async () => {
 		// 检查插件可用性
-		uniHaloPluginAvailable.value = await usePluginAvailable(uniHaloPluginId)
+		await checkPluginAvailable()
+		console.log('uniHaloPluginAvailable',uniHaloPluginAvailable.value)
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()
 			return
 		}
-	})
-
-	watch(galleryConfig, (newVal) => {
-		if (!newVal)
-			return
-		uni.setNavigationBarTitle({ title: newVal.pageTitle || t('page.gallery.title') })
+		
+		
+		// 开始正常数据请求
 		handleGetCategory()
-	}, { deep: true, immediate: true })
-
+	})
+ 
 	onPullDownRefresh(() => {
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()
@@ -211,9 +206,8 @@
 			</wd-sticky>
 
 			<!-- 加载/错误占位 -->
-			<view v-if="loading !== 'success'" class="box-border p-3">
-				<uh-data-loading :loading-status="loading" @refresh="handleGetCategory" />
-			</view>
+			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+				@refresh="handleGetCategory" />
 
 			<!-- 内容区域 -->
 			<view v-else class="box-border w-full p-3">

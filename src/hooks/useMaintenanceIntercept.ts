@@ -6,7 +6,6 @@
  * 维护页按 reason 展示默认(未配置维护信息)或配置文案。设计见插件
  * .docs/maintenance-config-design.md §8。
  */
-import { usePluginAvailable } from '@/utils/plugin'
 import { useAppConfigStore } from '@/store/appConfig'
 
 /** 维护拦截原因:plugin 主插件未激活 / maintenance 维护模式开启 */
@@ -33,14 +32,16 @@ export const MAINTENANCE_PLUGIN_ID = 'plugin-uni-halo'
  */
 export function useMaintenanceIntercept() {
   const appConfigStore = useAppConfigStore()
+  /** 主插件可用性 hook(checkIntercept 内 await check 后读取 available) */
+  const { available: pluginAvailable, check: checkPluginAvailable } = usePluginAvailable(MAINTENANCE_PLUGIN_ID)
 
   /**
    * 检查是否命中拦截(插件可用性 + 维护模式)。
    * @param force 是否强制刷新配置(默认 false 走 bootstrap TTL 缓存)
    */
   async function checkIntercept(force = false): Promise<IMaintenanceInterceptResult> {
-    const pluginAvailable = await usePluginAvailable(MAINTENANCE_PLUGIN_ID)
-    if (!pluginAvailable)
+    await checkPluginAvailable()
+    if (!pluginAvailable.value)
       return { intercepted: true, reason: 'plugin' }
 
     const { ok } = await appConfigStore.bootstrap({ force })

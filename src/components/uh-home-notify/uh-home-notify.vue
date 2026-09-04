@@ -1,11 +1,4 @@
 <script lang="ts" setup>
-/**
- * 首页公告滚动条(plugin-uni-halo 通知公告,2026-09-03 客户端新增)
- * 展示最新/置顶公告(公开 GET /notices 服务端默认 priority desc + publishTime desc),
- * 取前 6 条标题垂直循环轮播:点击当前标题跳公告详情,右侧「更多」跳公告列表页。
- * 无公告(或加载失败)时整条不渲染,不占首页空间。
- * UIUX 见 .docs/notice-module-client-design.md
- */
 import { computed, onMounted, ref } from 'vue'
 import { getNotices } from '@/api/uni-halo'
 import type { INoticeListVo } from '@/api/types/uni-halo'
@@ -47,14 +40,14 @@ onMounted(() => {
 <template>
   <view
     v-if="showList.length > 0"
-    class="mx-3 mb-2 flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm"
+    class="uh-global-card-glass box-border mx-3 mt-3 mb-2 flex items-center rounded-xl px-3"
   >
     <!-- 左侧公告入口 -->
     <view class="flex shrink-0 items-center gap-1 py-2 pr-3" @click="handleGoList">
-      <text class="text-[28rpx]">
+      <text class="text-sm">
         📢
       </text>
-      <text class="text-[24rpx] font-bold text-[#f83856]">
+      <text class="text-xs font-bold text-red-400">
         公告
       </text>
     </view>
@@ -76,7 +69,7 @@ onMounted(() => {
           class="h-full w-full"
         >
           <view
-            class="flex h-full w-full items-center truncate text-[24rpx] text-[#555]"
+            class="flex h-full w-full items-center truncate text-xs text-gray-500"
             @click="handleTap(item)"
           >
             {{ item.title }}

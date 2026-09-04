@@ -12,7 +12,7 @@ import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-import { NeedPluginIds, usePluginAvailable } from '@/utils/plugin'
+import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { ILink, ILinkGroup } from '@/api/types/halo'
 import type { IMiniProgramLink, IMiniProgramLinkGroupVo } from '@/api/types/uni-halo'
 
@@ -32,10 +32,10 @@ const globalAppSettings = computed(() => settingStore.settings)
 /* ---------------- 依赖插件 ---------------- */
 /** 站点 tab:plugin-links */
 const sitePluginId = NeedPluginIds.PluginLinks
-const sitePluginAvailable = ref(true)
+const { available: sitePluginAvailable, check: checkSitePluginAvailable } = usePluginAvailable(sitePluginId)
 /** 小程序 tab:plugin-uni-halo */
 const miniPluginId = NeedPluginIds.PluginUniHalo
-const miniPluginAvailable = ref(true)
+const { available: miniPluginAvailable, check: checkMiniPluginAvailable } = usePluginAvailable(miniPluginId)
 
 /* ---------------- tabs ---------------- */
 const activeTabIndex = ref(0)
@@ -268,9 +268,9 @@ function handleSaveMiniProgramCode(link: IMiniProgramLink) {
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
-  ;[sitePluginAvailable.value, miniPluginAvailable.value] = await Promise.all([
-    usePluginAvailable(sitePluginId),
-    usePluginAvailable(miniPluginId),
+  await Promise.all([
+    checkSitePluginAvailable(),
+    checkMiniPluginAvailable(),
   ])
   if (sitePluginAvailable.value)
     handleGetLinkGroupData()

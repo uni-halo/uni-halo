@@ -10,9 +10,12 @@
 		isComment ?: boolean
 		title ?: string
 		postName : string
+		/** 评论目标 kind(文章 Post / 瞬间 Moment) */
+		subjectKind ?: string
 	}>(), {
 		isComment: false,
 		title: '',
+		subjectKind: 'Post',
 	})
 
 	const emit = defineEmits<{
@@ -189,7 +192,7 @@
 					},
 					subjectRef: {
 						group: 'content.halo.run',
-						kind: 'Post',
+						kind: props.subjectKind,
 						name: form.value.postName,
 						version: 'v1alpha1',
 					},

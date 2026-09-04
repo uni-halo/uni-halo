@@ -3,7 +3,6 @@
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
-	import { usePluginAvailable } from '@/utils/plugin'
 	import type { IPublicMaintenance } from '@/api/types/uni-halo'
 
 	definePage({
@@ -23,6 +22,8 @@
 	const RECOVERY_POLL_INTERVAL = 30 * 1000
 
 	const store = useAppConfigStore()
+	/** 插件可用性(拦截恢复检测用) */
+	const { check: checkPluginAvailable } = usePluginAvailable(uniHaloPluginId)
 
 	const viewState = ref<ViewState>('loading')
 	const maintenance = ref<IPublicMaintenance | null>(null)
@@ -146,7 +147,7 @@
 		try {
 			await store.bootstrap({ force: true })
 			if (fromReason.value === 'plugin') {
-				const available = await usePluginAvailable(uniHaloPluginId)
+				const available = await checkPluginAvailable()
 				if (!available) {
 					const info = store.configs.maintenance
 					if (info) {
