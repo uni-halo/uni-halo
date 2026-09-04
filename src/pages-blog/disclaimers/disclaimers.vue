@@ -40,7 +40,7 @@ function copyText(content: string, tips = '复制成功') {
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen bg-white p-12 text-[30rpx] text-[#303133] leading-[1.65]">
+  <view class="box-border min-h-screen bg-page ">
     <!-- 自定义导航 -->
     <uh-navbar default-title="免责声明" title-color="text-gray-900" />
 
@@ -48,12 +48,9 @@ function copyText(content: string, tips = '复制成功') {
     <view v-if="disclaimersContent" style="min-height: 100%;" v-html="disclaimersContent" />
 
     <!-- 静态写法 -->
-    <block v-else>
-      <view class="title text-center text-[34rpx] font-bold">
-        《 本博客免责声明 》
-      </view>
+    <view v-else class="box-border p-4 pt-0 text-sm text-gray-900 leading-7">
       <view class="item mt-6">
-        1、本博客属于个人非盈利性质的网站，所有转载的文章都以遵循原作者的版权声明注明了文章来源。
+        1、本应用属于个人非盈利性质的网站，所有转载的文章都以遵循原作者的版权声明注明了文章来源。
       </view>
       <view class="item mt-6">
         2、如果原文没有版权声明，按照目前互联网开放的原则，本博客将在不通知作者的情况下转载文章。
@@ -63,7 +60,7 @@ function copyText(content: string, tips = '复制成功') {
       </view>
       <view class="item mt-6">
         4、如果本博客转载的文章不符合作者的版权声明或者作者不想让本博客转载您的文章，请邮件告知
-        <text class="email mx-3 text-[#03a9f4]" @click="copyText(bloggerInfo.email, '电子邮箱已复制到剪贴板！')">{{ bloggerInfo.email }}</text>
+        <text class="email mx-3 text-primary" @click="copyText(bloggerInfo.email, '电子邮箱已复制到剪贴板！')">{{ bloggerInfo.email }}</text>
         ，博主将会在第一时间删除相关信息！
       </view>
       <view class="item mt-6">
@@ -81,6 +78,6 @@ function copyText(content: string, tips = '复制成功') {
       <view class="item mt-6">
         9、尊重原创，知识共享！
       </view>
-    </block>
+    </view>
   </view>
 </template>

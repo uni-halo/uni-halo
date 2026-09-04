@@ -81,8 +81,7 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	function findLinkGroupDisplayNameByGroupMetadataName(groupName ?: string) : string {
-		if (linkGroupList.value.length === 0)
-			return groupName || '未分组'
+		if (linkGroupList.value.length === 0) { return groupName || '未分组' }
 		const found = linkGroupList.value.find(item => item.metadata.name === groupName)
 		return found?.spec.displayName || groupName || '未分组'
 	}
@@ -90,7 +89,7 @@
 	async function handleGetLinkGroupData() {
 		try {
 			const res = await getFriendLinkGroupList({ page: 1, size: 0 })
-			linkGroupList.value = res.data.items || []
+			linkGroupList.value = res.data || []
 			handleGetData()
 		}
 		catch (err) {
@@ -345,7 +344,7 @@
 		<!-- 自定义导航 -->
 		<uh-navbar default-title="友情链接" title-color="text-gray-900" />
 
-		<!-- 顶部 tab(吸顶玻璃胶囊 chip,同收藏页) -->
+		<!-- 顶部 -->
 		<wd-sticky>
 			<scroll-view scroll-x class="w-full whitespace-nowrap">
 				<view class="flex gap-2 px-3 pb-1 pt-3">
@@ -364,7 +363,6 @@
 			<uh-plugin-unavailable v-if="!sitePluginAvailable" :plugin-id="sitePluginId" :error-text="siteTips"
 				:checking="siteChecking" @on-refresh="handleSitePluginRefresh" />
 			<template v-else>
-				<!-- 加载/错误/空占位(状态机) -->
 				<view v-if="siteLoadingStatus !== 'success'">
 					<uh-data-loading :loading-status="siteLoadingStatus" empty-text="啊偶,博主还没有朋友呢~"
 						@refresh="handleGetData" />
@@ -372,41 +370,22 @@
 
 				<view v-else class="content pt-4">
 					<!-- 友链列表 -->
-					<view class="link-list flex flex-col gap-4 px-4 pb-4">
+					<view class="box-border flex flex-col gap-4 px-4 pb-4">
 						<view v-for="link in dataList" :key="link.metadata?.name || link.spec.displayName">
-							<!-- 色彩版 -->
-							<view v-if="!globalAppSettings.links.useSimple"
-								class="info uh-global-card-glass flex rounded-2xl p-3" @click="handleOnLinkEvent(link)">
-								<image class="link-logo h-[140rpx] w-[140rpx] shrink-0 rounded-xl" :src="link.spec.logo"
-									mode="aspectFill" />
-								<view class="info-detail flex flex-1 flex-col justify-center pl-5">
-									<view class="link-card-name text-[30rpx] text-gray-900 font-bold">
+							<view class="uh-global-card-glass overflow-hidden box-border flex rounded-xl p-3"
+								@click="handleOnLinkEvent(link)">
+								<image class="h-16 w-16 shrink-0 rounded-lg" :src="link.spec.logo" mode="aspectFill" />
+								<view class="overflow-hidden box-border flex flex-1 flex-col justify-center pl-4">
+									<view class="flex items-center text-sm text-gray-900 font-bold">
 										<text
-											class="group-tag mr-3 rounded-md bg-secondary px-1.5 py-0.5 text-[20rpx] text-[#4d7c0f] font-normal">{{ link.spec.groupName || '暂未分组' }}</text>
-										{{ link.spec.displayName }}
+											class="shrink-0 mr-3 rounded-md bg-secondary px-1.5 py-0.5 text-xs text-[#4d7c0f] font-normal">{{ link.spec.groupName || '暂未分组' }}</text>
+										<text class="flex-1 truncate">{{ link.spec.displayName }}</text>
 									</view>
-									<view
-										class="link-card-url mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-400">
+									<view class="mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400">
 										站点地址：{{ link.spec.url }}
 									</view>
-									<view
-										class="link-card-desc mt-2 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-600">
+									<view class="mt-2 overflow-hidden truncate whitespace-nowrap text-xs text-gray-600">
 										博客简介：{{ link.spec.description || '这个博主很懒，没写简介~' }}
-									</view>
-								</view>
-							</view>
-							<!-- 简洁版 -->
-							<view v-else class="link-card uh-global-card-glass flex items-center rounded-2xl p-4"
-								@click="handleOnLinkEvent(link)">
-								<image class="logo h-[80rpx] w-[80rpx] shrink-0 border-4 border-white/90 rounded-xl"
-									:src="link.spec.logo" mode="aspectFill" />
-								<view class="link-info flex-1 pl-5">
-									<view class="name text-[30rpx] text-gray-900 font-bold">
-										{{ link.spec.displayName }}
-									</view>
-									<view
-										class="desc mt-2 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-400">
-										{{ link.spec.description }}
 									</view>
 								</view>
 							</view>
@@ -415,8 +394,7 @@
 
 					<!-- 悬浮按钮 -->
 					<view class="flot-buttons fixed bottom-10 right-4 z-999 flex flex-col gap-1.5">
-						<view
-							v-if="!haloPluginConfigs?.linksSubmitPlugin?.enabled"
+						<view v-if="!haloPluginConfigs?.linksSubmitPlugin?.enabled"
 							class="fab-btn uh-global-card-glass h-10 w-10 flex items-center justify-center rounded-full"
 							@click="toSubmitLinkPage">
 							<wd-icon name="edit" size="20px" color="#6b7280" />
@@ -424,33 +402,44 @@
 					</view>
 
 					<!-- 详情弹窗 -->
-					<wd-popup v-model="detail.show" position="center" custom-style="width:640rpx;border-radius:12rpx;">
-						<view v-if="detail.data" class="poup p-8">
-							<view class="info flex">
+					<uh-glass-popup v-model="detail.show" position="center" custom-class="w-[90vw] rounded-xl !border">
+						<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
+							<view class="w-full flex flex-col gap-y-1">
+								<text class="text-md font-bold">小程序详情</text>
+							</view>
+							<view
+								class="absolute right-4 top-4 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg text-center"
+								@click="miniDetail.show = false">
+								<wd-icon name="close" size="32rpx" class="text-gray-500"></wd-icon>
+							</view>
+						</view>
+						<scroll-view v-if="detail.data" :scroll-y="true" :show-scrollbar="false"
+							class="box-border p-4 max-h-[60vh]">
+							<view class="flex">
 								<image class="poup-logo h-[140rpx] w-[140rpx] shrink-0 rounded-full"
 									:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
-								<view class="poup-info ml-6 flex flex-1 flex-col justify-center">
+								<view class="ml-4 flex flex-1 flex-col gap-y-1 justify-center">
 									<view class="poup-name text-[34rpx] text-gray-900 font-bold">
 										{{ detail.data.spec.displayName }}
 									</view>
-									<view class="poup-tag mt-2 text-[24rpx] text-gray-400">
+									<view class="text-xs text-gray-500">
 										{{ detail.data.spec.groupName }}
 									</view>
-									<view class="poup-link mt-3" @click="handleCopyLink(detail.data)">
+									<view @click="handleCopyLink(detail.data)">
 										<text
-											class="poup-url rounded-lg bg-secondary px-2 py-1 text-[24rpx] text-[#4d7c0f]">{{ detail.data.spec.url }}</text>
+											class="rounded-lg bg-secondary px-2 py-1 text-xs text-gray-900">{{ detail.data.spec.url }}</text>
 									</view>
 								</view>
 							</view>
-							<view class="poup-desc mt-5 text-[28rpx] text-gray-600 leading-[1.6]">
-								博客简介：{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
+							<view class="poup-desc mt-4 text-[28rpx] text-gray-600 leading-[1.6]">
+								{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
 							</view>
-							<image class="poup-img mt-6 h-[320rpx] w-full rounded-xl"
+							<image class="poup-img mt-4 h-[320rpx] w-full rounded-xl"
 								:src="calcSiteThumbnail(detail.data.spec.url)" mode="aspectFill" />
-						</view>
-					</wd-popup>
+						</scroll-view>
+					</uh-glass-popup>
 
-					<view class="load-text py-5 text-center text-[24rpx] text-gray-400">
+					<view class="load-text py-5 text-center text-xs text-gray-400">
 						{{ loadMoreText }}
 					</view>
 				</view>
@@ -462,39 +451,39 @@
 			<uh-plugin-unavailable v-if="!miniPluginAvailable" :plugin-id="miniPluginId" :error-text="miniTips"
 				:checking="miniChecking" @on-refresh="handleMiniPluginRefresh" />
 			<template v-else>
-					<uh-data-loading  v-if="miniLoadingStatus !== 'success'" :loading-status="miniLoadingStatus" empty-text="还没有收录的小程序呢~"
-						@refresh="handleGetMiniProgramLinks" />
+				<uh-data-loading v-if="miniLoadingStatus !== 'success'" :loading-status="miniLoadingStatus"
+					empty-text="还没有收录的小程序呢~" @refresh="handleGetMiniProgramLinks" />
 				<view v-else class="content flex flex-1 flex-col">
 					<!-- 分组列表 -->
-					<view class="mini-link-list flex-1 px-6 py-4">
+					<view class="box-border flex-1 p-3">
 						<view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-8">
-							<view class="group-title mb-4 flex items-center">
+							<view class="mb-4 flex items-center">
 								<text class="mr-2 inline-block h-[28rpx] w-[8rpx] rounded-full bg-secondary" />
 								<text
 									class="text-[30rpx] text-gray-900 font-bold">{{ group.displayName || '未分组' }}</text>
-								<text class="ml-3 text-[24rpx] text-gray-400">（{{ group.links.length }}）</text>
+								<text class="ml-3 text-xs text-gray-400">（{{ group.links.length }}）</text>
 							</view>
 							<view class="group-cards flex flex-col gap-4">
 								<view v-for="link in group.links" :key="link.metadata?.name"
-									class="mini-card uh-global-card-glass flex items-center rounded-2xl p-4"
+									class="uh-global-card-glass box-border uh-shadow-xs flex items-center rounded-2xl p-3"
 									@click="handleOnMiniLinkEvent(link)">
-									<image class="mini-code h-[120rpx] w-[120rpx] shrink-0 rounded-lg"
+									<image class="h-16 w-16 shrink-0 rounded-lg"
 										:src="checkImageUrl(link.spec?.miniProgramCode)" mode="aspectFill" />
-									<view class="mini-info flex flex-1 flex-col pl-5">
+									<view class="box-border flex flex-1 flex-col pl-4">
 										<view
-											class="mini-name overflow-hidden text-ellipsis whitespace-nowrap text-[30rpx] text-gray-900 font-bold">
+											class="overflow-hidden truncate whitespace-nowrap text-[30rpx] text-gray-900 font-bold">
 											{{ link.spec?.displayName }}
 										</view>
 										<view v-if="link.spec?.authorName"
-											class="mini-author mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-400">
+											class="mini-author mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400">
 											{{ link.spec.authorName }}
 										</view>
 										<view
-											class="mini-desc mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-500">
+											class="mini-desc mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500">
 											{{ link.spec?.description || '暂无简介~' }}
 										</view>
 									</view>
-									<wd-icon name="arrow-right" size="16px" color="#c8c2b4" />
+									<wd-icon name="arrow-right" size="36rpx" class="text-primary" />
 								</view>
 							</view>
 						</view>
@@ -502,7 +491,8 @@
 
 					<!-- 申请收录悬浮按钮 -->
 					<view class="fixed bottom-10 right-4 z-50">
-						<view class="box-border flex flex-col w-10 h-10 items-center justify-center rounded-full bg-gray-900"
+						<view
+							class="box-border flex flex-col w-10 h-10 items-center justify-center rounded-full bg-gray-900"
 							@click="handleOpenApply">
 							<text class="text-xs text-white">申请</text>
 						</view>
@@ -510,15 +500,26 @@
 				</view>
 
 				<!-- 小程序详情弹窗 -->
-				<wd-popup v-model="miniDetail.show" position="center" custom-style="width:640rpx;border-radius:12rpx;">
-					<view v-if="miniDetail.data" class="mini-poup p-8">
+				<uh-glass-popup v-model="miniDetail.show" position="center" custom-class="w-[90vw] rounded-xl !border">
+					<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
+						<view class="w-full flex flex-col gap-y-1">
+							<text class="text-md font-bold">小程序详情</text>
+						</view>
+						<view
+							class="absolute right-4 top-4 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg text-center"
+							@click="miniDetail.show = false">
+							<wd-icon name="close" size="32rpx" class="text-gray-500"></wd-icon>
+						</view>
+					</view>
+					<scroll-view v-if="miniDetail.data" :scroll-y="true" :show-scrollbar="false"
+						class="box-border p-4 max-h-[60vh]">
 						<!-- 太阳码大图(点击预览/长按保存) -->
 						<view class="code-area flex flex-col items-center">
-							<image class="code-img h-[320rpx] w-[320rpx] rounded-xl"
+							<image class="code-img h-32 w-32 rounded-xl"
 								:src="checkImageUrl(miniDetail.data.spec?.miniProgramCode)" mode="aspectFill"
 								@click="handlePreviewMiniProgramCode(miniDetail.data)"
 								@longpress="handleSaveMiniProgramCode(miniDetail.data)" />
-							<view class="code-tip mt-3 flex items-center text-[24rpx] text-gray-400">
+							<view class="code-tip mt-3 flex items-center text-xs text-gray-400">
 								<wd-icon name="picture" size="14px" color="#a8a294" />
 								<text class="ml-1">点击预览，长按保存太阳码</text>
 							</view>
@@ -551,7 +552,7 @@
 								<text v-if="miniDetail.data.spec?.authorName"
 									class="author-name text-[28rpx] text-gray-900 font-medium">{{ miniDetail.data.spec.authorName }}</text>
 								<text v-if="miniDetail.data.spec?.website"
-									class="author-website mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-400"
+									class="author-website mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
 									@click="handleCopyMiniProgramCode(miniDetail.data)">
 									网站：{{ miniDetail.data.spec.website }}
 								</text>
@@ -562,7 +563,7 @@
 						<view v-if="miniDetail.data.spec?.link"
 							class="mini-link mt-5 flex items-center justify-between rounded-xl bg-secondary p-4">
 							<view
-								class="link-text flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
+								class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
 								{{ miniDetail.data.spec.link }}
 							</view>
 							<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold"
@@ -579,8 +580,8 @@
 								</swiper-item>
 							</swiper>
 						</view>
-					</view>
-				</wd-popup>
+					</scroll-view>
+				</uh-glass-popup>
 
 				<!-- 小程序链接申请弹窗 -->
 				<uh-links-mini-apply :show="applyShow" @on-close="handleApplyClose" />

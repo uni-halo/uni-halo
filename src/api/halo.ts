@@ -15,7 +15,7 @@ import type {
   ICommentListReq,
   ICommentListRes,
   ILink,
-  ILinkGroupListRes,
+  ILinkGroup,
   ILinkListRes,
   IMoment,
   IMomentListReq,
@@ -243,7 +243,7 @@ export function getPhotoListByGroupName(params: IPhotoListReq) {
  * 友链分组列表
  */
 export function getFriendLinkGroupList(params: ICategoryListReq) {
-  return http.Get<IResponse<ILinkGroupListRes>>('/apis/api.link.halo.run/v1alpha1/linkgroups', {
+  return http.Get<IResponse<Array<ILinkGroup>>>('/apis/api.link.halo.run/v1alpha1/linkgroups', {
     params,
     meta: { requestFrom: RequestFrom.Halo },
   })
