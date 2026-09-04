@@ -14,6 +14,7 @@ interface IProps {
   loadingSubText?: string
   errorSubText?: string
   emptySubText?: string
+  useLoadingButton?: boolean
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<IProps>(), {
   loadingSubText: '',
   errorSubText: '请检查网络连接，或稍后再试',
   emptySubText: '稍后再来看看吧～',
+  useLoadingButton: true,
 })
 
 const emit = defineEmits<{ (e: 'refresh'): void }>()
@@ -45,7 +47,7 @@ const statusScene = computed(() => {
       return {
         icon: '-confused',
         stageClass: 'stage-empty',
-        mainTextClass: 'text-gray-600',
+        mainTextClass: 'text-gray-900',
         mainText: props.emptyText,
         subText: props.emptySubText,
       }
@@ -66,7 +68,6 @@ const statusScene = computed(() => {
     class="w-full flex flex-col items-center justify-center gap-y-4 text-sm"
     :style="{ minHeight: props.minHeight }"
   >
-    <!-- 状态舞台:光晕 + 漂浮装饰点 + 毛玻璃表情珠 -->
     <view class="scene relative h-[250rpx] w-[250rpx] flex items-center justify-center" :class="statusScene.stageClass">
       <view class="glow absolute inset-0 m-auto h-[220rpx] w-[220rpx] rounded-full" />
       <view class="deco-dot dot-a absolute rounded-full" />
@@ -80,17 +81,16 @@ const statusScene = computed(() => {
 
     <!-- 文案区 -->
     <view class="flex flex-col items-center">
-      <view class="flex items-center justify-center text-[28rpx] font-bold" :class="statusScene.mainTextClass">
+      <view class="flex items-center justify-center text-sm font-bold" :class="statusScene.mainTextClass">
         <text>{{ statusScene.mainText }}</text>
-        <!-- 加载中三点跳动 -->
         <view v-if="isLoading" class="ml-1 flex items-end gap-1">
-          <view v-for="n in 3" :key="n" class="typing-dot bg-primary" />
+          <view v-for="n in 3" :key="n" class="typing-dot bg-primary" :style="{ animationDelay: `${(n - 1) * 0.15}s` }" />
         </view>
       </view>
-      <text v-if="statusScene.subText" class="mt-3 text-[24rpx] text-gray-400">
+      <text v-if="statusScene.subText" class="mt-3 text-xs text-gray-500">
         {{ statusScene.subText }}
       </text>
-      <uh-button class="mt-5" @click="emit('refresh')">
+      <uh-button v-if="props.useLoadingButton" class="mt-5" @click="emit('refresh')">
         刷新试试
       </uh-button>
     </view>
@@ -158,20 +158,12 @@ const statusScene = computed(() => {
   transform-origin: 50% 85%;
 }
 
-/* —— 加载中三点跳动 —— */
+/* —— 加载中三点跳动(错峰延迟经模板 :style 注入,避开 WXSS 不支持的 :nth-child) —— */
 .typing-dot {
   width: 10rpx;
   height: 10rpx;
   border-radius: 50%; 
   animation: dot-jump 1s ease-in-out infinite;
-
-  &:nth-child(2) {
-    animation-delay: 0.15s;
-  }
-
-  &:nth-child(3) {
-    animation-delay: 0.3s;
-  }
 }
 
 /* —— keyframes —— */

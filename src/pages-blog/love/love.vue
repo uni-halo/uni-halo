@@ -310,21 +310,19 @@ onBeforeUnmount(() => {
   }
 }
 
-/* 列表项漂浮动画(无法用 UnoCSS 表达) */
-.list-item {
-  &:nth-child(1) {
-    animation: listItemAni1 3s ease-in-out infinite;
-  }
+/* 列表项漂浮动画(无法用 UnoCSS 表达;模板已生成 list-item-N 类,避开 WXSS 不支持的 :nth-child) */
+.list-item-1 {
+  animation: listItemAni1 3s ease-in-out infinite;
+}
 
-  &:nth-child(2) {
-    animation: listItemAni1 3s ease-in-out infinite;
-    animation-delay: 1.5s;
-  }
+.list-item-2 {
+  animation: listItemAni1 3s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
 
-  &:nth-child(3) {
-    animation: listItemAni1 3s ease-in-out infinite;
-    animation-delay: 2s;
-  }
+.list-item-3 {
+  animation: listItemAni1 3s ease-in-out infinite;
+  animation-delay: 2s;
 }
 
 @keyframes likeani {

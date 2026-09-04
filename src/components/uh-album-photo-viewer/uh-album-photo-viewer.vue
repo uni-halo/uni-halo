@@ -95,7 +95,7 @@ function handlePreview(url?: string) {
         </view>
         <view v-else class="photo-list box-border flex items-start p-5">
           <!-- 左列 -->
-          <view class="photo-column box-border min-w-0 flex-1">
+          <view class="photo-column box-border min-w-0 flex-1 mr-[20rpx]">
             <view v-for="photo in leftPhotos" :key="photo.name" class="photo-card mb-6 box-border overflow-hidden rounded-xl bg-white shadow-sm">
               <image
                 class="photo-image w-full"
@@ -154,13 +154,3 @@ function handlePreview(url?: string) {
     </view>
   </wd-popup>
 </template>
-
-<style scoped>
-.album-photo-viewer {
-  /* 布局全部由 UnoCSS 原子类实现 */
-
-  .photo-column:first-child {
-    margin-right: 20rpx;
-  }
-}
-</style>

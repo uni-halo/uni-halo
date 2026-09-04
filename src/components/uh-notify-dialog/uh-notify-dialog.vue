@@ -76,8 +76,8 @@
 </script>
 
 <template>
-	<wd-popup v-model="isShow" position="center" custom-class="rounded-xl" :z-index="9999" @close="handleClose">
-		<view v-if="notice" class="box-border w-[80vw] p-6">
+	<uh-glass-popup v-model="isShow" position="center" :z-index="9999" radius="24rpx" @close="handleClose">
+		<view v-if="notice" class="box-border w-[80vw] p-4">
 			<!-- 头部:标题 + 关闭 -->
 			<view class="flex items-center justify-between">
 				<view class="flex items-center gap-2">
@@ -92,7 +92,7 @@
 						{{ notice.typeDisplayName }}
 					</view>
 				</view>
-				<view class="flex h-8 w-8 items-center justify-end text-gray-500" @click="handleClose">
+				<view class="uh-global-card-glass !bg-white/5 border flex h-6 w-6 rounded-lg items-center justify-center text-gray-500" @click="handleClose">
 					<wd-icon name="close" size="16px" />
 				</view>
 			</view>
@@ -122,5 +122,5 @@
 				</uh-button>
 			</view>
 		</view>
-	</wd-popup>
+	</uh-glass-popup>
 </template>

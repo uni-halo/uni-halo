@@ -225,9 +225,9 @@
 			if (config.value?.security?.captcha?.anonymousCommentCaptcha) {
 				captchaData.value.status = 'success'
 				form.value.captchaCode = undefined
-				if(error?.data?.captcha){
+				if (error?.data?.captcha) {
 					captchaData.value.image = error?.data?.captcha
-				}else{
+				} else {
 					handleGetCaptchaImage()
 				}
 			}
@@ -265,75 +265,72 @@
 </script>
 
 <template>
-	<wd-popup v-model="isShow" position="bottom" :z-index="100" closable custom-style="border-radius:12rpx 12rpx 0 0;"
-		@close="handleOnChange(false)">
-		<view class="uh-comment-modal box-border  p-3">
-			<view class="title text-center text-md font-bold">
+	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-lt-2xl rounded-rt-2xl"
+		:z-index="100" @close="handleOnChange(false)">
+		<view class="box-border p-4">
+			<view
+				class="relative w-full flex items-center justify-around box-border px-12  text-md font-bold text-center">
 				{{ calcTitle }}
+				<view class="absolute right-0 top-1 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg"
+					@click="handleClose">
+					<wd-icon name="close" size="32rpx" class="text-gray-500"></wd-icon>
+				</view>
 			</view>
 
-			<view class="form mt-6 max-h-[70vh] overflow-y-auto">
-				<view class="form-item mb-5 flex items-center">
+			<scroll-view :scroll-y="true" class="form mt-6">
+				<view class="form-item mb-4 flex items-center">
 					<textarea v-model="form.content"
-						class="content-input box-border w-full rounded-xl bg-[#f5f5f5] p-5 text-[26rpx]"
-						:placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200"
-						style="height: 200rpx;" />
+						class="h-22 uh-global-card-glass shadow-none border box-border w-full rounded-xl  p-5 text-sm"
+						:placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200" />
 				</view>
 
-				<view class="form-item mb-5 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">我的昵称</text>
+				<view class="form-item mb-4 flex items-center">
+					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的昵称</text>
 					<input v-model="form.author"
-						class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]"
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
 						placeholder="请输入您的昵称...">
 				</view>
 
-				<view class="form-item mb-5 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">我的邮箱</text>
-					<input v-model="form.email" class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]"
+				<view class="form-item mb-4 flex items-center">
+					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的邮箱</text>
+					<input v-model="form.email"
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
 						placeholder="请输入您的邮箱...">
 				</view>
 
-				<view class="form-item mb-5 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">我的网站</text>
+				<view class="form-item mb-4 flex items-center">
+					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的网站</text>
 					<input v-model="form.authorUrl"
-						class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]"
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
 						placeholder="请输入您的网址...">
 				</view>
 
 				<!-- 匿名评论验证码 -->
 				<view v-if="config?.security?.captcha?.anonymousCommentCaptcha"
-					class="form-item mb-5 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-[26rpx] text-[#666]">验证码</text>
-					<view class="captcha-row flex flex-1 items-center gap-4">
+					class="form-item mb-4 flex items-center">
+					<text class="w-[140rpx] shrink-0 text-sm text-[#666]">验证码</text>
+					<view class="flex flex-1 items-center gap-4">
 						<input v-model="form.captchaCode"
-							class="input h-[72rpx] flex-1 rounded-xl bg-[#f5f5f5] px-5 text-[26rpx]"
+							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
 							placeholder="请输入验证码结果">
-						<view class="captcha-wrapper h-[68rpx] w-[200rpx] flex shrink-0 items-center justify-center">
-							<text v-if="captchaData.status === 'loading'"
-								class="captcha-tip text-[24rpx] text-[#999]">获取中...</text>
-							<text v-else-if="captchaData.status === 'fail'"
-								class="captcha-tip text-[24rpx] text-[#f56c6c]"
-								@click="handleGetCaptchaImage()">请重试</text>
-							<image v-else :src="captchaData.image" class="captcha-img h-full w-full" mode="aspectFit"
-								@click="handleGetCaptchaImage()" />
+						<view class="h-10 w-29 flex shrink-0 items-center justify-center">
+							<uh-button v-if="captchaData.status === 'loading'"
+								class="w-full uh-global-card-glass shadow-none border py-2.5 !rounded-xl text-xs text-gray-900">获取中...</uh-button>
+							<uh-button v-else-if="captchaData.status === 'fail'"
+								class="w-full uh-global-card-glass shadow-none border py-2.5 !rounded-xl text-xs text-red-400"
+								@click="handleGetCaptchaImage()">请重试</uh-button>
+							<image v-else :src="captchaData.image" class="block rounded-xl h-full w-full"
+								mode="aspectFit" @click="handleGetCaptchaImage()" />
 						</view>
 					</view>
 				</view>
 
 				<view class="submit-btn my-6">
-					<wd-button type="primary" block size="medium" @click="handleHandle">
+					<uh-button custom-class="py-2 !rounded-xl uh-global-card-glass border" @click="handleHandle">
 						提交
-					</wd-button>
+					</uh-button>
 				</view>
-			</view>
+			</scroll-view>
 		</view>
-	</wd-popup>
+	</uh-glass-popup>
 </template>
-
-<style scoped lang="scss">
-	.uh-comment-modal {
-		.content-input {
-			min-height: 200rpx;
-		}
-	}
-</style>

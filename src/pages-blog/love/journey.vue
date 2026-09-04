@@ -166,7 +166,7 @@ onPullDownRefresh(() => {
       </view>
       <!-- 时间轴 -->
       <view v-else class="timeline relative pl-10">
-        <view v-for="(story, index) in stories" :key="String((story as unknown as { name?: string })?.name ?? index)" class="timeline-item relative pb-10" @click="handleOnStoryClick(story)">
+        <view v-for="(story, index) in stories" :key="String((story as unknown as { name?: string })?.name ?? index)" class="timeline-item relative pb-10" :class="index === stories.length - 1 ? 'timeline-item-last' : ''" @click="handleOnStoryClick(story)">
           <view class="timeline-dot absolute left-[-32rpx] top-4 z-2 h-5 w-5 rounded-full" style="background-color: #f88ca2; box-shadow: 0 0 0 6rpx rgb(248 140 162 / 20%);" />
           <view class="timeline-card rounded-xl bg-white p-6 shadow-sm">
             <view v-if="(story as unknown as { spec?: { date?: string } }).spec?.date" class="timeline-date mb-2 text-[24rpx] text-[#f88ca2]">
@@ -273,7 +273,7 @@ onPullDownRefresh(() => {
       background-color: rgb(248 140 162 / 40%);
     }
 
-    &:last-child::before {
+    &.timeline-item-last::before {
       display: none;
     }
   }

@@ -43,10 +43,21 @@
 				{{props.checking?'正在刷新':'刷新试试'}}
 			</uh-button>
 			<!-- #ifdef MP-WEIXIN -->
-			<uh-button custom-class="bg-white py-2 !rounded-full" open-type="contact">
-				提交反馈
-			</uh-button>
+			<!-- 微信端客服会话只能由原生 button 的 open-type="contact" 唤起,故此处不用 uh-button(view 实现) -->
+			<button
+				class="uh-contact-btn bg-white py-2 px-4 !rounded-full text-black text-sm leading-none flex items-center justify-center"
+				open-type="contact"
+				hover-class="none">提交反馈</button>
 			<!-- #endif -->
 		</view>
 	</view>
 </template>
+
+<style lang="scss">
+	/* #ifdef MP-WEIXIN */
+	/* 重置微信原生 button 默认样式(灰底、字号行高、::after 细边框),保证与 uh-button(view 实现)视觉一致 */
+	.uh-contact-btn::after {
+		border: none;
+	}
+	/* #endif */
+</style>

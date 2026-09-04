@@ -16,14 +16,14 @@
 	type FromReason = 'plugin' | 'maintenance'
 
 	/** 默认维护标题(拦截场景未配置维护信息时展示) */
-	const DEFAULT_MAINTENANCE_TITLE = '我们正在加油升级！'
+	const DEFAULT_MAINTENANCE_TITLE = '维护中'
 	/** 恢复检测轮询间隔(ms):插件激活/维护结束探测 */
 	const RECOVERY_POLL_INTERVAL = 30 * 1000
 
 	const store = useAppConfigStore()
 	/** 插件可用性(拦截恢复检测用,参考 gallery 对象传参模式) */
 	const { check: checkPluginAvailable } = usePluginAvailable({
-	 pluginId: 'plugin-uni-halo',
+		pluginId: 'plugin-uni-halo',
 	})
 
 	const viewState = ref<ViewState>('loading')
@@ -133,8 +133,7 @@
 			return
 		}
 		const remaining = new Date(target).getTime() - nowMs.value
-		if (Number.isFinite(remaining) && remaining <= 0)
-			void silentCheck()
+		if (Number.isFinite(remaining) && remaining <= 0) { silentCheck() }
 	}
 
 	/**
@@ -142,8 +141,7 @@
 	 * 拉取失败(服务器停机)保持维护页不打扰。
 	 */
 	async function silentCheck() {
-		if (refreshing)
-			return
+		if (refreshing) { return }
 		refreshing = true
 		try {
 			await store.bootstrap({ force: true })
@@ -270,8 +268,8 @@
 <template>
 	<view class="relative min-h-screen flex flex-col justify-center bg-[#f5fae8]">
 		<!-- 背景 -->
-		<view class="absolute lef-0 top-0  w-full h-[46vh] from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b">
-		</view>
+		<view
+			class="absolute lef-0 top-0  w-full h-[46vh] from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b" />
 
 		<!-- 刷新 -->
 		<uh-data-loading v-if="viewState === 'loading'" />
@@ -279,9 +277,7 @@
 		<!-- 拉取失败(手动进入,通常为服务器停机中) -->
 		<view v-else-if="viewState === 'error'"
 			class="relative z-10 flex flex-col items-center justify-center px-10 py-48 text-center">
-			<text class="text-[64rpx]">
-				<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="120rpx" />
-			</text>
+			<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="140rpx" />
 			<text class="mt-6 text-md text-gray-900 font-bold">
 				服务暂时无法访问
 			</text>
@@ -290,10 +286,9 @@
 			</text>
 			<view class="mt-10">
 				<uh-button custom-class="uh-global-card-glass border flex-1 py-2 !px-8 !rounded-full font-semibold"
-					@click="load(true)">刷新试试</uh-button>
+					@click="load(true)">刷新试试 </uh-button>
 			</view>
 		</view>
-
 		<!-- 维护页-->
 		<view v-else class="relative z-10 w-full min-h-screen flex items-center justify-center flex-col ">
 			<view
@@ -309,8 +304,8 @@
 					<view
 						class="bob flex items-center justify-center absolute inset-0 rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br shadow-[0_0_0_12rpx_#fff,0_28rpx_60rpx_rgba(98,124,44,0.22)]">
 						<image v-if="appLogo" class="h-full w-full rounded-full" :src="appLogo" mode="aspectFill" />
-						<wd-icon v-else class="flex items-center justify-center text-gray-900" name="tool"
-							size="120rpx" />
+						<wd-icon v-else class-prefix="uhemoji-icon" name="-thinking" size="140rpx"
+							class="text-gray-900" />
 					</view>
 					<view
 						class="gear-spin absolute right-[-28rpx] top-[-16rpx] h-[68rpx] w-[68rpx] flex items-center justify-center">
@@ -331,10 +326,8 @@
 				</view>
 				<view
 					class="relative z-2 mx-auto mt-[8rpx] h-[8rpx] w-[224rpx] rounded-full from-transparent via-[#a7e93b] to-transparent bg-gradient-to-r" />
-
-				<view
-					class="relative z-2 mt-[20rpx] px-[16rpx] text-[25rpx] text-[rgba(23,24,26,0.55)] font-medium leading-[1.7]">
-					<template v-if="noticeLines.length > 0">
+				<view class="relative z-2 mt-6 px-[16rpx] text-[25rpx] text-balck/50 font-medium leading-[1.7]">
+					<template v-if="fromReason!=='plugin' && noticeLines.length > 0">
 						<text v-for="(line, index) in noticeLines" :key="index" class="block">{{ line }}</text>
 					</template>
 					<template v-else>
@@ -352,7 +345,6 @@
 					class="pointer-events-none absolute left-[64rpx] top-[-52rpx] z-0 h-[192rpx] w-[192rpx] rounded-full bg-[#ebfabf] opacity-90 blur-[44rpx]" />
 				<view
 					class="pointer-events-none absolute right-[-52rpx] top-[300rpx] z-0 h-[168rpx] w-[168rpx] rounded-full bg-[#ffd53d] opacity-20 blur-[44rpx]" />
-
 				<view
 					class="relative box-border w-full z-1 flex flex-col items-center gap-[28rpx] px-6 pb-[68rpx] pt-[32rpx]">
 					<!-- 恢复倒计时 -->
@@ -404,17 +396,16 @@
 					<!-- 操作 -->
 					<view class="mt-2 w-full flex flex-col gap-4">
 						<uh-button custom-class="uh-global-card-glass border flex-1 py-3 !rounded-full font-semibold"
-							@click="handleRefresh">刷新看看</uh-button>
+							@click="handleRefresh">{{ spinning?'请稍等...':'刷新试试'}}</uh-button>
 						<view v-if="detailHtml"
 							class="uh-global-card-glass py-2 flex flex-1 items-center justify-center rounded-full bg-white text-sm text-primary font-extrabold uh-shadow-xs"
 							@click="showDetail = true">
 							维护详情
 						</view>
 					</view>
-
 					<!-- 页脚 -->
 					<view class="mt-[12rpx] flex flex-col items-center">
-						<view class="mt-[18rpx] text-center text-[21rpx] text-[#c9cdd4] font-medium leading-[1.7]">
+						<view class="mt-[18rpx] text-center text-[21rpx] text-black/50 font-medium leading-[1.7]">
 							升级期间给你带来不便，非常抱歉
 							<text class="block">
 								去喝杯奶茶等等吧～
@@ -424,13 +415,11 @@
 				</view>
 			</view>
 
-			<!-- Toast -->
 			<view v-if="toast"
 				class="uh-global-card-glass border fixed bottom-[calc(72rpx+env(safe-area-inset-bottom))] left-1/2 z-60 whitespace-nowrap rounded-full px-6 py-2 text-xs font-bold -translate-x-1/2">
 				{{ toast }}
 			</view>
 
-			<!-- 维护详情弹窗(复用封装组件,见 components/uh-maintenance-detail) -->
 			<uh-maintenance-detail v-model="showDetail" :content="detailHtml" />
 		</view>
 	</view>

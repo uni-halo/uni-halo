@@ -39,12 +39,7 @@ watchEffect(() => {
     currentItems.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
   )
 })
-
-/** uh-data-loading「刷新试试」:空收藏无可刷新来源,引导回首页发现可收藏内容 */
-function handleExplore() {
-  uni.switchTab({ url: '/pages/tabbar/home/home' })
-}
-
+ 
 /* ---------------- 收藏时间 ---------------- */
 function formatCollectTime(time: string): string {
   return formatTime({ d: time, f: 'yyyy-MM-dd' })
@@ -98,9 +93,8 @@ const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏
     <view class="flex flex-col gap-3 px-3 pt-2">
       <!-- 空态(当前 Tab 无收藏):uh-data-loading 统一渲染,视觉与 tabbar 页一致 -->
       <uh-data-loading
-        v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="55vh"
-        :empty-text="emptyText" empty-sub-text="在文章或瞬间的详情页点亮星标,内容会出现在这里"
-        @refresh="handleExplore"
+        v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
+       :use-loading-button="false" :empty-text="emptyText" empty-sub-text="快去阅读文章/瞬间点击收藏吧"
       />
 
       <!-- 成功态:当前 Tab 列表 -->

@@ -5,6 +5,7 @@
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import type { IDataStatistics } from '@/api/uni-halo'
+	import { sleep } from '@/utils/common'
 
 	definePage({
 		style: {
@@ -22,8 +23,9 @@
 
 	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
 	async function handlePluginRefresh() {
-		if (await checkPluginAvailable())
+		if (await checkPluginAvailable()) {
 			handleGetData()
+		}
 	}
 
 	/* ---------------- 状态 ---------------- */
@@ -119,10 +121,10 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
-		uni.showLoading({ mask: true, title: '加载中...' })
 		updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		try {
 			const res = await getChartData()
+			await sleep(500)
 			statistics.value = res.data
 			handleTagChart()
 			handleCategoriesChart()
@@ -140,7 +142,6 @@
 		}
 		finally {
 			setTimeout(() => {
-				uni.hideLoading()
 				uni.stopPullDownRefresh()
 			}, 100)
 		}
@@ -174,8 +175,10 @@
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
+			
 		<template v-else>
-			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" empty-text="暂无统计数据" @refresh="handleGetData" />
+			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" empty-text="暂无统计数据"
+				min-height="75vh" @refresh="handleGetData" />
 
 			<!-- 内容区域 -->
 			<view v-else class="content flex flex-col gap-3">

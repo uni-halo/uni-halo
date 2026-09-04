@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-/**
- * 归档页(源自旧项目 pagesA/archives,新建复刻)
- * 按月份/年份分组展示文章时间线
- */
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
@@ -10,6 +6,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
+import { sleep } from '@/utils/common'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IPost } from '@/api/types/halo'
 
@@ -127,11 +124,11 @@ async function handleGetData() {
       const posts = handleGetPosts(filtered)
       dataList.value = handleGetShowDataList(posts)
       cacheDataList.value = filtered
+	 c
       updateLoadingStatus(
         dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
       )
-      loadMoreText.value = '呜呜，没有更多数据啦~'
-      uni.hideLoading()
+      loadMoreText.value = '呜呜，没有更多数据啦~' 
       uni.stopPullDownRefresh()
     }
     catch (err) {
@@ -181,7 +178,7 @@ async function handleGetData() {
       dataList.value = showDataList
       cacheDataList.value = res.data.items
     }
-
+	await sleep(500)
     updateLoadingStatus(
       dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
     )
@@ -192,8 +189,7 @@ async function handleGetData() {
     updateLoadingStatus(DataLoadingStatusEnum.Error)
     loadMoreText.value = '加载失败，请下拉刷新！'
   }
-  finally {
-    uni.hideLoading()
+  finally { 
     uni.stopPullDownRefresh()
   }
 }
@@ -261,14 +257,14 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col bg-page">
+  <view class="min-h-screen w-screen flex flex-col bg-page">
     <!-- 自定义导航 -->
-    <uh-navbar default-title="归档" title-color="text-gray-900" />
+    <uh-navbar default-title="内容归档" title-color="text-gray-900" />
 
-    <!-- 顶部 tab(吸顶玻璃胶囊 chip,同收藏页) -->
+    <!-- 顶部-->
     <wd-sticky>
       <scroll-view scroll-x class="w-full whitespace-nowrap">
-        <view class="flex gap-2 px-3 pb-1 pt-3">
+        <view class="box-border flex gap-2 px-3 pb-1 pt-3">
           <view
             v-for="(tab, index) in archiveTabs" :key="tab.key"
             class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-1.5 text-sm"
@@ -280,37 +276,36 @@ onReachBottom(() => {
         </view>
       </scroll-view>
     </wd-sticky>
-
-    <!-- 加载/错误/空占位(状态机) -->
-    <view v-if="loadingStatus !== 'success'">
-      <uh-data-loading
-        :loading-status="loadingStatus"
-        :empty-text="calcAuditModeEnabled ? '暂无归档的内容' : '暂无归档的文章'"
-        @refresh="handleGetData"
-      />
-    </view>
+ 
+    <uh-data-loading v-if="loadingStatus !== 'success'"
+       :loading-status="loadingStatus"
+       :empty-text="calcAuditModeEnabled ? '暂无归档的内容' : '暂无归档的文章'"
+       @refresh="handleGetData"
+    />
+  
 
     <!-- 内容区域 -->
     <block v-else>
       <!-- 时间线 -->
       <view class="timeline px-4 pt-3">
         <view v-for="(item, index) in dataList" :key="item.key" class="timeline-item flex">
-          <view class="timeline-left w-[96rpx] flex shrink-0 flex-col items-center">
+        <!--  <view class="timeline-left w-[96rpx] flex shrink-0 flex-col items-center">
             <view class="timeline-dot mt-2 h-4 w-4 rounded-full bg-secondary shadow-[0_0_0_8rpx_rgba(215,249,76,0.3)]" />
             <view v-if="index !== dataList.length - 1" class="timeline-line mt-2 w-[2rpx] flex-1 bg-black/5" />
-          </view>
-          <view class="timeline-content min-w-0 flex-1 pb-10 pl-5">
-            <view class="time mb-5 flex items-center gap-2">
-              <text class="text-[32rpx] text-gray-900 font-bold">{{ item.year }}年</text>
-              <text v-if="activeTabIndex === 0" class="text-[32rpx] text-gray-900 font-bold">{{ item.month }}月</text>
-              <text class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
+          </view> -->
+          <!-- <view class="timeline-content min-w-0 flex-1 pb-10 pl-5"> -->
+          <view class="flex-1 pb-10">
+            <view class="mb-3 flex items-center gap-2">
+              <text class="text-md text-gray-900 font-bold">{{ item.year }}年</text>
+              <text v-if="activeTabIndex === 0" class="text-md text-gray-900 font-bold">{{ item.month }}月</text>
+              <text class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-500 leading-none">共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
             </view>
 
             <view v-if="item.posts.length !== 0">
               <view
                 v-for="post in item.posts"
                 :key="post.metadata.name"
-                class="post uh-global-card-glass mb-4 flex rounded-2xl p-4"
+                class="uh-global-card-glass mb-4 flex rounded-2xl p-4"
                 :class="calcCardLayout.card"
                 @click="handleToArticleDetail(post)"
               >
@@ -323,7 +318,7 @@ onReachBottom(() => {
                     {{ post.status?.excerpt }}
                   </view>
                   <view class="post-info-time mt-2 text-[24rpx] text-gray-400">
-                    发布时间：{{ formatTime(post.spec.publishTime) }}
+                    日期：{{ formatTime(post.spec.publishTime) }}
                   </view>
                 </view>
               </view>
@@ -337,10 +332,7 @@ onReachBottom(() => {
 
       <view class="load-text pb-6 text-center text-[24rpx] text-gray-400">
         {{ loadMoreText }}
-      </view>
-      <view class="to-top-btn uh-global-card-glass fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full" @click="handleToTopPage()">
-        <wd-icon name="arrow-up" size="20px" color="#6b7280" />
-      </view>
+      </view> 
     </block>
   </view>
 </template>

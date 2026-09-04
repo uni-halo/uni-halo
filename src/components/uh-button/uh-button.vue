@@ -1,16 +1,18 @@
 <script setup lang="ts">
-	import { useAttrs } from 'vue';
-	
 	interface IProps {
 		customClass ?: string | Array<string>;
 	}
 
+	interface IEmits {
+		(e : 'click') : void;
+	}
+
 	const props = defineProps<IProps>();
-	const attrs = useAttrs();
+	const emit = defineEmits<IEmits>();
 </script>
 
 <template>
-	<view v-bind="attrs" class="bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg" :class="props.customClass">
+	<view class="box-border bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg" :class="props.customClass" @click="emit('click')">
 		<slot></slot>
 	</view>
 </template>

@@ -336,9 +336,9 @@
 				class="gif-wave absolute bottom-0 left-0 z-99 h-[100rpx] w-full" style="mix-blend-mode: screen;" />
 		</view>
 
-		<!-- 站点统计(上浮玻璃卡,与头部衔接) -->
-		<view class="uh-global-card-glass relative z-100 mx-4 flex border rounded-2xl -mt-12">
-			<view v-for="item in allStats" :key="item.key" class="flex-1 py-6 text-center">
+		<!-- 站点统计 -->
+		<view class="uh-global-card-glass uh-shadow-xs relative z-100 mx-4 flex border rounded-2xl -mt-12">
+			<view v-for="item in allStats" :key="item.key" class="flex-1 py-4 text-center">
 				<wd-count-to
 					:key="`${item.key}-${item.value}`" :start-val="0" :end-val="item.value"
 					:duration="900" separator="" color="#111827" custom-class="text-lg font-bold"
@@ -349,7 +349,7 @@
 			</view>
 		</view>
 
-		<!-- 功能导航(分组玻璃卡) -->
+		<!-- 功能导航-->
 		<template v-for="group in calcNavGroups" :key="group.key">
 			<uh-section-title class="mx-4 mb-3 mt-8">
 				{{ group.title }}
