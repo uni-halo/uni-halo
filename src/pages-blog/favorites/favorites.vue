@@ -1,10 +1,4 @@
 <script lang="ts" setup>
-/**
- * 收藏页(纯本地,文章 × 瞬间)
- * 功能:双 Tab(仿图库顶部吸顶胶囊 chip)本地收藏列表 + 跳详情 + 删除 + 状态舞台
- * 数据:useFavoritesStore(persist),快照自包含,无需网络加载
- * 状态:useDataLoadingStatus + uh-data-loading(与 tabbar 页同构);本地同步数据,状态直接推导
- */
 import { computed, ref, watchEffect } from 'vue'
 import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
@@ -14,7 +8,7 @@ import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
 definePage({
   style: {
     navigationBarTitleText: '我的收藏',
-    backgroundColor: '#f6f3ee',
+	navigationStyle: 'custom',
   },
 })
 
@@ -80,6 +74,9 @@ const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏
 
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-10">
+	  <!-- 自定义导航 -->
+	<uh-navbar default-title="我的收藏" title-color="text-gray-900"></uh-navbar>
+	  
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
     <wd-sticky>
       <scroll-view scroll-x class="w-full whitespace-nowrap">

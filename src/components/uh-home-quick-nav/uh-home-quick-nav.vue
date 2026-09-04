@@ -14,20 +14,27 @@
 	const navList = computed(() => {
 		const loveEnabled = !!(haloConfigs.value.loveConfig as { loveEnabled ?: boolean })?.loveEnabled
 		const socialEnabled = !!(haloConfigs.value.authorConfig?.social as { enabled ?: boolean } | undefined)?.enabled
+		// <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
 		return [
 			{
 				key: 'archives',
 				title: calcAuditModeEnabled.value ? '内容归档' : '文章归档',
-				bgColor: 'rgba(3, 169, 244, 0.95)',
-				icon: 'news',
+				color: '#03A9F4',
+				bgGlass: 'rgba(3, 169, 244, 0.14)',
+				borderColor: 'rgba(3, 169, 244, 0.35)',
+				iconPrefix: 'uhemoji2-icon',
+				icon: '-mask',
 				path: '/pages-blog/archives/archives',
 				show: true,
 			},
 			{
 				key: 'vote',
 				title: '投票中心',
-				bgColor: 'rgba(0, 188, 212, 0.95)',
-				icon: 'box',
+				color: '#00BCD4',
+				bgGlass: 'rgba(0, 188, 212, 0.14)',
+				borderColor: 'rgba(0, 188, 212, 0.35)',
+				iconPrefix: 'uhemoji2-icon',
+				icon: '-confused',
 				path: '/pages-blog/votes/votes',
 				// show: !calcAuditModeEnabled.value && calcVotePluginEnabled.value,
 				show: true,
@@ -35,8 +42,11 @@
 			{
 				key: 'disclaimers',
 				title: '友情链接',
-				bgColor: 'rgba(0, 150, 136, 0.95)',
-				icon: 'link',
+				color: '#009688',
+				bgGlass: 'rgba(0, 150, 136, 0.14)',
+				borderColor: 'rgba(0, 150, 136, 0.35)',
+				iconPrefix: 'uhemoji2-icon',
+				icon: '-wink',
 				path: '/pages-blog/friend-links/friend-links',
 				// show: calcLinksPluginEnabled.value,
 				show: true,
@@ -44,8 +54,11 @@
 			{
 				key: 'love',
 				title: '恋爱日记',
-				bgColor: 'rgba(255, 76, 103, 0.95)',
-				icon: 'heart',
+				color: '#FF4C67',
+				bgGlass: 'rgba(255, 76, 103, 0.14)',
+				borderColor: 'rgba(255, 76, 103, 0.075)',
+				iconPrefix: 'uhemoji2-icon',
+				icon: '-in-love',
 				path: '/pages-blog/love/love',
 				// show: loveEnabled,
 				show: true,
@@ -53,8 +66,11 @@
 			{
 				key: 'contact-blogger',
 				title: '联系博主',
-				bgColor: 'rgba(255, 152, 0, 0.95)',
-				icon: 'message',
+				color: '#FF9800',
+				bgGlass: 'rgba(255, 152, 0, 0.14)',
+				borderColor: 'rgba(255, 152, 0, 0.35)',
+				iconPrefix: 'uhemoji2-icon',
+				icon: '-cool',
 				path: '/pages-blog/contact/contact',
 				show: socialEnabled,
 			},
@@ -68,21 +84,37 @@
 </script>
 
 <template>
-	<view v-if="navList.length" class="overflow-hidden rounded-xl p-3 px-4 mb-3">
+	<view v-if="navList.length" class="box-border overflow-hidden rounded-xl p-3 px-4 mb-3">
 		<uh-section-title class="mb-4">
 			快捷导航
 		</uh-section-title>
 		<view class="grid grid-cols-5 gap-4">
 			<view v-for="item in navList" :key="item.key" class="flex flex-col items-center gap-2"
 				@click="handleClickNav(item)">
-				<view class="uh-global-card-glass border h-12 w-12 flex items-center justify-center rounded-2xl"
-					:style="{ backgroundColor: item.bgColor }">
-					<wd-icon :name="item.icon" size="24px" color="#fff" />
+				<view
+					class="uh-global-card-glass uh-shadow-xs h-13 w-13 flex items-center justify-center rounded-2xl border transition-transform active:scale-90"
+					:style="{
+						backgroundColor: item.bgGlass
+					}">
+					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx" :color="item.color" />
 				</view>
-				<view class="text-xs text-gray-900 font-bold">
+				<view class="text-xs text-gray-900">
 					{{ item.title }}
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
+
+<style scoped lang="scss">
+	/* 彩色玻璃图标:低透明度同色底 + 同色描边 + 柔和同色投影,图标用实体色保证通透感 */
+	.quick-nav-icon {
+		backdrop-filter: blur(16rpx) saturate(160%);
+		-webkit-backdrop-filter: blur(16rpx) saturate(160%);
+
+		/* 低端安卓 WebView 不支持 backdrop-filter 的兜底:提高底色不透明度保证可读性 */
+		@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+			background-color: rgb(255 255 255 / 60%) !important;
+		}
+	}
+</style>

@@ -148,12 +148,10 @@
 	onLoad(async () => {
 		// 检查插件可用性
 		await checkPluginAvailable()
-		console.log('uniHaloPluginAvailable',uniHaloPluginAvailable.value)
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()
 			return
 		}
-		
 		
 		// 开始正常数据请求
 		handleGetCategory()

@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-	/**
- * 插件不可用提示(源自旧项目 components/plugin-unavailable,新建复刻)
- * 当依赖的 Halo 插件未安装/未启用时展示:插件 logo、名称、错误标签、描述、插件地址、复制/反馈按钮
- */
 	import { computed } from 'vue'
 	import { NeedPlugins } from '@/hooks/usePluginAvailable'
 
@@ -45,18 +41,7 @@
 		...defaultStyle,
 		...props.customStyle,
 	}))
-
-	function copy() {
-		if (!pluginInfo.value.url)
-			return
-		uni.setClipboardData({
-			data: pluginInfo.value.url,
-			showToast: false,
-			success: () => {
-				uni.showToast({ icon: 'none', title: '插件地址已复制' })
-			},
-		})
-	}
+ 
 </script>
 
 <template>

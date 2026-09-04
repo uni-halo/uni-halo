@@ -13,7 +13,7 @@
 	}
 
 	// 获取当前页面，并且设置黑名单模式，因为有的页面可能不需要滚动到顶部
-	const balckList = ['pages/maintenance/maintenance']
+	const balckList = ['pages/maintenance/maintenance','pages-blog/setting/setting']
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const visible = computed(() => {

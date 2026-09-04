@@ -1,675 +1,645 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getPostByName, getPostCommentReplyList, postTrackersCounter, submitUpvote } from '@/api/halo'
-import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
-import { formatTime } from '@/utils/formatTime'
-import { useAppConfigStore } from '@/store/appConfig'
-import { useFavoritesStore } from '@/store/favorites'
-import { useSettingStore } from '@/store/setting'
-import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-import { buildPostFavoriteItem } from '@/utils/favorite'
-import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
-import { getDomainOnly } from '@/utils/urlParams'
-import { markdownConfig } from '@/config/markdown'
-import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import type { IComment, IPost } from '@/api/types/halo'
-import type { RestrictReadType } from '@/api/types/uni-halo'
+	import { computed, ref } from 'vue'
+	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+	import { getPostByName, getPostCommentReplyList, postTrackersCounter, submitUpvote } from '@/api/halo'
+	import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
+	import { formatTime } from '@/utils/formatTime'
+	import { useAppConfigStore } from '@/store/appConfig'
+	import { useFavoritesStore } from '@/store/favorites'
+	import { useSettingStore } from '@/store/setting'
+	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+	import { buildPostFavoriteItem } from '@/utils/favorite'
+	import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
+	import { getDomainOnly } from '@/utils/urlParams'
+	import { markdownConfig } from '@/config/markdown'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import type { IComment, IPost } from '@/api/types/halo'
+	import type { RestrictReadType } from '@/api/types/uni-halo'
 
-definePage({
-  style: {
-    navigationBarTitleText: '内容详情',
-    enablePullDownRefresh: true,
-    navigationStyle: 'custom',
-  },
-})
+	definePage({
+		style: {
+			navigationBarTitleText: '内容详情',
+			enablePullDownRefresh: true,
+			navigationStyle: 'custom',
+		},
+	})
 
-const appConfigStore = useAppConfigStore()
-const favoritesStore = useFavoritesStore()
-const settingStore = useSettingStore()
-const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const appConfigStore = useAppConfigStore()
+	const favoritesStore = useFavoritesStore()
+	const settingStore = useSettingStore()
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
-const haloConfigs = computed(() => appConfigStore.configs)
+	const haloConfigs = computed(() => appConfigStore.configs)
 
-/* ---------------- 状态 ---------------- */
-const queryName = ref('')
-const result = ref<IPost & {
-  _voteIds?: string[]
-  _doubanUrls?: string[]
-  owner?: { displayName?: string, avatar?: string }
-  stats?: { visit?: number, upvote?: number, comment?: number }
-} | null>(null)
+	/* ---------------- 状态 ---------------- */
+	const queryName = ref('')
+	const result = ref<IPost & {
+		_voteIds ?: string[]
+		_doubanUrls ?: string[]
+		owner ?: { displayName ?: string, avatar ?: string }
+		stats ?: { visit ?: number, upvote ?: number, comment ?: number }
+	} | null>(null)
 
-const showContentArr = ref<string[]>([])
-const restrictReadInputCode = ref('')
-const commentListScrollTop = ref(0)
+	const showContentArr = ref<string[]>([])
+	const restrictReadInputCode = ref('')
+	const commentListScrollTop = ref(0)
 
-const passwordModal = ref({ show: false })
-const verificationCodeModal = ref({
-  show: false,
-  type: '',
-  imgUrl: '',
-})
-const commentModal = ref({
-  show: false,
-  isComment: false,
-  postName: '',
-  title: '',
-})
-const commentDetail = ref({
-  show: false,
-  loading: 'loading' as 'loading' | 'success' | 'error',
-  comment: {} as IComment,
-  postName: '',
-  list: [] as IComment[],
-})
+	const passwordModal = ref({ show: false })
+	const verificationCodeModal = ref({
+		show: false,
+		type: '',
+		imgUrl: '',
+	})
+	const commentModal = ref({
+		show: false,
+		isComment: false,
+		postName: '',
+		title: '',
+	})
+	const commentDetail = ref({
+		show: false,
+		loading: 'loading' as 'loading' | 'success' | 'error',
+		comment: {} as IComment,
+		postName: '',
+		list: [] as IComment[],
+	})
 
-/* ---------------- 计算属性 ---------------- */
-const postDetailConfig = computed(() => (haloConfigs.value.basicConfig as { postDetailConfig?: Record<string, unknown> } | undefined)?.postDetailConfig)
+	/* ---------------- 计算属性 ---------------- */
+	const postDetailConfig = computed(() => (haloConfigs.value.basicConfig as { postDetailConfig ?: Record<string, unknown> } | undefined)?.postDetailConfig)
 
-const bloggerInfo = computed(() => {
-  const blogger = haloConfigs.value.authorConfig?.blogger as { nickname?: string, avatar?: string } | undefined
-  return {
-    nickname: blogger?.nickname || '',
-    avatar: checkAvatarUrl(blogger?.avatar),
-  }
-})
+	const bloggerInfo = computed(() => {
+		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		return {
+			nickname: blogger?.nickname || '',
+			avatar: checkAvatarUrl(blogger?.avatar),
+		}
+	})
 
-const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
-const doubanPluginConfig = computed(() => (haloConfigs.value.pluginConfig?.doubanPlugin as { position?: string } | undefined) || {})
-const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
+	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+	const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
+	const doubanPluginConfig = computed(() => (haloConfigs.value.pluginConfig?.doubanPlugin as { position ?: string } | undefined) || {})
+	const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
-/** 从 HTML 提取投票块 id */
-function extractVoteBlockIds(html: string): string[] {
-  const regex = /<vote-block\s+id="(vote-\w+)"\s*\/?>/g
-  const ids: string[] = []
-  for (const match of html.matchAll(regex)) {
-    ids.push(match[1])
-  }
-  return ids
-}
+	/** 从 HTML 提取投票块 id */
+	function extractVoteBlockIds(html : string) : string[] {
+		const regex = /<vote-block\s+id="(vote-\w+)"\s*\/?>/g
+		const ids : string[] = []
+		for (const match of html.matchAll(regex)) {
+			ids.push(match[1])
+		}
+		return ids
+	}
 
-/** 从 HTML 提取豆瓣块 url */
-function extractDoubanBlockUrls(html: string): string[] {
-  const regex = /<douban\s+src="([^"]+)"\s*\/?>/g
-  const urls: string[] = []
-  for (const match of html.matchAll(regex)) {
-    urls.push(match[1])
-  }
-  return urls
-}
+	/** 从 HTML 提取豆瓣块 url */
+	function extractDoubanBlockUrls(html : string) : string[] {
+		const regex = /<douban\s+src="([^"]+)"\s*\/?>/g
+		const urls : string[] = []
+		for (const match of html.matchAll(regex)) {
+			urls.push(match[1])
+		}
+		return urls
+	}
 
-/** 移除内容中的 tag 链接 */
-function removeTagLinksCompletely(html: string): string {
-  const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
-  return html.replace(regex, '')
-}
+	/** 移除内容中的 tag 链接 */
+	function removeTagLinksCompletely(html : string) : string {
+		const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
+		return html.replace(regex, '')
+	}
 
-/** 获取 openid(微信端) */
-function handleGetOpenid() {
-  // #ifdef MP-WEIXIN
-  uni.login({
-    provider: 'weixin',
-    success: (loginRes) => {
-      try {
-        uni.setStorageSync('openid', loginRes.code)
-      }
-      catch (error) {
-        console.error(error)
-      }
-    },
-  })
-  // #endif
-}
+	/** 获取 openid(微信端) */
+	function handleGetOpenid() {
+		// #ifdef MP-WEIXIN
+		uni.login({
+			provider: 'weixin',
+			success: (loginRes) => {
+				try {
+					uni.setStorageSync('openid', loginRes.code)
+				}
+				catch (error) {
+					console.error(error)
+				}
+			},
+		})
+		// #endif
+	}
 
-/* ---------------- 数据加载 ---------------- */
-async function handleGetData() {
-  updateLoadingStatus(DataLoadingStatusEnum.Loading)
-  try {
-    const res = await getPostByName(queryName.value)
-    const tempResult = res.data as typeof result.value
-    if (tempResult) {
-      tempResult._voteIds = extractVoteBlockIds(res.data.content?.raw || res.data.content?.content || '')
-      tempResult._doubanUrls = extractDoubanBlockUrls(res.data.content?.raw || res.data.content?.content || '')
-      tempResult.owner.avatar = checkAvatarUrl(tempResult.owner.avatar)
-      tempResult.spec.cover = checkImageUrl(tempResult.spec.cover)
-      const openid = uni.getStorageSync('openid')
-      if (openid === '' || openid === null) {
-        handleGetOpenid()
-      }
+	/* ---------------- 数据加载 ---------------- */
+	async function handleGetData() {
+		updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		try {
+			const res = await getPostByName(queryName.value)
+			const tempResult = res.data as typeof result.value
+			if (tempResult) {
+				tempResult._voteIds = extractVoteBlockIds(res.data.content?.raw || res.data.content?.content || '')
+				tempResult._doubanUrls = extractDoubanBlockUrls(res.data.content?.raw || res.data.content?.content || '')
+				tempResult.owner.avatar = checkAvatarUrl(tempResult.owner.avatar)
+				tempResult.spec.cover = checkImageUrl(tempResult.spec.cover)
+				const openid = uni.getStorageSync('openid')
+				if (openid === '' || openid === null) {
+					handleGetOpenid()
+				}
 
-      // 受限阅读:拆分可展示内容
-      if (checkPostRestrictRead(res.data)) {
-        showContentArr.value = getShowableContent(res.data)
-      }
-      else {
-        showContentArr.value = []
-      }
-    }
-    result.value = tempResult
-    uni.setNavigationBarTitle({ title: '文章详情' })
-    updateLoadingStatus(DataLoadingStatusEnum.Success)
-    handleTrackersCounter()
-  }
-  catch (err) {
-    console.error('获取文章失败', err)
-    updateLoadingStatus(DataLoadingStatusEnum.Error)
-  }
-  finally {
-    uni.hideLoading()
-    uni.stopPullDownRefresh()
-  }
-}
+				// 受限阅读:拆分可展示内容
+				if (checkPostRestrictRead(res.data)) {
+					showContentArr.value = getShowableContent(res.data)
+				}
+				else {
+					showContentArr.value = []
+				}
+			}
+			result.value = tempResult
+			uni.setNavigationBarTitle({ title: '文章详情' })
+			updateLoadingStatus(DataLoadingStatusEnum.Success)
+			handleTrackersCounter()
+		}
+		catch (err) {
+			console.error('获取文章失败', err)
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
+		}
+		finally {
+			uni.hideLoading()
+			uni.stopPullDownRefresh()
+		}
+	}
 
-/** 访问计数埋点 */
-async function handleTrackersCounter() {
-  if (!result.value) {
-    return
-  }
-  const winInfo = uni.getWindowInfo()
-  const appBaseInfo = uni.getAppBaseInfo()
-  const baseUrl = import.meta.env.VITE_SERVER_BASEURL || ''
-  try {
-    await postTrackersCounter({
-      group: 'content.halo.run',
-      plural: 'posts',
-      name: result.value.metadata.name,
-      hostname: getDomainOnly(baseUrl),
-      screen: `${winInfo.screenWidth}x${winInfo.screenHeight}`,
-      language: appBaseInfo.language,
-      url: `/archives/${baseUrl}`,
-      referrer: `${baseUrl}/`,
-    })
-  }
-  catch (err) {
-    console.error('埋点失败', err)
-  }
-}
+	/** 访问计数埋点 */
+	async function handleTrackersCounter() {
+		if (!result.value) {
+			return
+		}
+		const winInfo = uni.getWindowInfo()
+		const appBaseInfo = uni.getAppBaseInfo()
+		const baseUrl = import.meta.env.VITE_SERVER_BASEURL || ''
+		try {
+			await postTrackersCounter({
+				group: 'content.halo.run',
+				plural: 'posts',
+				name: result.value.metadata.name,
+				hostname: getDomainOnly(baseUrl),
+				screen: `${winInfo.screenWidth}x${winInfo.screenHeight}`,
+				language: appBaseInfo.language,
+				url: `/archives/${baseUrl}`,
+				referrer: `${baseUrl}/`,
+			})
+		}
+		catch (err) {
+			console.error('埋点失败', err)
+		}
+	}
 
-/* ---------------- 点赞 ---------------- */
-const upvotedNames = ref<string[]>([])
+	/* ---------------- 点赞 ---------------- */
+	const upvotedNames = ref<string[]>([])
 
-function hasUpvoted(): boolean {
-  return upvotedNames.value.includes(result.value?.metadata.name || '')
-}
+	function hasUpvoted() : boolean {
+		return upvotedNames.value.includes(result.value?.metadata.name || '')
+	}
 
-async function handleDoLikes() {
-  if (!result.value) {
-    return
-  }
-  if (hasUpvoted()) {
-    uni.showToast({ icon: 'none', title: '已经点过赞啦!' })
-    return
-  }
-  try {
-    await submitUpvote({
-      group: 'content.halo.run',
-      plural: 'posts',
-      name: result.value.metadata.name,
-    })
-    uni.showToast({ icon: 'none', title: '点赞成功!' })
-    upvotedNames.value.push(result.value.metadata.name)
-    if (result.value.stats) {
-      result.value.stats.upvote = (result.value.stats.upvote || 0) + 1
-    }
-  }
-  catch (err) {
-    console.error('点赞失败', err)
-    uni.showToast({ icon: 'none', title: '点赞失败' })
-  }
-}
+	async function handleDoLikes() {
+		if (!result.value) {
+			return
+		}
+		if (hasUpvoted()) {
+			uni.showToast({ icon: 'none', title: '已经点过赞啦!' })
+			return
+		}
+		try {
+			await submitUpvote({
+				group: 'content.halo.run',
+				plural: 'posts',
+				name: result.value.metadata.name,
+			})
+			uni.showToast({ icon: 'none', title: '点赞成功!' })
+			upvotedNames.value.push(result.value.metadata.name)
+			if (result.value.stats) {
+				result.value.stats.upvote = (result.value.stats.upvote || 0) + 1
+			}
+		}
+		catch (err) {
+			console.error('点赞失败', err)
+			uni.showToast({ icon: 'none', title: '点赞失败' })
+		}
+	}
 
-/* ---------------- 收藏 ---------------- */
-/** 当前文章是否已收藏 */
-function hasFavorited(): boolean {
-  const name = result.value?.metadata.name
-  return !!name && favoritesStore.isFavorite('post', name)
-}
+	/* ---------------- 收藏 ---------------- */
+	/** 当前文章是否已收藏 */
+	function hasFavorited() : boolean {
+		const name = result.value?.metadata.name
+		return !!name && favoritesStore.isFavorite('post', name)
+	}
 
-/** 切换收藏(收藏/取消),收藏时按当前文章内容生成快照入库 */
-function handleTogglePostFavorite() {
-  const post = result.value
-  if (!post)
-    return
-  const favorited = favoritesStore.toggle(buildPostFavoriteItem(post))
-  uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
-}
+	/** 切换收藏(收藏/取消),收藏时按当前文章内容生成快照入库 */
+	function handleTogglePostFavorite() {
+		const post = result.value
+		if (!post)
+			return
+		const favorited = favoritesStore.toggle(buildPostFavoriteItem(post))
+		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
+	}
 
-/* ---------------- 受限阅读 ---------------- */
-function readMore() {
-  const annotations = result.value?.metadata?.annotations
-  const restrictReadEnable = annotations?.restrictReadEnable
-  if (restrictReadEnable === 'password') {
-    passwordModal.value.show = true
-  }
-  else if (restrictReadEnable === 'code') {
-    verificationCodeModal.value.show = true
-    verificationCodeModal.value.type = 'scan'
-    verificationCodeModal.value.imgUrl = checkImageUrl((haloConfigs.value.pluginConfig?.toolsPlugin as { scanCodeUrl?: string } | undefined)?.scanCodeUrl)
-  }
-  else if (restrictReadEnable === 'comment') {
-    handleToComment()
-  }
-  else if (restrictReadEnable === 'login') {
-    uni.showToast({ title: '前往web端登录后访问', icon: 'none' })
-  }
-  else if (restrictReadEnable === 'pay') {
-    uni.showToast({ title: '前往web端支付后访问', icon: 'none' })
-  }
-  // 两秒后复制原文链接
-  setTimeout(() => {
-    if (result.value?.status?.permalink) {
-      copyToClipboard(import.meta.env.VITE_SERVER_BASEURL + result.value.status.permalink)
-    }
-  }, 2000)
-}
+	/* ---------------- 受限阅读 ---------------- */
+	function readMore() {
+		const annotations = result.value?.metadata?.annotations
+		const restrictReadEnable = annotations?.restrictReadEnable
+		if (restrictReadEnable === 'password') {
+			passwordModal.value.show = true
+		}
+		else if (restrictReadEnable === 'code') {
+			verificationCodeModal.value.show = true
+			verificationCodeModal.value.type = 'scan'
+			verificationCodeModal.value.imgUrl = checkImageUrl((haloConfigs.value.pluginConfig?.toolsPlugin as { scanCodeUrl ?: string } | undefined)?.scanCodeUrl)
+		}
+		else if (restrictReadEnable === 'comment') {
+			handleToComment()
+		}
+		else if (restrictReadEnable === 'login') {
+			uni.showToast({ title: '前往web端登录后访问', icon: 'none' })
+		}
+		else if (restrictReadEnable === 'pay') {
+			uni.showToast({ title: '前往web端支付后访问', icon: 'none' })
+		}
+		// 两秒后复制原文链接
+		setTimeout(() => {
+			if (result.value?.status?.permalink) {
+				copyToClipboard(import.meta.env.VITE_SERVER_BASEURL + result.value.status.permalink)
+			}
+		}, 2000)
+	}
 
-/** 校验密码/验证码 */
-async function restrictReadCheck() {
-  if (!result.value) {
-    return
-  }
-  if (!restrictReadInputCode.value) {
-    uni.showToast({ title: '请输入内容', icon: 'none' })
-    return
-  }
-  try {
-    const res = await requestRestrictReadCheck(
-      (result.value.metadata.annotations?.restrictReadEnable || 'password') as RestrictReadType,
-      restrictReadInputCode.value,
-      result.value.metadata.name,
-    )
-    if (res.code === 200) {
-      passwordModal.value.show = false
-      verificationCodeModal.value.show = false
-      handleGetData()
-    }
-    else {
-      uni.showToast({ title: '密码错误', icon: 'none' })
-    }
-  }
-  catch (err) {
-    console.error(err)
-  }
-}
+	/** 校验密码/验证码 */
+	async function restrictReadCheck() {
+		if (!result.value) {
+			return
+		}
+		if (!restrictReadInputCode.value) {
+			uni.showToast({ title: '请输入内容', icon: 'none' })
+			return
+		}
+		try {
+			const res = await requestRestrictReadCheck(
+				(result.value.metadata.annotations?.restrictReadEnable || 'password') as RestrictReadType,
+				restrictReadInputCode.value,
+				result.value.metadata.name,
+			)
+			if (res.code === 200) {
+				passwordModal.value.show = false
+				verificationCodeModal.value.show = false
+				handleGetData()
+			}
+			else {
+				uni.showToast({ title: '密码错误', icon: 'none' })
+			}
+		}
+		catch (err) {
+			console.error(err)
+		}
+	}
 
-/** 获取验证码(受限阅读 code 模式) */
-async function getVerificationCode() {
-  uni.showLoading({ title: '正在获取...' })
-  try {
-    const res = await createVerificationCode()
-    if (res.code === 200) {
-      verificationCodeModal.value.show = false
-      restrictReadInputCode.value = res.data as string || ''
-      restrictReadCheck()
-    }
-    else {
-      uni.showToast({ icon: 'none', title: '操作失败，请重试！' })
-    }
-  }
-  catch (err) {
-    uni.showToast({ icon: 'none', title: (err as Error).message || '操作失败' })
-  }
-  finally {
-    uni.hideLoading()
-  }
-}
+	/** 获取验证码(受限阅读 code 模式) */
+	async function getVerificationCode() {
+		uni.showLoading({ title: '正在获取...' })
+		try {
+			const res = await createVerificationCode()
+			if (res.code === 200) {
+				verificationCodeModal.value.show = false
+				restrictReadInputCode.value = res.data as string || ''
+				restrictReadCheck()
+			}
+			else {
+				uni.showToast({ icon: 'none', title: '操作失败，请重试！' })
+			}
+		}
+		catch (err) {
+			uni.showToast({ icon: 'none', title: (err as Error).message || '操作失败' })
+		}
+		finally {
+			uni.hideLoading()
+		}
+	}
 
-/* ---------------- 评论 ---------------- */
-function handleToComment() {
-  console.log('calcIsShowComment.value', calcIsShowComment.value)
-  console.log('result.value', result.value)
-  if (!result.value) {
-    return
-  }
-  if (!calcIsShowComment.value) {
-    return
-  }
-  if (!result.value.spec.allowComment) {
-    uni.showToast({ icon: 'none', title: '文章已开启禁止评论！' })
-    return
-  }
-  commentModal.value = {
-    show: true,
-    isComment: true,
-    postName: result.value.metadata.name,
-    title: '新增评论',
-  }
-}
+	/* ---------------- 评论 ---------------- */
+	function handleToComment() {
+		console.log('calcIsShowComment.value', calcIsShowComment.value)
+		console.log('result.value', result.value)
+		if (!result.value) {
+			return
+		}
+		if (!calcIsShowComment.value) {
+			return
+		}
+		if (!result.value.spec.allowComment) {
+			uni.showToast({ icon: 'none', title: '文章已开启禁止评论！' })
+			return
+		}
+		commentModal.value = {
+			show: true,
+			isComment: true,
+			postName: result.value.metadata.name,
+			title: '新增评论',
+		}
+	}
 
-function handleOnComment(data: { isComment: boolean, postName: string, title: string }) {
-  commentModal.value = {
-    show: true,
-    isComment: data.isComment,
-    postName: data.postName,
-    title: data.title,
-  }
-}
+	function handleOnComment(data : { isComment : boolean, postName : string, title : string }) {
+		commentModal.value = {
+			show: true,
+			isComment: data.isComment,
+			postName: data.postName,
+			title: data.title,
+		}
+	}
 
-function handleOnCommentModalClose(data: { refresh: boolean, isSubmit: boolean }) {
-  if (result.value?.metadata.annotations?.restrictReadEnable === 'comment') {
-    handleGetData()
-  }
-  if (data.refresh && data.isSubmit) {
-    // 评论成功后刷新(通过 uni.$emit 广播给 comment-list)
-    uni.$emit('comment_list_refresh')
-  }
-  commentModal.value.show = false
-}
+	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean }) {
+		if (result.value?.metadata.annotations?.restrictReadEnable === 'comment') {
+			handleGetData()
+		}
+		if (data.refresh && data.isSubmit) {
+			// 评论成功后刷新(通过 uni.$emit 广播给 comment-list)
+			uni.$emit('comment_list_refresh')
+		}
+		commentModal.value.show = false
+	}
 
-function handleOnShowCommentDetail(data: { postName: string, comment: IComment }) {
-  commentDetail.value = {
-    show: true,
-    loading: 'loading',
-    comment: data.comment,
-    postName: data.postName,
-    list: [],
-  }
-}
+	function handleOnShowCommentDetail(data : { postName : string, comment : IComment }) {
+		commentDetail.value = {
+			show: true,
+			loading: 'loading',
+			comment: data.comment,
+			postName: data.postName,
+			list: [],
+		}
+	}
 
-async function handleGetChildComments() {
-  commentDetail.value.loading = 'loading'
-  try {
-    const res = await getPostCommentReplyList(commentDetail.value.postName, {
-      page: 1,
-      size: 100,
-    })
-    commentDetail.value.loading = 'success'
-    commentDetail.value.list = res.data.items
-  }
-  catch (err) {
-    console.error(err)
-    commentDetail.value.loading = 'error'
-  }
-}
+	async function handleGetChildComments() {
+		commentDetail.value.loading = 'loading'
+		try {
+			const res = await getPostCommentReplyList(commentDetail.value.postName, {
+				page: 1,
+				size: 100,
+			})
+			commentDetail.value.loading = 'success'
+			commentDetail.value.list = res.data.items
+		}
+		catch (err) {
+			console.error(err)
+			commentDetail.value.loading = 'error'
+		}
+	}
 
-/* ---------------- 跳转 ---------------- */
-function handleToCate(category: { metadata: { name: string }, spec: { displayName: string } }) {
-  uni.navigateTo({
-    url: `/pages-blog/category-detail/category-detail?name=${category.metadata.name}&title=${category.spec.displayName}`,
-  })
-}
+	/* ---------------- 跳转 ---------------- */
+	function handleToCate(category : { metadata : { name : string }, spec : { displayName : string } }) {
+		uni.navigateTo({
+			url: `/pages-blog/category-detail/category-detail?name=${category.metadata.name}&title=${category.spec.displayName}`,
+		})
+	}
 
-function handleToTag(tag: { metadata: { name: string }, spec: { displayName: string } }) {
-  uni.navigateTo({
-    url: `/pages-blog/tag-detail/tag-detail?name=${tag.metadata.name}&title=${tag.spec.displayName}`,
-  })
-}
+	function handleToTag(tag : { metadata : { name : string }, spec : { displayName : string } }) {
+		uni.navigateTo({
+			url: `/pages-blog/tag-detail/tag-detail?name=${tag.metadata.name}&title=${tag.spec.displayName}`,
+		})
+	}
 
-function handleToWebview(data: { title: string, url: string }) {
-  uni.navigateTo({
-    url: `/pages-blog/website/website?data=${JSON.stringify({
-      title: data.title,
-      url: encodeURIComponent(data.url),
-    })}`,
-  })
-}
+	function handleToWebview(data : { title : string, url : string }) {
+		uni.navigateTo({
+			url: `/pages-blog/website/website?data=${JSON.stringify({
+				title: data.title,
+				url: encodeURIComponent(data.url),
+			})}`,
+		})
+	}
 
-function handleToOriginal(originalURLValue: string) {
-  handleToWebview({
-    title: result.value?.spec.title || '',
-    url: originalURLValue,
-  })
-}
+	function handleToOriginal(originalURLValue : string) {
+		handleToWebview({
+			title: result.value?.spec.title || '',
+			url: originalURLValue,
+		})
+	}
 
-function handlePreview(index: number, list: { url: string }[]) {
-  uni.previewImage({
-    current: index,
-    urls: list.map(item => item.url),
-  })
-}
+	function handlePreview(index : number, list : { url : string }[]) {
+		uni.previewImage({
+			current: index,
+			urls: list.map(item => item.url),
+		})
+	}
 
-/* ---------------- 格式化 ---------------- */
-function formatPublishTime(time?: string): string {
-  // 与旧项目一致:yyyy年MM月dd日 星期w
-  return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
-}
+	/* ---------------- 格式化 ---------------- */
+	function formatPublishTime(time ?: string) : string {
+		// 与旧项目一致:yyyy年MM月dd日 星期w
+		return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
+	}
 
-/* ---------------- 生命周期 ---------------- */
-onLoad((options) => {
-  uni.setNavigationBarTitle({ title: '文章加载中...' })
-  queryName.value = options?.name || ''
-  handleGetData()
-})
+	/* ---------------- 生命周期 ---------------- */
+	onLoad((options) => {
+		uni.setNavigationBarTitle({ title: '文章加载中...' })
+		queryName.value = options?.name || ''
+		handleGetData()
+	})
 
-onPullDownRefresh(() => {
-  handleGetData()
-})
+	onPullDownRefresh(() => {
+		handleGetData()
+	})
 
-onShareAppMessage(() => {
-  const cover = result.value?.spec.cover ? checkImageUrl(result.value.spec.cover) : ''
-  return {
-    path: `/pages-blog/article-detail/article-detail?name=${result.value?.metadata.name}`,
-    title: result.value?.spec.title || '',
-    imageUrl: cover,
-  }
-})
+	onShareAppMessage(() => {
+		const cover = result.value?.spec.cover ? checkImageUrl(result.value.spec.cover) : ''
+		return {
+			path: `/pages-blog/article-detail/article-detail?name=${result.value?.metadata.name}`,
+			title: result.value?.spec.title || '',
+			imageUrl: cover,
+		}
+	})
 
-onShareTimeline(() => {
-  const cover = result.value?.spec.cover ? checkImageUrl(result.value.spec.cover) : ''
-  return {
-    title: result.value?.spec.title || '',
-    query: result.value ? `name=${result.value.metadata.name}` : '',
-    imageUrl: cover,
-  }
-})
+	onShareTimeline(() => {
+		const cover = result.value?.spec.cover ? checkImageUrl(result.value.spec.cover) : ''
+		return {
+			title: result.value?.spec.title || '',
+			query: result.value ? `name=${result.value.metadata.name}` : '',
+			imageUrl: cover,
+		}
+	})
 
-const globalAppSettings = computed(() => settingStore.settings)
+	const globalAppSettings = computed(() => settingStore.settings)
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
-    <!-- 顶部导航 -->
-    <uh-navbar default-title="内容详情" :scroll-title="result?.spec?.title" />
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
+		<!-- 顶部导航 -->
+		<uh-navbar default-title="内容详情" :need-placeholder="false" :scroll-title="result?.spec?.title" />
 
-    <!-- 骨架屏 -->
-    <view v-if="loadingStatus !== 'success'" class="box-border p-4">
-      <uh-data-loading :loading-status="loadingStatus" @refresh="handleGetData()" />
-    </view>
+		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus"
+			@refresh="handleGetData()" />
 
-    <view v-else class="box-border pt-72">
-      <!-- 顶部背景封面区域 -->
-      <view class="fixed left-0 top-0 h-72 w-full">
-        <image v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill" />
-        <view class="absolute bottom-0 left-0 h-[140rpx] w-full from-white/0 to-page bg-gradient-to-b" />
-      </view>
-
-      <view
-        class="uh-global-card-glass box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none -translate-y-12"
-        :style="{
-          boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
-        }"
-      >
-        <!-- 顶部信息 -->
-        <view class="box-border flex flex-col gap-3 p-3 pb-2">
-          <view class="flex items-center gap-x-2">
-            <image
-              :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
-              mode="aspectFill"
-            />
-            <text class="text-sm font-semibold">{{ result?.owner?.displayName }}</text>
-          </view>
-          <view class="font-semibold">
-            {{ result?.spec.title }}
-          </view>
-          <view class="flex flex-wrap items-center gap-2 text-xs">
-            <text
-              v-for="(item, index) in result?.categories" :key="index"
-              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1" @click="handleToCate(item)"
-            >
-              {{ item.spec.displayName }}
-            </text>
-            <text
-              v-for="(item, index) in result?.tags" :key="index"
-              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1" @click="handleToTag(item)"
-            >
-              #{{ item.spec.displayName }}
-            </text>
-          </view>
-
-          <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-2 rounded-xl p-3">
-            <view v-if="originalURL" class="flex flex-1 items-center gap-x-2 text-gray-500">
-              <text class="text-xs">原文</text>
-              <text class="text-xs text-gray-900" @click.stop="handleToOriginal(originalURL)">
-                {{ originalURL }}
-              </text>
-            </view>
-            <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-              <text class="text-xs">日期</text>
-              <text class="text-xs text-gray-900">{{ formatPublishTime(result?.spec.publishTime) }}</text>
-            </view>
-            <view class="flex items-center">
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">阅读</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.visit ?? 0 }}</text>
-              </view>
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">喜欢</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
-              </view>
-              <view v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">评论</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
-              </view>
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">字数</text>
-                <text class="text-xs text-gray-900">{{ result?.content?.raw.length || 0 }}</text>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 内容区域 -->
-        <view class="box-border flex flex-col gap-y-3 p-3">
-          <!-- 受限阅读 -->
-          <template v-if="checkPostRestrictRead(result!)">
-            <view v-if="showContentArr.length === 0">
-              <uh-restrict-read-skeleton
-                :loading="true" :lines="3"
-                :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-                @refresh="readMore"
-              />
-            </view>
-            <view v-for="(showContent, showContentIndex) in showContentArr" v-else :key="showContentIndex">
-              <mp-html
-                 lazy-load :domain="markdownConfig.domain ?? ''"
-                :loading-img="markdownConfig.loadingGif" scroll-table selectable
-                :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                :content="showContent" :markdown="true" :show-line-number="true"
-                :show-language-name="true" copy-by-long-press
-              />
-              <uh-restrict-read-skeleton
-                :loading="true" :lines="3"
-                :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-                @refresh="readMore"
-              />
-            </view>
-          </template>
-
-          <!-- 正常渲染 -->
-          <template v-else>
-            <mp-html
-               lazy-load :domain="markdownConfig.domain ?? ''"
-              :loading-img="markdownConfig.loadingGif" scroll-table selectable
-              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-              :content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
-              :show-language-name="true" copy-by-long-press
-            />
-          </template>
-        </view>
-		
-		<view class="box-border px-1">
-			<!-- 版权声明 -->
-			<view v-if="postDetailConfig?.copyrightEnabled" class="box-border px-2 mb-3">
-			  <view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
-			    <uh-section-title>版权声明</uh-section-title>
-			    <view class="mt-3 flex flex-col gap-y-2 text-gray-600">
-			      <view v-if="postDetailConfig.copyrightAuthor" class="text-sm leading-5">
-			        版权归属：{{ postDetailConfig.copyrightAuthor }}
-			      </view>
-			      <view v-if="postDetailConfig.copyrightDesc" class="text-sm leading-5">
-			        版权说明：{{ postDetailConfig.copyrightDesc }}
-			      </view>
-			      <view v-if="postDetailConfig.copyrightViolation" class="text-sm text-red-400 leading-5">
-			        侵权处理：{{ postDetailConfig.copyrightViolation }}
-			      </view>
-			    </view>
-			  </view>
+		<view v-else class="box-border pt-72">
+			<!-- 顶部背景封面区域 -->
+			<view class="fixed left-0 top-0 h-72 w-full">
+				<image v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill" />
+				<view class="absolute bottom-0 left-0 h-[140rpx] w-full from-white/0 to-page bg-gradient-to-b" />
 			</view>
-			
-			<!-- 评论区域 -->
-			<uh-comment-list
-			  v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
-			  :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
-			  @on-comment-detail="handleOnShowCommentDetail"
-			/>
+
+			<view
+				class="uh-global-card-glass box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none -translate-y-12"
+				:style="{
+					  boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
+					}">
+				<!-- 顶部信息 -->
+				<view class="box-border flex flex-col gap-3 p-3 pb-2">
+					<view class="flex items-center gap-x-2">
+						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
+							mode="aspectFill" />
+						<text class="text-sm font-semibold">{{ result?.owner?.displayName }}</text>
+					</view>
+					<view class="font-semibold">
+						{{ result?.spec.title }}
+					</view>
+					<view class="flex flex-wrap items-center gap-2 text-xs">
+						<text v-for="(item, index) in result?.categories" :key="index"
+							class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1"
+							@click="handleToCate(item)">
+							{{ item.spec.displayName }}
+						</text>
+						<text v-for="(item, index) in result?.tags" :key="index"
+							class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1"
+							@click="handleToTag(item)">
+							#{{ item.spec.displayName }}
+						</text>
+					</view>
+
+					<view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-2 rounded-xl p-3">
+						<view v-if="originalURL" class="flex flex-1 items-center gap-x-2 text-gray-500">
+							<text class="text-xs">原文</text>
+							<text class="text-xs text-gray-900" @click.stop="handleToOriginal(originalURL)">
+								{{ originalURL }}
+							</text>
+						</view>
+						<view class="flex flex-1 items-center gap-x-2 text-gray-500">
+							<text class="text-xs">日期</text>
+							<text class="text-xs text-gray-900">{{ formatPublishTime(result?.spec.publishTime) }}</text>
+						</view>
+						<view class="flex items-center">
+							<view class="flex flex-1 items-center gap-x-2 text-gray-500">
+								<text class="text-xs">阅读</text>
+								<text class="text-xs text-gray-900">{{ result?.stats?.visit ?? 0 }}</text>
+							</view>
+							<view class="flex flex-1 items-center gap-x-2 text-gray-500">
+								<text class="text-xs">喜欢</text>
+								<text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
+							</view>
+							<view v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500">
+								<text class="text-xs">评论</text>
+								<text class="text-xs text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
+							</view>
+							<view class="flex flex-1 items-center gap-x-2 text-gray-500">
+								<text class="text-xs">字数</text>
+								<text class="text-xs text-gray-900">{{ result?.content?.raw.length || 0 }}</text>
+							</view>
+						</view>
+					</view>
+				</view>
+
+				<!-- 内容区域 -->
+				<view class="box-border flex flex-col gap-y-3 p-3">
+					<!-- 受限阅读 -->
+					<template v-if="checkPostRestrictRead(result!)">
+						<view v-if="showContentArr.length === 0">
+							<uh-restrict-read-skeleton :loading="true" :lines="3"
+								:tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
+								:button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
+								@refresh="readMore" />
+						</view>
+						<view v-for="(showContent, showContentIndex) in showContentArr" v-else :key="showContentIndex">
+							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+								:loading-img="markdownConfig.loadingGif" scroll-table selectable
+								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+								:content="showContent" :markdown="true" :show-line-number="true"
+								:show-language-name="true" copy-by-long-press />
+							<uh-restrict-read-skeleton :loading="true" :lines="3"
+								:tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
+								:button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
+								@refresh="readMore" />
+						</view>
+					</template>
+
+					<!-- 正常渲染 -->
+					<template v-else>
+						<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+							:loading-img="markdownConfig.loadingGif" scroll-table selectable
+							:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+							:content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
+							:show-language-name="true" copy-by-long-press />
+					</template>
+				</view>
+
+				<view class="box-border px-1">
+					<!-- 版权声明 -->
+					<view v-if="postDetailConfig?.copyrightEnabled" class="box-border px-2 mb-3">
+						<view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
+							<uh-section-title>版权声明</uh-section-title>
+							<view class="mt-3 flex flex-col gap-y-2 text-gray-600">
+								<view v-if="postDetailConfig.copyrightAuthor" class="text-sm leading-5">
+									版权归属：{{ postDetailConfig.copyrightAuthor }}
+								</view>
+								<view v-if="postDetailConfig.copyrightDesc" class="text-sm leading-5">
+									版权说明：{{ postDetailConfig.copyrightDesc }}
+								</view>
+								<view v-if="postDetailConfig.copyrightViolation" class="text-sm text-red-400 leading-5">
+									侵权处理：{{ postDetailConfig.copyrightViolation }}
+								</view>
+							</view>
+						</view>
+					</view>
+
+					<!-- 评论区域 -->
+					<uh-comment-list v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
+						:post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
+						@on-comment-detail="handleOnShowCommentDetail" />
+				</view>
+			</view>
+
+			<!-- 悬浮操作 -->
+			<view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
+				<!-- #7BE200 -->
+				<view
+					class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
+					<view
+						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+						:class="{ active: hasUpvoted() }" @click="handleDoLikes">
+						<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
+						<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
+					</view>
+					<view v-if="calcIsShowComment"
+						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+						@click="handleToComment()">
+						<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
+						<text class="shrink-0 text-sm text-gray-900 font-semibold">评论</text>
+					</view>
+					<view
+						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+						@click="handleTogglePostFavorite">
+						<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
+						<text class="shrink-0 text-sm text-gray-900 font-semibold"
+							:style="hasFavorited() ? { color: '#ffb300' } : ''">{{ hasFavorited() ? '已收藏' : '收藏' }}</text>
+					</view>
+				</view>
+			</view>
 		</view>
-      </view>
 
-      <!-- 悬浮操作 -->
-      <view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
-        <!-- #7BE200 -->
-        <view
-          class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
-        >
-          <view
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            :class="{ active: hasUpvoted() }" @click="handleDoLikes"
-          >
-            <wd-icon  class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-            <text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
-          </view>
-          <view
-            v-if="calcIsShowComment"
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            @click="handleToComment()"
-          >
-            <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-            <text class="shrink-0 text-sm text-gray-900 font-semibold">评论</text>
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            @click="handleTogglePostFavorite"
-          >
-            <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-            <text class="shrink-0 text-sm text-gray-900 font-semibold"
-              :style="hasFavorited() ? { color: '#ffb300' } : ''">{{ hasFavorited() ? '已收藏' : '收藏' }}</text>
-          </view>
-        </view>
-      </view>
-    </view>
+		<!-- 密码弹窗 -->
+		<wd-dialog v-model="passwordModal.show" title="验证提示" :show-cancel="true" show-confirm-button confirm-text="确定"
+			@confirm="restrictReadCheck">
+			<view class="modal-body py-4">
+				<wd-input v-model="restrictReadInputCode" placeholder="请输入密码" />
+			</view>
+		</wd-dialog>
 
-    <!-- 密码弹窗 -->
-    <wd-dialog
-      v-model="passwordModal.show" title="验证提示" :show-cancel="true" show-confirm-button confirm-text="确定"
-      @confirm="restrictReadCheck"
-    >
-      <view class="modal-body py-4">
-        <wd-input v-model="restrictReadInputCode" placeholder="请输入密码" />
-      </view>
-    </wd-dialog>
+		<!-- 验证码弹窗 -->
+		<wd-dialog v-model="verificationCodeModal.show" title="验证提示" :show-cancel="true" confirm-text="确定"
+			@confirm="restrictReadCheck">
+			<view class="modal-body py-4">
+				<image v-if="verificationCodeModal.imgUrl" :src="verificationCodeModal.imgUrl"
+					class="modal-code-img mb-4 h-[200rpx] w-full" mode="aspectFit" />
+				<wd-input v-model="restrictReadInputCode" placeholder="请输入验证码" class="mt-2" />
+			</view>
+		</wd-dialog>
 
-    <!-- 验证码弹窗 -->
-    <wd-dialog
-      v-model="verificationCodeModal.show" title="验证提示" :show-cancel="true" confirm-text="确定"
-      @confirm="restrictReadCheck"
-    >
-      <view class="modal-body py-4">
-        <image
-          v-if="verificationCodeModal.imgUrl" :src="verificationCodeModal.imgUrl"
-          class="modal-code-img mb-4 h-[200rpx] w-full" mode="aspectFit"
-        />
-        <wd-input v-model="restrictReadInputCode" placeholder="请输入验证码" class="mt-2" />
-      </view>
-    </wd-dialog>
-
-    <!-- 评论弹窗 -->
-    <uh-comment-modal
-      v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
-      :title="commentModal.title" :post-name="commentModal.postName" @on-close="handleOnCommentModalClose"
-    />
-  </view>
+		<!-- 评论弹窗 -->
+		<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
+			:title="commentModal.title" :post-name="commentModal.postName" @on-close="handleOnCommentModalClose" />
+	</view>
 </template>

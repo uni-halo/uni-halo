@@ -81,9 +81,7 @@
 			<!-- 头部:标题 + 关闭 -->
 			<view class="flex items-center justify-between">
 				<view class="flex items-center gap-2">
-					<text class="text-sm">
-						📢
-					</text>
+					<wd-icon class-prefix="uhemoji2-icon" name="-happy-" size="36rpx" />
 					<text class="text-md font-bold text-gray-900">
 						最新公告
 					</text>
@@ -101,7 +99,8 @@
 
 			<!-- 内容 -->
 			<view class="mt-4">
-				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2"></image>
+				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2">
+				</image>
 				<view class="text-md font-bold leading-snug text-gray-900">
 					{{ notice.title }}
 				</view>

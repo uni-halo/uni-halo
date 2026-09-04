@@ -295,7 +295,85 @@ onLoad(() => {
 - 页面根节点用 `app-page` 类 + 主题底色：`<view class="app-page min-h-screen w-screen flex flex-col bg-page">`
 - 页面标题 `navigationBarTitleText` 写中文；下拉刷新 `enablePullDownRefresh: true`
 
-### 5.4 页面数据请求（统一 updateLoadingStatus + uh-data-loading 组件）
+### 5.4 子页面自定义导航（uh-navbar 组件）
+
+**用途**：子页面（非 tabbar 页，如文章详情、设置、投票详情等）的顶部自定义导航栏。
+配合页面 `navigationStyle: 'custom'` 使用，**新页面一律使用它，不要用默认导航栏**。
+
+**前提（definePage 里必须声明）**：
+
+```ts
+definePage({
+  style: {
+    navigationStyle: 'custom', // 关闭系统默认导航栏,让位给 uh-navbar
+  },
+})
+```
+
+**Props 一览**：
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `use-back` | `boolean` | `true` | 是否显示左侧返回按钮 |
+| `use-title` | `boolean` | `true` | 是否显示标题 |
+| `default-title` | `string` | - | 默认标题（顶部文案） |
+| `title-color` | `string` | - | 标题颜色类名（如 `text-gray-900`），**带此属性时固定颜色、不随滚动变色** |
+| `scroll-title` | `string` | - | 滚动后标题（配合 default-title：顶部显示默认标题，滚过 50% 换 scroll-title） |
+| `need-placeholder` | `boolean` | `true` | 是否生成占位（为页面内容让出导航高度） |
+
+**页面结构模板**（参考 `src/pages-blog/test/test.vue`）：
+
+```vue
+<script lang="ts" setup>
+definePage({
+  style: {
+    navigationBarTitleText: '测试页面',
+    navigationStyle: 'custom', // 使用 uh-navbar 必须声明
+  },
+})
+
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+</script>
+
+<template>
+  <!-- 最外层仅作容器(bg-page 底色),不设 padding -->
+  <view class="w-full min-h-screen bg-page">
+    <!-- 导航栏:置于页面最顶部,内置占位/安全区处理 -->
+    <uh-navbar default-title="测试页面" :need-placeholder="true" title-color="text-gray-900" />
+
+    <!-- 内容区:从这开始写,因为 uh-navbar 已内置占位(need-placeholder=true) -->
+    <view class="box-border px-3">
+      <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" min-height="80vh" />
+      <view v-else>
+        请求成功啦
+      </view>
+    </view>
+  </view>
+</template>
+```
+
+**使用要点**：
+
+- **`need-placeholder` 必须按场景传对**：
+  - 页面内容直接从导航下开始（普通子页面）→ `:need-placeholder="true"`（默认即可，如 test.vue / setting.vue）
+  - 页面顶部有全屏封面/背景图，内容要盖到导航下面 → `:need-placeholder="false"`（如 article-detail.vue，封面 `pt-72` 上移）
+- **`title-color` 与 `scroll-title` 二选一**：
+  - 页面底色非深色 → 传 `title-color="text-gray-900"`（固定深色，如 test.vue / setting.vue）
+  - 不传时标题会随滚动变白→深灰（顶部透明、滚后加深），适合顶部是深色大图的场景（如 article-detail.vue 只传 `default-title` + `scroll-title`，让滚动变色）
+- 中间标题可用**默认插槽覆盖**（不传则显示 `default-title`/`scroll-title`），右侧扩展用 **`#right` 插槽**：
+
+```vue
+<uh-navbar default-title="偏好设置" :need-placeholder="true">
+  <template #right>
+    <view @click="handleSave">保存</view>
+  </template>
+</uh-navbar>
+```
+
+- 返回按钮内置（`uni.navigateBack`），无需自写
+- easycom 已配置 `uh-` 前缀，直接用 `<uh-navbar />`，**无需 import**
+
+### 5.5 页面数据请求（统一 updateLoadingStatus + uh-data-loading 组件）
 
 **数据加载四态**：`loading / error / empty / success`，统一用
 `useDataLoadingStatus`（`src/hooks/useDataLoadingStatus.ts`）的
@@ -419,7 +497,7 @@ onReachBottom(() => {
   列表页/四态展示优先 `updateLoadingStatus` 写法
 - 简单场景也可用 `useRequest(fn, { immediate })`：返回 `{ loading, error, data, run }`
 
-### 5.5 列表页（分页加载）
+### 5.6 列表页（分页加载）
 
 列表页可用 z-paging（easycom 已配置 `<z-paging>` 直接用）或手写分页。
 手写分页的既有模式（参考 `src/pages/tabbar/home/home.vue`、`pages-blog/votes/votes.vue`）：
@@ -457,7 +535,7 @@ onReachBottom(() => {
 })
 ```
 
-### 5.6 依赖插件的页面（插件可用性 + 维护拦截）
+### 5.7 依赖插件的页面（插件可用性 + 维护拦截）
 
 Halo 是插件化 CMS，页面可能依赖插件（投票 plugin-vote、瞬间 PluginMoments 等）：
 
