@@ -190,8 +190,8 @@
 						{{ loveConfig.loveInfo.boyNickname }}
 					</view>
 				</view>
-				<!-- todo:加一个心动呼吸动画 -->
-				<text class="absolute z-10 -translate-y-4"><wd-icon class-prefix="uhlove-icon" name="aixin" size="90rpx"></wd-icon></text>
+				<!-- 心动呼吸动画 -->
+				<text class="heart-beat absolute z-10"><wd-icon class-prefix="uhlove-icon" name="aixin" size="72rpx"></wd-icon></text>
 				<view class="girl flex flex-col items-center justify-center -translate-x-0.5">
 					<image class="uh-global-card-glass border-3 box-border border-love h-26 w-26 rounded-full"
 						:src="checkAvatarUrl(loveConfig.loveInfo.girlAvatar)" mode="aspectFill" />
@@ -259,6 +259,34 @@
 </template>
 
 <style scoped lang="scss">
+	/* 心动呼吸动画:两次心跳 + 呼吸回落 */
+	.heart-beat {
+		animation: heartBeat 1.2s ease-in-out infinite;
+	}
+
+	@keyframes heartBeat {
+		0%,
+		100% {
+			transform: translateY(-1rem) scale(1);
+		}
+
+		15% {
+			transform: translateY(-1rem) scale(1.2);
+		}
+
+		30% {
+			transform: translateY(-1rem) scale(0.95);
+		}
+
+		45% {
+			transform: translateY(-1rem) scale(1.15);
+		}
+
+		60% {
+			transform: translateY(-1rem) scale(1);
+		}
+	}
+
 	.list-item-1 {
 		animation: listItemAni1 3s ease-in-out infinite;
 	}
