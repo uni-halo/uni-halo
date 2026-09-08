@@ -321,11 +321,9 @@
 					</view>
 				</view>
 
-				<view class="relative z-2 mt-[64rpx] text-[54rpx] font-black leading-[64rpx]">
-					{{ title }}
+				<view class="relative z-2 mt-8 text-6 font-black leading-8">
+					<uh-text-underline>{{ title }}</uh-text-underline>
 				</view>
-				<view
-					class="relative z-2 mx-auto mt-[8rpx] h-[8rpx] w-[224rpx] rounded-full from-transparent via-[#a7e93b] to-transparent bg-gradient-to-r" />
 				<view class="relative z-2 mt-6 px-[16rpx] text-[25rpx] text-balck/50 font-medium leading-[1.7]">
 					<template v-if="fromReason!=='plugin' && noticeLines.length > 0">
 						<text v-for="(line, index) in noticeLines" :key="index" class="block">{{ line }}</text>

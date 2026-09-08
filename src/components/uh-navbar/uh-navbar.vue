@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { onPageScroll } from '@dcloudio/uni-app'
 	import { ref, computed, useSlots, onMounted } from 'vue'
+	import { tabbarList } from '@/tabbar/config'
 
 	interface IProps {
 		useBack : boolean;
@@ -57,8 +58,25 @@
 		return props.scrollTitle;
 	})
 
-	// todo：注意：如果是从分享进来的，我们需要处理为返回 home页面
+	// 如果是从分享进来的，我们需要处理为返回 home页面
+	const homePage = 'pages/index/index'
+
+	const allEntryPages = computed<string[]>(() => {
+		return [
+			homePage,
+			'pages/maintenance/maintenance',
+			...tabbarList.map(item => item.pagePath),
+		] as string[];
+	})
+
 	function handleBack() {
+		const currentPage = getCurrentPages()[0]
+		if (!allEntryPages.value.some(pagePath => pagePath == currentPage.route)) {
+			uni.reLaunch({
+				url: `/${homePage}`
+			})
+			return;
+		}
 		uni.navigateBack({ delta: 1 })
 	}
 

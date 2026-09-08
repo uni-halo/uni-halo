@@ -7,21 +7,29 @@ import { getCache, setCache } from './storage'
 /** 投票 UID 缓存 key */
 const UnihaloVoteUid = 'unihalo_vote_uid'
 
-export type VoteType = 'SINGLE' | 'MULTIPLE'
+export type VoteType = 'single' | 'multiple' | 'pk'
 export type VoteState = 'not-voted' | 'voting' | 'voted' | 'vote-ended'
 
-/** 投票类型常量 */
-export const VOTE_TYPES: { SINGLE: VoteType, MULTIPLE: VoteType } = {
-  SINGLE: 'SINGLE',
-  MULTIPLE: 'MULTIPLE',
+/** 投票类型中文映射(与旧项目一致:key 为插件小写 type) */
+export const VOTE_TYPES: Record<string, string> = {
+  pk: '双选PK',
+  multiple: '多选',
+  single: '单选',
 }
 
-/** 投票状态常量 */
+/** 投票状态常量(内部状态机) */
 export const VOTE_STATES: { NOT_VOTED: VoteState, VOTING: VoteState, VOTED: VoteState, VOTE_ENDED: VoteState } = {
   NOT_VOTED: 'not-voted',
   VOTING: 'voting',
   VOTED: 'voted',
   VOTE_ENDED: 'vote-ended',
+}
+
+/** 投票展示状态(与旧项目 VOTE_STATES 一致:中文 + 颜色) */
+export const VOTE_STATE_LABELS: Record<string, { state: string, color: string }> = {
+  未开始: { state: '未开始', color: 'orange' },
+  进行中: { state: '进行中', color: 'green' },
+  已结束: { state: '已结束', color: 'red' },
 }
 
 /**
@@ -37,33 +45,31 @@ export function getOrCreateVoteUid(): string {
 }
 
 /**
- * 计算投票状态
- * @param vote 投票对象(含 startTime/endTime/options)
- * @param voteTypes 已投票项
- * @param canAnonymously 是否允许匿名
+ * 计算投票展示状态(与旧项目 calcVoteState 一致)
+ * 非 custom 期限(permanent 等)直接看 hasEnded;custom 按起止时间判断
+ * @param vote 投票对象(含 spec.timeLimit/hasEnded/startDate/endDate)
+ * @returns { state: '未开始' | '进行中' | '已结束', color: 'orange' | 'green' | 'red' }
  */
 export function calcVoteState(
-  vote: { startTime?: string, endTime?: string, [key: string]: unknown },
-  voteTypes: string[],
-  canAnonymously: boolean,
-): VoteState {
-  const now = Date.now()
-  const startTime = vote.startTime ? new Date(vote.startTime).getTime() : now
-  const endTime = vote.endTime ? new Date(vote.endTime).getTime() : now
+  vote: { spec?: { timeLimit?: string, hasEnded?: boolean, startDate?: string, endDate?: string, [key: string]: unknown } },
+): { state: string, color: string } {
+  if (vote.spec?.timeLimit !== 'custom') {
+    return vote.spec?.hasEnded ? VOTE_STATE_LABELS['已结束'] : VOTE_STATE_LABELS['进行中']
+  }
 
-  if (endTime < now)
-    return VOTE_STATES.VOTE_ENDED
-  if (startTime > now)
-    return VOTE_STATES.NOT_VOTED
-  if (voteTypes.length !== 0)
-    return VOTE_STATES.VOTED
-  if (!canAnonymously)
-    return VOTE_STATES.NOT_VOTED
-  return VOTE_STATES.VOTING
+  const nowTime = new Date().getTime()
+  const startTime = vote.spec?.startDate ? new Date(vote.spec.startDate).getTime() : nowTime
+  const endTime = vote.spec?.endDate ? new Date(vote.spec.endDate).getTime() : nowTime
+
+  if (nowTime < startTime)
+    return VOTE_STATE_LABELS['未开始']
+  if (nowTime < endTime)
+    return VOTE_STATE_LABELS['进行中']
+  return vote.spec?.hasEnded ? VOTE_STATE_LABELS['已结束'] : VOTE_STATE_LABELS['进行中']
 }
 
 /**
- * 计算选项票数占比
+ * 计算选项票数占比(与旧项目一致:整数百分比)
  * @param vote 投票对象(含 stats.voteCount)
  * @param option 选项(含 count)
  */
@@ -72,7 +78,7 @@ export function calcVotePercent(vote: { stats?: { voteCount?: number } }, option
   const count = option.count || 0
   if (total === 0)
     return 0
-  return Number(((count / total) * 100).toFixed(2))
+  return Math.round((count / total) * 100)
 }
 
 /** 投票缓存 key 前缀 */

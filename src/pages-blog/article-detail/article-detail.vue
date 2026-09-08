@@ -456,6 +456,11 @@
 	})
 
 	const globalAppSettings = computed(() => settingStore.settings)
+	
+	onMounted(() => {
+		console.log('获取当前所有的页面')
+		console.log(getCurrentPages())
+	})
 </script>
 
 <template>
@@ -565,6 +570,9 @@
 							:show-language-name="true" copy-by-long-press />
 					</template>
 				</view>
+
+				<!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
+				<uh-article-vote :vote-ids="result?._voteIds || []" />
 
 				<view class="box-border px-1">
 					<!-- 版权声明 -->

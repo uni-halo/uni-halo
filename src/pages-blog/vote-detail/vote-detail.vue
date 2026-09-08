@@ -7,7 +7,7 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import { calcVotePercent, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
+import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
 
@@ -85,27 +85,17 @@ async function handleGetData() {
     const detailRes = res.data as IVoteDetail
     const tempVote = detailRes.vote as typeof vote.value
     if (tempVote) {
-      const typeKey = ((tempVote.spec?.type || 'SINGLE') as string).toUpperCase()
-      pageTitle.value = `投票详情（${VOTE_TYPES[typeKey as keyof typeof VOTE_TYPES] || tempVote.spec?.type}）`
+      const typeKey = ((tempVote.spec?.type || 'single') as string).toLowerCase()
+      pageTitle.value = `投票详情（${VOTE_TYPES[typeKey] || tempVote.spec?.type}）`
       tempVote.spec = tempVote.spec || {}
       tempVote.spec.isVoted = isVoted.value
       tempVote.spec.disabled = isVoted.value
-      tempVote.spec._uh_type = VOTE_TYPES[typeKey as keyof typeof VOTE_TYPES] || tempVote.spec.type
+      tempVote.spec._uh_type = VOTE_TYPES[typeKey] || tempVote.spec.type
 
-      // 计算状态
-      const startTime = tempVote.spec.startDate ? new Date(tempVote.spec.startDate).getTime() : Date.now()
-      const endTime = tempVote.spec.endDate ? new Date(tempVote.spec.endDate).getTime() : Date.now()
-      const now = Date.now()
-      if (endTime < now) {
-        tempVote.spec._uh_state = { state: '已结束', color: 'red' }
+      // 计算状态(与旧项目 calcVoteState 一致,含 timeLimit 非 custom 时 hasEnded 兜底)
+      tempVote.spec._uh_state = calcVoteState(tempVote)
+      if (tempVote.spec._uh_state.state === '已结束')
         tempVote.spec.hasEnded = true
-      }
-      else if (startTime > now) {
-        tempVote.spec._uh_state = { state: '未开始', color: 'orange' }
-      }
-      else {
-        tempVote.spec._uh_state = { state: '进行中', color: 'green' }
-      }
 
       // 选项计算
       // 插件选项为 {id,title},票数在 VoteDetail.voteDataList / Vote.stats.voteDataList
@@ -272,7 +262,7 @@ onShareTimeline(() => ({
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen flex flex-col pb-[160rpx]" style="background-color: #fafafd;">
+  <view class="app-page box-border min-h-screen w-screen flex flex-col bg-page pb-[160rpx]">
     <!-- 自定义导航 -->
     <uh-navbar :default-title="pageTitle" title-color="text-gray-900" />
 
@@ -288,11 +278,11 @@ onShareTimeline(() => ({
     <block v-else>
       <template v-if="vote">
         <!-- 投票信息 -->
-        <view class="vote-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm">
+        <view class="uh-global-card-glass box-border mx-6 mb-6 flex flex-col rounded-2xl p-6">
           <view class="sub-title relative box-border pl-6 text-[30rpx]">
             投票信息
           </view>
-          <view class="vote-card-body flex flex-col gap-3 rounded-xl bg-[#f3f4f6] p-6 text-[28rpx] text-[#3f3f3f]">
+          <view class="vote-card-body mt-3 flex flex-col gap-3 rounded-xl bg-page p-6 text-[28rpx] text-[#3f3f3f]">
             <view class="info-row">
               <text>投票类型：</text>
               <text class="tag">{{ vote.spec?._uh_type }}</text>
@@ -303,7 +293,7 @@ onShareTimeline(() => ({
             </view>
             <view class="info-row">
               <text>投票方式：</text>
-              <text class="tag" :class="vote.spec?.canAnonymously ? 'text-[#03a9f4]' : 'text-[#f44336]'">
+              <text class="tag" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-[#f44336]'">
                 {{ vote.spec?.canAnonymously ? '匿名' : '不匿名' }}
               </text>
             </view>
@@ -318,7 +308,7 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 投票内容 -->
-        <view class="vote-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm">
+        <view class="uh-global-card-glass box-border mx-6 mb-6 flex flex-col rounded-2xl p-6">
           <view class="sub-title relative box-border pl-6 text-[30rpx]">
             投票内容
           </view>
@@ -333,18 +323,33 @@ onShareTimeline(() => ({
             <text v-if="vote.spec?.type === 'multiple'" class="sub-title-count text-[24rpx] font-normal">（最多选择 {{ vote.spec?.maxVotes }} 项）</text>
           </view>
           <view class="options mt-6 flex flex-col gap-4">
+            <!-- PK 对抗条(与旧项目 pk-container 一致) -->
+            <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border flex w-full">
+              <view
+                v-for="(option, optionIndex) in vote.spec?.options"
+                :key="optionIndex"
+                class="radio-item flex-grow"
+                :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
+                :style="{ width: `${option._uh_percent}%` }"
+              >
+                <view class="option-item box-border w-full rounded-xl p-6" :class="optionIndex === 0 ? 'option-item-left' : 'option-item-right'">
+                  {{ option._uh_percent }}%
+                </view>
+              </view>
+            </view>
+
             <template v-if="isVoted || isEnded">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options"
                 :key="optionIndex"
                 class="is-voted-item relative box-border min-h-[72rpx] overflow-hidden rounded-xl text-[24rpx]"
-                :class="option.checked ? 'bg-[#03a9f4]/35 text-white' : 'bg-[#e5e5e5]/75'"
+                :class="option.checked ? 'bg-primary/40 text-[#4d7c0f] font-bold' : 'bg-[#e5e5e5]/75'"
                 :style="{ '--percent': `${option._uh_percent}%` }"
               >
                 <view class="is-voted-item-content relative z-2 box-border min-h-[72rpx] px-6 py-3">
                   <view class="flex items-center justify-between">
                     <view class="flex-1 text-left">
-                      {{ option.title }}
+                      {{ vote.spec?.type === 'pk' ? `选项${optionIndex + 1}：` : '' }}{{ option.title }}
                     </view>
                     <view class="shrink-0">
                       {{ option._uh_percent }}%
@@ -358,7 +363,7 @@ onShareTimeline(() => ({
                 v-for="(option, optionIndex) in vote.spec?.options"
                 :key="optionIndex"
                 class="vote-select-option box-border rounded-xl bg-[#f3f4f6] px-6 py-5 text-[24rpx]"
-                :class="option.checked ? 'border-2 border-[#03a9f4] bg-[#03a9f4]/15 text-[#03a9f4]' : ''"
+                :class="option.checked ? 'border-2 border-primary bg-primary/15 text-primary font-bold' : ''"
                 @click="vote.spec?.type === 'multiple' ? handleSelectCheckboxOption(option) : handleSelectSingleOption(option)"
               >
                 {{ vote.spec?.type === 'pk' ? `选项${optionIndex + 1}：` : '' }}{{ option.title }}
@@ -368,7 +373,7 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 投票统计 -->
-        <view class="vote-card mx-6 mb-6 flex flex-col overflow-hidden rounded-xl bg-white p-6 shadow-sm">
+        <view class="uh-global-card-glass box-border mx-6 mb-6 flex flex-col rounded-2xl p-6">
           <view class="sub-title relative box-border pl-6 text-[30rpx]">
             投票统计
           </view>
@@ -378,7 +383,7 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 提交按钮 -->
-        <view class="vote-submit fixed bottom-0 left-0 z-99 box-border w-screen border-t-2 border-[#eee] bg-white/98 px-9 py-6 shadow-sm" :style="{ paddingBottom: `${safeAreaBottom}rpx` }">
+        <view class="vote-submit fixed bottom-0 left-0 z-99 box-border w-screen border-t border-black/5 bg-white/90 px-9 py-6 shadow-sm backdrop-blur" :style="{ paddingBottom: `${safeAreaBottom}rpx` }">
           <wd-button v-if="isVoted" disabled block>
             您已参与投票
           </wd-button>
@@ -413,7 +418,7 @@ onShareTimeline(() => ({
       position: absolute;
       left: 0;
       top: 6rpx;
-      background: #03a9f4;
+      background: var(--wot-color-theme, #b9e424);
       border-radius: 6rpx;
     }
   }
@@ -429,6 +434,26 @@ onShareTimeline(() => ({
       background-color: #d0d0d0;
       z-index: 0;
       border-radius: 6rpx;
+    }
+  }
+
+  .pk-container {
+    .radio-item {
+      min-width: 30%;
+      max-width: 70%;
+    }
+
+    .option-item-left {
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      color: white;
+      clip-path: polygon(0 0, calc(100% - 40rpx) 0, 100% 100%, 0 100%);
+    }
+
+    .option-item-right {
+      background: linear-gradient(90deg, #f87171, #ef4444);
+      color: white;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 40rpx 100%);
+      text-align: right;
     }
   }
 }

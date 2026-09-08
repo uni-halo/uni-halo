@@ -1,144 +1,149 @@
 <script setup lang="ts">
-// i-carbon-code
-import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
-import { setTabbarItem } from './i18n'
-import { tabbarList, tabbarStore } from './store'
-import TabbarItem from './TabbarItem.vue'
+	// i-carbon-code
+	import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
+	import { setTabbarItem } from './i18n'
+	import { tabbarList, tabbarStore } from './store'
+	import TabbarItem from './TabbarItem.vue'
 
-// #ifdef MP-WEIXIN
-// 将自定义节点设置成虚拟的（去掉自定义组件包裹层），更加接近Vue组件的表现，能更好的使用flex属性
-defineOptions({
-  virtualHost: true,
-})
-// #endif
+	// #ifdef MP-WEIXIN
+	// 将自定义节点设置成虚拟的（去掉自定义组件包裹层），更加接近Vue组件的表现，能更好的使用flex属性
+	defineOptions({
+		virtualHost: true,
+	})
+	// #endif
 
-/**
- * 中间的鼓包tabbarItem的点击事件
- */
-function handleClickBulge() {
-  uni.showToast({
-    title: '点击了中间的鼓包tabbarItem',
-    icon: 'none',
-  })
-}
+	function handleClick(index : number) {
+		// 点击原来的不做操作
+		if (index === tabbarStore.curIdx) {
+			return
+		}
+		const list = tabbarList.value
+		if (!list[index]) {
+			return
+		}
 
-function handleClick(index: number) {
-  // 点击原来的不做操作
-  if (index === tabbarStore.curIdx) {
-    return
-  }
-  const list = tabbarList.value
-  if (!list[index]) {
-    return
-  }
-  if (list[index].isBulge) {
-    handleClickBulge()
-    return
-  }
-  const url = list[index].pagePath
-  tabbarStore.setCurIdx(index)
-  if (tabbarCacheEnable) {
-    uni.switchTab({ url })
-  }
-  else {
-    uni.navigateTo({ url })
-  }
-}
-// #ifndef MP-WEIXIN || MP-ALIPAY
-// 因为有了 custom:true， 微信里面不需要多余的hide操作
-onLoad(() => {
-  // 解决原生 tabBar 未隐藏导致有2个 tabBar 的问题
-  needHideNativeTabbar
-  && uni.hideTabBar({
-    fail(err) {
-      console.log('hideTabBar fail: ', err)
-    },
-    success(res) {
-      // console.log('hideTabBar success: ', res)
-    },
-  })
-})
-// #endif
+		const url = list[index].pagePath
+		tabbarStore.setCurIdx(index)
+		if (tabbarCacheEnable) {
+			uni.switchTab({ url })
+		}
+		else {
+			uni.navigateTo({ url })
+		}
+	}
+	// #ifndef MP-WEIXIN || MP-ALIPAY
+	// 因为有了 custom:true， 微信里面不需要多余的hide操作
+	onLoad(() => {
+		// 解决原生 tabBar 未隐藏导致有2个 tabBar 的问题
+		needHideNativeTabbar
+			&& uni.hideTabBar({
+				fail(err) {
+					console.log('hideTabBar fail: ', err)
+				},
+				success(res) {
+					// console.log('hideTabBar success: ', res)
+				},
+			})
+	})
+	// #endif
 
-// #ifdef MP-ALIPAY
-onMounted(() => {
-  // 解决支付宝自定义tabbar 未隐藏导致有2个 tabBar 的问题; 注意支付宝很特别，需要在 onMounted 钩子调用
-  customTabbarEnable // 另外，支付宝里面，只要是 customTabbar 都需要隐藏
-  && uni.hideTabBar({
-    fail(err) {
-      console.log('hideTabBar fail: ', err)
-    },
-    success(res) {
-      // console.log('hideTabBar success: ', res)
-    },
-  })
-})
-// #endif
-const activeColor = 'var(--wot-color-theme, #1890ff)'
-const inactiveColor = '#666'
-function getColorByIndex(index: number) {
-  return tabbarStore.curIdx === index ? activeColor : inactiveColor
-}
+	// #ifdef MP-ALIPAY
+	onMounted(() => {
+		// 解决支付宝自定义tabbar 未隐藏导致有2个 tabBar 的问题; 注意支付宝很特别，需要在 onMounted 钩子调用
+		customTabbarEnable // 另外，支付宝里面，只要是 customTabbar 都需要隐藏
+			&& uni.hideTabBar({
+				fail(err) {
+					console.log('hideTabBar fail: ', err)
+				},
+				success(res) {
+					// console.log('hideTabBar success: ', res)
+				},
+			})
+	})
+	// #endif
+	const rightButton = computed(() => {
+		const index = tabbarList.value.findIndex(item => item.isRightButton)
+		if (-1 !== index) {
+			return {
+				index,
+				item: tabbarList.value[index],
+			}
+		}
+		return {
+			index,
+			item: null,
+		}
+	})
+	const noRightTabbarList = computed(() => {
+		return tabbarList.value.filter(item => !item.isRightButton)
+	})
+	const activeColor = 'var(--wot-color-theme, #1890ff)'
+	const inactiveColor = '#333'
+	function getColorByIndex(index : number) {
+		return tabbarStore.curIdx === index ? activeColor : inactiveColor
+	}
 
-// 注意，上面处理的是自定义tabbar，下面处理的是原生tabbar，参考：https://unibest.tech/base/10-i18n
-onShow(() => {
-  setTabbarItem()
-})
+	function isActive(index : number) {
+		return tabbarStore.curIdx === index
+	}
+
+	function handleClickRightButton() {
+		if (typeof rightButton.value.item?.onClick === 'function') {
+			rightButton.value.item.onClick(rightButton.value.item)
+		}
+	}
+
+	// 注意，上面处理的是自定义tabbar，下面处理的是原生tabbar，参考：https://unibest.tech/base/10-i18n
+	onShow(() => {
+		setTabbarItem()
+	})
 </script>
 
 <template>
-  <view v-if="customTabbarEnable" class="h-50px pb-safe">
-    <view class="border-and-fixed bg-white" @touchmove.stop.prevent>
-      <view class="h-50px flex items-center">
-        <view
-          v-for="(item, index) in tabbarList" :key="index"
-          class="flex flex-1 flex-col items-center justify-center"
-          :style="{ color: getColorByIndex(index) }"
-          @click="handleClick(index)"
-        >
-          <view v-if="item.isBulge" class="relative">
-            <!-- 中间一个鼓包tabbarItem的处理 -->
-            <view class="bulge">
-              <TabbarItem :item="item" :index="index" class="text-center" is-bulge />
-            </view>
-          </view>
-          <TabbarItem v-else :item="item" :index="index" class="relative px-3 text-center" />
-        </view>
-      </view>
-
-      <view class="pb-safe" />
-    </view>
-  </view>
+	<view v-if="customTabbarEnable" class="h-56px pb-safe bg-page">
+		<view class="border-and-fixed w-full px-2">
+			<view class="flex box-border w-full items-center justify-between gap-x-2" @touchmove.stop.prevent>
+				<view
+					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 h-52px flex items-center gap-x-1">
+					<view v-for="(item, index) in noRightTabbarList" :key="index" class="text-gray-900 flex-1"
+						:style="{ color: getColorByIndex(index) }" @click="handleClick(index)">
+						<TabbarItem :item="item" :index="index" class="relative"
+							:class="[isActive(index)?'uh-global-card-glass bg-white/30 border':'']" />
+					</view>
+				</view>
+				<view v-if="rightButton.item"
+					class="shrink-0 uh-global-card-glass border bg-white/65 rounded-full h-52px w-52px p-1 flex items-center justify-center"
+					@click="handleClickRightButton()">
+					<TabbarItem :item="rightButton.item" :index="rightButton.index" :is-bulge="true" />
+				</view>
+			</view>
+			<view class="pb-safe" />
+		</view>
+	</view>
 </template>
 
 <style scoped lang="scss">
-.border-and-fixed {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  border-top: 1px solid #eee;
-  box-sizing: border-box;
-}
-// 中间鼓包的样式
-.bulge {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform-origin: top center;
-  transform: translateX(-50%) scale(0.5) translateY(-33%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 250rpx;
-  height: 250rpx;
-  border-radius: 50%;
-  background-color: #fff;
-  box-shadow: inset 0 0 0 1px #fefefe;
+	.border-and-fixed {
+		position: fixed;
+		bottom: 24rpx;
+		z-index: 1000;
+		box-sizing: border-box;
+	}
 
-  &:active {
-    // opacity: 0.8;
-  }
-}
+	// 中间鼓包的样式
+	.bulge {
+		position: absolute;
+		top: -20px;
+		left: 50%;
+		transform-origin: top center;
+		transform: translateX(-50%) scale(0.5) translateY(-33%);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 250rpx;
+		height: 250rpx;
+		border-radius: 50%;
+		background-color: #fff;
+		box-shadow: inset 0 0 0 1px #fefefe;
+	}
 </style>

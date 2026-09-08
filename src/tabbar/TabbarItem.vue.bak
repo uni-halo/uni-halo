@@ -16,37 +16,33 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
   }
   return tabbarStore.curIdx === index ? item.iconActive : item.icon
 }
-
-function isActive(index: number) {
-  return tabbarStore.curIdx === index
-}
 </script>
 
 <template>
-  <view class="box-border py-0.5 flex flex-col items-center justify-center rounded-full">
+  <view class="flex flex-col items-center justify-center">
     <template v-if="item.iconType === 'uiLib'">
       <!-- TODO: 以下内容请根据选择的UI库自行替换 -->
       <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
       <!-- 如：<uv-icon name="home" /> (https://www.uvui.cn/components/icon.html) -->
       <!-- 如：<sar-icon name="image" /> (https://sard.wzt.zone/sard-uniapp-docs/components/icon)(sar没有home图标^_^) -->
-      <text class="text-primary"><wd-icon :name="item.icon" size="52rpx" /></text>
+      <!-- <wd-icon :name="item.icon" size="20" /> -->
     </template>
     <template v-if="item.iconType === 'unocss' || item.iconType === 'iconfont'">
-      <view class="flex-1" :class="[item.icon, isBulge ? 'text-80px' : 'text-20px']" />
+      <view :class="[item.icon, isBulge ? 'text-80px' : 'text-20px']" />
     </template>
     <template v-if="item.iconType === 'image'">
-      <image :src="getImageByIndex(index, item)" mode="scaleToFill" class="shrink-0" :class="[isBulge?'h-26px w-26px':'h-20px w-20px']" />
+      <image :src="getImageByIndex(index, item)" mode="scaleToFill" :class="isBulge ? 'h-80px w-80px' : 'h-24px w-24px'" />
     </template>
-    <view v-if="!isBulge" class="mt-1px text-10px shrink-0">
+    <view v-if="!isBulge" class="mt-2px text-12px">
       {{ getI18nText(item.text) }}
     </view>
     <!-- 角标显示 -->
     <view v-if="item.badge">
       <template v-if="item.badge === 'dot'">
-        <view class="absolute right-0 -top-2 h-2 w-2 rounded-full bg-red-400" />
+        <view class="absolute right-0 top-0 h-2 w-2 rounded-full bg-#f56c6c" />
       </template>
       <template v-else>
-        <view class="absolute -top-2 -right-2 z-20 box-border h-5 min-w-5 center rounded-full bg-red-400 px-1 text-center text-xs text-white ">
+        <view class="absolute top-0 box-border h-5 min-w-5 center rounded-full bg-#f56c6c px-1 text-center text-xs text-white -right-3">
           {{ item.badge > 99 ? '99+' : item.badge }}
         </view>
       </template>
