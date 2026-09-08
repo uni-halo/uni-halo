@@ -183,14 +183,16 @@
 		<!-- 情侣信息 -->
 		<view class="relative z-10 h-92 w-screen flex flex-col items-center justify-center">
 			<view class="relative z-10 w-full h-full flex items-center justify-center rounded-xl">
-				<view class="boy flex flex-col items-center justify-center translate-x-1">
+				<view class="boy flex flex-col items-center justify-center translate-x-0.5">
 					<image class="uh-global-card-glass border-3 box-border border-blue-400 h-26 w-26 rounded-full"
 						:src="checkAvatarUrl(loveConfig.loveInfo.boyAvatar)" mode="aspectFill" />
 					<view class="bg-blue-500 mt-2 text-center text-xs text-white font-bold px-2 py-1 rounded-lg">
 						{{ loveConfig.loveInfo.boyNickname }}
 					</view>
 				</view>
-				<view class="girl flex flex-col items-center justify-center -translate-x-1">
+				<!-- todo:加一个心动呼吸动画 -->
+				<text class="absolute z-10 -translate-y-4"><wd-icon class-prefix="uhlove-icon" name="aixin" size="90rpx"></wd-icon></text>
+				<view class="girl flex flex-col items-center justify-center -translate-x-0.5">
 					<image class="uh-global-card-glass border-3 box-border border-love h-26 w-26 rounded-full"
 						:src="checkAvatarUrl(loveConfig.loveInfo.girlAvatar)" mode="aspectFill" />
 					<view class="bg-love mt-2 text-center text-xs text-white font-bold px-2 py-1 rounded-lg">
