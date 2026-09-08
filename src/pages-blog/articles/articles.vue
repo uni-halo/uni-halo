@@ -32,16 +32,10 @@ const hasNext = ref(false)
 const isLoadMore = ref(false)
 const loadMoreText = ref(t('common.loading'))
 
-/* ---------------- 筛选与排序(参考投票中心) ---------------- */
+/* ---------------- 筛选与排序(内联:分类参考图库顶部,排序一排) ---------------- */
 interface IFilterOption {
   label: string
   value: string
-}
-
-interface IFilterItem {
-  key: 'category' | 'sort'
-  label: string
-  options: IFilterOption[]
 }
 
 /** 分类列表(筛选选项数据源) */
@@ -55,55 +49,28 @@ const sortMap: Record<string, string[]> = {
   pinned: ['spec.pinned,desc'],
 }
 
-/** 筛选维度:分类筛选 + 排序 */
-const filterConfig = computed<IFilterItem[]>(() => [
-  {
-    key: 'category',
-    label: '分类',
-    options: [
-      { label: '全部', value: '' },
-      ...categoryList.value.map(c => ({ label: c.spec.displayName, value: c.metadata.name })),
-    ],
-  },
-  {
-    key: 'sort',
-    label: '排序',
-    options: [
-      { label: '默认排序', value: 'default' },
-      { label: '最新', value: 'latest' },
-      { label: '最旧', value: 'oldest' },
-      { label: '置顶', value: 'pinned' },
-    ],
-  },
+/** 分类选项(含"全部",参考图库顶部设计) */
+const categoryOptions = computed<IFilterOption[]>(() => [
+  { label: '全部', value: '' },
+  ...categoryList.value.map(c => ({ label: c.spec.displayName, value: c.metadata.name })),
 ])
+
+/** 排序选项(一排内联) */
+const sortOptions: IFilterOption[] = [
+  { label: '默认排序', value: 'default' },
+  { label: '最新', value: 'latest' },
+  { label: '最旧', value: 'oldest' },
+  { label: '置顶', value: 'pinned' },
+]
 
 /** 各维度当前选中值(空串 = 全部) */
 const filterValues = ref<Record<string, string>>({ category: '', sort: 'default' })
 
-/** 当前选中中文标签(用于筛选栏展示) */
-const filterLabels = computed(() => {
-  const map: Record<string, string> = {}
-  for (const f of filterConfig.value) {
-    const cur = filterValues.value[f.key]
-    map[f.key] = f.options.find(o => o.value === cur)?.label || f.options[0].label
-  }
-  return map
-})
-
-/** 筛选弹层 */
-const filterPopup = ref<{ show: boolean, item: IFilterItem | null }>({ show: false, item: null })
-
-function handleOpenFilter(item: IFilterItem) {
-  filterPopup.value = { show: true, item }
-}
-
-/** 选择筛选/排序:重置分页并重新查询 */
-function handleSelectFilter(option: IFilterOption) {
-  const item = filterPopup.value.item
-  if (!item)
+/** 切换分类/排序:重置分页并重新查询 */
+function handleSelectFilter(key: 'category' | 'sort', value: string) {
+  if (filterValues.value[key] === value)
     return
-  filterValues.value[item.key] = option.value
-  filterPopup.value.show = false
+  filterValues.value[key] = value
   isLoadMore.value = false
   articleList.value = []
   queryParams.value.page = 1
@@ -228,18 +195,33 @@ onReachBottom(() => {
     <!-- 自定义导航 -->
     <uh-navbar default-title="文章列表" title-color="text-gray-900" />
 
-    <!-- 筛选栏:分类 + 排序 -->
-    <view class="box-border flex items-center justify-between gap-x-2 px-3 pt-2">
-      <view
-        v-for="f in filterConfig" :key="f.key"
-        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-1 border rounded-full px-2 py-1 text-gray-500"
-        :class="[filterValues[f.key] !== f.options[0].value ? 'bg-secondary text-gray-900 font-bold' : 'bg-white/80 text-gray-600']"
-        @click="handleOpenFilter(f)"
-      >
-        <text class="truncate text-xs">{{ filterLabels[f.key] }}</text>
-        <wd-icon name="arrow-down" size="10px" />
+    <!-- 第一行:分类 Tab(参考图库顶部设计) -->
+    <wd-sticky v-if="categoryOptions.length > 1" class="w-full">
+      <scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
+        <view
+          v-for="cate in categoryOptions" :key="cate.value"
+          class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1 text-sm"
+          :class="{ 'bg-primary text-gray-900 font-bold': filterValues.category === cate.value }"
+          @click="handleSelectFilter('category', cate.value)"
+        >
+          {{ cate.label }}
+        </view>
+      </scroll-view>
+    </wd-sticky>
+
+    <!-- 第二行:排序一排 -->
+    <scroll-view :scroll-x="true" class="w-full whitespace-nowrap">
+      <view class="box-border flex gap-2 px-3 py-2">
+        <view
+          v-for="opt in sortOptions" :key="opt.value"
+          class="uh-global-card-glass uh-shadow-xs inline-flex border rounded-full px-3 py-1 text-xs"
+          :class="{ 'bg-secondary text-gray-900 font-bold': filterValues.sort === opt.value }"
+          @click="handleSelectFilter('sort', opt.value)"
+        >
+          {{ opt.label }}
+        </view>
       </view>
-    </view>
+    </scroll-view>
 
     <!-- 加载/错误/空占位(状态机) -->
     <uh-data-loading
@@ -266,32 +248,5 @@ onReachBottom(() => {
         {{ loadMoreText }}
       </view>
     </view>
-
-    <!-- 回顶 -->
-    <view
-      class="to-top-btn fixed bottom-[160rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm"
-      @click="handleToTopPage()"
-    >
-      <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
-    </view>
-
-    <!-- 筛选弹层 -->
-    <uh-glass-popup v-model="filterPopup.show" :z-index="99" position="bottom" custom-class="rounded-2xl">
-      <view v-if="filterPopup.item" class="box-border p-4">
-        <view class="text-md mb-4 text-center text-gray-900 font-bold">
-          {{ filterPopup.item.label }}
-        </view>
-        <view class="flex flex-col gap-2">
-          <view
-            v-for="opt in filterPopup.item.options" :key="opt.label"
-            class="uh-global-card-glass box-border border rounded-xl px-5 py-2 text-center text-sm"
-            :class="filterValues[filterPopup.item.key] === opt.value ? 'bg-primary text-gray-900 font-bold' : 'text-gray-700'"
-            @click="handleSelectFilter(opt)"
-          >
-            {{ opt.label }}
-          </view>
-        </view>
-      </view>
-    </uh-glass-popup>
   </view>
 </template>
