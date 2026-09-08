@@ -6,6 +6,7 @@
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { debounce } from '@/utils/debounce'
+	import { sleep } from '@/utils/common'
 	import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 	import type { IVoteItem } from '@/api/types/uni-halo'
 
@@ -20,16 +21,22 @@
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-	/** 依赖插件(plugin-vote,参考 gallery 对象传参模式) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginVote,
-		tips: '检测到当前插件没有安装或者启用，无法使用投票功能哦，请联系管理员',
+		tips: '啊偶，功能正在维护中...', 
+		callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleGetData()
+		}
 	})
 
 	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
 	async function handlePluginRefresh() {
-		if (await checkPluginAvailable())
-			handleGetData()
+		if (await checkPluginAvailable()) { handleGetData() }
 	}
 
 	/* ---------------- 状态 ---------------- */
@@ -38,7 +45,6 @@
 	const hasNext = ref(false)
 	const isLoadMore = ref(false)
 	const loadMoreText = ref('加载中...')
-	/** 是否已投过滤(前端过滤,接口无此参数) */
 	const filterIsVoted = ref<boolean | undefined>(undefined)
 	const queryParams = ref<Record<string, unknown>>({
 		keyword: '',
@@ -124,8 +130,7 @@
 
 	function handleSelectFilter(option : IFilterOption) {
 		const item = filterPopup.value.item
-		if (!item)
-			return
+		if (!item) { return }
 		filterValues.value[item.key] = option.value
 		filterPopup.value.show = false
 
@@ -169,7 +174,6 @@
 			return
 		}
 
-		uni.showLoading({ mask: true, title: '加载中...' })
 		if (!isLoadMore.value) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
@@ -179,7 +183,6 @@
 			const res = await getVoteList({ ...queryParams.value })
 			hasNext.value = res.data.hasNext || false
 
-			// 加工列表数据(与旧项目一致):isVoted/_uh_state/_uh_type
 			const tempItems = res.data.items.map((item) => {
 				item.spec = item.spec || {}
 				item.spec.disabled = true
@@ -202,7 +205,7 @@
 			if (filterIsVoted.value !== undefined) {
 				dataList.value = dataList.value.filter(x => x.spec?.isVoted === filterIsVoted.value)
 			}
-
+			await sleep(600)
 			updateLoadingStatus(
 				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
 			)
@@ -214,10 +217,7 @@
 			loadMoreText.value = '加载失败，请下拉刷新！'
 		}
 		finally {
-			setTimeout(() => {
-				uni.hideLoading()
-				uni.stopPullDownRefresh()
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -281,18 +281,16 @@
 
 <template>
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
-		<!-- 自定义导航 -->
 		<uh-navbar default-title="投票中心" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
-			
+
 		<template v-else>
-			<!-- 顶部搜索框 -->
 			<view class="box-border w-screen px-3 pt-2">
 				<view class="uh-global-card-glass flex h-9 items-center gap-3 rounded-full px-5">
 					<wd-icon name="search" size="16px" />
-					<input v-model="queryParams.keyword as string" class="flex-1 text-[26rpx] text-gray-900"
+					<input v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
 						placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
 						@input="handleOnInput" @confirm="handleOnSearch">
 					<view v-if="queryParams.keyword" class="flex items-center"
@@ -304,17 +302,18 @@
 				<view class="box-border flex items-center justify-between mt-1 py-2 gap-x-2">
 					<view v-for="f in filterConfig" :key="f.key"
 						class="uh-global-card-glass border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
-						:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']" @click="handleOpenFilter(f)">
-						<text class="text-xs truncate" >
+						:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']"
+						@click="handleOpenFilter(f)">
+						<text class="text-xs truncate">
 							{{ filterLabels[f.key] }}
 						</text>
-						<wd-icon name="arrow-down" size="10px" />
+						<wd-icon name="arrow-down" size="24rpx" />
 					</view>
 				</view>
 			</view>
 
-			<!-- 加载/错误/空占位(状态机) -->
-			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" empty-text="博主还未发布投票~" min-height="65vh" @refresh="handleGetData" />
+			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+				empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-4 p-3">
 				<block v-if="dataList.length !== 0">
@@ -335,7 +334,7 @@
 				</view>
 				<view class="flex flex-col gap-2">
 					<view v-for="opt in filterPopup.item.options" :key="opt.label"
-						class="uh-global-card-glass border box-border rounded-xl px-5 py-2 text-center text-sm"
+						class="uh-global-card-glass shadow-none border box-border rounded-xl px-5 py-2 text-center text-sm"
 						:class="filterValues[filterPopup.item.key] === opt.value ? 'bg-primary text-gray-900 font-bold' : 'text-gray-700'"
 						@click="handleSelectFilter(opt)">
 						{{ opt.label }}
