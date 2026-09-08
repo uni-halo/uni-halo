@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-/**
- * 联系博主页(源自旧项目 pagesA/contact,新建复刻)
- * 数字名片式设计:Hero 名片卡(渐变光斑透卡) + 品牌色字母瓦片联系方式列表,点击复制
- */
 import { computed, ref, watch, watchEffect } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -94,7 +90,7 @@ watch(socialConfig, () => {
 </script>
 
 <template>
-  <view class="app-page box-border min-h-screen w-screen overflow-hidden bg-page px-4 pb-10 pt-6">
+  <view class="box-border min-h-screen w-screen overflow-hidden bg-page px-4 pb-10 pt-2">
     <!-- 自定义导航 -->
     <uh-navbar default-title="联系博主" title-color="text-gray-900" />
 
@@ -102,7 +98,7 @@ watch(socialConfig, () => {
     <view class="hero-wrap relative">
       <view class="absolute h-[220rpx] w-[220rpx] rounded-full bg-[rgba(185,228,36,0.32)] -right-8 -top-8" />
       <view class="absolute top-[150rpx] h-[180rpx] w-[180rpx] rounded-full bg-[rgba(215,249,76,0.45)] -left-10" />
-      <view class="hero-card uh-global-card-glass relative flex flex-col items-center rounded-3xl px-6 pb-6 pt-10">
+      <view class="hero-card uh-global-card-glass uh-shadow-xs relative flex flex-col items-center rounded-2xl px-6 pb-6 pt-10">
         <view class="avatar relative box-border h-[150rpx] w-[150rpx] overflow-hidden border-5 border-white/90 rounded-full shadow-lg">
           <image class="avatar-img h-full w-full" :src="bloggerInfo.avatar" mode="aspectFill" />
         </view>
@@ -125,26 +121,26 @@ watch(socialConfig, () => {
       empty-text="暂无联系方式" empty-sub-text="" @refresh="handleGetData"
     />
     <template v-else>
-      <uh-section-title class="mb-3 mt-6 text-[30rpx]">
+      <uh-section-title class="mb-3 mt-6">
         联系方式
       </uh-section-title>
       <view class="flex flex-col gap-3">
         <view
           v-for="item in result.filter(i => i.value)"
           :key="item.key"
-          class="item uh-global-card-glass flex items-center gap-3 rounded-2xl px-4 py-3"
+          class="box-border uh-global-card-glass uh-shadow-xs flex items-center gap-3 rounded-2xl px-4 py-3"
           @click="handleOnClick(item)"
         >
           <view class="tile h-[76rpx] w-[76rpx] flex shrink-0 items-center justify-center rounded-xl" :style="{ backgroundColor: platformMeta[item.key]?.color || '#8a8a7a' }">
             <text class="text-[30rpx] text-white font-bold">{{ platformMeta[item.key]?.letter || item.name.slice(0, 1) }}</text>
           </view>
           <view class="min-w-0 flex flex-1 flex-col">
-            <text class="text-[24rpx] text-gray-400">{{ item.name }}</text>
+            <text class="text-xs text-gray-500">{{ item.name }}</text>
             <view class="mt-1 break-all text-[26rpx] text-gray-900 leading-snug">
               {{ item.value }}
             </view>
           </view>
-          <wd-icon name="copy" size="28rpx" color="#c8c2b4" class="shrink-0" />
+          <wd-icon name="copy" size="28rpx"  class="shrink-0 text-gray-400" />
         </view>
       </view>
     </template>

@@ -23,6 +23,7 @@
 	definePage({
 		style: {
 			navigationBarTitleText: '瞬间',
+			navigationStyle: 'custom',
 			enablePullDownRefresh: true,
 		},
 	})
@@ -287,116 +288,111 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page py-3">
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page ">
+		<uh-navbar :use-back="false" default-title="我的日常" title-color="text-gray-900"></uh-navbar>
+
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
+
 		<template v-else>
 			<!-- 加载失败(可重试) -->
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				min-height="60vh" @refresh="handleGetData" />
 
-			<view v-else class="flex flex-col gap-3 px-3">
-				<view v-if="dataList.length === 0"
-					class="min-h-[70vh] w-full flex items-center justify-center content-empty">
-					<wd-empty :description="t('common.empty')" />
-				</view>
+			<view v-else class="box-border flex flex-col gap-3 p-3 pt-0">
 
-				<block v-else>
-					<!-- 瞬间卡片-->
-					<view v-for="moment in dataList" :key="moment.metadata.name"
-						class="moment-card uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white">
-						<!-- 作者 -->
-						<view class="box-border flex items-center px-4 pt-4">
-							<view class="flex-1 flex items-center">
-								<image class="avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
-									:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
-									mode="aspectFill" />
-								<view class="ml-3 flex flex-col">
-									<view class="text-sm text-gray-900 font-bold">
-										{{ moment.owner?.displayName || bloggerInfo.nickname }}
-									</view>
-									<view class="mt-0.5 text-xs text-gray-400">
-										{{ formatMomentTime(moment.spec.releaseTime) }}
-									</view>
+				<!-- 瞬间卡片-->
+				<view v-for="moment in dataList" :key="moment.metadata.name"
+					class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
+					<!-- 作者 -->
+					<view class="box-border flex items-center px-4 pt-4">
+						<view class="flex-1 flex items-center">
+							<image class="avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
+								:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)" mode="aspectFill" />
+							<view class="ml-3 flex flex-col">
+								<view class="text-sm text-gray-900 font-bold">
+									{{ moment.owner?.displayName || bloggerInfo.nickname }}
+								</view>
+								<view class="mt-0.5 text-xs text-gray-400">
+									{{ formatMomentTime(moment.spec.releaseTime) }}
 								</view>
 							</view>
-							<view class="shrink-0">
-								<uh-button custom-class="!py-1 bg-secondary font-semibold">详情</uh-button>
-							</view>
 						</view>
-
-						<!-- 正文-->
-						<view class="box-border px-4 pt-3">
-							<view class="relative box-border bg-gray-100 p-2 rounded-lg">
-								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-									:loading-img="markdownConfig.loadingGif" scroll-table selectable
-									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-									:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
-									:show-language-name="true" copy-by-long-press
-									@click.stop="handleToMomentDetail(moment)" />
-							</view>
-						</view>
-
-						<!-- 图片 -->
-						<view v-if="moment.images && moment.images.length !== 0"
-							class="images flex flex-wrap items-start px-4 pt-3">
-							<view v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
-								class="image-item box-border p-1"
-								:class="moment.images && moment.images.length === 1 ? 'h-[350rpx] w-full' : (moment.images && moment.images.length === 2 ? 'h-[250rpx] w-1/2' : 'h-[200rpx] w-1/3')">
-								<image mode="aspectFill" class="image-src h-full w-full rounded-lg" :src="image.url"
-									@click="handlePreview(mediumIndex, moment.images || [])" />
-							</view>
-						</view>
-
-						<!-- 音频 -->
-						<view v-if="moment.audios && moment.audios.length !== 0"
-							class="audio-list flex flex-col gap-3 px-4 pt-3">
-							<uh-audio-player v-for="audio in moment.audios" :key="audio.url" :src="audio.url"
-								:poster="bloggerInfo.avatar" :name="`来自${siteName}的声音`"
-								:author="bloggerInfo.nickname" />
-						</view>
-
-						<!-- 视频 -->
-						<view v-if="moment.videos && moment.videos.length !== 0"
-							class="video-list flex flex-col gap-3 px-4 pt-3">
-							<video v-for="(video, index) in moment.videos" :id="`video_${video.id}`" :key="index"
-								class="video-src h-[400rpx] w-full rounded-xl" :src="video.url" :show-mute-btn="true"
-								:controls="true" :show-center-play-btn="true" :enable-progress-gesture="true"
-								@play="onVideoPlay(video.id || '')" @pause="onVideoPause(video.id || '')"
-								@ended="onVideoEnded" />
-						</view>
-
-						<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
-							class="box-border px-4 mt-4 flex flex-wrap gap-2">
-							<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
-								class="py-1 px-2 text-xs rounded-xl bg-secondary">
-								# {{ tag }}
-							</text>
-						</view>
-
-						<!--  (点赞/评论) -->
-						<view
-							class="mt-2 mb-1 box-border w-full flex items-center justify-between gap-x-12 border-t border-black/5 py-3 px-4 text-xs text-gray-400">
-							<view class="flex items-center gap-x-1">
-								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
-								<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
-							</view>
-							<view class="flex items-center gap-x-1">
-								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
-								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
-							</view>
-							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
-								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
-								<text class="text-sm text-gray-600"
-									:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}</text>
-							</view>
+						<view class="shrink-0">
+							<uh-button custom-class="!py-1 bg-secondary font-semibold">详情</uh-button>
 						</view>
 					</view>
 
-					<view class="load-text pb-5 pt-1 text-center text-xs text-gray-500">
-						{{ loadMoreText }}
+					<!-- 正文-->
+					<view class="box-border px-4 pt-3">
+						<view class="relative box-border bg-page p-3 rounded-lg">
+							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+								:loading-img="markdownConfig.loadingGif" scroll-table selectable
+								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+								:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
+								:show-language-name="true" copy-by-long-press
+								@click.stop="handleToMomentDetail(moment)" />
+						</view>
 					</view>
-				</block>
+
+					<!-- 图片 -->
+					<view v-if="moment.images && moment.images.length !== 0"
+						class="box-border flex flex-wrap items-start px-3 pt-3">
+						<view v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
+							class="image-item box-border p-1"
+							:class="moment.images && moment.images.length === 1 ? 'h-[350rpx] w-full' : (moment.images && moment.images.length === 2 ? 'h-[250rpx] w-1/2' : 'h-[200rpx] w-1/3')">
+							<image mode="aspectFill" class="image-src h-full w-full rounded-lg" :src="image.url"
+								@click="handlePreview(mediumIndex, moment.images || [])" />
+						</view>
+					</view>
+
+					<!-- 音频 -->
+					<view v-if="moment.audios && moment.audios.length !== 0"
+						class="box-border flex flex-col gap-3 px-4 pt-3">
+						<uh-audio-player v-for="audio in moment.audios" :key="audio.url" :src="audio.url"
+							:poster="bloggerInfo.avatar" :name="`来自${siteName}的声音`" :author="bloggerInfo.nickname" />
+					</view>
+
+					<!-- 视频 -->
+					<view v-if="moment.videos && moment.videos.length !== 0"
+						class="box-border flex flex-col gap-3 px-4 pt-3">
+						<video v-for="(video, index) in moment.videos" :id="`video_${video.id}`" :key="index"
+							class="video-src h-[400rpx] w-full rounded-xl" :src="video.url" :show-mute-btn="true"
+							:controls="true" :show-center-play-btn="true" :enable-progress-gesture="true"
+							@play="onVideoPlay(video.id || '')" @pause="onVideoPause(video.id || '')"
+							@ended="onVideoEnded" />
+					</view>
+
+					<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
+						class="box-border px-4 mt-3 flex flex-wrap gap-2">
+						<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
+							class="py-1 px-2 text-xs rounded-xl bg-secondary">
+							# {{ tag }}
+						</text>
+					</view>
+
+					<!--  (点赞/评论) -->
+					<view
+						class="mt-2 mb-1 box-border w-full flex items-center justify-between gap-x-12 border-t border-black/5 py-3 px-4 text-xs text-gray-400">
+						<view class="flex items-center gap-x-1">
+							<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
+							<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
+						</view>
+						<view class="flex items-center gap-x-1">
+							<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
+							<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
+						</view>
+						<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
+							<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
+							<text class="text-sm text-gray-600"
+								:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="load-text pb-5 pt-1 text-center text-xs text-gray-500">
+					{{ loadMoreText }}
+				</view>
 			</view>
 		</template>
 	</view>

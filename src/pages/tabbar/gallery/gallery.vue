@@ -11,6 +11,7 @@
 	definePage({
 		style: {
 			navigationBarTitleText: '图库',
+			navigationStyle: 'custom',
 			enablePullDownRefresh: true,
 		},
 	})
@@ -191,11 +192,13 @@
 
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page pb-6">
+		<uh-navbar :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
+		
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="checkPluginAvailable" />
 		<template v-else>
-			<wd-sticky v-if="category.list.length!==0">
-				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-3">
+			<wd-sticky v-if="category.list.length!==0" class="w-full">
+				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
 						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-block border rounded-2xl px-4 py-1 text-sm"
 						:class="{ 'bg-primary text-gray-900 font-bold': index === category.activeIndex }"

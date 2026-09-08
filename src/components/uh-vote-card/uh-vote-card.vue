@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-/**
- * 投票卡片(源自旧项目 components/vote-card,新建复刻)
- * 纯展示卡片:列表接口一次返回,页面加工后传入,点击跳转详情
- */
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 
 interface IVoteCardOption {
@@ -50,7 +46,7 @@ function formatTime(date?: string, fmt = 'yyyy-MM-dd HH:mm'): string {
 </script>
 
 <template>
-  <view class="uh-vote-card uh-global-card-glass box-border w-full rounded-2xl p-4" @click="handleToDetail">
+  <view class="uh-global-card-glass box-border w-full rounded-2xl p-4" @click="handleToDetail">
     <!-- 头部:类型/状态/已投票 -->
     <view class="flex items-center justify-between">
       <view class="flex flex-wrap items-center gap-1">

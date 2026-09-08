@@ -12,6 +12,7 @@
 	definePage({
 		style: {
 			navigationBarTitleText: '分类',
+			navigationStyle: 'custom',
 			enablePullDownRefresh: true,
 			backgroundColor: '#f6f3ee',
 		},
@@ -151,11 +152,13 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page p-3">
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
+		<uh-navbar :use-back="false" default-title="分类" title-color="text-gray-900"></uh-navbar>
+		
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
 
 		<block v-else>
-			<view class="grid grid-cols-2 gap-2.5">
+			<view class="box-border grid grid-cols-2 gap-2.5 p-3 pt-0">
 				<view v-for="(item, index) in dataList" :key="index"
 					class="uh-global-card-glass relative box-border w-full overflow-hidden rounded-xl"
 					@click="handleToCategory(item)">

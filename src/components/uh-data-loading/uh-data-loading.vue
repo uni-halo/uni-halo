@@ -1,5 +1,7 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
+	import { checkUrl } from '@/utils/url'
+	import { useAppConfigStore } from '@/store/appConfig'
 	import type { DataLoadingStatus } from '@/hooks/useDataLoading'
 
 	interface IProps {
@@ -31,6 +33,16 @@
 
 	const emit = defineEmits<{ (e : 'refresh') : void }>()
 
+	const appConfigStore = useAppConfigStore()
+	
+	const appInfo = computed(() => {
+		const _appInfo = (appConfigStore.configs?.appConfig?.appInfo as any)
+		return {
+			name: _appInfo.name ?? 'UniHalo',
+			logo: checkUrl(_appInfo?.logo ?? 'https://uni-halo.925i.cn/logo.png')
+		}
+	})
+	
 	const isLoading = computed(() => props.loadingStatus === 'loading')
 
 	const statusScene = computed(() => {
@@ -64,9 +76,13 @@
 </script>
 
 <template>
-	<view class="w-full flex flex-col items-center justify-center gap-y-4 text-sm"
+	<view class="relative w-full flex flex-col items-center justify-center gap-y-4 text-sm"
 		:style="{ minHeight: props.minHeight }">
-		<view class="scene relative h-[250rpx] w-[250rpx] flex items-center justify-center"
+		
+		<!-- logo背景 -->
+		<image v-if="false" :src="appInfo.logo" class="absolute left-1/2 top-1/2 -translate-1/2 z-0 opacity-10 w-46 h-46"></image>
+		
+		<view class="scene relative z-1 h-[250rpx] w-[250rpx] flex items-center justify-center"
 			:class="statusScene.stageClass">
 			<view class="glow absolute inset-0 m-auto h-[220rpx] w-[220rpx] rounded-full" />
 			<view class="deco-dot dot-a absolute rounded-full" />
@@ -79,7 +95,7 @@
 		</view>
 
 		<!-- 文案区 -->
-		<view class="flex flex-col items-center">
+		<view class="relative z-2 flex flex-col items-center">
 			<view class="flex items-center justify-center text-sm font-bold" :class="statusScene.mainTextClass">
 				<text>{{ statusScene.mainText }}</text>
 				<view v-if="isLoading" class="ml-1 flex items-end gap-1">

@@ -184,18 +184,18 @@
 
 		<wd-sticky>
 			<scroll-view scroll-x class="w-full whitespace-nowrap" :show-scrollbar="false">
-				<view class="flex gap-2 px-3 pb-1 pt-2">
-					<view class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-4 py-1.5 text-sm"
+				<view class="box-border flex gap-2 px-3 pb-1 pt-2">
+					<view class="flex-1 uh-global-card-glass uh-shadow-xs inline-flex border rounded-2xl px-4 py-1.5 text-sm"
 						:class="activeType === '' ? 'bg-primary font-bold' : 'text-gray-500'" @click="activeType = ''">
 						全部
 					</view>
-					<view v-for="(type) in typeOptions" :key="type.typeName || '__none__'"
-						class="uh-global-card-glass uh-shadow-xs inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-sm"
+					<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
+						class="flex-1 box-border uh-global-card-glass uh-shadow-xs inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-sm"
 						:class="activeType === type.typeName ? 'bg-primary font-bold' : 'text-gray-500'"
 						@click="activeType = activeType === type.typeName ? '' : type.typeName">
 						<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
 							:style="{ backgroundColor: type.typeColor }" />
-						<text class="shrink-0">{{ type.typeDisplayName }}</text>
+						<view class="shrink-0">{{ type.typeDisplayName }}</view>
 					</view>
 				</view>
 			</scroll-view>

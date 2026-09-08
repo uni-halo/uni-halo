@@ -210,16 +210,13 @@
 			min-height="36vh" @refresh="handleQuery" />
 
 		<block v-else>
-			<view class="flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
+			<view class="box-border flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
 				<uh-article-card v-for="(article, index) in articleList" :key="index"
 				 from="home" :article="article" :audit-mode="calcAuditModeEnabled"
 				 />
 			</view>
-			<view class="load-text mt-3 pb-5 text-center text-xs text-gray-400">
+			<view class="box-border mt-3 pb-5 text-center text-xs text-gray-400">
 				{{ loadMoreText }}
-			</view>
-			<view v-if="articleList.length > 10" class="to-top-btn" @click="handleToTopPage()">
-				<wd-icon name="arrow-up" size="20px" color="#03a9f4" />
 			</view>
 		</block>
 	</view>

@@ -87,11 +87,11 @@
 
 <template>
 	<view class="w-full box-border">
-		<view class="box-border pt-safe w-full fixed left-0 top-0 z-50" :class="customCalss" :style="[customStyle]">
+		<view class="box-border pt-safe w-full fixed left-0 top-0 z-100" :class="customCalss" :style="[customStyle]">
 			<view class="w-full h-[46px] flex items-center gap-x-4 box-border px-3 backdrop-blur-[2rpx]">
 				<!-- 左边 -->
-				<view class="shrink-0" @click="handleBack()">
-					<view
+				<view class="shrink-0 min-w-18" @click="handleBack()">
+					<view v-if="props.useBack"
 						class="uh-global-card-glass h-7 px-3 rounded-full border flex items-center gap-x-2 text-gray-900 text-sm">
 						<wd-icon name="arrow-left" size="32rpx"></wd-icon>
 						<view class="w-[1px] h-4 bg-white/60" />

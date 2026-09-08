@@ -402,10 +402,10 @@
 					</view>
 
 					<!-- 详情弹窗 -->
-					<uh-glass-popup v-model="detail.show" position="center" custom-class="w-[90vw] rounded-xl !border">
+					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999" custom-class="rounded-xl !border">
 						<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
 							<view class="w-full flex flex-col gap-y-1">
-								<text class="text-md font-bold">小程序详情</text>
+								<text class="text-md font-bold">站点详情</text>
 							</view>
 							<view
 								class="absolute right-4 top-4 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg text-center"
@@ -416,26 +416,27 @@
 						<scroll-view v-if="detail.data" :scroll-y="true" :show-scrollbar="false"
 							class="box-border p-4 max-h-[60vh]">
 							<view class="flex">
-								<image class="poup-logo h-[140rpx] w-[140rpx] shrink-0 rounded-full"
+								<image class="h-20 w-20 shrink-0 rounded-2xl uh-global-card-glass"
 									:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
 								<view class="ml-4 flex flex-1 flex-col gap-y-1 justify-center">
-									<view class="poup-name text-[34rpx] text-gray-900 font-bold">
+									<view class="text-lg text-gray-900 font-bold">
 										{{ detail.data.spec.displayName }}
 									</view>
-									<view class="text-xs text-gray-500">
-										{{ detail.data.spec.groupName }}
+									<view class="flex items-center gap-x-2">
+										<text class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">{{ detail.data.spec.groupName }}</text>
+										<text class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">
+											复制地址
+										</text>
 									</view>
 									<view @click="handleCopyLink(detail.data)">
 										<text
-											class="rounded-lg bg-secondary px-2 py-1 text-xs text-gray-900">{{ detail.data.spec.url }}</text>
+											class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
 									</view>
 								</view>
 							</view>
 							<view class="poup-desc mt-4 text-[28rpx] text-gray-600 leading-[1.6]">
 								{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
 							</view>
-							<image class="poup-img mt-4 h-[320rpx] w-full rounded-xl"
-								:src="calcSiteThumbnail(detail.data.spec.url)" mode="aspectFill" />
 						</scroll-view>
 					</uh-glass-popup>
 
@@ -500,7 +501,7 @@
 				</view>
 
 				<!-- 小程序详情弹窗 -->
-				<uh-glass-popup v-model="miniDetail.show" position="center" custom-class="w-[90vw] rounded-xl !border">
+				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom" custom-class="rounded-xl !border">
 					<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
 						<view class="w-full flex flex-col gap-y-1">
 							<text class="text-md font-bold">小程序详情</text>
