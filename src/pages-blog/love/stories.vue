@@ -1,8 +1,4 @@
 <script lang="ts" setup>
-/**
- * 恋爱故事页(源自旧项目 pagesA/love/journey.vue,新建复刻)
- * 时间轴展示恋爱故事,点击查看故事详情弹窗
- */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 import { getLoveStories } from '@/api/uni-halo'
@@ -13,6 +9,7 @@ import type { ILoveStory } from '@/api/types/uni-halo'
 definePage({
   style: {
     navigationBarTitleText: '恋爱故事',
+	navigationStyle: 'custom',
     enablePullDownRefresh: true,
   },
 })

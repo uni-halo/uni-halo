@@ -10,12 +10,15 @@
 		titleColor ?: string;
 		scrollTitle ?: string;
 		needPlaceholder ?: boolean;
+		backClass ?: string;
+		backStyle ?: string;
 	}
 
 	const props = withDefaults(defineProps<IProps>(), {
 		useBack: true,
 		useTitle: true,
 		needPlaceholder: true,
+		backClass: 'text-gray-900'
 	})
 
 	const slots = useSlots()
@@ -35,10 +38,6 @@
 
 	const customCalss = computed(() => {
 		const _class = []
-		if (props.titleColor) {
-			_class.push(props.titleColor)
-			return
-		}
 		if (scrollThreshold.value) {
 			_class.push('text-white')
 		}
@@ -46,6 +45,10 @@
 			_class.push('text-gray-900')
 		}
 		return _class;
+	})
+
+	const titleColorClass = computed(() => {
+		return [props.titleColor]
 	})
 
 	const visibleTitle = computed(() => {
@@ -65,7 +68,7 @@
 		return [
 			homePage,
 			'pages/maintenance/maintenance',
-			...tabbarList.map(item => item.pagePath),
+			...tabbarList.map((item : any) => item.pagePath),
 		] as string[];
 	})
 
@@ -92,14 +95,16 @@
 				<!-- 左边 -->
 				<view class="shrink-0 min-w-18" @click="handleBack()">
 					<view v-if="props.useBack"
-						class="uh-global-card-glass h-7 px-3 rounded-full border flex items-center gap-x-2 text-gray-900 text-sm">
+						class="uh-global-card-glass h-7 px-3 rounded-full border flex items-center gap-x-2 text-sm"
+						:class="props.backClass" :style="[props.backStyle]">
 						<wd-icon name="arrow-left" size="32rpx"></wd-icon>
 						<view class="w-[1px] h-4 bg-white/60" />
 						<text class="text-xs font-bold">返回</text>
 					</view>
 				</view>
 				<!-- 中间 -->
-				<view class="flex-1 truncate text-center font-bold transition-colors duration-300">
+				<view class="flex-1 truncate text-center font-bold transition-colors duration-300"
+					:class="titleColorClass">
 					<slot> {{visibleTitle}} </slot>
 				</view>
 				<!-- 右边 -->

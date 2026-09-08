@@ -104,8 +104,10 @@ function handleSelectCheckboxOption(option: IVoteOption) {
     return
 
   const checkedList = (spec.options || []).filter(x => x.checked && x.id !== option.id)
-  if (spec.type === 'multiple' && checkedList.length >= (spec.maxVotes || 0)) {
-    showToast(`最多选择 ${spec.maxVotes} 项`)
+  // maxVotes 缺失(0/undefined)时不限制多选数量,避免 0 >= 0 恒真导致无法选择
+  const maxVotes = spec.maxVotes
+  if (spec.type === 'multiple' && maxVotes && maxVotes > 0 && checkedList.length >= maxVotes) {
+    showToast(`最多选择 ${maxVotes} 项`)
     return
   }
 
@@ -225,7 +227,7 @@ defineExpose({ refresh: handleGetData })
           </view>
           <text class="shrink-0 text-[22rpx] text-gray-400" @click="handleToVoteDetail">查看投票详情 ></text>
         </view>
-        <view class="title mt-2 text-[30rpx] font-bold text-gray-900">
+        <view class="title mt-2 text-[30rpx] text-gray-900 font-bold">
           {{ voteData.spec?.title }}
         </view>
       </view>
@@ -247,8 +249,12 @@ defineExpose({ refresh: handleGetData })
             >
               <view class="is-voted-item-content relative z-2 box-border min-h-[72rpx] px-6 py-3">
                 <view class="flex items-center justify-between">
-                  <view class="flex-1 text-left">{{ option.title }}</view>
-                  <view class="shrink-0">{{ handleCalcPercent(option) }}%</view>
+                  <view class="flex-1 text-left">
+                    {{ option.title }}
+                  </view>
+                  <view class="shrink-0">
+                    {{ handleCalcPercent(option) }}%
+                  </view>
                 </view>
               </view>
             </view>
@@ -278,8 +284,12 @@ defineExpose({ refresh: handleGetData })
             >
               <view class="is-voted-item-content relative z-2 box-border min-h-[72rpx] px-6 py-3">
                 <view class="flex items-center justify-between">
-                  <view class="flex-1 text-left">{{ option.title }}</view>
-                  <view class="shrink-0">{{ handleCalcPercent(option) }}%</view>
+                  <view class="flex-1 text-left">
+                    {{ option.title }}
+                  </view>
+                  <view class="shrink-0">
+                    {{ handleCalcPercent(option) }}%
+                  </view>
                 </view>
               </view>
             </view>
@@ -300,7 +310,7 @@ defineExpose({ refresh: handleGetData })
         <!-- PK -->
         <view v-else-if="voteData.spec?.type === 'pk'" class="flex flex-col gap-2">
           <!-- PK 对抗条 -->
-          <view class="pk-container box-border flex w-full">
+          <view class="pk-container box-border w-full flex">
             <view
               v-for="(option, optionIndex) in voteData.spec?.options || []"
               :key="optionIndex"
@@ -324,8 +334,12 @@ defineExpose({ refresh: handleGetData })
             >
               <view class="is-voted-item-content relative z-2 box-border min-h-[72rpx] px-6 py-3">
                 <view class="flex items-center justify-between">
-                  <view class="flex-1 text-left">选项{{ optionIndex + 1 }}：{{ option.title }}</view>
-                  <view class="shrink-0">{{ handleCalcPercent(option) }}%</view>
+                  <view class="flex-1 text-left">
+                    选项{{ optionIndex + 1 }}：{{ option.title }}
+                  </view>
+                  <view class="shrink-0">
+                    {{ handleCalcPercent(option) }}%
+                  </view>
                 </view>
               </view>
             </view>

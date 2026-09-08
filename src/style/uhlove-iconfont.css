@@ -1,0 +1,26 @@
+@font-face {
+  font-family: "uhlove-icon"; /* Project id 5231616 */
+  /* Color fonts */
+  src: 
+       url('data:application/x-font-woff2;charset=utf-8;base64,d09GMgABAAAAAARwAAwAAAAACOgAAAQiAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIlgjHgZgAEwKiXSHFgE2AiQDKgsoAAQgBYIUByAbjwYRFZs62eNDeNa/mSSLTIoFyGwPTI9MD/C3mOv3W5kQKcEiIRMSrf7vy3uoZXFL0JhOSKLN/CwRj3Sl3gN2Wy23sREAB0APwBeiKQABHAm8KbSFYKOwIi9bA7ABhS0AEQSM8EsAdC03cTAAMAKwI7z2AMADoeh+MwFNu1CsbTjvagueo3TgS5S7Riigh+gwgCpvHDKMBJIAQ4EY8ZXqmuoiPAjfz905RVMATgHsAAEACvrcGugYvSpwpBHxHDxS502uAGjrZdLnzp+7axoQFWifP3L73e07t6/7qjSQA3UnGIATQGYA8ijIDn6O9UzE0ZgCYchIohcLlxz0W/Ilo9FZ8NMvX0L/Yot5P9tqgaKKW/b1tOw/7zRlOejYunyrS8fha8HT5550bVQPOlnOu7TsL9Q7tsa+IBPOvE/Ub1FBF2+9D7xyL+G8n5BesqAww1YimLMG0C6JusMPsOVjbO0wUPWMc/O5wMYzwRCtnnNevHU/6VAgjapYWF8iaulWl/MeAk8w+bzq2Hx3aqPqDF6yhVmbB1aiDoG3EfP9E4i+F1YHg86GzN3edDED+i2Lp2Gb2frK1OBlzIYXQZWXmGDYetGHCym4lKu7vLwPsgqLAyOm+CzL2xub90d6/2Hn9kPiGWvzoUDArbv0z46mg2yrS0ubpXvOf5+5tihVNiNFzon+REHGzx+nfPwocvewHxjTGPufse/xSUHd413PvBb8yWv3dM9IiDVO2s8cX3sgZ2nwJ0u5/cVRafLevSllnmdv8Cd7y5Q3pMt78/BXEATxezbBvhcFvNLtUeTu4VHo0eDe6BHHvu90UxxjDRLzYFIDi3QaG21DnHuTOxL9O8QfVL3I4CWcwt1Mf/UOU0FF2cqc8oyprPL0LcVPXNfjekApgcLdrL7raJfwfZxyB7uOkYVINObob7+mZ92+JAILxdS4MkeWp7IotpSAUCLZ2izY2JZOixctb6lbgtuCHStJO49f3VKCQT9jE0zFt2P543OlFrETP3pF3BOuht8TUR7u8eFsvtOzjqrjs07ljmQW0mvfETW2IR+PtoBR5dIGpiG+t+Hj0IkDR7563hS9M812YVFQy+uuDzrl3igfk699dmL34/e3lDWq64va7qpdescNJ8cHKqeelZa+K4/q/IEFHA/70ih7j26sZ32PIfM3G+4Ruj9/bMPzXn6edhf3JFcE/F5MC/rPWJsH8pDKPfnKKQzVjy0Pm+3IPHyKJ9FB/oDLx2mSis10BfLoG5hAdbuwA/LBzaam8cgK1eBAeFsQOAORjULP06SIQyYCRTyC0SsS4I4NX7VCME7AhFFMYgaLMIQojGGAsE2jnrw1AhMm0Yd5xCEasaY3A9WosaEoaKBVryi+AYQ8X1szhsAlY6yiYrQWjEDv00TQbkECDAA=') format('woff2');
+}
+
+.uhlove-icon {
+  font-family: "uhlove-icon" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.uhlove-icon-gushi:before {
+  content: "\e60c";
+}
+
+.uhlove-icon-liebiao:before {
+  content: "\e616";
+}
+
+.uhlove-icon-xiangce:before {
+  content: "\e61a";
+}
