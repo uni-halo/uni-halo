@@ -1,11 +1,10 @@
 <script setup lang="ts">
 	interface IProps {
-		customClass : Array<string>;
+		customClass?: string;
 	}
-	const props = defineProps({
-		customClass: () => {
-			return []
-		},
+	
+	const props = withDefaults(defineProps<IProps>(), {
+		customClass: ''
 	})
 
 	function handleScrollTop() {
@@ -19,13 +18,18 @@
 	const visible = computed(() => {
 		return !balckList.includes(currentPage.route)
 	})
+	
+	const _customClass = computed(() => {
+		const colorClass = currentPage.route.includes('/love/')?'text-love':'text-primary'
+		return `${props.customClass} ${colorClass}`
+	})
 </script>
 
 <template>
 	<view v-if="visible" class="fixed bottom-22 right-3 z-50 pb-safe">
-		<view class="uh-global-card-glass border h-11 w-11 flex items-center justify-center rounded-full text-primary"
-			:class="props.customClass" @click="handleScrollTop">
-			<wd-icon name="arrow-up" size="20px" />
+		<view class="uh-global-card-glass border h-11 w-11 flex items-center justify-center rounded-full"
+			:class="_customClass" @click="handleScrollTop">
+			<wd-icon name="arrow-up" size="42rpx" />
 		</view>
 	</view>
 </template>

@@ -7,10 +7,10 @@
 :root,
 page {
 	// 修改按主题色
-	--wot-color-theme: #B9E424;
+	--wot-color-theme: #b9e424;
 
 	// 修改按钮背景色
-	--wot-button-primary-bg-color: #B9E424;
+	--wot-button-primary-bg-color: #b9e424;
 }
 
 .uh-global-page {
@@ -34,6 +34,19 @@ page {
 	box-shadow: inset 0 1rpx 0 rgb(255 255 255 / 75%), 0 8rpx 32rpx rgb(90 105 200 / 7%);
 }
 
+.uh-global-love-page {
+	background: linear-gradient(
+		135deg,
+		rgb(247 149 51 / 10%),
+		rgb(243 112 85 / 10%) 15%,
+		rgb(239 78 123 / 10%) 30%,
+		rgb(161 102 171 / 10%) 44%,
+		rgb(80 115 184 / 10%) 58%,
+		rgb(16 152 173 / 10%) 72%,
+		rgb(7 179 155 / 10%) 86%,
+		rgb(109 186 130 / 10%)
+	);
+}
 /*
 border-t-1
 由于uniapp中无法使用*选择器，使用魔法代替*，加上此规则可以简化border与divide的使用，并提升布局的兼容性
