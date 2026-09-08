@@ -1,11 +1,7 @@
 <script lang="ts" setup>
-	/**
- * 瞬间页(源自旧项目 pages/tabbar/moments/moments.vue,新建复刻)
- * 功能:瞬间卡片列表(头像/内容/图片/音频/视频/标签) + 分页加载
- * 设计:社交信息流(实心白纸卡 + 着色昵称 + 朋友圈式不缩进正文),区别于工具页的玻璃拟态
- */
 	import { computed, ref } from 'vue'
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import dayjs from 'dayjs'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
@@ -13,8 +9,8 @@
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
 	import { generateUUID } from '@/utils/uuid'
+	import { sleep } from '@/utils/common'
 	import { formatTime } from '@/utils/formatTime'
-	import { randomTagColor } from '@/utils/random'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { markdownConfig } from '@/config/markdown'
@@ -42,22 +38,26 @@
 		}
 	})
 
-	/** 站点名称(原 startConfig.title 已随启动页下线,改读 appConfig.appInfo.name) */
 	const siteName = computed(() => {
 		const appInfo = haloConfigs.value.appConfig?.appInfo as { name ?: string } | undefined
 		return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 	})
 
-	/** 依赖插件(plugin-moments,参考 gallery 对象传参模式) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginMoments,
-		tips: '检测到当前插件没有安装或者启用，无法使用瞬间功能哦，请联系管理员',
+		tips: '啊偶，功能正在维护中...',
+		callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleGetData()
+		}
 	})
 
-	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
 	async function handlePluginRefresh() {
-		if (await checkPluginAvailable())
-			handleGetData()
+		if (await checkPluginAvailable()) { handleGetData() }
 	}
 
 	/* ---------------- 状态 ---------------- */
@@ -70,6 +70,10 @@
 		videos ?: { id ?: string, url : string }[]
 		audios ?: { type ?: string, url : string }[]
 		spec : IMoment['spec'] & { newHtml ?: string }
+		year : string
+		month : string
+		day : string
+		weekend : string
 	}
 	const dataList = ref<MomentCard[]>([])
 	const isLoadMore = ref(false)
@@ -77,20 +81,33 @@
 	const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
 	const currentVideoId = ref<string | null>(null)
 
-	/** 移除内容中的 tag 链接 */
 	function removeTagLinksCompletely(htmlString : string) : string {
 		const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
 		return htmlString.replace(regex, '')
 	}
 
-	/** 瞬间项映射(spec.content.medium 拆分为 images/videos/audios + 内容 tag 清理 + 作者兜底) */
+	const WEEKDAY_TEXT = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+	function splitMomentDate(timeStr ?: string) {
+		const d = timeStr ? dayjs(timeStr) : null
+		if (!d || !d.isValid()) {
+			return { year: '', month: '', day: '', weekend: '' }
+		}
+		return {
+			year: `${d.year()}`,
+			month: `${d.month() + 1}`,
+			day: `${d.date()}`,
+			weekend: WEEKDAY_TEXT[d.day()],
+		}
+	}
+
 	function mapMomentItem(item : IMoment) : MomentCard {
 		const medium = (item.spec.content?.medium || [])
 			.map(x => ({ ...x, url: x.url || '' }))
 		const owner = item.owner
 		return {
 			...item,
-			// 无顶层 owner(如个别历史接口)时兜底为博主信息
+			...splitMomentDate(item.spec?.releaseTime),
 			owner: owner?.displayName
 				? owner
 				: { displayName: bloggerInfo.value.nickname || '', name: bloggerInfo.value.nickname || '', avatar: bloggerInfo.value.avatar },
@@ -107,7 +124,6 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
 		if (calcAuditModeEnabled.value) {
-			// 审核模式:真实瞬间按 audit-data moments 过滤(数组顺序即展示顺序)
 			const auditMomentNames = appConfigStore.auditData.spec?.moments || []
 			try {
 				const res = await getMomentList({ page: 1, size: 0 })
@@ -117,12 +133,9 @@
 				filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
 				const tempItems = filtered.map(mapMomentItem)
 				dataList.value = tempItems
-				nextTick(() => {
-					createVideoContexts(tempItems)
-				})
+				await sleep(600)
 				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 				loadMoreText.value = t('common.noMore')
-				uni.hideLoading()
 				uni.stopPullDownRefresh()
 			}
 			catch (err) {
@@ -133,7 +146,6 @@
 			return
 		}
 
-		uni.showLoading({ mask: true, title: t('common.loading') })
 		if (!isLoadMore.value) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
@@ -151,11 +163,9 @@
 			dataList.value = isLoadMore.value
 				? dataList.value.concat(tempItems)
 				: tempItems
-			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 
-			nextTick(() => {
-				createVideoContexts(tempItems)
-			})
+			await sleep(600)
+			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 		}
 		catch (err) {
 			console.error(err)
@@ -163,44 +173,8 @@
 			loadMoreText.value = t('common.loadFailed')
 		}
 		finally {
-			setTimeout(() => {
-				uni.hideLoading()
-				uni.stopPullDownRefresh()
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
-	}
-
-	/* ---------------- 视频互斥 ---------------- */
-	function createVideoContexts(list : { videos ?: { id ?: string }[] }[]) {
-		stopAllVideos()
-		list.map(item => item.videos || []).flat().forEach((item) => {
-			if (item.id) {
-				videoContexts.value[item.id] = uni.createVideoContext(`video_${item.id}`)
-			}
-		})
-	}
-
-	function stopAllVideos(excludesVideoId : string | null = null) {
-		Object.keys(videoContexts.value).forEach((videoId) => {
-			if (!excludesVideoId || excludesVideoId !== videoId) {
-				videoContexts.value[videoId]?.pause()
-			}
-		})
-	}
-
-	function onVideoPlay(videoId : string) {
-		currentVideoId.value = videoId
-		stopAllVideos(videoId)
-	}
-
-	function onVideoPause(videoId : string) {
-		if (currentVideoId.value === videoId) {
-			currentVideoId.value = null
-		}
-	}
-
-	function onVideoEnded() {
-		currentVideoId.value = null
 	}
 
 	/* ---------------- 交互 ---------------- */
@@ -220,12 +194,10 @@
 		})
 	}
 
-	/** 是否已收藏该瞬间(卡片收藏格高亮) */
 	function isMomentFavorite(moment : IMoment) : boolean {
 		return favoritesStore.isFavorite('moment', moment.metadata.name)
 	}
 
-	/** 切换收藏(收藏/取消),收藏时按当前卡片内容生成快照入库 */
 	function handleToggleMomentFavorite(moment : MomentCard) {
 		if (!moment) { return }
 		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(moment))
@@ -271,7 +243,8 @@
 	})
 
 	onReachBottom(() => {
-		if (!uniHaloPluginAvailable.value) { return }
+		if (!uniHaloPluginAvailable.value)
+			return
 		if (calcAuditModeEnabled.value) {
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 			return
@@ -288,108 +261,105 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page ">
-		<uh-navbar :use-back="false" default-title="我的日常" title-color="text-gray-900"></uh-navbar>
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
+		<uh-navbar :use-back="false" default-title="我的日常" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
-			<!-- 加载失败(可重试) -->
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-				min-height="60vh" @refresh="handleGetData" />
+				min-height="75vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-3 p-3 pt-0">
-
-				<!-- 瞬间卡片-->
-				<view v-for="moment in dataList" :key="moment.metadata.name"
-					class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
-					<!-- 作者 -->
-					<view class="box-border flex items-center px-4 pt-4">
-						<view class="flex-1 flex items-center">
-							<image class="avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
-								:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)" mode="aspectFill" />
-							<view class="ml-3 flex flex-col">
-								<view class="text-sm text-gray-900 font-bold">
-									{{ moment.owner?.displayName || bloggerInfo.nickname }}
-								</view>
-								<view class="mt-0.5 text-xs text-gray-400">
-									{{ formatMomentTime(moment.spec.releaseTime) }}
+				<!-- 瞬间卡片 -->
+				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
+					<view class="shrink-0 flex flex-col gap-y-2 w-13">
+						<view class="shrink-0 flex flex-col items-center font-bold">
+							<text
+								class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
+							<text class="date-year-month mt-2 text-sm text-gray-600">{{ moment.year }}</text>
+							<text class="date-weekend mt-1 text-xs text-gray-600">{{ moment.weekend }}</text>
+						</view>
+						<view class="flex-1 w-full flex flex-col items-center">
+							<view class="shrink-0 w-4 h-4 bg-primary rounded-full uh-global-card-glass"></view>
+							<view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
+						</view>
+					</view>
+					<view class="uh-global-card-glass uh-shadow-xs flex-1 overflow-hidden rounded-xl">
+						<view class="box-border flex items-center px-4 pt-4">
+							<view class="flex flex-1 items-center">
+								<image class="avatar h-9 w-9 shrink-0 rounded-full"
+									:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
+									mode="aspectFill" />
+								<view class="ml-2 flex flex-col">
+									<view class="text-sm text-gray-900 font-bold">
+										{{ moment.owner?.displayName || bloggerInfo.nickname }}
+									</view>
+									<view class="text-xs text-gray-400">
+										{{ formatMomentTime(moment.spec.releaseTime) }}
+									</view>
 								</view>
 							</view>
+							<view class="shrink-0">
+								<uh-button custom-class="!py-1 bg-secondary text-xs font-semibold"
+									@click="handleToMomentDetail(moment)">
+									详情
+								</uh-button>
+							</view>
 						</view>
-						<view class="shrink-0">
-							<uh-button custom-class="!py-1 bg-secondary font-semibold">详情</uh-button>
+
+						<!-- 正文 -->
+						<view class="box-border px-4 pt-3">
+							<view class="relative box-border rounded-lg bg-page p-3">
+								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+									:loading-img="markdownConfig.loadingGif" scroll-table selectable
+									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+									:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
+									:show-language-name="true" copy-by-long-press />
+							</view>
 						</view>
-					</view>
 
-					<!-- 正文-->
-					<view class="box-border px-4 pt-3">
-						<view class="relative box-border bg-page p-3 rounded-lg">
-							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-								:loading-img="markdownConfig.loadingGif" scroll-table selectable
-								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-								:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
-								:show-language-name="true" copy-by-long-press
-								@click.stop="handleToMomentDetail(moment)" />
+						<!-- 图片 -->
+						<view v-if="moment.images && moment.images.length !== 0"
+							class="box-border flex flex-wrap items-start px-3 pt-2">
+							<view v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
+								class="image-item box-border p-1"
+								:class="moment.images && moment.images.length === 1 ? 'h-32 w-full' : (moment.images && moment.images.length === 2 ? 'h-[250rpx] w-1/2' : 'h-20 w-1/3')">
+								<image mode="aspectFill" class="h-full w-full rounded-lg" :src="image.url"
+									@click="handlePreview(mediumIndex, moment.images || [])" />
+							</view>
 						</view>
-					</view>
 
-					<!-- 图片 -->
-					<view v-if="moment.images && moment.images.length !== 0"
-						class="box-border flex flex-wrap items-start px-3 pt-3">
-						<view v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
-							class="image-item box-border p-1"
-							:class="moment.images && moment.images.length === 1 ? 'h-[350rpx] w-full' : (moment.images && moment.images.length === 2 ? 'h-[250rpx] w-1/2' : 'h-[200rpx] w-1/3')">
-							<image mode="aspectFill" class="image-src h-full w-full rounded-lg" :src="image.url"
-								@click="handlePreview(mediumIndex, moment.images || [])" />
+						<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
+							class="mt-3 box-border flex flex-wrap gap-2 px-4">
+							<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
+								class="rounded-xl bg-secondary px-2 py-1 text-xs">
+								# {{ tag }}
+							</text>
 						</view>
-					</view>
 
-					<!-- 音频 -->
-					<view v-if="moment.audios && moment.audios.length !== 0"
-						class="box-border flex flex-col gap-3 px-4 pt-3">
-						<uh-audio-player v-for="audio in moment.audios" :key="audio.url" :src="audio.url"
-							:poster="bloggerInfo.avatar" :name="`来自${siteName}的声音`" :author="bloggerInfo.nickname" />
-					</view>
-
-					<!-- 视频 -->
-					<view v-if="moment.videos && moment.videos.length !== 0"
-						class="box-border flex flex-col gap-3 px-4 pt-3">
-						<video v-for="(video, index) in moment.videos" :id="`video_${video.id}`" :key="index"
-							class="video-src h-[400rpx] w-full rounded-xl" :src="video.url" :show-mute-btn="true"
-							:controls="true" :show-center-play-btn="true" :enable-progress-gesture="true"
-							@play="onVideoPlay(video.id || '')" @pause="onVideoPause(video.id || '')"
-							@ended="onVideoEnded" />
-					</view>
-
-					<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
-						class="box-border px-4 mt-3 flex flex-wrap gap-2">
-						<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
-							class="py-1 px-2 text-xs rounded-xl bg-secondary">
-							# {{ tag }}
-						</text>
-					</view>
-
-					<!--  (点赞/评论) -->
-					<view
-						class="mt-2 mb-1 box-border w-full flex items-center justify-between gap-x-12 border-t border-black/5 py-3 px-4 text-xs text-gray-400">
-						<view class="flex items-center gap-x-1">
-							<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
-							<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
-						</view>
-						<view class="flex items-center gap-x-1">
-							<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
-							<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
-						</view>
-						<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
-							<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
-							<text class="text-sm text-gray-600"
-								:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}</text>
+						<!--  (点赞/评论) -->
+						<view
+							class="mb-1 mt-2 box-border w-full flex items-center justify-between border-t border-black/5 px-4 py-3 text-xs text-gray-400">
+							<view class="flex items-center gap-x-1">
+								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
+								<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
+							</view>
+							<view class="flex items-center gap-x-1">
+								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
+								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
+							</view>
+							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
+								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
+								<text class="text-sm text-gray-600"
+									:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">
+									{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}
+								</text>
+							</view>
 						</view>
 					</view>
 				</view>
-
 				<view class="load-text pb-5 pt-1 text-center text-xs text-gray-500">
 					{{ loadMoreText }}
 				</view>

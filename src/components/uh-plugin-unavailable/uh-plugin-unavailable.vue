@@ -6,6 +6,7 @@
 		pluginId : string
 		errorText ?: string
 		checking : boolean
+		customClass ?: string
 	}>(), {
 		errorText: '',
 	})
@@ -16,7 +17,7 @@
 
 	/** 插件信息(未在清单中时兜底) */
 	const pluginInfo = computed(() => {
-		return NeedPlugins.get(props.pluginId) ?? {pluginId:props.pluginId, name: '未找到插件' }
+		return NeedPlugins.get(props.pluginId) ?? { pluginId: props.pluginId, name: '未找到插件' }
 	})
 
 	function handleRefresh() {
@@ -26,7 +27,9 @@
 </script>
 
 <template>
-	<view v-if="pluginInfo" class="max-w-3/5 mx-auto my-auto box-border flex flex-col items-center justify-center gap-6 text-sm">
+	<view v-if="pluginInfo"
+		class="max-w-3/5 mx-auto my-auto box-border flex flex-col items-center justify-center gap-6 text-sm"
+		:class="props.customClass">
 
 		<wd-icon class-prefix="uhemoji-icon" name="-cry" size="160rpx"></wd-icon>
 
@@ -46,8 +49,7 @@
 			<!-- 微信端客服会话只能由原生 button 的 open-type="contact" 唤起,故此处不用 uh-button(view 实现) -->
 			<button
 				class="uh-contact-btn bg-white py-2 px-4 !rounded-full text-black text-sm leading-none flex items-center justify-center"
-				open-type="contact"
-				hover-class="none">提交反馈</button>
+				open-type="contact" hover-class="none">提交反馈</button>
 			<!-- #endif -->
 		</view>
 	</view>
@@ -59,5 +61,6 @@
 	.uh-contact-btn::after {
 		border: none;
 	}
+
 	/* #endif */
 </style>

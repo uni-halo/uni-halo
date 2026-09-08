@@ -10,7 +10,7 @@
 	definePage({
 		style: {
 			navigationBarTitleText: '偏好设置',
-			navigationStyle: 'custom'
+			navigationStyle: 'custom',
 		},
 	})
 
@@ -87,7 +87,7 @@
 	]
 
 	/* ---------------- 状态读取 ---------------- */
-	function valueOf(path : Path) : unknown {
+	function prefValueOf(path : Path) : unknown {
 		return getByPath(settingStore.settings, path)
 	}
 
@@ -133,11 +133,17 @@
 		settingStore.savePreference(buildPatch(path, null))
 	}
 
-	/* ---------------- 枚举底部弹层 ---------------- */
+	/* ---------------- 枚举底部弹层(uh-glass-popup + wd-picker-view) ---------------- */
 	const enumSheet = ref<{ show : boolean, def : PrefDef | null }>({ show: false, def: null })
+	/** 弹层内滚动中的临时选中值(单列;确认时才落库,取消不生效) */
+	const pickerValue = ref<(string | number)[]>([''])
 
 	function handleOpenEnum(def : PrefDef) {
+		console.log('handleOpenEnum', def)
 		enumSheet.value = { show: true, def }
+		// 打开时同步当前值(跟随站点默认 → 空串哨兵)
+		pickerValue.value = [isFollowing(def) ? '' : String(prefValueOf(def.path) ?? '')]
+		console.log('pickerValue', pickerValue.value)
 	}
 
 	function handleCloseEnum() {
@@ -157,36 +163,58 @@
 		handleCloseEnum()
 	}
 
-	/* ---------------- wd-picker 弹层数据 ---------------- */
+	/* ---------------- wd-picker-view 弹层数据 ---------------- */
 	/** 枚举弹层列(首项「跟随站点默认」,空串哨兵映射 null) */
 	const enumColumns = computed(() => {
 		const def = enumSheet.value.def
-		if (!def)
-			return []
+		if (!def) { return [] }
 		return [
 			{ label: '跟随站点默认', value: '' },
 			...(def.options || []).map(opt => ({ label: opt.label, value: opt.value })),
 		]
 	})
 
-	/** 当前选中列值(单列;跟随站点默认时为空串) */
-	const enumValue = computed(() => {
-		const def = enumSheet.value.def
-		if (!def)
-			return ['']
-		return [isFollowing(def) ? '' : String(valueOf(def.path) ?? '')]
-	})
+	/** wd-picker-view 滚动变化:更新临时选中值(未确认不落库) */
+	function handlePickerChange(payload : { selectedValues : (string | number)[] }) {
+		pickerValue.value = payload.selectedValues
+	}
 
-	/** wd-picker 确认:空串哨兵还原为「跟随站点默认」 */
-	function handlePickerConfirm(payload: { value: (string | number)[] }) {
-		const picked = String(payload.value[0] ?? '')
+	/** 确认:空串哨兵还原为「跟随站点默认」 */
+	function handlePickerConfirm() {
+		const picked = String(pickerValue.value[0] ?? '')
 		handleChooseEnum(picked === '' ? null : picked)
+	}
+
+	/** 取消:不落库,直接关闭 */
+	function handlePickerCancel() {
+		handleCloseEnum()
 	}
 
 	/** 当前枚举项是否处于「跟随站点默认」 */
 	function isFollowing(def : PrefDef) : boolean {
 		return !isOverridden(def.path)
 	}
+
+	/* ---------------- 展示行(预计算,避免模板渲染期函数调用) ---------------- */
+	/** 偏好展示行:展示文本/跟随态/开关值在数据层算好,模板只做属性访问 */
+	interface PrefRow extends PrefDef {
+		displayValue : string
+		following : boolean
+		/** 仅 kind==='bool' 使用 */
+		boolValue : boolean
+	}
+
+	function buildRows(defs : PrefDef[]) : PrefRow[] {
+		return defs.map(def => ({
+			...def,
+			displayValue: enumLabelOf(def, prefValueOf(def.path)),
+			following: isFollowing(def),
+			boolValue: def.kind === 'bool' ? prefValueOf(def.path) === true : false,
+		}))
+	}
+
+	const layoutRows = computed(() => buildRows(layoutPrefs))
+	const featureRows = computed(() => buildRows(featurePrefs))
 
 	/* ---------------- 重置全部 ---------------- */
 	function handleResetAll() {
@@ -211,10 +239,10 @@
 <template>
 	<view class="box-border min-h-screen bg-page">
 		<!-- 自定义标题 -->
-		<uh-navbar default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true"></uh-navbar>
-		
+		<uh-navbar default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true" />
+
 		<!-- 内容区域 -->
-		<view class="box-border p-3 flex flex-col gap-y-6">
+		<view class="box-border flex flex-col gap-y-6 p-3">
 			<!-- 布局设置 -->
 			<view class="flex flex-col gap-y-3">
 				<uh-section-title>
@@ -224,14 +252,14 @@
 					</template>
 				</uh-section-title>
 				<view class="uh-global-card-glass overflow-hidden rounded-2xl">
-					<view v-for="(def, index) in layoutPrefs" :key="def.key"
+					<view v-for="(row, index) in layoutRows" :key="row.key"
 						class="pick-row flex items-center justify-between px-4 py-4"
-						:class="index < layoutPrefs.length - 1 ? 'border-b border-black/5' : ''"
-						@click="handleOpenEnum(def)">
+						:class="index < layoutRows.length - 1 ? 'border-b border-black/5' : ''"
+						@click="handleOpenEnum(row)">
 						<view class="row-left flex flex-col gap-1">
-							<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+							<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
 							<view class="flex items-center gap-2">
-								<text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+								<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
 								<view v-else
 									class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
 									已自定义
@@ -239,8 +267,7 @@
 							</view>
 						</view>
 						<view class="row-value flex items-center gap-2">
-							<text
-								class="value-text text-[26rpx] text-gray-400">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
+							<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
 							<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
 						</view>
 					</view>
@@ -255,64 +282,87 @@
 					</template>
 				</uh-section-title>
 				<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
-					<template v-for="(def, index) in featurePrefs" :key="def.key">
+					<template v-for="(row, index) in featureRows" :key="row.key">
 						<!-- 布尔开关 -->
-						<view v-if="def.kind === 'bool'" class="switch-row flex items-center justify-between px-4 py-4"
-							:class="index < featurePrefs.length - 1 ? 'border-b border-black/5' : ''">
+						<view v-if="row.kind === 'bool'" class="switch-row flex items-center justify-between px-4 py-4"
+							:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 							<view class="row-left flex flex-col gap-1">
-								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
 								<view class="flex items-center gap-2">
-									<text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+									<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
 									<template v-else>
 										<view
 											class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
 											已自定义
 										</view>
 										<text class="revert-text text-2xs text-gray-400 underline"
-											@click.stop="handleRevert(def.path)">恢复默认</text>
+											@click.stop="handleRevert(row.path)">
+											恢复默认
+										</text>
 									</template>
 								</view>
 							</view>
-							<wd-switch :model-value="valueOf(def.path) === true" @change="handleSwitchChange(def, $event)" />
+							<wd-switch :model-value="row.boolValue" @change="handleSwitchChange(row, $event)" />
 						</view>
 						<!-- 枚举选择(指示器位置) -->
 						<view v-else class="pick-row flex items-center justify-between px-4 py-4"
-							:class="index < featurePrefs.length - 1 ? 'border-b border-black/5' : ''"
-							@click="handleOpenEnum(def)">
+							:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''"
+							@click="handleOpenEnum(row)">
 							<view class="row-left flex flex-col gap-1">
-								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ def.label }}</text>
+								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
 								<view class="flex items-center gap-2">
-									<text v-if="isFollowing(def)" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+									<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
 									<template v-else>
 										<view
 											class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
 											已自定义
 										</view>
 										<text class="revert-text text-2xs text-gray-400 underline"
-											@click.stop="handleRevert(def.path)">恢复默认</text>
+											@click.stop="handleRevert(row.path)">
+											恢复默认
+										</text>
 									</template>
 								</view>
 							</view>
 							<view class="row-value flex items-center gap-2">
-								<text
-									class="value-text text-[26rpx] text-gray-400">{{ enumLabelOf(def, valueOf(def.path)) }}</text>
+								<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
 								<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
 							</view>
 						</view>
 					</template>
 				</view>
 			</view>
-			<!-- 底部操作栏(玻璃悬浮) -->
-			<view class="box-border w-full px-2">
-				<uh-button custom-class="uh-global-card-glass py-2 !rounded-full"
-					@click="handleResetAll">恢复默认</uh-button>
+			<!-- 底部操作栏-->
+			<view class="box-border w-full">
+				<uh-button custom-class="uh-global-card-glass py-2 !rounded-xl" @click="handleResetAll">
+					恢复默认
+				</uh-button>
 			</view>
 		</view>
-		<!-- 枚举选择弹层(wd-picker 自带底部弹层与工具栏) -->
-		<wd-picker
-			v-model:visible="enumSheet.show" :title="enumSheet.def?.label || ''" :columns="enumColumns"
-			:model-value="enumValue" confirm-button-text="确定" cancel-button-text="取消"
-			@confirm="handlePickerConfirm"
-		/>
+
+		<!-- 枚举选择弹层(uh-glass-popup + wd-picker-view,底部取消/确认,参考 uh-album-photo-viewer 布局) -->
+		<uh-glass-popup v-model="enumSheet.show" :hide-when-close="false" position="bottom" custom-class="rounded-xl">
+			<view class="box-border px-4 py-4">
+				<!-- 标题 -->
+				<view class="mb-3 flex items-center justify-between">
+					<text class="text-md font-bold">{{ enumSheet.def?.label || '请选择' }}</text>
+				</view>
+				<!-- 选择器 -->
+				<wd-picker-view :columns="enumColumns" v-model="pickerValue"
+					custom-class="!p-0 !bg-transparent !rounded-xl overflow-hidden" @change="handlePickerChange" />
+				<!-- 底部操作:取消 / 确认 -->
+				<view class="mt-4 flex items-center justify-center gap-x-3">
+					<uh-button custom-class="flex-1 py-2 uh-global-card-glass border !rounded-xl bg-white/90"
+						@click="handlePickerCancel">
+						取消
+					</uh-button>
+					<uh-button
+						custom-class="flex-1 py-2 uh-global-card-glass !rounded-xl border bg-primary text-gray-900"
+						@click="handlePickerConfirm">
+						确定
+					</uh-button>
+				</view>
+			</view>
+		</uh-glass-popup>
 	</view>
 </template>

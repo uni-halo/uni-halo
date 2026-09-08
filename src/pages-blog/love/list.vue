@@ -241,10 +241,8 @@
 
 <template>
 	<view class="uh-global-love-page box-border min-h-screen w-screen flex flex-col">
-		<!-- 自定义导航 -->
 		<uh-navbar default-title="恋爱清单" title-color="text-love" back-class="text-love"/>
 
-		<!-- 粘性筛选区:参考投票页顶部胶囊设计,每个维度独立状态 -->
 		<wd-sticky>
 			<view class="box-border px-3 pb-1 pt-2">
 				<view class="box-border flex items-center justify-between gap-x-2">
@@ -263,16 +261,10 @@
 			</view>
 		</wd-sticky>
 
-		<!-- 加载/错误/空占位(状态机) -->
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 			min-height="60vh" empty-text="暂时还没有恋爱清单，快去制定你们的恋爱清单吧~" @refresh="handleGetList" />
 
-		<!-- 清单列表 -->
 		<view v-else class="box-border flex flex-1 flex-col gap-y-3 p-3 pb-safe">
-			<view
-				class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-xl p-3 text-center text-xs text-love">
-				看看我们的恋爱清单都完成了哪些吧
-			</view>
 			<block v-for="(item, index) in showList" :key="item.name">
 				<view
 					class="uh-global-card-glass uh-shadow-xs box-border w-full flex flex-col items-center rounded-xl p-3">
@@ -298,10 +290,10 @@
 					<view v-if="item.open"
 						class="uh-global-card-glass mt-4 box-border w-full rounded-xl p-3 text-xs shadow-none">
 						<view v-if="item.content" class="desc mb-3 flex">
-							<view class="desc-label w-16 shrink-0 text-gray-500">
+							<view class="desc-label w-16 shrink-0 text-gray-500 ">
 								计划内容
 							</view>
-							<view class="desc-value w-0 flex-1 text-gray-900 leading-4">
+							<view class="desc-value w-0 flex-1 text-gray-900 leading-5">
 								{{ item.content || '-' }}
 							</view>
 						</view>

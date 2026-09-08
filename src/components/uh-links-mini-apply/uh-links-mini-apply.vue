@@ -201,7 +201,7 @@
 
 <template>
 	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom"
-		custom-class="!border rounded-lt-2xl rounded-rt-2xl" @close="handleClose(false)">
+		custom-class="!border rounded-xl" @close="handleClose(false)">
 		<view class="mb-4 relative w-full flex items-center justify-around box-border px-4 pt-4">
 			<view class="w-full flex flex-col gap-y-1">
 				<text class="text-md font-bold">申请收录小程序</text>

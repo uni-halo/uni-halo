@@ -22,7 +22,15 @@
 
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginSearchWidget,
-		tips: '啊偶，当前功能未开放！',
+		tips: '啊偶，功能正在维护中...',
+		callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleOnSearch()
+		}
 	})
 
 	async function handlePluginRefresh() {

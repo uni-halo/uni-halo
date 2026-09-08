@@ -5,6 +5,7 @@
 	import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
+	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
@@ -29,24 +30,37 @@
 	/** 站点 tab:PluginLinks */
 	const { pluginId: sitePluginId, checking: siteChecking, tips: siteTips, available: sitePluginAvailable, check: checkSitePluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginLinks,
-		tips: '检测到当前插件没有安装或者启用，无法使用友情链接功能哦，请联系管理员',
+		tips: '啊偶，功能正在维护中...',
+		callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleGetLinkGroupData()
+		}
 	})
 	/** 小程序 tab:plugin-uni-halo */
 	const { pluginId: miniPluginId, checking: miniChecking, tips: miniTips, available: miniPluginAvailable, check: checkMiniPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginUniHalo,
-		tips: '检测到当前插件没有安装或者启用，无法使用小程序链接功能哦，请联系管理员',
+		tips: '啊偶，功能正在维护中...', callback: (isAvailable) => {
+			if (!isAvailable) { return }
+			uni.pageScrollTo({
+				scrollTop: 0,
+				duration: 0,
+			})
+			handleGetMiniProgramLinks()
+		}
 	})
 
 	/** 重新检测站点插件:可用则拉取友链数据(供 uh-plugin-unavailable 刷新按钮) */
 	async function handleSitePluginRefresh() {
-		if (await checkSitePluginAvailable())
-			handleGetLinkGroupData()
+		if (await checkSitePluginAvailable()) { handleGetLinkGroupData() }
 	}
 
 	/** 重新检测小程序插件:可用则拉取小程序链接数据(供 uh-plugin-unavailable 刷新按钮) */
 	async function handleMiniPluginRefresh() {
-		if (await checkMiniPluginAvailable())
-			handleGetMiniProgramLinks()
+		if (await checkMiniPluginAvailable()) { handleGetMiniProgramLinks() }
 	}
 
 	/* ---------------- tabs ---------------- */
@@ -64,8 +78,7 @@
 
 	// 审核模式下小程序 tab 隐藏,强制停留在站点 tab
 	watch(() => appConfigStore.auditModeEnabled, (enabled) => {
-		if (enabled)
-			activeTabIndex.value = 0
+		if (enabled) { activeTabIndex.value = 0 }
 	})
 
 	/* ==================== 站点 tab(plugin-links) ==================== */
@@ -122,12 +135,11 @@
 				},
 			}))
 			dataList.value = dataList.value.concat(list)
-			setTimeout(() => {
-				updateSiteLoadingStatus(
-					dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-				)
-				loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
-			}, 500)
+			await sleep(600)
+			updateSiteLoadingStatus(
+				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+			)
+			loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
 		}
 		catch (err) {
 			console.error(err)
@@ -135,9 +147,7 @@
 			loadMoreText.value = '加载失败，请下拉刷新！'
 		}
 		finally {
-			setTimeout(() => {
-				uni.stopPullDownRefresh()
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -173,13 +183,6 @@
 		})
 	}
 
-	function calcSiteThumbnail(val ?: string) : string {
-		if (!val)
-			return ''
-		const _val = val.endsWith('/') ? val : `${val}/`
-		return `https://image.thum.io/get/width/1000/crop/800/${_val}`
-	}
-
 	/* ==================== 小程序 tab(plugin-uni-halo) ==================== */
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus: miniLoadingStatus, updateLoadingStatus: updateMiniLoadingStatus } = useDataLoadingStatus()
@@ -193,20 +196,17 @@
 		try {
 			const res = await getMiniProgramLinkGroupedList()
 			miniGroups.value = res.data || []
-			setTimeout(() => {
-				updateMiniLoadingStatus(
-					miniGroups.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-				)
-			}, 500)
+			await sleep(600)
+			updateMiniLoadingStatus(
+				miniGroups.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+			)
 		}
 		catch (err) {
 			console.error(err)
 			updateMiniLoadingStatus(DataLoadingStatusEnum.Error)
 		}
 		finally {
-			setTimeout(() => {
-				uni.stopPullDownRefresh()
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -393,16 +393,17 @@
 					</view>
 
 					<!-- 悬浮按钮 -->
-					<view class="flot-buttons fixed bottom-10 right-4 z-999 flex flex-col gap-1.5">
+					<view class="flot-buttons fixed bottom-8 right-3 z-999 flex flex-col gap-1.5">
 						<view v-if="!haloPluginConfigs?.linksSubmitPlugin?.enabled"
-							class="fab-btn uh-global-card-glass h-10 w-10 flex items-center justify-center rounded-full"
+							class="fab-btn uh-global-card-glass h-11 w-11 flex items-center justify-center rounded-full"
 							@click="toSubmitLinkPage">
 							<wd-icon name="edit" size="20px" color="#6b7280" />
 						</view>
 					</view>
 
 					<!-- 详情弹窗 -->
-					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999" custom-class="rounded-xl !border">
+					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999"
+						custom-class="rounded-xl !border">
 						<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
 							<view class="w-full flex flex-col gap-y-1">
 								<text class="text-md font-bold">站点详情</text>
@@ -418,23 +419,24 @@
 							<view class="flex">
 								<image class="h-20 w-20 shrink-0 rounded-2xl uh-global-card-glass"
 									:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
-								<view class="ml-4 flex flex-1 flex-col gap-y-1 justify-center">
-									<view class="text-lg text-gray-900 font-bold">
+								<view class="ml-4 flex flex-1 flex-col gap-y-1.5 justify-center">
+									<view class="text-md text-gray-900 font-bold">
 										{{ detail.data.spec.displayName }}
 									</view>
 									<view class="flex items-center gap-x-2">
-										<text class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">{{ detail.data.spec.groupName }}</text>
-										<text class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">
+										<text
+											class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">{{ detail.data.spec.groupName }}</text>
+										<text
+											class="uh-global-card-glass border uh-shadow-xs text-xs text-gray-500 rounded-lg bg-secondary px-2 py-0.5 text-gray-900">
 											复制地址
 										</text>
 									</view>
 									<view @click="handleCopyLink(detail.data)">
-										<text
-											class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
+										<text class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
 									</view>
 								</view>
 							</view>
-							<view class="poup-desc mt-4 text-[28rpx] text-gray-600 leading-[1.6]">
+							<view class="poup-desc mt-4 text-xs text-gray-600 leading-5">
 								{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
 							</view>
 						</scroll-view>
@@ -457,11 +459,11 @@
 				<view v-else class="content flex flex-1 flex-col">
 					<!-- 分组列表 -->
 					<view class="box-border flex-1 p-3">
-						<view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-8">
-							<view class="mb-4 flex items-center">
-								<text class="mr-2 inline-block h-[28rpx] w-[8rpx] rounded-full bg-secondary" />
+						<view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-4">
+							<view class="mb-3 flex items-center">
+								<text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />
 								<text
-									class="text-[30rpx] text-gray-900 font-bold">{{ group.displayName || '未分组' }}</text>
+									class="text-sm text-gray-900 font-bold">{{ group.displayName || '未分组' }}</text>
 								<text class="ml-3 text-xs text-gray-400">（{{ group.links.length }}）</text>
 							</view>
 							<view class="group-cards flex flex-col gap-4">
@@ -491,9 +493,9 @@
 					</view>
 
 					<!-- 申请收录悬浮按钮 -->
-					<view class="fixed bottom-10 right-4 z-50">
+					<view class="fixed bottom-8 right-3 z-50">
 						<view
-							class="box-border flex flex-col w-10 h-10 items-center justify-center rounded-full bg-gray-900"
+							class="box-border flex flex-col w-11 h-11 items-center justify-center rounded-full bg-gray-900"
 							@click="handleOpenApply">
 							<text class="text-xs text-white">申请</text>
 						</view>
@@ -501,7 +503,8 @@
 				</view>
 
 				<!-- 小程序详情弹窗 -->
-				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom" custom-class="rounded-xl !border">
+				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom"
+					custom-class="!rounded-xl !border">
 					<view class="relative w-full flex items-center justify-around box-border px-4 pt-4">
 						<view class="w-full flex flex-col gap-y-1">
 							<text class="text-md font-bold">小程序详情</text>

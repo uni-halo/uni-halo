@@ -4,6 +4,8 @@
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
+	import { usePluginAvailable } from '@/hooks/usePluginAvailable'
+	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
@@ -25,7 +27,7 @@
 	/** 依赖插件(PluginPhotos) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: 'PluginPhotos',
-		tips: '很抱歉，功能正在维护中...',
+		tips: '啊偶，功能正在维护中...',
 		callback: (isAvailable) => {
 			if (!isAvailable) { return }
 			uni.pageScrollTo({
@@ -114,6 +116,7 @@
 					? dataList.value.concat(list)
 					: list
 			}
+			await sleep(600)
 			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
 		}
@@ -123,11 +126,7 @@
 			loadMoreText.value = t('common.loadFailed')
 		}
 		finally {
-			setTimeout(() => {
-				uni.hideLoading()
-				uni.stopPullDownRefresh()
-				lock.value = false
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -191,29 +190,30 @@
 </script>
 
 <template>
-	<view class="min-h-screen w-screen flex flex-col bg-page pb-6">
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-6">
 		<uh-navbar :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="checkPluginAvailable" />
+
 		<template v-else>
 			<wd-sticky v-if="category.list.length!==0" class="w-full">
 				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
-						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-block border rounded-2xl px-4 py-1 text-sm"
+						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1 text-sm"
 						:class="{ 'bg-primary text-gray-900 font-bold': index === category.activeIndex }"
 						@click="handleGetDataByCategory(index, cate)">
-						{{ cate.spec.displayName }} <text
-							v-if="cate.spec.displayName!=='全部'">({{ cate.status?.photoCount ?? 0 }})</text>
+						{{ cate.spec.displayName }}
+						<text v-if="cate.spec.displayName!=='全部'">
+							({{ cate.status?.photoCount ?? 0 }})
+						</text>
 					</view>
 				</scroll-view>
 			</wd-sticky>
 
-			<!-- 加载/错误占位 -->
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				@refresh="handleGetCategory" />
 
-			<!-- 内容区域 -->
 			<view v-else class="box-border w-full p-3">
 				<view class="grid grid-cols-2 gap-2.5">
 					<view v-for="(item, index) in dataList" :key="index"

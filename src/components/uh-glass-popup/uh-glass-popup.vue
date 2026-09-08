@@ -23,6 +23,8 @@
 		radius ?: string
 		/** 是否开启 wot 位置自适应圆角(bottom→上圆角 / center→四圆角等),与 radius 二选一 */
 		round ?: boolean
+		lazyRender ?: boolean
+		hideWhenClose?: boolean
 		/** 追加到面板的内联样式,如宽度:width:640rpx; */
 		customStyle ?: string
 		customClass? :string 
@@ -43,6 +45,8 @@
 		safeAreaInsetBottom: false,
 		radius: '',
 		round: false,
+		lazyRender: true,
+		hideWhenClose: true,
 		customStyle: '',
 		customClass:''
 	})
@@ -66,10 +70,12 @@
 		:closable="closable"
 		:modal="modal"
 		:close-on-click-modal="closeOnClickModal"
+		:hide-when-close="hideWhenClose"
 		:safe-area-inset-bottom="safeAreaInsetBottom"
 		:round="round"
 		:custom-style="panelStyle"
 		:custom-class="panelClass"
+		:lazy-render="lazyRender"
 		@update:model-value="(value: boolean) => emit('update:modelValue', value)"
 		@close="emit('close')"
 		@click-modal="emit('click-modal')"
