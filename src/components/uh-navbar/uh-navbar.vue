@@ -95,11 +95,11 @@
 				<!-- 左边 -->
 				<view class="shrink-0 min-w-18" @click="handleBack()">
 					<view v-if="props.useBack"
-						class="uh-global-card-glass h-7 px-3 rounded-full border flex items-center gap-x-2 text-sm"
+						class="uh-global-card-glass uh-shadow-xs h-8 px-3 rounded-full border flex items-center gap-x-2 text-sm"
 						:class="props.backClass" :style="[props.backStyle]">
-						<wd-icon name="arrow-left" size="32rpx"></wd-icon>
+						<wd-icon name="arrow-left" size="34rpx"></wd-icon>
 						<view class="w-[1px] h-4 bg-white/60" />
-						<text class="text-xs font-bold">返回</text>
+						<text class="text-sm font-bold">返回</text>
 					</view>
 				</view>
 				<!-- 中间 -->

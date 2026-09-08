@@ -193,7 +193,7 @@
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page pb-6">
 		<uh-navbar :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
-		
+
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="checkPluginAvailable" />
 		<template v-else>
@@ -217,9 +217,13 @@
 			<view v-else class="box-border w-full p-3">
 				<view class="grid grid-cols-2 gap-2.5">
 					<view v-for="(item, index) in dataList" :key="index"
-						class="uh-global-card-glass h-38 w-full overflow-hidden rounded-xl">
+						class="relative uh-global-card-glass h-38 w-full overflow-hidden rounded-xl">
 						<image class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load
 							@click="handlePreview(item)" />
+						<view v-if="item.spec.displayName"
+							class="absolute bottom-0 w-full box-border p-3 pt-6 z-2 bg-gradient-to-b from-white/0 to-black/40 text-xs text-white">
+							{{item.spec.displayName}}
+						</view>
 					</view>
 				</view>
 				<view class="load-text w-full py-4 text-center text-xs text-gray-500">

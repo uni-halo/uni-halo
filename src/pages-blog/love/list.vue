@@ -350,7 +350,7 @@
 
 			</view>
 			<uh-data-loading v-if="showList.length === 0" :loading-status="DataLoadingStatusEnum.Empty"
-				min-height="42vh" empty-text="该筛选条件下暂无清单~" :use-loading-button="false" />
+				min-height="42vh" empty-text="该筛选条件下暂无清单~" :use-refresh-button="false" />
 		</view>
 
 		<!-- 筛选弹层(状态/排序;排序附方向选择) -->

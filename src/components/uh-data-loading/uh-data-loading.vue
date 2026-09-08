@@ -16,7 +16,7 @@
 		loadingSubText ?: string
 		errorSubText ?: string
 		emptySubText ?: string
-		useLoadingButton ?: boolean
+		useRefreshButton ?: boolean
 	}
 
 	const props = withDefaults(defineProps<IProps>(), {
@@ -28,7 +28,7 @@
 		loadingSubText: '',
 		errorSubText: '请检查网络连接，或稍后再试',
 		emptySubText: '稍后再来看看吧～',
-		useLoadingButton: true,
+		useRefreshButton: true,
 	})
 
 	const emit = defineEmits<{ (e : 'refresh') : void }>()
@@ -106,8 +106,8 @@
 			<text v-if="statusScene.subText" class="mt-3 text-xs text-gray-500">
 				{{ statusScene.subText }}
 			</text>
-			<view v-if="props.useLoadingButton" class="mt-5 uh-global-card-glass uh-shadow-xs border rounded-lg">
-				<uh-button custom-class="!rounded-lg" @click="emit('refresh')">
+			<view v-if="props.useRefreshButton" class="mt-5">
+				<uh-button custom-class="!rounded-lg uh-global-card-glass uh-shadow-xs border rounded-lg" @click="emit('refresh')">
 					刷新试试
 				</uh-button>
 			</view>

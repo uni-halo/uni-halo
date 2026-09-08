@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 	import { computed, ref, watch } from 'vue'
+	import { getLoveAlbumByName } from '@/api/uni-halo'
 	import { checkImageUrl } from '@/utils/url'
+	import { sleep } from '@/utils/common'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import type { ILoveAlbum } from '@/api/types/uni-halo'
 
 	const props = withDefaults(defineProps<{
 		show : boolean
 		albumName ?: string
-		photos ?: IAlbumPhoto[]
-		loading ?: boolean
+		/** 相册 key(详情请求参数) */
+		albumKey ?: string
+		/** 解锁 token(加密相册已解锁时传入) */
+		token ?: string
 	}>(), {
 		albumName: '',
-		photos: () => [],
-		loading: false,
+		albumKey: '',
+		token: '',
 	})
 
 	const emit = defineEmits<{
@@ -28,24 +34,39 @@
 	}
 
 	const isShow = ref(false)
-
-	watch(() => props.show, (val) => {
-		isShow.value = val
-	})
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const photos = ref<IAlbumPhoto[]>([])
 
 	/** 预处理图片路径(相对路径拼接 BASE_API) */
 	const photoList = computed<IAlbumPhoto[]>(() =>
-		(props.photos || []).map(photo => ({
+		photos.value.map(photo => ({
 			...photo,
 			url: checkImageUrl(photo.url || ''),
 		})),
 	)
 
-	/** 左列(偶数位照片,瀑布流错落) */
-	const leftPhotos = computed(() => photoList.value.filter((_, index) => index % 2 === 0))
+	/** 内部自请求:获取相册详情并填充照片 */
+	async function handleLoadPhotos() {
+		updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		try {
+			const detail = await getLoveAlbumByName(props.albumKey, { token: props.token })
+			photos.value = (detail.data as unknown as ILoveAlbum)?.photos || []
+			await sleep(600)
+			updateLoadingStatus(photos.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+		}
+		catch (e) {
+			console.error('获取相册照片失败', e)
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
+		}
+	}
 
-	/** 右列(奇数位照片) */
-	const rightPhotos = computed(() => photoList.value.filter((_, index) => index % 2 === 1))
+	watch(() => props.show, (val) => {
+		isShow.value = val
+		if (val) {
+			photos.value = []
+			handleLoadPhotos()
+		}
+	})
 
 	function handleClose() {
 		isShow.value = false
@@ -71,87 +92,60 @@
 		safe-area-inset-bottom @close="handleClose">
 		<view class="box-border h-full w-full flex flex-col gap-y-3 p-4">
 			<!-- 头部 -->
-			<view class="w-full shrink-0 flex items-center justify-between">
-				<view class="font-bold flex items-center gap-x-1">
+			<view class="w-full flex shrink-0 items-center justify-between">
+				<view class="flex items-center gap-x-1 font-bold">
 					{{ albumName }}
 				</view>
 				<view
-					class="w-6 h-6 uh-global-card-glass border uh-shadow-xs flex items-center justify-center rounded-lg"
+					class="uh-global-card-glass uh-shadow-xs h-6 w-6 flex items-center justify-center border rounded-lg"
 					@click="handleClose">
-					<wd-icon name="close" size="32rpx"></wd-icon>
+					<wd-icon name="close" size="32rpx" />
 				</view>
 			</view>
 
 			<!-- 照片列表 -->
 			<scroll-view class="box-border max-h-[50vh] flex-1" scroll-y :show-scrollbar="false">
-				<view v-if="loading" class="viewer-empty box-border h-full flex items-center justify-center p-10">
-					<view class="viewer-loading flex flex-col items-center">
-						<view class="loading-text mt-7 text-[28rpx] text-[#56bbf9]">
-							照片正在努力加载中啦~
-						</view>
-					</view>
-				</view>
-				<view v-else-if="photoList.length === 0"
-					class="viewer-empty box-border h-full flex items-center justify-center p-10">
-					<wd-empty description="这个相册暂时还没有照片~" />
-				</view>
-				<view v-else class="photo-list box-border flex items-start p-5">
-					<!-- 左列 -->
-					<view class="photo-column box-border min-w-0 flex-1 mr-[20rpx]">
-						<view v-for="photo in leftPhotos" :key="photo.name"
-							class="photo-card mb-6 box-border overflow-hidden rounded-xl bg-white shadow-sm">
-							<image class="photo-image w-full" :src="photo.url" mode="widthFix" lazy-load
-								@click="handlePreview(photo.url)" />
-							<view class="photo-info box-border px-6 py-5">
-								<view v-if="photo.title" class="photo-title mb-3 text-[30rpx] text-[#333] font-bold">
-									{{ photo.title }}
-								</view>
-								<view v-if="photo.takenDate || photo.location"
-									class="photo-meta mb-3 flex flex-wrap items-center">
-									<text v-if="photo.takenDate"
-										class="meta-item mr-8 text-[24rpx] text-[#999]">{{ photo.takenDate }}</text>
-									<text v-if="photo.location"
-										class="meta-item mr-8 text-[24rpx] text-[#999]">{{ photo.location }}</text>
-								</view>
-								<view v-if="photo.description"
-									class="photo-desc text-[26rpx] text-[#666] leading-[1.6]">
-									{{ photo.description }}
-								</view>
+				<!-- 加载/错误/空占位(状态机) -->
+				<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :use-refresh-button="false"
+					:loading-status="loadingStatus" error-text="照片加载失败，请点击刷新重试" empty-text="这个相册暂时还没有照片~"
+					min-height="40vh" @refresh="handleLoadPhotos" />
+				<view v-else class="box-border grid grid-cols-2 gap-2">
+					<view v-for="photo in photoList" :key="photo.name"
+						class="relative box-border overflow-hidden uh-global-card-glass rounded-xl">
+						<image class="w-full h-46 block" :src="photo.url" mode="aspectFill" lazy-load
+							@click="handlePreview(photo.url)" />
+						<view
+							class="absolute bottom-0 w-full box-border p-3 pt-4 z-2 bg-gradient-to-b from-white/0 to-white/60">
+							<view v-if="photo.title" class="mb-1 text-xs text-love font-bold">
+								{{ photo.title }}
 							</view>
-						</view>
-					</view>
-					<!-- 右列 -->
-					<view class="photo-column box-border min-w-0 flex-1">
-						<view v-for="photo in rightPhotos" :key="photo.name"
-							class="photo-card mb-6 box-border overflow-hidden rounded-xl bg-white shadow-sm">
-							<image class="photo-image w-full" :src="photo.url" mode="widthFix" lazy-load
-								@click="handlePreview(photo.url)" />
-							<view class="photo-info box-border px-6 py-5">
-								<view v-if="photo.title" class="photo-title mb-3 text-[30rpx] text-[#333] font-bold">
-									{{ photo.title }}
-								</view>
-								<view v-if="photo.takenDate || photo.location"
-									class="photo-meta mb-3 flex flex-wrap items-center">
-									<text v-if="photo.takenDate"
-										class="meta-item mr-8 text-[24rpx] text-[#999]">{{ photo.takenDate }}</text>
-									<text v-if="photo.location"
-										class="meta-item mr-8 text-[24rpx] text-[#999]">{{ photo.location }}</text>
-								</view>
-								<view v-if="photo.description"
-									class="photo-desc text-[26rpx] text-[#666] leading-[1.6]">
-									{{ photo.description }}
-								</view>
+							<view v-if="photo.description" class="mb-1 text-xs text-white leading-5">
+								{{ photo.description }}
 							</view>
+							<view v-if="photo.takenDate || photo.location"
+								class="flex flex-col gap-y-1">
+								<text v-if="photo.takenDate" class="text-xs text-white">
+									<wd-icon name="time-line"></wd-icon> {{ photo.takenDate }}
+								</text>
+								<text v-if="photo.location" class="text-xs text-white">
+									<wd-icon name="location"></wd-icon> {{ photo.location }}
+								</text>
+							</view>
+
 						</view>
 					</view>
 				</view>
 			</scroll-view>
 
 			<!-- 底部关闭 -->
-			<view class="w-full shrink-0">
-				<uh-button custom-class="py-2 uh-global-card-glass rounded-xl !bg-love/90 text-white border"
+			<view class="w-full shrink-0 flex items-center justify-center gap-x-2">
+				<uh-button custom-class="py-2 flex-1 uh-global-card-glass border rounded-xl bg-white/90"
 					@click="handleClose">
 					关闭
+				</uh-button>
+				<uh-button custom-class="flex-1 py-2 uh-global-card-glass rounded-xl !bg-love/90 text-white border"
+					@click="handleLoadPhotos">
+					刷新
 				</uh-button>
 			</view>
 		</view>

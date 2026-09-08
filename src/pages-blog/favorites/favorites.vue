@@ -94,7 +94,7 @@ const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏
       <!-- 空态(当前 Tab 无收藏):uh-data-loading 统一渲染,视觉与 tabbar 页一致 -->
       <uh-data-loading
         v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
-       :use-loading-button="false" :empty-text="emptyText" empty-sub-text="快去阅读文章/瞬间点击收藏吧"
+       :use-refresh-button="false" :empty-text="emptyText" empty-sub-text="快去阅读文章/瞬间点击收藏吧"
       />
 
       <!-- 成功态:当前 Tab 列表 -->

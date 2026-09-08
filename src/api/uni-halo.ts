@@ -1,10 +1,5 @@
 /**
  * uni-halo 自定义 API 接口定义
- * 覆盖 plugin-uni-halo(/apis/api.unihalo.ialley.cn)与三方插件接口:
- * 受限阅读(tools.muyin.site)、友链提交(linkssubmit.muyin.site)、投票(api.vote.kunkunyu.com)、
- * 豆瓣(api.douban.moony.la)、评论组件(api.commentwidget.halo.run)
- * 风格参考 src/api/foo-alova.ts:http.Get<IResponse<T>>(url, { params, header, meta })
- * 源自旧项目 api/v2/all.config.js、all.api.js(三方部分)、love.*.js,按需命名导出
  */
 import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
@@ -211,6 +206,7 @@ export function getLoveConfig() {
 export function getLoveAlbums(params: ILoveAlbumListReq) {
   return http.Get<IResponse<ILoveAlbumListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums', {
     params,
+	cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -221,6 +217,7 @@ export function getLoveAlbums(params: ILoveAlbumListReq) {
 export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
   return http.Get<IResponse<ILoveAlbum>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums/${name}`, {
     params,
+	cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -249,6 +246,7 @@ export function getLoveDailyItems(params: ILoveDailyItemListReq) {
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-daily-items',
     {
       params,
+	  cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )

@@ -76,7 +76,7 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" position="center" :z-index="9999" radius="24rpx" @close="handleClose">
+	<uh-glass-popup v-model="isShow" position="center" :z-index="9999" custom-class="rounded-xl" @close="handleClose">
 		<view v-if="notice" class="box-border w-[80vw] p-4">
 			<!-- 头部:标题 + 关闭 -->
 			<view class="flex items-center justify-between">

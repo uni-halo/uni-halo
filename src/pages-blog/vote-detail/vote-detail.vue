@@ -274,7 +274,7 @@ onShareTimeline(() => ({
       <!-- 投票信息 -->
       <view class="uh-global-card-glass box-border flex flex-col gap-y-3 rounded-2xl p-3">
         <uh-section-title> 投票信息 </uh-section-title>
-        <view class="flex flex-col gap-3 rounded-xl bg-gray-100 p-4 text-sm text-gray-600">
+        <view class="flex flex-col gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-900">
           <view class="info-row">
             <text>投票类型：</text>
             <text class="tag">{{ vote.spec?._uh_type }}</text>
@@ -290,7 +290,7 @@ onShareTimeline(() => ({
           </view>
           <view class="info-row">
             <text>投票方式：</text>
-            <text class="tag" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-[#f44336]'">
+            <text class="tag" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-red-400'">
               {{ vote.spec?.canAnonymously ? '匿名' : '不匿名' }}
             </text>
           </view>
@@ -307,7 +307,7 @@ onShareTimeline(() => ({
       <!-- 投票内容 -->
       <view class="uh-global-card-glass box-border flex flex-col gap-3 rounded-2xl p-3">
         <uh-section-title> 投票内容 </uh-section-title>
-        <view class="box-border flex flex-col gap-y-2 rounded-xl bg-gray-100 p-4">
+        <view class="box-border flex flex-col gap-y-2 rounded-xl bg-gray-100 px-4 py-3">
           <view class="text-sm text-gray-900 font-bold">
             {{ vote.spec?.title }}
           </view>
@@ -326,12 +326,12 @@ onShareTimeline(() => ({
               {{ vote.spec?.maxVotes }} 项）
             </text>
           </view>
-          <view class="options flex flex-col gap-3">
+          <view class="options flex flex-col gap-3 w-full">
             <!-- PK 对抗条(与旧项目 pk-container 一致;样式需顶层定义,勿嵌套在 .vote-card 下) -->
             <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border w-full flex">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
-                class="radio-item" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
+                class="flex-1 radio-item" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
                 :style="{ width: `${option._uh_percent}%` }"
               >
                 <view
