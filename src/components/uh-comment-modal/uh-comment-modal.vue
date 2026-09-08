@@ -265,7 +265,7 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-lt-2xl rounded-rt-2xl"
+	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-2xl"
 		:z-index="100" @close="handleOnChange(false)">
 		<view class="box-border p-4">
 			<view

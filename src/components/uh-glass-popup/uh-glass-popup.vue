@@ -50,8 +50,7 @@
 	const emit = defineEmits<IEmits>()
 
 	const panelStyle = computed(() => {
-		const radiusStyle = props.radius ? `border-radius:${props.radius};` : ''
-		return `${radiusStyle}${props.customStyle}`
+		return props.customStyle
 	})
 	
 	const panelClass = computed(() =>{
@@ -95,5 +94,11 @@
 		:deep(.wd-popup.uh-glass-popup-panel) {
 			background-color: rgb(255 255 255 / 88%);
 		}
+	}
+	
+	:deep(.wd-popup--bottom){
+		left:24rpx;
+		bottom:24rpx;
+		right:24rpx;
 	}
 </style>

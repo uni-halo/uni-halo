@@ -29,7 +29,7 @@ function isActive(index: number) {
       <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
       <!-- 如：<uv-icon name="home" /> (https://www.uvui.cn/components/icon.html) -->
       <!-- 如：<sar-icon name="image" /> (https://sard.wzt.zone/sard-uniapp-docs/components/icon)(sar没有home图标^_^) -->
-      <text class="text-primary"><wd-icon :name="item.icon" size="52rpx" /></text>
+      <text class="text-primary"><wd-icon :name="item.icon" size="50rpx" /></text>
     </template>
     <template v-if="item.iconType === 'unocss' || item.iconType === 'iconfont'">
       <view class="flex-1" :class="[item.icon, isBulge ? 'text-80px' : 'text-20px']" />

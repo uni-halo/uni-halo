@@ -101,18 +101,18 @@
 
 <template>
 	<view v-if="customTabbarEnable" class="h-56px pb-safe bg-page">
-		<view class="border-and-fixed w-full px-2">
+		<view class="border-and-fixed w-full px-3">
 			<view class="flex box-border w-full items-center justify-between gap-x-2" @touchmove.stop.prevent>
 				<view
-					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 h-52px flex items-center gap-x-1">
+					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 h-50px flex items-center gap-x-1">
 					<view v-for="(item, index) in noRightTabbarList" :key="index" class="text-gray-900 flex-1"
 						:style="{ color: getColorByIndex(index) }" @click="handleClick(index)">
 						<TabbarItem :item="item" :index="index" class="relative"
-							:class="[isActive(index)?'uh-global-card-glass bg-white/30 border':'']" />
+							:class="[isActive(index)?'uh-global-card-glass bg-white/0 border':'']" />
 					</view>
 				</view>
 				<view v-if="rightButton.item"
-					class="shrink-0 uh-global-card-glass border bg-white/65 rounded-full h-52px w-52px p-1 flex items-center justify-center"
+					class="shrink-0 uh-global-card-glass border bg-white/65 rounded-full h-50px w-50px p-1 flex items-center justify-center"
 					@click="handleClickRightButton()">
 					<TabbarItem :item="rightButton.item" :index="rightButton.index" :is-bulge="true" />
 				</view>

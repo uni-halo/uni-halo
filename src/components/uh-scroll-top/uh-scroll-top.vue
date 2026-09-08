@@ -22,9 +22,11 @@
 </script>
 
 <template>
-	<view v-if="visible"
-		class="uh-global-card-glass border fixed bottom-24 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full text-primary"
-		:class="props.customClass" @click="handleScrollTop">
-		<wd-icon name="arrow-up" size="20px" />
+	<view v-if="visible" class="fixed bottom-22 right-3 z-50 pb-safe">
+		<view
+			class="uh-global-card-glass border h-11 w-11 flex items-center justify-center rounded-full text-primary"
+			:class="props.customClass" @click="handleScrollTop">
+			<wd-icon name="arrow-up" size="20px" />
+		</view>
 	</view>
 </template>

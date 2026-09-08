@@ -65,11 +65,9 @@
 		</view>
 
 		<!-- 右侧更多入口 -->
-		<view class="flex shrink-0 items-center gap-0.5 py-2 pl-2" @click="handleGoList">
-			<text class="text-[22rpx] text-[#bbb]">
-				更多
-			</text>
-			<wd-icon name="arrow-right" size="12px" color="#bbb" />
+		<view class="box-border flex shrink-0 items-center gap-0.5 py-2 pl-2 text-gray-400"  @click="handleGoList">
+			<text class="text-xs"> 全部 </text>
+			<wd-icon name="arrow-right" size="26rpx" />
 		</view>
 	</view>
 </template>

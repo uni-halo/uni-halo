@@ -1,15 +1,10 @@
 <script lang="ts" setup>
-	/**
- * 公告详情页(plugin-uni-halo 通知公告,2026-09-03 客户端接入)
- * 公开 GET /notices/{name} 返回完整 Notice extension(metadata+spec,spec 内嵌
- * typeDisplayName/typeColor);正文 content 为富文本 HTML,mp-html 渲染。
- * 不存在/删除中返回 404 → 空态提示。UIUX 见 .docs/notice-module-client-design.md
- */
 	import { computed, ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import { getNoticeDetail } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { checkImageUrl, checkIsUrl } from '@/utils/url'
+	import { sleep } from '@/utils/common'
 	import { markdownConfig } from '@/config/markdown'
 	import type { INoticeDetail } from '@/api/types/uni-halo'
 
@@ -74,6 +69,7 @@
 		try {
 			const res = await getNoticeDetail(name.value)
 			detail.value = res.data || null
+			await sleep(600)
 			updateLoadingStatus(
 				detail.value?.spec ? DataLoadingStatusEnum.Success : DataLoadingStatusEnum.Empty,
 			)
@@ -97,7 +93,7 @@
 		<uh-navbar default-title="公告详情" title-color="text-gray-900" />
 
 		<!-- 加载/错误/空态(状态机) -->
-		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="55vh"
+		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="75vh"
 			error-text="公告加载失败" empty-text="公告不存在或已下线" empty-sub-text="" @refresh="loadDetail" />
 
 		<!-- 正文 -->
