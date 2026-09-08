@@ -10,11 +10,13 @@ import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { getCache, setCache } from '@/utils/storage'
-import type { ILoveAlbum } from '@/api/types/uni-halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
 
 definePage({
   style: {
     navigationBarTitleText: '恋爱相册',
+    navigationStyle: 'custom',
     enablePullDownRefresh: true,
   },
 })
@@ -27,18 +29,48 @@ const UNLOCKED_ALBUMS_CACHE_KEY = 'unlocked_albums'
 /** 解锁 token 有效期(后端默认 30 分钟) */
 const ALBUM_TOKEN_TTL_SECONDS = 30 * 60
 
+/* ---------------- 展示层类型 ---------------- */
+/** 相册展示卡片(script 预处理后的干净展示数据) */
+interface ILoveAlbumCard {
+  /** 相册 key(metadata.name,用于解锁/详情请求) */
+  name: string
+  displayName: string
+  locked: boolean
+  photoCount: number
+  /** 封面图(已预处理 URL) */
+  image: string
+  /** 创建时间(格式化展示) */
+  takeTime: string
+  /** 相册照片(解锁后填充) */
+  photos: ILovePhoto[]
+}
+
+/** 相册卡片映射:字段取值 + 封面/时间预处理(模板不感知原始接口结构) */
+function mapAlbumCard(item: ILoveAlbum): ILoveAlbumCard {
+  const creationTimestamp = item.metadata?.creationTimestamp
+  return {
+    name: item.name || item.metadata?.name || '',
+    displayName: item.displayName || item.title || '',
+    locked: !!item.locked,
+    photoCount: Number(item.photoCount) || 0,
+    image: checkImageUrl(item.cover || ''),
+    takeTime: creationTimestamp ? dayjs(creationTimestamp).format('DD/MM/YYYY') : '',
+    photos: item.photos || [],
+  }
+}
+
 /* ---------------- 状态 ---------------- */
-const loading = ref<'loading' | 'success' | 'error'>('loading')
-const dataList = ref<(ILoveAlbum & { image?: string, takeTime?: string })[]>([])
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const dataList = ref<ILoveAlbumCard[]>([])
 const unlockedAlbums = ref<Record<string, string>>({})
 
 /** 密码解锁弹窗 */
 const showUnlockModal = ref(false)
-const currentUnlockAlbum = ref<(ILoveAlbum & { image?: string }) | null>(null)
+const currentUnlockAlbum = ref<ILoveAlbumCard | null>(null)
 
 /** 图片查看弹窗 */
 const showPhotoViewer = ref(false)
-const currentViewerAlbum = ref<(ILoveAlbum & { image?: string }) | null>(null)
+const currentViewerAlbum = ref<ILoveAlbumCard | null>(null)
 const viewerLoading = ref(false)
 
 const unlockAlbumName = computed(() => currentUnlockAlbum.value?.displayName || '')
@@ -70,30 +102,18 @@ function handleSaveUnlockedAlbums() {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
-  loading.value = 'loading'
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getLoveAlbums({})
-    if (res.data && (res.data as unknown as { items?: unknown[] }).items) {
-      dataList.value = ((res.data as unknown as { items: ILoveAlbum[] }).items || []).map((item) => {
-        const creationTimestamp = (item.metadata as unknown as { creationTimestamp?: string } | undefined)?.creationTimestamp
-        return {
-          ...item,
-          image: checkImageUrl(item.cover),
-          takeTime: creationTimestamp ? dayjs(creationTimestamp).format('DD/MM/YYYY') : '',
-        }
-      })
-      loading.value = 'success'
+    const items = res.data?.items || []
+    dataList.value = items.map(mapAlbumCard)
+    updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+    if (dataList.value.length > 0)
       handleLoadUnlockedAlbumPhotos()
-    }
-    else {
-      dataList.value = []
-      loading.value = 'success'
-    }
   }
   catch (e) {
     console.error('获取相册失败', e)
-    loading.value = 'error'
-    uni.showToast({ icon: 'none', title: '加载失败，请下拉刷新重试！' })
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
     setTimeout(() => {
@@ -105,12 +125,12 @@ async function handleGetData() {
 /** 加载已解锁相册的照片 */
 async function handleLoadUnlockedAlbumPhotos() {
   for (const item of dataList.value) {
-    if (item.locked && unlockedAlbums.value[item.name || '']) {
-      const token = unlockedAlbums.value[item.name || '']
+    const token = unlockedAlbums.value[item.name]
+    if (item.locked && token) {
       try {
-        const detail = await getLoveAlbumByName(item.name || '', { token })
+        const detail = await getLoveAlbumByName(item.name, { token })
         if (detail.locked) {
-          delete unlockedAlbums.value[item.name || '']
+          delete unlockedAlbums.value[item.name]
           handleSaveUnlockedAlbums()
         }
         else if (detail.photos) {
@@ -126,8 +146,8 @@ async function handleLoadUnlockedAlbumPhotos() {
 }
 
 /* ---------------- 交互 ---------------- */
-function handleOnAlbumClick(item: ILoveAlbum & { image?: string }) {
-  if (item.locked && !unlockedAlbums.value[item.name || '']) {
+function handleOnAlbumClick(item: ILoveAlbumCard) {
+  if (item.locked && !unlockedAlbums.value[item.name]) {
     currentUnlockAlbum.value = item
     showUnlockModal.value = true
     return
@@ -135,18 +155,18 @@ function handleOnAlbumClick(item: ILoveAlbum & { image?: string }) {
   handleOpenPhotoViewer(item)
 }
 
-async function handleOpenPhotoViewer(item: ILoveAlbum & { image?: string }) {
+async function handleOpenPhotoViewer(item: ILoveAlbumCard) {
   currentViewerAlbum.value = item
   showPhotoViewer.value = true
-  if (item.photos && item.photos.length > 0)
+  if (item.photos.length > 0)
     return
   viewerLoading.value = true
   try {
-    const token = unlockedAlbums.value[item.name || ''] || ''
-    const detail = await getLoveAlbumByName(item.name || '', { token })
+    const token = unlockedAlbums.value[item.name] || ''
+    const detail = await getLoveAlbumByName(item.name, { token })
     if (detail) {
       if (detail.locked) {
-        delete unlockedAlbums.value[item.name || '']
+        delete unlockedAlbums.value[item.name]
         handleSaveUnlockedAlbums()
       }
       else if (detail.photos) {
@@ -170,7 +190,7 @@ function handleOnUnlockSuccess(data: { albumKey: string, token: string, photos: 
 
   const albumIndex = dataList.value.findIndex(a => a.name === data.albumKey)
   if (albumIndex !== -1) {
-    dataList.value[albumIndex].photos = data.photos as typeof dataList.value[number]['photos']
+    dataList.value[albumIndex].photos = data.photos as ILovePhoto[]
     dataList.value[albumIndex].locked = false
   }
   currentUnlockAlbum.value = null
@@ -181,7 +201,6 @@ function handleOnUnlockSuccess(data: { albumKey: string, token: string, photos: 
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(() => {
-  uni.setNavigationBarTitle({ title: '恋爱相册' })
   handleRestoreUnlockedAlbums()
   handleGetData()
 })
@@ -193,52 +212,38 @@ onPullDownRefresh(() => {
 
 <template>
   <view class="app-page box-border min-h-screen w-screen flex flex-col pb-[144rpx]" style="background: linear-gradient(-135deg, rgb(247 149 51 / 10%), rgb(243 112 85 / 10%) 15%, rgb(239 78 123 / 10%) 30%, rgb(161 102 171 / 10%) 44%, rgb(80 115 184 / 10%) 58%, rgb(16 152 173 / 10%) 72%, rgb(7 179 155 / 10%) 86%, rgb(109 186 130 / 10%));">
-    <view v-if="loading !== 'success'" class="loading-wrap box-border h-[60vh] w-screen flex flex-col items-center justify-center p-9">
-      <view v-if="loading === 'loading'" class="loading">
-        <view class="loadig-text mt-7 text-[28rpx] text-[#56bbf9]">
-          相册正在努力加载中啦~
-        </view>
-      </view>
-      <view v-else class="loading-error w-full">
-        <wd-empty description="啊偶,加载失败了呢~">
-          <wd-button size="small" plain type="danger" @click="handleGetData()">
-            刷新试试
-          </wd-button>
-        </wd-empty>
-      </view>
-    </view>
+    <!-- 自定义导航 -->
+    <uh-navbar default-title="恋爱相册" title-color="text-gray-900" />
 
-    <!-- 内容区域 -->
-    <view v-else class="app-page-content">
-      <view v-if="dataList.length === 0" class="h-[60vh] w-full flex items-center justify-center content-empty">
-        <wd-empty description="相册暂时还没有数据~">
-          <wd-button size="small" plain type="primary" @click="handleGetData()">
-            刷新试试
-          </wd-button>
-        </wd-empty>
-      </view>
+    <!-- 加载/错误/空占位(状态机) -->
+    <uh-data-loading
+      v-if="loadingStatus !== DataLoadingStatusEnum.Success"
+      :loading-status="loadingStatus"
+      min-height="60vh"
+      empty-text="相册暂时还没有数据~"
+      @refresh="handleGetData"
+    />
 
-      <!-- 相册列表(两列网格) -->
-      <view v-else class="album-list box-border flex flex-wrap px-6">
-        <view v-for="(item, index) in dataList" :key="index" class="album-card mb-6 box-border overflow-hidden rounded-xl bg-white shadow-sm" :class="index % 2 === 0 ? 'mr-6 w-[calc((100%-24rpx)/2)]' : 'w-[calc((100%-24rpx)/2)]'" @click="handleOnAlbumClick(item)">
-          <view class="album-cover-wrap relative h-[320rpx] w-full">
-            <image class="album-cover h-full w-full" :src="item.image" mode="aspectFill" lazy-load />
-            <view v-if="item.locked && !unlockedAlbums[item.name || '']" class="album-lock-mask absolute left-0 top-0 h-full w-full flex flex-col items-center justify-center bg-black/45">
-              <view class="lock-icon text-[64rpx]">
-                🔒
-              </view>
-              <view class="lock-tip mt-3 text-[26rpx] text-white">
-                已加密
-              </view>
+    <!-- 相册列表(两列网格) -->
+    <view v-else class="album-list box-border flex flex-wrap px-6">
+      <view v-for="(item, index) in dataList" :key="item.name" class="album-card mb-6 box-border overflow-hidden rounded-xl bg-white shadow-sm" :class="index % 2 === 0 ? 'mr-6 w-[calc((100%-24rpx)/2)]' : 'w-[calc((100%-24rpx)/2)]'" @click="handleOnAlbumClick(item)">
+        <view class="album-cover-wrap relative h-[320rpx] w-full">
+          <image class="album-cover h-full w-full" :src="item.image" mode="aspectFill" lazy-load />
+          <view v-if="item.locked && !unlockedAlbums[item.name]" class="album-lock-mask absolute left-0 top-0 h-full w-full flex flex-col items-center justify-center bg-black/45">
+            <view class="lock-icon text-[64rpx]">
+              🔒
+            </view>
+            <view class="lock-tip mt-3 text-[26rpx] text-white">
+              已加密
             </view>
           </view>
-          <view class="album-info box-border p-5">
-            <view class="album-name overflow-hidden text-ellipsis whitespace-nowrap text-[30rpx] text-[#333] font-bold">
-              {{ item.displayName }}
-            </view>
-            <view class="album-count mt-1 text-[24rpx] text-[#999]">
-              {{ item.photoCount || 0 }} 张照片
-            </view>
+        </view>
+        <view class="album-info box-border p-5">
+          <view class="album-name overflow-hidden text-ellipsis whitespace-nowrap text-[30rpx] text-[#333] font-bold">
+            {{ item.displayName }}
+          </view>
+          <view class="album-count mt-1 text-[24rpx] text-[#999]">
+            {{ item.photoCount }} 张照片
           </view>
         </view>
       </view>

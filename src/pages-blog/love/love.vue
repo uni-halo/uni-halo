@@ -100,7 +100,7 @@
 		const configs = loveConfig.value
 		navList.value = [
 			{
-				key: 'story',
+				key: 'stories',
 				use: configs.ourStory.enabled,
 				title: '恋爱故事',
 				desc: '我们一起度过的那些经历',

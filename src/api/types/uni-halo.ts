@@ -405,6 +405,12 @@ export interface ILoveAlbum {
   locked?: boolean
   cover?: string
   photos?: ILovePhoto[]
+  /** Halo 资源元数据(接口返回 metadata) */
+  metadata?: {
+    name?: string
+    creationTimestamp?: string
+    [key: string]: unknown
+  }
   [key: string]: unknown
 }
 
@@ -420,7 +426,14 @@ export interface ILoveAlbumListReq {
   [key: string]: unknown
 }
 
-export type ILoveAlbumListRes = ILoveAlbum[]
+/** 恋爱相册列表响应(插件分页包装) */
+export interface ILoveAlbumListRes {
+  page?: number
+  size?: number
+  total?: number
+  hasNext?: boolean
+  items: ILoveAlbum[]
+}
 
 export interface ILoveAlbumDetailReq {
   [key: string]: unknown
@@ -439,6 +452,32 @@ export interface ILoveDailyItem {
   id?: string
   content?: string
   date?: string
+  /** Halo 资源元数据(接口返回 metadata) */
+  metadata?: {
+    name?: string
+    [key: string]: unknown
+  }
+  /** 清单项详情(接口返回 spec) */
+  spec?: ILoveDailyItemSpec
+  [key: string]: unknown
+}
+
+/** 恋爱清单项 spec(对齐插件 LoveDailyItemSpec) */
+export interface ILoveDailyItemSpec {
+  /** 清单标题 */
+  title?: string
+  /** 清单内容 */
+  content?: string
+  /** 状态:未开始/进行中/已完成 */
+  status?: 'wait' | 'doing' | 'complete'
+  /** 计划时间 */
+  planDate?: string
+  /** 完成时间 */
+  completeDate?: string
+  /** 完成感想 */
+  completeRemark?: string
+  /** 回忆图片 */
+  images?: string[]
   [key: string]: unknown
 }
 
@@ -448,13 +487,44 @@ export interface ILoveDailyItemListReq {
   [key: string]: unknown
 }
 
-export type ILoveDailyItemListRes = ILoveDailyItem[]
+/** 恋爱清单列表响应(插件分页包装) */
+export interface ILoveDailyItemListRes {
+  page?: number
+  size?: number
+  total?: number
+  hasNext?: boolean
+  items: ILoveDailyItem[]
+}
 
 export interface ILoveStory {
   id?: string
   title?: string
   content?: string
   date?: string
+  /** Halo 资源元数据(接口返回 metadata) */
+  metadata?: {
+    name?: string
+    [key: string]: unknown
+  }
+  /** 故事详情(接口返回 spec) */
+  spec?: ILoveStorySpec
+  [key: string]: unknown
+}
+
+/** 恋爱故事 spec(对齐插件 LoveStorySpec) */
+export interface ILoveStorySpec {
+  /** 故事标题 */
+  title?: string
+  /** 故事内容(HTML) */
+  content?: string
+  /** 故事日期 */
+  date?: string
+  /** 故事地点 */
+  location?: string
+  /** 故事图片 */
+  images?: string[]
+  /** 排序优先级(越大越靠前) */
+  priority?: number
   [key: string]: unknown
 }
 
@@ -556,4 +626,11 @@ export interface IMiniProgramLinkSubmissionForm {
   email?: string
 }
 
-export type ILoveStoryListRes = ILoveStory[]
+/** 恋爱故事列表响应(插件分页包装) */
+export interface ILoveStoryListRes {
+  page?: number
+  size?: number
+  total?: number
+  hasNext?: boolean
+  items: ILoveStory[]
+}
