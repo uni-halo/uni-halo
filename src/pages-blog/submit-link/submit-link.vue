@@ -5,7 +5,6 @@
  */
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { submitLink } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl } from '@/utils/url'
 
@@ -18,11 +17,14 @@ definePage({
 const appConfigStore = useAppConfigStore()
 const haloPluginConfigs = computed(() => appConfigStore.configs.pluginConfig)
 
-const blogDetail = computed(() => (haloPluginConfigs.value?.linksSubmitPlugin as {
-  blogName?: string
-  blogUrl?: string
-  blogLogo?: string
-  blogDesc?: string
+const blogDetail = computed(() => (haloPluginConfigs.value?.linkInfo?.siteInfo as {
+  displayName?: string
+  url?: string
+  logo?: string
+  description?: string
+  email?: string
+  backlink?: string
+  feedUrls?: string[]
 } | undefined) || {})
 
 const blogDetailPoupShow = ref(false)
@@ -38,10 +40,10 @@ const form = ref({
 })
 
 const calcBlogContent = computed(() => `
-博客名称：${blogDetail.value.blogName}
-博客地址：${blogDetail.value.blogUrl}
-博客logo：${checkAvatarUrl(blogDetail.value.blogLogo)}
-博客简介：${blogDetail.value.blogDesc}
+博客名称：${blogDetail.value.displayName}
+博客地址：${blogDetail.value.url}
+博客logo：${checkAvatarUrl(blogDetail.value.logo)}
+博客简介：${blogDetail.value.description}
 `)
 
 function calcSiteThumbnail(val?: string): string {
@@ -77,34 +79,9 @@ async function handleHandle() {
     return
   }
 
-  uni.showLoading({ title: '正在提交...' })
-  try {
-    const res = await submitLink({
-      name: form.value.name,
-      url: form.value.url,
-      logo: form.value.logo,
-      description: form.value.description,
-      email: form.value.email,
-      linkPageUrl: form.value.linkPageUrl,
-      rssUrl: form.value.rssUrl,
-    })
-    uni.hideLoading()
-    const code = res.code
-    const msg = res.data?.msg || res.data?.message || res.message || '提交成功'
-    uni.showToast({ icon: 'none', title: msg })
-    if (code === 200 || code === undefined) {
-      setTimeout(() => {
-        uni.navigateTo({
-          url: '/pages-blog/friend-links/friend-links',
-        })
-      }, 1000)
-    }
-  }
-  catch (err) {
-    console.error(err)
-    uni.hideLoading()
-    uni.showToast({ icon: 'none', title: '提交失败，请重试！' })
-  }
+  // linksSubmitPlugin 已弃用（2026-09-08），第三方友链自助提交暂未开放；
+  // 后续可对接 Halo 官方 plugin-links link-applications 接口
+  uni.showToast({ icon: 'none', title: '友链申请功能暂未开放，请联系站长' })
 }
 
 function handleCopyLink() {
@@ -129,13 +106,13 @@ onLoad(() => {
   <view class="app-page box-border min-h-screen w-screen bg-[#fafafd] p-8">
     <!-- 博客详情卡片 -->
     <view class="blog-coupon mb-6 flex items-center rounded-xl p-6" style="background: linear-gradient(135deg, #2196f3, #64b5f6);" @click="blogDetailPoupShow = true">
-      <image class="coupon-img h-[80rpx] w-[80rpx] shrink-0 rounded-xl" :src="checkAvatarUrl(blogDetail.blogLogo)" mode="aspectFill" />
+      <image class="coupon-img h-[80rpx] w-[80rpx] shrink-0 rounded-xl" :src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
       <view class="coupon-info ml-5 flex-1">
         <view class="coupon-title text-[30rpx] text-white font-bold">
-          {{ blogDetail.blogName }}
+          {{ blogDetail.displayName }}
         </view>
         <view class="coupon-desc mt-1 text-[24rpx] text-white/80">
-          {{ blogDetail.blogDesc }}
+          {{ blogDetail.description }}
         </view>
       </view>
       <view class="coupon-btn border-2 border-white/60 rounded-3xl px-5 py-1 text-[24rpx] text-white">
@@ -198,20 +175,20 @@ onLoad(() => {
     <wd-popup v-model="blogDetailPoupShow" position="center" custom-style="width:640rpx;border-radius:12rpx;">
       <view class="poup p-9">
         <view class="info flex">
-          <image class="poup-logo h-[140rpx] w-[140rpx] rounded-3xl" :src="checkAvatarUrl(blogDetail.blogLogo)" mode="aspectFill" />
+          <image class="poup-logo h-[140rpx] w-[140rpx] rounded-3xl" :src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
           <view class="info-detail ml-6 flex flex-1 flex-col justify-center">
             <view class="poup-name text-[34rpx] font-bold">
-              {{ blogDetail.blogName }}
+              {{ blogDetail.displayName }}
             </view>
             <view class="poup-tag mt-2.5 text-[24rpx] text-[#999]">
-              {{ blogDetail.blogDesc }}
+              {{ blogDetail.description }}
             </view>
           </view>
         </view>
         <view class="poup-desc mt-6 whitespace-pre-wrap text-[28rpx] text-[#555] leading-[1.8]">
           <text>{{ calcBlogContent }}</text>
         </view>
-        <image v-if="blogDetail.blogUrl" class="poup-img mt-6 h-[320rpx] w-[568rpx] rounded-xl" :src="calcSiteThumbnail(blogDetail.blogUrl)" mode="aspectFill" />
+        <image v-if="blogDetail.url" class="poup-img mt-6 h-[320rpx] w-[568rpx] rounded-xl" :src="calcSiteThumbnail(blogDetail.url)" mode="aspectFill" />
         <view class="poup-link my-6 flex justify-center gap-6">
           <wd-button size="small" plain type="primary" @click="handleCopyLink">
             复制友链交换信息

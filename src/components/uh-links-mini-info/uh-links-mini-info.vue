@@ -24,20 +24,21 @@ const emit = defineEmits<{
 const isShow = ref(false)
 const appConfigStore = useAppConfigStore()
 
-/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致,从插件端 linkInfo 配置直接读取,字段名无映射) */
+/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致；小程序信息读 linkInfo.miniInfo、作者信息读 linkInfo.authorInfo，字段名无映射) */
 const miniInfo = computed(() => {
-  const cfg = (appConfigStore.configs.pluginConfig?.linkInfo || {}) as Record<string, unknown>
-  const str = (key: string, fallback = '') => String(cfg[key] || fallback || '')
+  const miniCfg = (appConfigStore.configs.pluginConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
+  const authorCfg = (appConfigStore.configs.pluginConfig?.linkInfo?.authorInfo || {}) as Record<string, unknown>
+  const str = (cfg: Record<string, unknown>, key: string, fallback = '') => String(cfg[key] || fallback || '')
   return {
-    displayName: str('displayName'),
-    miniProgramCode: str('miniProgramCode'),
-    link: str('link'),
-    authorName: str('authorName'),
-    avatar: str('avatar'),
-    website: str('website'),
-    description: str('description'),
-    applyRemark: str('applyRemark'),
-    email: str('email'),
+    displayName: str(miniCfg, 'displayName'),
+    miniProgramCode: str(miniCfg, 'miniProgramCode'),
+    link: str(miniCfg, 'link'),
+    authorName: str(authorCfg, 'authorName'),
+    avatar: str(authorCfg, 'avatar'),
+    website: str(authorCfg, 'website'),
+    description: str(miniCfg, 'description'),
+    applyRemark: str(miniCfg, 'applyRemark'),
+    email: str(miniCfg, 'email'),
   }
 })
 

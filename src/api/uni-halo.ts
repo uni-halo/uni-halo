@@ -377,19 +377,6 @@ export function createVerificationCode() {
 
 /* ==================== 友链提交(linkssubmit.muyin.site) ==================== */
 
-/**
- * 提交友链
- */
-export function submitLink(form: ISubmitLinkForm) {
-  return http.Post<IResponse<{ msg?: string, message?: string }>>('/apis/linkssubmit.muyin.site/v1alpha1/submit', form, {
-    headers: {
-      'Authorization': getLinksSubmitAuthorization(),
-      'Wechat-Session-Id': getOpenid(),
-    },
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
 /* ==================== 投票(api.vote.kunkunyu.com) ==================== */
 
 /**
@@ -508,13 +495,6 @@ export function getUptimeKumaStatus() {
  */
 function getToolsAuthorization(): string {
   return getAppConfigFromStore().pluginConfig?.toolsPlugin?.Authorization || ''
-}
-
-/**
- * 友链提交插件授权头(源自应用配置 pluginConfig.linksSubmitPlugin.Authorization)
- */
-function getLinksSubmitAuthorization(): string {
-  return getAppConfigFromStore().pluginConfig?.linksSubmitPlugin?.Authorization || ''
 }
 
 /**

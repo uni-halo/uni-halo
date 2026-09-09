@@ -10,8 +10,6 @@ export const DefaultAppConfigs: IAppConfig = {
     votePlugin: {},
     toolsPlugin: {},
     linksPlugin: {},
-    // 保留:友链提交授权头(pluginConfig.linksSubmitPlugin.Authorization)与站点信息展示仍读取
-    linksSubmitPlugin: {},
     doubanPlugin: {
       position: 'bottom',
     },

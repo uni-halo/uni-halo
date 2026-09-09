@@ -2,7 +2,7 @@
 /**
  * 站点友链信息弹窗(源自旧页面 pages-blog/submit-link 的博客详情弹窗,重设计为底部玻璃弹窗)
  * 展示本站友链交换信息(博客名片 + 复制交换信息 + 站点缩略图)
- * 数据源为 linksSubmitPlugin 配置(即本站申请提交的信息)
+ * 数据源为插件端 linkInfo.siteInfo 配置(字段对齐 Halo 官方友链提交 API:displayName/url/logo/description/email/backlink/feedUrls)
  */
 import { computed, ref, watch } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -21,19 +21,22 @@ const emit = defineEmits<{
 const isShow = ref(false)
 const appConfigStore = useAppConfigStore()
 
-const blogDetail = computed(() => (appConfigStore.configs.pluginConfig?.linksSubmitPlugin as {
-  blogName?: string
-  blogUrl?: string
-  blogLogo?: string
-  blogDesc?: string
+const blogDetail = computed(() => (appConfigStore.configs.pluginConfig?.linkInfo?.siteInfo as {
+  displayName?: string
+  url?: string
+  logo?: string
+  description?: string
+  email?: string
+  backlink?: string
+  feedUrls?: string[]
 } | undefined) || {})
 
 /** 友链交换信息文案(复制用) */
 const calcBlogContent = computed(() => `
-博客名称：${blogDetail.value.blogName || ''}
-博客地址：${blogDetail.value.blogUrl || ''}
-博客logo：${checkAvatarUrl(blogDetail.value.blogLogo)}
-博客简介：${blogDetail.value.blogDesc || ''}
+博客名称：${blogDetail.value.displayName || ''}
+博客地址：${blogDetail.value.url || ''}
+博客logo：${checkAvatarUrl(blogDetail.value.logo)}
+博客简介：${blogDetail.value.description || ''}
 `)
 
 function calcSiteThumbnail(val?: string): string {
@@ -88,14 +91,14 @@ watch(() => props.show, (val) => {
       <view class="flex items-center">
         <image
           class="uh-global-card-glass h-20 w-20 shrink-0 rounded-2xl"
-          :src="checkAvatarUrl(blogDetail.blogLogo)" mode="aspectFill"
+          :src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill"
         />
         <view class="ml-4 flex flex-1 flex-col justify-center gap-y-1">
           <text class="text-md text-gray-900 font-bold">
-            {{ blogDetail.blogName || '未命名博客' }}
+            {{ blogDetail.displayName || '未命名博客' }}
           </text>
           <text class="text-xs text-gray-500">
-            {{ blogDetail.blogDesc || '这个博主很懒，没写简介~' }}
+            {{ blogDetail.description || '这个博主很懒，没写简介~' }}
           </text>
         </view>
       </view>
@@ -107,8 +110,8 @@ watch(() => props.show, (val) => {
 
       <!-- 站点缩略图 -->
       <image
-        v-if="blogDetail.blogUrl" class="mt-4 h-[320rpx] w-full rounded-xl"
-        :src="calcSiteThumbnail(blogDetail.blogUrl)" mode="aspectFill"
+        v-if="blogDetail.url" class="mt-4 h-[320rpx] w-full rounded-xl"
+        :src="calcSiteThumbnail(blogDetail.url)" mode="aspectFill"
       />
 
       <view class="my-6">

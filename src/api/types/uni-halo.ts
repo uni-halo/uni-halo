@@ -14,14 +14,41 @@ export interface IImagesConfig {
   [key: string]: unknown
 }
 
-/** 插件配置(toolsPlugin/linksSubmitPlugin 等带 Authorization) */
+/** 插件配置(toolsPlugin/linksPlugin 等带 Authorization) */
 export interface IPluginConfig {
   votePlugin?: Record<string, unknown>
   toolsPlugin?: { Authorization?: string } & Record<string, unknown>
   linksPlugin?: Record<string, unknown>
-  linksSubmitPlugin?: { Authorization?: string } & Record<string, unknown>
-  /** 链接配置（插件端 spec.linkInfo 直接下发到本键，字段名无映射：displayName/miniProgramCode/link/description/applyRemark/authorName/avatar/website） */
-  linkInfo?: Record<string, unknown>
+  /**
+   * 链接配置（插件端 spec.linkInfo 直接下发到本键，结构 = {miniInfo, siteInfo, authorInfo}，字段名无映射；
+   * linksSubmitPlugin 旧键已弃用不再下发）
+   */
+  linkInfo?: {
+    /** 小程序信息（「申请信息」弹窗展示） */
+    miniInfo?: {
+      displayName?: string
+      miniProgramCode?: string
+      link?: string
+      description?: string
+      applyRemark?: string
+    }
+    /** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/email/backlink/feedUrls） */
+    siteInfo?: {
+      displayName?: string
+      url?: string
+      logo?: string
+      description?: string
+      email?: string
+      backlink?: string
+      feedUrls?: string[]
+    }
+    /** 作者信息（小程序端作者区） */
+    authorInfo?: {
+      authorName?: string
+      avatar?: string
+      website?: string
+    }
+  }
   doubanPlugin?: { position?: string } & Record<string, unknown>
   [key: string]: unknown
 }
@@ -78,7 +105,7 @@ export interface IPageConfig {
       visible?: boolean
     }>
     /** 首页精选分类引用（插件端「通用配置 → 页面设置 → 首页」配置，固定最多 3 个，
-     * 快照含名称/封面/排序权重，数组顺序 = 展示顺序；配置模式下直接映射渲染不发请求，
+     * 快照含名称/封面/排序权重/文章数，数组顺序 = 展示顺序；配置模式下直接映射渲染不发请求，
      * 未配置/为空时回退默认取数） */
     categories?: Array<{
       name: string
@@ -86,6 +113,8 @@ export interface IPageConfig {
       cover?: string
       /** 分类排序权重（Halo Category.spec.priority，越大越靠前） */
       priority?: number
+      /** 分类文章数（Halo Category.status.postCount 冗余快照，缺失默认 0） */
+      postCount?: number
     }>
   }
   categoryConfig?: { type?: string }
@@ -123,6 +152,16 @@ export interface IAuditDataResult {
     description?: string
     [key: string]: unknown
   }
+  /** 分类完整快照(插件端公开接口附带:剔除失效、按配置顺序;app 端审核模式分类页免请求映射 ICategory) */
+  categoryDetails?: Array<{
+    name: string
+    title?: string
+    cover?: string
+    /** 排序权重(Halo Category.spec.priority) */
+    priority?: number
+    /** 文章数(Halo Category.status.postCount,缺失默认 0) */
+    postCount?: number
+  }>
 }
 
 /** 应用基础配置(对应旧 DefaultAppConfigs) */

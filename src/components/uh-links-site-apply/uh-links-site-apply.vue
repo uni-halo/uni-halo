@@ -5,8 +5,6 @@
  * 提交后等待站长审核,通过后展示在「站点」列表中
  */
 import { ref, watch } from 'vue'
-import { submitLink } from '@/api/uni-halo'
-import type { ISubmitLinkForm } from '@/api/types/uni-halo'
 
 const props = withDefaults(defineProps<{
   show?: boolean
@@ -88,34 +86,9 @@ async function handleSubmit() {
   if (!validateForm())
     return
 
-  submitting.value = true
-  uni.showLoading({ title: '正在提交...' })
-  try {
-    const payload: ISubmitLinkForm = {
-      name: form.value.name.trim(),
-      url: form.value.url.trim(),
-      logo: form.value.logo.trim() || undefined,
-      linkPageUrl: form.value.linkPageUrl.trim() || undefined,
-      email: form.value.email.trim() || undefined,
-      rssUrl: form.value.rssUrl.trim() || undefined,
-      description: form.value.description.trim() || undefined,
-    }
-    const res = await submitLink(payload)
-    const msg = res.data?.msg || res.data?.message || res.message || '提交成功'
-    uni.showToast({ icon: 'none', title: msg })
-    if (res.code === 200 || res.code === undefined) {
-      handleClose(true)
-      handleResetForm()
-    }
-  }
-  catch (err) {
-    console.error('友链申请提交失败', err)
-    uni.showToast({ icon: 'none', title: '提交失败，请稍后重试！' })
-  }
-  finally {
-    submitting.value = false
-    uni.hideLoading()
-  }
+  // linksSubmitPlugin 已弃用（2026-09-08），第三方友链自助提交暂未开放；
+  // 后续可对接 Halo 官方 plugin-links link-applications 接口
+  uni.showToast({ icon: 'none', title: '友链申请功能暂未开放，请联系站长' })
 }
 
 function handleOnChange(isOpen: boolean) {

@@ -34,7 +34,8 @@
 						slug: '',
 						cover: checkThumbnailUrl(c.cover),
 						priority: c.priority,
-					}
+					},
+					postCount: c.postCount ?? 0,
 				} as ICategory))
 			}
 			else {

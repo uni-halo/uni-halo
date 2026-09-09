@@ -54,21 +54,20 @@
 		updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		// 增加延迟，提升用户体验
 		await sleep(800)
-		// 审核模式
+		// 审核模式：直接使用审核配置分类快照(categoryDetails)映射 ICategory,免请求
 		if (calcAuditModeEnabled.value) {
-			const auditCategoryNames = appConfigStore.auditData.spec?.categories || []
+			const auditCategoryDetails = appConfigStore.auditData.categoryDetails || []
 			try {
-				const res = await getCategoryList({ page: 1, size: 99999 })
-				const filtered = res.data.items
-					.filter(item => auditCategoryNames.includes(item.metadata.name))
-					.map(item => ({
-						...item,
-						postCount: item.postCount ?? 0,
-						spec: { ...item.spec, cover: checkThumbnailUrl(item.spec.cover, true) },
-					}))
-				const orderMap = new Map(auditCategoryNames.map((name, index) => [name, index]))
-				filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
-				dataList.value = filtered
+				dataList.value = auditCategoryDetails.map(item => ({
+					metadata: { name: item.name },
+					spec: {
+						displayName: item.title || item.name,
+						slug: '',
+						cover: checkThumbnailUrl(item.cover, true),
+						priority: item.priority,
+					},
+					postCount: item.postCount ?? 0,
+				} as ICategory))
 				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 				loadMoreText.value = t('common.noMore')
 				uni.hideLoading()
