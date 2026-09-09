@@ -101,7 +101,7 @@
 
 <template>
 	<view v-if="customTabbarEnable" class="h-56px pb-safe bg-page">
-		<view class="border-and-fixed w-full px-3">
+		<view class="box-border fixed bottom-3 z-100 w-full px-3">
 			<view class="flex box-border w-full items-center justify-between gap-x-2" @touchmove.stop.prevent>
 				<view
 					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 h-50px flex items-center gap-x-1">
@@ -120,30 +120,4 @@
 			<view class="pb-safe" />
 		</view>
 	</view>
-</template>
-
-<style scoped lang="scss">
-	.border-and-fixed {
-		position: fixed;
-		bottom: 24rpx;
-		z-index: 1000;
-		box-sizing: border-box;
-	}
-
-	// 中间鼓包的样式
-	.bulge {
-		position: absolute;
-		top: -20px;
-		left: 50%;
-		transform-origin: top center;
-		transform: translateX(-50%) scale(0.5) translateY(-33%);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		width: 250rpx;
-		height: 250rpx;
-		border-radius: 50%;
-		background-color: #fff;
-		box-shadow: inset 0 0 0 1px #fefefe;
-	}
-</style>
+</template> 

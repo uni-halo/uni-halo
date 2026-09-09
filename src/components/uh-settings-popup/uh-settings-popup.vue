@@ -3,6 +3,9 @@
 	import { useSettingStore } from '@/store/setting'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
 	import { useSettingsPopup } from '@/hooks/useSettingsPopup'
+	import { useDialog } from '@wot-ui/ui'
+
+	const dialog = useDialog()
 
 	const settingStore = useSettingStore()
 
@@ -49,11 +52,11 @@
 	function handleResetAll() {
 		uni.showModal({
 			title: '提示',
-			content: '确定将所有偏好恢复为站点默认吗？本地自定义的偏好将被清除，未配置站点默认的项将恢复为内置默认。',
+			content: '确定将所有偏好恢复为站点默认吗？',
 			showCancel: true,
 			cancelText: '取消',
 			confirmText: '确定',
-			confirmColor: '#03a9f4',
+			confirmColor: '#B9E424',
 			success: (res) => {
 				if (res.confirm) {
 					settingStore.resetPreferences()
@@ -69,12 +72,11 @@
 	function onOpen() {
 		emits('open')
 	}
-	
 </script>
 
 <template>
 	<uh-glass-popup v-model="settingsPopupVisible" position="bottom" custom-class="rounded-xl !border"
-		safe-area-inset-bottom :z-index="99999" hide-when-close @close="onClose" @open="onOpen">
+		safe-area-inset-bottom :z-index="110" hide-when-close @close="onClose" @open="onOpen">
 		<view class="box-border px-3 pt-3">
 			<view class="mb-3 flex items-center justify-between">
 				<text class="text-md font-bold">偏好设置</text>
@@ -219,4 +221,4 @@
 			</view>
 		</view>
 	</uh-glass-popup>
-</template>
+</template> 

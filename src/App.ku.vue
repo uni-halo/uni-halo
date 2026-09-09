@@ -20,10 +20,10 @@
 <template>
 	<view>
 		<uh-global-actions>
-			<uh-scrolltop-button :fixed="false"/>
-			<uh-settings-button :fixed="false" @click="globalSettingsVisible = !globalSettingsVisible"/>
+			<uh-scrolltop-button :fixed="false" />
+			<uh-settings-button :fixed="false" @click="globalSettingsVisible = !globalSettingsVisible" />
 		</uh-global-actions>
-		
+
 		<uh-settings-popup v-model="globalSettingsVisible" @close="globalSettingsVisible = false" />
 
 		<KuRootView />
