@@ -64,10 +64,14 @@ export interface IPageConfig {
     useQuickNavigation?: boolean
     bannerConfig?: IBannerConfig
     /** 首页精选分类引用（插件端「通用配置 → 页面设置 → 首页」配置，固定最多 3 个，
-     * 数组顺序 = 展示顺序；未配置/为空时客户端回退默认取数） */
+     * 快照含名称/封面/排序权重，数组顺序 = 展示顺序；配置模式下直接映射渲染不发请求，
+     * 未配置/为空时回退默认取数） */
     categories?: Array<{
       name: string
       displayName?: string
+      cover?: string
+      /** 分类排序权重（Halo Category.spec.priority，越大越靠前） */
+      priority?: number
     }>
   }
   categoryConfig?: { type?: string }

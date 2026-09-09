@@ -35,17 +35,20 @@
 		mini: {
 			icon: '60rpx',
 			stage: 'h-16 w-16',
-			glow: 'h-12 w-12'
+			glow: 'h-12 w-12',
+			button: '!rounded-lg py-0.5'
 		},
 		small: {
 			icon: '100rpx',
 			stage: 'h-22 w-22',
-			glow: 'h-18 w-18'
+			glow: 'h-18 w-18',
+			button: '!rounded-lg py-1'
 		},
 		large: {
 			icon: '120rpx',
 			stage: 'h-32 w-32',
-			glow: 'h-28 w-28'
+			glow: 'h-28 w-28',
+			button: '!rounded-lg'
 		},
 	}
 
@@ -95,9 +98,9 @@
 			<view class="deco-dot dot-a absolute rounded-full" />
 			<view class="deco-dot dot-b absolute rounded-full" />
 			<view class="bubble">
-				<text class="bubble-icon">
+				<view class="bubble-icon">
 					<wd-icon class-prefix="uhemoji-icon" :name="statusScene.icon" :size="sizeClasses.icon" />
-				</text>
+				</view>
 			</view>
 		</view>
 
@@ -114,7 +117,7 @@
 				{{ statusScene.subText }}
 			</text>
 			<view v-if="props.useRefreshButton" class="mt-4">
-				<uh-button custom-class="!rounded-lg uh-global-card-glass uh-shadow-xs border"
+				<uh-button :custom-class="'uh-global-card-glass uh-shadow-xs border' + sizeClasses.button"
 					@click="emit('refresh')">
 					刷新试试
 				</uh-button>

@@ -9,9 +9,9 @@ const messages = {
 }
 
 const i18n = createI18n({
+  legacy: false, // 组合式 API 模式:不再注入每组件 legacy mixin,避免 mounted 阶段访问 $i18n.__composer 报错
   locale: uni.getLocale(), // 获取已设置的语言，fallback 语言需要再 manifest.config.ts 中设置
   messages,
-  allowComposition: true,
 })
 
 console.log(uni.getLocale())

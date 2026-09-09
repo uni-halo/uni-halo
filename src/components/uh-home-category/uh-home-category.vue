@@ -3,8 +3,8 @@
 	import { getCategoryList } from '@/api/halo'
 	import { checkThumbnailUrl } from '@/utils/url'
 	import { useAppConfigStore } from '@/store/appConfig'
-	import type { ICategory } from '@/api/types/halo'
 	import { sleep } from '@/utils/common'
+	import type { ICategory } from '@/api/types/halo'
 
 	const appConfigStore = useAppConfigStore()
 
@@ -18,27 +18,27 @@
 	const isEnableCategoryModule = computed(() => {
 		return !!haloConfigs.value.pageConfig?.homeConfig?.useCategory
 	})
-
+ 
 	async function handleGetCategoryList() {
 		try {
 			loading.value = 'loading'
 			const configured = haloConfigs.value.pageConfig?.homeConfig?.categories
+			console.log('configured',configured)
 			let categoryListRaw : ICategory[] = []
 			if (configured && configured.length) {
-				// 配置模式：按 name 用 in 查询（Halo fieldSelector 数组为 AND 语义，多 name 需 in 语法）
-				const names = configured.map(c => c.name)
-				const res = await getCategoryList({
-					fieldSelector: [`metadata.name in (${names.join(',')})`],
-					size: 3,
-				})
-				// 按配置顺序排列；配置的 name 查不到（分类已删除）则跳过
-				const byName = new Map(res.data.items.map(item => [item.metadata.name, item]))
-				categoryListRaw = names
-					.map(name => byName.get(name))
-					.filter((item) : item is ICategory => !!item)
+				// 配置模式
+				categoryListRaw = configured.map(c => ({
+					metadata: { name: c.name },
+					spec: {
+						displayName: c.displayName || '',
+						slug: '',
+						cover: checkThumbnailUrl(c.cover),
+						priority: c.priority,
+					}
+				} as ICategory))
 			}
 			else {
-				// 默认模式（老部署无配置）：保持原有取数与排序
+				// 默认模式
 				const res = await getCategoryList({ fieldSelector: ['spec.hideFromList=false'], size: 3 })
 				categoryListRaw = res.data.items
 			}
@@ -50,13 +50,7 @@
 						postCount: item.postCount ?? 0
 					}
 				})
-				.sort((a, b) => {
-					if (configured && configured.length) {
-						return 0
-					}
-					return (b.postCount || 0) - (a.postCount || 0)
-				})
-				
+				.sort((a, b) => b.spec.priority - a.spec.priority)
 			await sleep(600)
 			loading.value = 'success'
 		}
@@ -66,11 +60,9 @@
 		}
 	}
 
-
 	function handleToCategoryPage() {
 		uni.switchTab({ url: '/pages/tabbar/category/category' })
 	}
-
 
 	function handleToCategoryBy(category : ICategory) {
 		uni.navigateTo({
@@ -78,9 +70,7 @@
 		})
 	}
 
-	onMounted(() => {
-		handleGetCategoryList()
-	})
+	onMounted(handleGetCategoryList)
 </script>
 
 <template>
