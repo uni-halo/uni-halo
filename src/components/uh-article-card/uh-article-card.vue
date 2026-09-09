@@ -111,7 +111,7 @@
 				: 'image_top'
 		}
 		const narrow = isGrid.value || (props.from === 'home' && _layout.home.listLayout === 'double')
-		if (narrow && (raw === 'image_left' || raw === 'image_right')) {
+		if (narrow && raw !== 'image_top') {
 			return 'image_top'
 		}
 		return raw

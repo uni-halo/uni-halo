@@ -150,11 +150,31 @@ export function usePreferenceRows() {
 		settingStore.savePreference(buildPatch(path, next));
 	}
 
+	/** 给定页面分组下字段路径,判断该页面列表布局是否为双列 */
+	function isDoubleColumn(path: string[]): boolean {
+		if (path.length >= 2 && path[0] === 'layout') {
+			return prefValueOf(['layout', path[1], 'listLayout']) === 'double';
+		}
+		return false;
+	}
+
+	/** 卡片样式选项是否因双列约束被禁用(双列仅允许 image_top) */
+	function isCardTypeOptionDisabled(path: string[], value: string): boolean {
+		return path[2] === 'cardType' && isDoubleColumn(path) && value !== 'image_top';
+	}
+
 	function handleChoose(path: string[], value: string | null): void {
 		if (value === null) {
 			handleRevert(path);
 		} else {
 			settingStore.savePreference(buildPatch(path, value));
+			// 双列约束:列表布局改为双列时,卡片样式强制为 image_top
+			if (path[0] === 'layout' && path[2] === 'listLayout' && value === 'double') {
+				const cardTypePath = ['layout', path[1], 'cardType'];
+				if (prefValueOf(cardTypePath) !== 'image_top') {
+					settingStore.savePreference(buildPatch(cardTypePath, 'image_top'));
+				}
+			}
 		}
 	}
 
@@ -175,6 +195,8 @@ export function usePreferenceRows() {
 		isFollowing,
 		handleRevert,
 		handleBoolChange,
-		handleChoose
+		handleChoose,
+		isDoubleColumn,
+		isCardTypeOptionDisabled
 	};
 }

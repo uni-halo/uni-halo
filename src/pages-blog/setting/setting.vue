@@ -27,6 +27,7 @@
 		handleRevert,
 		handleBoolChange,
 		handleChoose,
+		isCardTypeOptionDisabled,
 	} = usePreferenceRows()
 
 	/** 确保启动合并已执行(入口页未跑或 H5 直达时兜底) */
@@ -65,13 +66,14 @@
 	}
 
 	/* ---------------- wd-picker-view 弹层数据 ---------------- */
-	/** 枚举弹层列(首项「跟随站点默认」,空串哨兵映射 null) */
+	/** 枚举弹层列(首项「跟随站点默认」,空串哨兵映射 null;双列约束下卡片样式仅保留 image_top) */
 	const enumColumns = computed(() => {
 		const def = enumSheet.value.def
 		if (!def) { return [] }
+		const options = (def.options || []).filter(opt => !isCardTypeOptionDisabled(def.path, opt.value))
 		return [
 			{ label: '跟随站点默认', value: '' },
-			...(def.options || []).map(opt => ({ label: opt.label, value: opt.value })),
+			...options.map(opt => ({ label: opt.label, value: opt.value })),
 		]
 	})
 

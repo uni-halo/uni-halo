@@ -2,11 +2,7 @@
 	import { ref } from 'vue'
 	import { useSettingStore } from '@/store/setting'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
-	import { useSettingsPopup } from '@/hooks/useSettingsPopup'
-	import { useDialog } from '@wot-ui/ui'
-
-	const dialog = useDialog()
-
+	import { useSettingsPopup } from '@/hooks/useSettingsPopup' 
 	const settingStore = useSettingStore()
 
 	const {
@@ -18,6 +14,7 @@
 		handleRevert,
 		handleBoolChange,
 		handleChoose,
+		isCardTypeOptionDisabled,
 	} = usePreferenceRows()
 
 	const { settingsPopupVisible } = useSettingsPopup()
@@ -25,8 +22,8 @@
 	const emits = defineEmits(['close', 'open'])
 
 	const activeTab = ref<'layout' | 'feature'>('layout')
-
-	// 进行过滤，只保留当前页面的布局和功能
+	
+// 进行过滤，只保留当前页面的布局和功能
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const filterLayoutGroups = computed(() => {
@@ -34,7 +31,7 @@
 			return currentPage.route.split('/').pop() === group.key
 		})
 	})
-
+	
 	/* ---------------- 交互 ---------------- */
 	function currentValueOf(path : string[]) : string | null {
 		return isFollowing(path) ? null : String(prefValueOf(path) ?? '')
@@ -117,14 +114,17 @@
 									<view class="mt-3 flex flex-wrap gap-2">
 										<view
 											class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-											:class="currentValueOf(row.path) === null ? 'bg-secondary font-bold' : 'text-gray-500'"
+											:class="currentValueOf(row.path) === null ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
 											@click="handleInlineChoose(row.path, null)">
 											默认
 										</view>
 										<view v-for="opt in row.options" :key="opt.value"
 											class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-											:class="currentValueOf(row.path) === opt.value ? 'bg-secondary font-bold' : ' border-gray-100 text-gray-500'"
-											@click="handleInlineChoose(row.path, opt.value)">
+											:class="[
+												currentValueOf(row.path) === opt.value ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500',
+												isCardTypeOptionDisabled(row.path, opt.value) ? 'opacity-40' : ''
+											]"
+											@click="isCardTypeOptionDisabled(row.path, opt.value) ? null : handleInlineChoose(row.path, opt.value)">
 											{{ opt.label }}
 										</view>
 									</view>
@@ -160,19 +160,19 @@
 										<view class="mt-3 flex flex-wrap gap-2">
 											<view
 												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
+												:class="row.following ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
 												@click="handleRevert(row.path)">
 												默认
 											</view>
 											<view
 												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+												:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
 												@click="handleBoolChange(row.path, true)">
 												开
 											</view>
 											<view
 												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+												:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
 												@click="handleBoolChange(row.path, false)">
 												关
 											</view>
