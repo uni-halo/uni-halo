@@ -281,7 +281,7 @@
 
 		<!-- 瞬间内页(日记式:大字日期刊头 + 阅读正文 + 媒体 + 互动脚注) -->
 		<view v-else-if="moment" class="box-border px-3 pt-2 pb-12">
-			<view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl  box-border pb-4">
+			<view class="mb-3 uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl  box-border pb-4">
 				<!-- 刊头:大字日期 -->
 				<view v-if="moment.spec.releaseTime" class="px-4 pt-4">
 					<view class="text-[56rpx] text-gray-900 font-bold leading-tight">
@@ -308,7 +308,7 @@
 				</view>
 
 				<!-- 正文 -->
-				<view class="content px-4 mt-6">
+				<view class="content px-4 mt-6 text-gray-900 text-sm">
 					<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
 						:loading-img="markdownConfig.loadingGif" scroll-table selectable
 						:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"

@@ -114,7 +114,7 @@
 </script>
 
 <template>
-	<view class="w-full box-border px-2">
+	<view class="w-full box-border">
 		<view class="uh-global-card-glass box-border uh-shadow-xs rounded-xl p-3">
 			<!-- 顶部区域 -->
 			<uh-section-title>

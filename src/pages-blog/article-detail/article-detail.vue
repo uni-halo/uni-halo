@@ -580,9 +580,11 @@
 					</view>
 
 					<!-- 评论区域 -->
-					<uh-comment-list v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
-					 :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
-					 @on-comment-detail="handleOnShowCommentDetail" @on-loaded="handleCommentLoaded" />
+					<view class="box-border px-2">
+						<uh-comment-list v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
+						 :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
+						 @on-comment-detail="handleOnShowCommentDetail" @on-loaded="handleCommentLoaded" />
+					</view>
 				</view>
 			</view>
 
