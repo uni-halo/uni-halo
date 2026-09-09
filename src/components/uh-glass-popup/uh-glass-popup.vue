@@ -33,6 +33,7 @@
 	interface IEmits {
 		(e : 'update:modelValue', value : boolean) : void
 		(e : 'close') : void
+		(e : 'open') : void
 		(e : 'click-modal') : void
 	}
 
@@ -78,6 +79,7 @@
 		:lazy-render="lazyRender"
 		@update:model-value="(value: boolean) => emit('update:modelValue', value)"
 		@close="emit('close')"
+		@enter="emit('open')"
 		@click-modal="emit('click-modal')"
 	>
 		<slot></slot>
