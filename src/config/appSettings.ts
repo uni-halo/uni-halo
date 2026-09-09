@@ -2,6 +2,14 @@
  * 应用设置默认值与类型(源自旧项目 utils/app.js 的 _DefaultAppSettings)
  */
 
+/** 单页布局偏好(列表布局 + 卡片样式,与后端 preferences 分区对齐) */
+export interface IPageLayoutPref {
+  /** 列表布局:single=单列 / double=双列 */
+  listLayout: string
+  /** 卡片样式(组件 layout 值):image_top=上图下文 / image_right=左文右图 / image_bottom=上文下图(社交卡片) / image_left=左图右文 */
+  cardType: string
+}
+
 export interface IAppSettings {
   /** 评论头像是否圆形 */
   isAvatarRadius: boolean
@@ -9,12 +17,14 @@ export interface IAppSettings {
     useDot: boolean
     dotPosition: string
   }
-  /** 布局配置 */
+  /** 布局配置(按页面分组,每组可独立自定义) */
   layout: {
-    /** h_row_col1 = 一行一列 / h_row_col2 = 一行两列 */
-    home: string
-    /** lr_image_text=左图右文 / lr_text_image=左文右图 / tb_image_text=上图下文 / tb_text_image=上文下图 / only_text=仅文字 */
-    cardType: string
+    /** 首页 */
+    home: IPageLayoutPref
+    /** 文章列表页 */
+    articles: IPageLayoutPref
+    /** 文章归档页 */
+    archives: IPageLayoutPref
   }
   /** 广告配置 */
   ad: {
@@ -53,8 +63,9 @@ export const DefaultAppSettings: IAppSettings = {
     dotPosition: 'right',
   },
   layout: {
-    home: 'h_row_col1',
-    cardType: 'lr_image_text',
+    home: { listLayout: 'single', cardType: 'image_bottom' },
+    articles: { listLayout: 'double', cardType: 'image_bottom' },
+    archives: { listLayout: 'single', cardType: 'image_bottom' },
   },
   ad: {
     timeout: 3,

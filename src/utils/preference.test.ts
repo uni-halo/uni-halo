@@ -36,28 +36,28 @@ describe('preference 基础读写', () => {
   })
 
   it('updateLocalPrefs：嵌套字段增量合并', () => {
-    updateLocalPrefs({ layout: { home: 'h_row_col2' } })
-    updateLocalPrefs({ layout: { cardType: 'tb_image_text' } })
+    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
+    updateLocalPrefs({ layout: { home: { cardType: 'image_bottom' } } })
     expect(readLocalPrefs()).toEqual({
-      layout: { home: 'h_row_col2', cardType: 'tb_image_text' },
+      layout: { home: { listLayout: 'double', cardType: 'image_bottom' } },
     })
   })
 
   it('updateLocalPrefs：null 删除该键(回退跟随站点默认)', () => {
-    updateLocalPrefs({ layout: { home: 'h_row_col2', cardType: 'tb_image_text' } })
+    updateLocalPrefs({ layout: { home: { listLayout: 'double', cardType: 'image_bottom' } } })
     updateLocalPrefs({ layout: { home: null } })
-    expect(readLocalPrefs()).toEqual({ layout: { cardType: 'tb_image_text' } })
+    expect(readLocalPrefs()).toEqual({ layout: {} })
   })
 
   it('updateLocalPrefs(null)：整体清空差异', () => {
-    updateLocalPrefs({ layout: { home: 'h_row_col2' } })
+    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
     updateLocalPrefs(null)
     expect(readLocalPrefs()).toEqual({})
     expect(mem.has(LOCAL_PREFS_KEY)).toBe(false)
   })
 
   it('clearLocalPrefs：删除存储键', () => {
-    updateLocalPrefs({ layout: { home: 'h_row_col2' } })
+    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
     clearLocalPrefs()
     expect(readLocalPrefs()).toEqual({})
   })
@@ -76,10 +76,10 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
 
   it('本地优先于站点默认，站点默认优先于内置默认', () => {
     const merged = mergeWithDefaults(
-      { layout: { home: 'h_row_col1' }, gallery: { useWaterfull: true } },
-      { layout: { home: 'h_row_col2' } },
+      { layout: { home: { listLayout: 'single' } }, gallery: { useWaterfull: true } },
+      { layout: { home: { listLayout: 'double' } } },
     )
-    expect(merged.layout.home).toBe('h_row_col2')
+    expect(merged.layout.home.listLayout).toBe('double')
     expect(merged.gallery.useWaterfull).toBe(true)
     expect(merged.isAvatarRadius).toBe(DefaultAppSettings.isAvatarRadius)
   })
@@ -95,15 +95,22 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
     expect(site.banner).toEqual({ useDot: false, dotPosition: 'bottom' })
   })
 
-  it('collectSiteDefaults：preferences(L0)映射到 layout.home/cardType/isAvatarRadius', () => {
+  it('collectSiteDefaults：preferences(L0)映射到 layout 页面分组/isAvatarRadius', () => {
     const site = collectSiteDefaults({
       preferences: {
         homeListLayout: 'h_row_col2',
-        articleCardType: 'tb_image_text',
+        homeCardType: 'image_bottom',
+        articlesListLayout: 'single',
+        articleCardType: 'image_left',
+        archivesCardType: 'image_top',
         avatarRadius: true,
       },
     })
-    expect(site.layout).toEqual({ home: 'h_row_col2', cardType: 'tb_image_text' })
+    expect(site.layout).toEqual({
+      home: { listLayout: 'double', cardType: 'image_bottom' },
+      articles: { listLayout: 'single', cardType: 'image_left' },
+      archives: { cardType: 'image_top' },
+    })
     expect(site.isAvatarRadius).toBe(true)
   })
 
@@ -111,13 +118,13 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
     const site = collectSiteDefaults({
       preferences: {
         homeListLayout: 'h_row_col2',
-        articleCardType: 'tb_image_text',
+        articleCardType: 'image_bottom',
         avatarRadius: true,
       },
     })
     const merged = mergeWithDefaults(site, {})
-    expect(merged.layout.home).toBe('h_row_col2')
-    expect(merged.layout.cardType).toBe('tb_image_text')
+    expect(merged.layout.home.listLayout).toBe('double')
+    expect(merged.layout.articles.cardType).toBe('image_bottom')
     expect(merged.isAvatarRadius).toBe(true)
   })
 
@@ -125,13 +132,13 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
     const site = collectSiteDefaults({
       preferences: {
         homeListLayout: 'h_row_col2',
-        articleCardType: 'tb_image_text',
+        articleCardType: 'image_bottom',
         avatarRadius: true,
       },
     })
-    const merged = mergeWithDefaults(site, { layout: { home: 'h_row_col1' }, isAvatarRadius: false })
-    expect(merged.layout.home).toBe('h_row_col1')
-    expect(merged.layout.cardType).toBe('tb_image_text')
+    const merged = mergeWithDefaults(site, { layout: { home: { listLayout: 'single' } }, isAvatarRadius: false })
+    expect(merged.layout.home.listLayout).toBe('single')
+    expect(merged.layout.articles.cardType).toBe('image_bottom')
     expect(merged.isAvatarRadius).toBe(false)
   })
 
@@ -146,12 +153,12 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
     const merged = mergeWithDefaults(site, {})
     expect(merged.banner.useDot).toBe(false)
     expect(merged.banner.dotPosition).toBe('bottom')
-    expect(merged.layout.home).toBe(DefaultAppSettings.layout.home)
+    expect(merged.layout.home.listLayout).toBe(DefaultAppSettings.layout.home.listLayout)
   })
 
   it('未知枚举值不回退抛错(跟随默认)', () => {
-    const merged = mergeWithDefaults({}, { layout: { home: 'not-exist' } })
-    expect(merged.layout.home).toBe('not-exist')
+    const merged = mergeWithDefaults({}, { layout: { home: { listLayout: 'not-exist' } } })
+    expect(merged.layout.home.listLayout).toBe('not-exist')
   })
 })
 
@@ -163,7 +170,8 @@ describe('migrateLegacyLocalPrefs', () => {
 
   it('旧 persist 存在时仅迁移被改过的叶子字段', () => {
     const legacySettings: IAppSettings = JSON.parse(JSON.stringify(DefaultAppSettings))
-    legacySettings.layout.home = 'h_row_col2'
+    // 旧结构 layout.home 为 string(列表布局),类型上绕过新结构约束
+    ;(legacySettings.layout as unknown as Record<string, unknown>).home = 'h_row_col2'
     legacySettings.gallery.useWaterfull = false
     mem.set('setting', JSON.stringify({ settings: legacySettings }))
 
@@ -175,13 +183,13 @@ describe('migrateLegacyLocalPrefs', () => {
   })
 
   it('已存在新差异键时不再重复迁移', () => {
-    updateLocalPrefs({ layout: { home: 'h_row_col1' } })
+    updateLocalPrefs({ layout: { home: { listLayout: 'single' } } })
     const legacySettings = JSON.parse(JSON.stringify(DefaultAppSettings)) as IAppSettings
-    legacySettings.layout.home = 'h_row_col2'
+    ;(legacySettings.layout as unknown as Record<string, unknown>).home = 'h_row_col2'
     mem.set('setting', JSON.stringify({ settings: legacySettings }))
 
     expect(migrateLegacyLocalPrefs()).toBe(false)
-    expect(readLocalPrefs()).toEqual({ layout: { home: 'h_row_col1' } })
+    expect(readLocalPrefs()).toEqual({ layout: { home: { listLayout: 'single' } } })
   })
 
   it('无旧键或格式异常时返回 false 且不写新键', () => {

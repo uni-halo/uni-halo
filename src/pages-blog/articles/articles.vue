@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -19,6 +20,11 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+
+const settingStore = useSettingStore()
+
+/** 文章列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
+const articlesListLayout = computed(() => settingStore.settings.layout.articles.listLayout)
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -208,12 +214,12 @@ onReachBottom(() => {
     />
 
     <view v-else class="box-border flex flex-col gap-4 p-3">
-      <view class="grid grid-cols-2 gap-3">
+      <view :class="articlesListLayout === 'double' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3'">
         <uh-article-card
           v-for="(article, index) in articleList"
           :key="article.metadata.name || index"
           from="articles"
-          variant="grid"
+          :variant="articlesListLayout === 'double' ? 'grid' : 'list'"
           :article="article"
           :audit-mode="calcAuditModeEnabled"
         />

@@ -20,7 +20,7 @@ interface IVoteCardData {
     endDate?: string
     isVoted?: boolean
     _uh_type?: string
-    _uh_state?: { state: string, color: string }
+    _uh_state?: { state: string, color: string, bgColor: string }
     options?: IVoteCardOption[]
     [key: string]: unknown
   }
@@ -59,7 +59,7 @@ function formatTime(date?: string, fmt = 'yyyy-MM-dd HH:mm'): string {
         <text
           v-if="vote.spec?._uh_state"
           class="rounded-md px-1.5 py-0.5 text-[22rpx]"
-          :style="{ color: vote.spec._uh_state.color, backgroundColor: `${vote.spec._uh_state.color}1a` }"
+          :class="[vote.spec._uh_state.color, vote.spec._uh_state.bgColor]"
         >
           {{ vote.spec._uh_state.state }}
         </text>

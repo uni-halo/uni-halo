@@ -45,7 +45,7 @@ const vote = ref<(IVote & {
     hasEnded?: boolean
     disabled?: boolean
     _uh_type?: string
-    _uh_state?: { state: string, color: string }
+    _uh_state?: { state: string, color: string, bgColor: string }
   }
   stats?: { voteCount?: number }
 }) | null>(null)
@@ -283,7 +283,7 @@ onShareTimeline(() => ({
             <text>投票状态：</text>
             <text
               class="tag"
-              :style="{ color: vote.spec?._uh_state?.color }"
+              :class="[vote.spec?._uh_state?.color, vote.spec?._uh_state?.bgColor]"
             >
               {{ vote.spec?._uh_state?.state }}
             </text>

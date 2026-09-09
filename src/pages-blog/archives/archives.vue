@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useSettingStore } from '@/store/setting'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
 import type { IPost } from '@/api/types/halo'
@@ -18,6 +19,11 @@ definePage({
 const appConfigStore = useAppConfigStore()
 
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+
+const settingStore = useSettingStore()
+
+/** 归档页列表布局(偏好设置驱动:single=单列 / double=双列) */
+const archivesListLayout = computed(() => settingStore.settings.layout.archives.listLayout)
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -270,7 +276,8 @@ onReachBottom(() => {
               <text class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-500 leading-none">共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
             </view>
 
-            <view v-if="item.posts.length !== 0" class="flex flex-col gap-y-4">
+            <view v-if="item.posts.length !== 0"
+              :class="archivesListLayout === 'double' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-y-4'">
               <uh-article-card
                 v-for="post in item.posts"
                 :key="post.metadata.name"

@@ -200,8 +200,7 @@
 						<text v-if="voteTypeLabel" class="rounded-md bg-primary px-2 py-0.5 text-xs text-gray-900">
 							{{ voteTypeLabel }}
 						</text>
-						<text v-if="voteState" class="rounded-md px-2 py-0.5 text-xs"
-							:style="{ color: voteState.color, backgroundColor: `${voteState.color}1a` }">
+						<text v-if="voteState" class="rounded-md px-2 py-0.5 text-xs" :class="[voteState.color,voteState.bgColor]">
 							{{ voteState.state }}
 						</text>
 					</view>

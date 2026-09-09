@@ -18,6 +18,7 @@
 | [conventions.md](./conventions.md) | 代码规范：命名、SFC 结构、TS、状态、提交与验证命令 |
 | [platforms.md](./platforms.md) | 平台适配手册：差异决策树、条件编译速查、本项目差异点表、多端地址 |
 | [api.md](./api.md) | 请求层规范：分层、httpGet/Post 用法、错误四分类、401 双 token 策略 |
+| [preferences.md](./preferences.md) | 偏好设置：两层结构、按页面分组的布局偏好、后端 getConfigs 字段映射 |
 | [sop-new-page.md](./sop-new-page.md) | 新页面/组件/分包/tabbar/hooks SOP 与验证清单 |
 | [performance.md](./performance.md) | 性能与分包：主包体积、内置优化表、包体积检查、编码侧规则 |
 | [release.md](./release.md) | 发布流程：upload:mp 全流程、changesets、uvm 升级、环境切换、合入门禁 |

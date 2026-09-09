@@ -22,14 +22,6 @@
 		pinned: string
 	}
 
-	/** 旧版全局 cardType → 新版 layout;未知值(如 only_text)由 effectiveLayout 兜底 image_top */
-	const CARD_TYPE_TO_LAYOUT: Record<string, CardLayout> = {
-		lr_image_text: 'image_left',
-		lr_text_image: 'image_right',
-		tb_image_text: 'image_top',
-		tb_text_image: 'image_bottom',
-	}
-
 	/** 单一事实源:每种布局的完整形态,模板不再有任何 order / 条件分支 */
 	const CARD_LAYOUTS: Record<CardLayout, CardLayoutClasses> = {
 		image_top: {
@@ -54,7 +46,7 @@
 			authorGroup: 'items-center gap-x-2',
 			avatar: '!h-9 !w-9 !rounded-xl',
 			nickname: '!text-sm',
-			infoCol: 'flex-col items-start leading-tight',
+			infoCol: 'leading-tight',
 			time: '',
 			tagCategory: '',
 			visits: '',
@@ -106,23 +98,26 @@
 
 	const isGrid = computed(() => props.variant === 'grid')
 
-	/** 实际生效布局:显式 layout > home/archives 跟随全局 cardType > image_top;窄列场景左右布局回退上图下文 */
+	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/文章列表/文章归档)> image_top;窄列场景左右布局回退上图下文 */
 	const effectiveLayout = computed<CardLayout>(() => {
-		const followGlobal = props.from === 'home' || props.from === 'archives'
+		const _layout = settingStore.settings.layout
+		const page = props.from === 'home' || props.from === 'articles' || props.from === 'archives'
+			? props.from
+			: null
 		let raw = props.layout
 		if (!raw) {
-			raw = followGlobal
-				? CARD_TYPE_TO_LAYOUT[settingStore.settings.layout.cardType] ?? 'image_top'
+			raw = page
+				? (_layout[page].cardType as CardLayout)
 				: 'image_top'
 		}
-		const narrow = isGrid.value || (props.from === 'home' && settingStore.settings.layout.home === 'h_row_col2')
+		const narrow = isGrid.value || (props.from === 'home' && _layout.home.listLayout === 'double')
 		if (narrow && (raw === 'image_left' || raw === 'image_right')) {
 			return 'image_top'
 		}
 		return raw
 	})
 
-	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value])
+	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value] ?? CARD_LAYOUTS.image_bottom)
 
 	/** 社交卡片形态(封面在下):左上用户信息(头像 + 昵称/日期垂直)、右上浏览数 */
 	const isSocialCard = computed(() => effectiveLayout.value === 'image_bottom')
@@ -192,8 +187,8 @@
 					<image :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
 						:class="cardLayout.avatar" mode="aspectFill" />
 					<template v-if="isSocialCard">
-						<view class="flex" :class="cardLayout.infoCol">
-							<text class="truncate" :class="cardLayout.nickname">{{ article.owner.displayName }}</text>
+						<view :class="cardLayout.infoCol">
+							<text class="block truncate" :class="cardLayout.nickname">{{ article.owner.displayName }}</text>
 							<view class="flex items-center gap-x-2">
 								<text class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
 								<view class="visits flex items-center gap-x-1 text-gray-400">

@@ -93,6 +93,9 @@
 
 	const globalAppSettings = computed(() => settingStore.settings)
 
+	/** 首页列表布局(偏好设置驱动:single=单列 / double=双列) */
+	const homeListLayout = computed(() => settingStore.settings.layout.home.listLayout)
+
 	/* ---------------- 数据加载 ---------------- */
 	async function handleQuery() {
 		handleGetArticleList()
@@ -243,9 +246,10 @@
 			min-height="36vh" @refresh="handleQuery" />
 
 		<block v-else>
-			<view class="box-border flex flex-col gap-y-3 p-3 pt-0" :class="globalAppSettings.layout.home">
+			<view class="box-border p-3 pt-0"
+				:class="homeListLayout === 'double' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-y-3'">
 				<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
-					:audit-mode="calcAuditModeEnabled" layout="image_bottom"/>
+					:audit-mode="calcAuditModeEnabled" />
 			</view>
 			<view class="mt-3 box-border pb-5 text-center text-xs text-gray-400">
 				{{ loadMoreText }}

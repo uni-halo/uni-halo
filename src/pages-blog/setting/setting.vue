@@ -56,35 +56,48 @@
 		siteLabelOf ?: (value : string) => string
 	}
 
-	const layoutPrefs : PrefDef[] = [
-		{
-			key: 'home',
-			label: '首页文章布局',
-			kind: 'enum',
-			path: ['layout', 'home'],
-			options: [
-				{ label: '一行一列', value: 'h_row_col1' },
-				{ label: '一行两列', value: 'h_row_col2' },
-			],
-		},
-		{
-			key: 'cardType',
-			label: '文章卡片样式',
-			kind: 'enum',
-			path: ['layout', 'cardType'],
-			options: [
-				{ label: '左图右文', value: 'lr_image_text' },
-				{ label: '左文右图', value: 'lr_text_image' },
-				{ label: '上图下文', value: 'tb_image_text' },
-				{ label: '上文下图', value: 'tb_text_image' },
-				{ label: '只有文字', value: 'only_text' },
-			],
-		},
+	/** 布局设置按页面分组(每组:列表布局 + 卡片样式) */
+	const PAGE_GROUPS = [
+		{ key: 'home', label: '首页' },
+		{ key: 'articles', label: '文章列表' },
+		{ key: 'archives', label: '文章归档' },
 	]
+
+	const layoutPrefs : PrefDef[] = PAGE_GROUPS.flatMap(group => [
+		{
+			key: `${group.key}ListLayout`,
+			label: '列表布局',
+			kind: 'enum',
+			path: ['layout', group.key, 'listLayout'],
+			options: [
+				{ label: '单列', value: 'single' },
+				{ label: '双列', value: 'double' },
+			],
+		},
+		{
+			key: `${group.key}CardType`,
+			label: '卡片样式',
+			kind: 'enum',
+			path: ['layout', group.key, 'cardType'],
+			options: [
+				{ label: '上图下文', value: 'image_top' },
+				{ label: '左文右图', value: 'image_right' },
+				{ label: '上文下图', value: 'image_bottom' },
+				{ label: '左图右文', value: 'image_left' },
+			],
+		},
+	])
 
 	const featurePrefs : PrefDef[] = [
 		{ key: 'isAvatarRadius', label: '是否圆形头像', kind: 'bool', path: ['isAvatarRadius'] },
 	]
+
+	/* ---------------- 顶部分段器(布局 / 功能) ---------------- */
+	const settingTabs : { key : 'layout' | 'feature', label : string }[] = [
+		{ key: 'layout', label: '布局' },
+		{ key: 'feature', label: '功能' },
+	]
+	const activeTab = ref<'layout' | 'feature'>('layout')
 
 	/* ---------------- 状态读取 ---------------- */
 	function prefValueOf(path : Path) : unknown {
@@ -216,6 +229,13 @@
 	const layoutRows = computed(() => buildRows(layoutPrefs))
 	const featureRows = computed(() => buildRows(featurePrefs))
 
+	/** 布局设置按页面分组的展示行 */
+	const layoutGroups = computed(() => PAGE_GROUPS.map(group => ({
+		key: group.key,
+		label: group.label,
+		rows: layoutRows.value.filter(row => row.path[1] === group.key),
+	})))
+
 	/* ---------------- 重置全部 ---------------- */
 	function handleResetAll() {
 		uni.showModal({
@@ -243,45 +263,54 @@
 
 		<!-- 内容区域 -->
 		<view class="box-border flex flex-col gap-y-6 p-3">
-			<!-- 布局设置 -->
-			<view class="flex flex-col gap-y-3">
-				<uh-section-title>
-					布局
-					<template #right>
-						<text class="text-2xs text-gray-400">应用以及文章列表布局设置</text>
-					</template>
-				</uh-section-title>
-				<view class="uh-global-card-glass overflow-hidden rounded-2xl">
-					<view v-for="(row, index) in layoutRows" :key="row.key"
-						class="pick-row flex items-center justify-between px-4 py-4"
-						:class="index < layoutRows.length - 1 ? 'border-b border-black/5' : ''"
-						@click="handleOpenEnum(row)">
-						<view class="row-left flex flex-col gap-1">
-							<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
-							<view class="flex items-center gap-2">
-								<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
-								<view v-else
-									class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
-									已自定义
+			<!-- 顶部分段器:布局 / 功能 -->
+			<view class="uh-global-card-glass flex rounded-full p-1">
+				<view v-for="tab in settingTabs" :key="tab.key"
+					class="flex-1 rounded-full py-1.5 text-center text-sm"
+					:class="activeTab === tab.key ? 'bg-primary font-bold' : 'text-gray-500'"
+					@click="activeTab = tab.key">
+					{{ tab.label }}
+				</view>
+			</view>
+
+			<!-- 布局:按页面分组(首页/文章列表/文章归档 × 列表布局/卡片样式) -->
+			<template v-if="activeTab === 'layout'">
+				<view v-for="group in layoutGroups" :key="group.key" class="flex flex-col gap-y-3">
+					<uh-section-title>{{ group.label }}</uh-section-title>
+					<view class="uh-global-card-glass overflow-hidden rounded-2xl">
+						<view v-for="(row, index) in group.rows" :key="row.key"
+							class="pick-row flex items-center justify-between px-4 py-4"
+							:class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''"
+							@click="handleOpenEnum(row)">
+							<view class="row-left flex flex-col gap-1">
+								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+								<view class="flex items-center gap-2">
+									<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+									<view v-else
+										class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
+										已自定义
+									</view>
 								</view>
 							</view>
-						</view>
-						<view class="row-value flex items-center gap-2">
-							<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
-							<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+							<view class="row-value flex items-center gap-2">
+								<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
+								<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+							</view>
 						</view>
 					</view>
 				</view>
-			</view>
+			</template>
+
 			<!-- 功能设置 -->
-			<view class="flex flex-col gap-y-3">
-				<uh-section-title>
-					功能
-					<template #right>
-						<text class="text-2xs text-gray-400">一些常用的功能性设置</text>
-					</template>
-				</uh-section-title>
-				<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
+			<template v-else>
+				<view class="flex flex-col gap-y-3">
+					<uh-section-title>
+						功能
+						<template #right>
+							<text class="text-2xs text-gray-400">一些常用的功能性设置</text>
+						</template>
+					</uh-section-title>
+					<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
 					<template v-for="(row, index) in featureRows" :key="row.key">
 						<!-- 布尔开关 -->
 						<view v-if="row.kind === 'bool'" class="switch-row flex items-center justify-between px-4 py-4"
@@ -332,7 +361,8 @@
 					</template>
 				</view>
 			</view>
-			<!-- 底部操作栏-->
+		</template>
+		<!-- 底部操作栏-->
 			<view class="box-border w-full">
 				<uh-button custom-class="uh-global-card-glass py-2 !rounded-xl" @click="handleResetAll">
 					恢复默认

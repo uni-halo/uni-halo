@@ -117,11 +117,23 @@ export interface IAppConfig {
   auditConfig?: IAuditConfig
   /**
    * 站点级展示偏好默认(L0,插件端 GeneralConfig.preferences 经 getConfigs additive 下发;
-   * 客户端 layout.home/cardType/isAvatarRadius 的站点默认来源,本地偏好可覆盖)
+   * 客户端 layout.{home,articles,archives}.{listLayout,cardType}/isAvatarRadius 的站点默认来源,
+   * 本地偏好可覆盖;字段映射见 hermes/preferences.md §3)
    */
   preferences?: {
+    /** 首页列表布局(h_row_col1/2 旧值由前端归一化为 single/double) */
     homeListLayout?: string
+    /** 首页卡片样式(image_top/image_right/image_bottom/image_left) */
+    homeCardType?: string
+    /** 文章列表页列表布局 */
+    articlesListLayout?: string
+    /** 文章列表页卡片样式(沿用旧字段名,兼容既有下发) */
     articleCardType?: string
+    /** 文章归档页列表布局 */
+    archivesListLayout?: string
+    /** 文章归档页卡片样式 */
+    archivesCardType?: string
+    /** 评论头像是否圆形 */
     avatarRadius?: boolean
   }
   /**

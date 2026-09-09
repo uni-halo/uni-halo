@@ -25,11 +25,11 @@ export const VOTE_STATES: { NOT_VOTED: VoteState; VOTING: VoteState; VOTED: Vote
 	VOTE_ENDED: 'vote-ended'
 };
 
-/** 投票展示状态(与旧项目 VOTE_STATES 一致:中文 + 颜色) */
-export const VOTE_STATE_LABELS: Record<string, { state: string; color: string }> = {
-	未开始: { state: '未开始', color: 'orange' },
-	进行中: { state: '进行中', color: 'green' },
-	已结束: { state: '已结束', color: 'red' }
+/** 投票展示状态(与旧项目 VOTE_STATES 一致:中文 + unocss 文字/背景色类) */
+export const VOTE_STATE_LABELS: Record<string, { state: string; color: string; bgColor: string }> = {
+	未开始: { state: '未开始', color: 'text-orange-400', bgColor: 'bg-orange-100' },
+	进行中: { state: '进行中', color: 'text-green-400', bgColor: 'bg-green-100' },
+	已结束: { state: '已结束', color: 'text-red-400', bgColor: 'bg-red-100' }
 };
 
 /**
@@ -48,11 +48,12 @@ export function getOrCreateVoteUid(): string {
  * 计算投票展示状态(与旧项目 calcVoteState 一致)
  * 非 custom 期限(permanent 等)直接看 hasEnded;custom 按起止时间判断
  * @param vote 投票对象(含 spec.timeLimit/hasEnded/startDate/endDate)
- * @returns { state: '未开始' | '进行中' | '已结束', color: 'orange' | 'green' | 'red' }
+ * @returns { state: '未开始' | '进行中' | '已结束', color: unocss 文字色类, bgColor: unocss 背景色类 }
  */
 export function calcVoteState(vote: { spec?: { timeLimit?: string; hasEnded?: boolean; startDate?: string; endDate?: string; [key: string]: unknown } }): {
 	state: string;
 	color: string;
+	bgColor: string;
 } {
 	if (vote.spec?.timeLimit !== 'custom') {
 		return vote.spec?.hasEnded ? VOTE_STATE_LABELS['已结束'] : VOTE_STATE_LABELS['进行中'];
