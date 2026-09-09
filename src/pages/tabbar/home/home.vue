@@ -249,7 +249,7 @@
 			<view class="box-border p-3 pt-0"
 				:class="homeListLayout === 'double' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-y-3'">
 				<uh-article-card v-for="(article, index) in articleList" :key="index" from="home" :article="article"
-					:audit-mode="calcAuditModeEnabled" />
+					:variant="homeListLayout === 'double' ? 'grid' : 'list'" :audit-mode="calcAuditModeEnabled" />
 			</view>
 			<view class="mt-3 box-border pb-5 text-center text-xs text-gray-400">
 				{{ loadMoreText }}

@@ -63,9 +63,9 @@ export const DefaultAppSettings: IAppSettings = {
     dotPosition: 'right',
   },
   layout: {
-    home: { listLayout: 'single', cardType: 'image_bottom' },
-    articles: { listLayout: 'double', cardType: 'image_bottom' },
-    archives: { listLayout: 'single', cardType: 'image_bottom' },
+    home: { listLayout: 'single', cardType: 'image_top' },
+    articles: { listLayout: 'double', cardType: 'image_top' },
+    archives: { listLayout: 'single', cardType: 'image_top' },
   },
   ad: {
     timeout: 3,

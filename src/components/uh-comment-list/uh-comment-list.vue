@@ -39,7 +39,7 @@
 			result.value = res.data
 			dataList.value = res.data.items.map((item) => {
 				// todo：临时
-				item.spec.owner.avatar = checkAvatarUrl(item.spec.owner.avatar??'https://api.dicebear.com/10.x/adventurer-neutral/svg')
+				item.spec.owner.avatar = checkAvatarUrl(item.spec.owner.avatar ?? 'https://api.dicebear.com/10.x/adventurer-neutral/svg')
 				return item
 			})
 			loading.value = 'success'
@@ -101,8 +101,7 @@
 			<uh-section-title>
 				评论列表
 				<template #right>
-					<view class="flex items-center gap-1.5 text-xs text-gray-500 font-normal"
-						@click="handleGetData">
+					<view class="flex items-center gap-1.5 text-xs text-gray-500 font-normal" @click="handleGetData">
 						<wd-icon name="refresh" size="28rpx" />
 						<text class="">刷新</text>
 					</view>
@@ -135,20 +134,15 @@
 
 					<view v-if="dataList.length === 0" class="empty py-12">
 						<view class="empty-box flex flex-col items-center">
-							<wd-empty>
-								<template #image>
-									<wd-icon name="empty" size="100rpx" class="text-primary" />
-								</template>	
-								<template #bottom>
-									<text class="mt-2 text-sm text-gray-500">{{disallowComment ? '暂无评论' : '暂无评论'}}</text>
-									<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
-										文章已开启禁止评论
-									</view>
-									<view v-else class="mt-2 bg-primary text-black text-sm px-4 py-1.5 rounded-lg" @click="handleToComment()">
-										抢沙发
-									</view>
-								</template>
-							</wd-empty>
+							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
+							<text class="mt-2 text-sm text-gray-500">{{disallowComment ? '暂无评论' : '暂无评论'}}</text>
+							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
+								文章已开启禁止评论
+							</view>
+							<view v-else class="mt-2 bg-primary text-black text-sm px-4 py-1.5 rounded-lg"
+								@click="handleToComment()">
+								抢沙发
+							</view>
 						</view>
 					</view>
 

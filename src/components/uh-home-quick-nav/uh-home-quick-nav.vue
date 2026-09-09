@@ -96,7 +96,7 @@
 					:style="{
 						backgroundColor: item.bgGlass
 					}">
-					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx" :color="item.color" />
+					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx"/>
 				</view>
 				<view class="text-xs text-gray-900">
 					{{ item.title }}
@@ -104,17 +104,4 @@
 			</view>
 		</view>
 	</view>
-</template>
-
-<style scoped lang="scss">
-	/* 彩色玻璃图标:低透明度同色底 + 同色描边 + 柔和同色投影,图标用实体色保证通透感 */
-	.quick-nav-icon {
-		backdrop-filter: blur(16rpx) saturate(160%);
-		-webkit-backdrop-filter: blur(16rpx) saturate(160%);
-
-		/* 低端安卓 WebView 不支持 backdrop-filter 的兜底:提高底色不透明度保证可读性 */
-		@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-			background-color: rgb(255 255 255 / 60%) !important;
-		}
-	}
-</style>
+</template> 

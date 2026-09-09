@@ -282,6 +282,7 @@ onReachBottom(() => {
                 v-for="post in item.posts"
                 :key="post.metadata.name"
                 from="archives"
+                :variant="archivesListLayout === 'double' ? 'grid' : 'list'"
                 :article="post"
                 :audit-mode="calcAuditModeEnabled"
               />

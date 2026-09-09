@@ -539,7 +539,7 @@
 				</view>
 
 				<!-- 内容区域 -->
-				<view class="box-border flex flex-col gap-y-3 p-3">
+				<view class="box-border flex flex-col gap-y-3 p-3 text-gray-900 text-sm">
 					<!-- 受限阅读 -->
 					<template v-if="checkPostRestrictRead(result!)">
 						<view v-if="showContentArr.length === 0">

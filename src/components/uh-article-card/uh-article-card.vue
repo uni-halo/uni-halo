@@ -117,7 +117,7 @@
 		return raw
 	})
 
-	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value] ?? CARD_LAYOUTS.image_bottom)
+	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value] ?? CARD_LAYOUTS.image_top)
 
 	/** 社交卡片形态(封面在下):左上用户信息(头像 + 昵称/日期垂直)、右上浏览数 */
 	const isSocialCard = computed(() => effectiveLayout.value === 'image_bottom')
@@ -183,7 +183,7 @@
 				</template>
 			</view>
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
-				<view v-if="!isGrid" class="flex items-center" :class="cardLayout.authorGroup">
+				<view class="flex items-center" :class="cardLayout.authorGroup">
 					<image :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
 						:class="cardLayout.avatar" mode="aspectFill" />
 					<template v-if="isSocialCard">
@@ -199,11 +199,11 @@
 							</view>
 						</view>
 					</template>
-					<text v-else class="truncate">{{ article.owner.displayName }}</text>
+					<text v-else class="min-w-0 flex-1 truncate">{{ article.owner.displayName }}</text>
 				</view>
 				<text v-if="!isGrid && !isSocialCard" class="text-gray-400"
 					:class="cardLayout.time">{{ publishTimeText }}</text>
-				<view v-if="!isSocialCard" class="visits flex items-center gap-x-1" :class="cardLayout.visits">
+				<view v-if="!isGrid && !isSocialCard" class="visits flex items-center gap-x-1" :class="cardLayout.visits">
 					浏览
 					<text class="number">{{ visitCount }}</text>
 					次
