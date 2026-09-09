@@ -229,14 +229,14 @@
 							@click="handleRecommendModeChange(tab.value as 'default' | 'pinned' | 'latest' | 'oldest')">
 							{{ tab.label }}
 						</view>
-						<view class="rounded-md px-2 py-0.5 text-xs text-gray-500" @click="handleToArticles()">
+						<view v-if="false" class="rounded-md px-2 py-0.5 text-xs text-gray-500" @click="handleToArticles()">
 							更多
 						</view>
 					</view>
-					<view v-if="false"
-						class="uh-global-card-glass flex items-center justify-center gap-x-1 rounded-md p-1 text-gray-400"
+					<view 
+						class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
 						@click="handleToArticles()">
-						<wd-icon name="arrow-right" size="24rpx" />
+						<wd-icon name="arrow-right" size="28rpx" />
 					</view>
 				</view>
 			</template>

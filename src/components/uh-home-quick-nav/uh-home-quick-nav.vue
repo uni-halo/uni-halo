@@ -12,18 +12,20 @@
 
 	/** 快捷导航项（字段命名与插件端 quickNavigation 一致：key/title/color/bgColor/iconPrefix/icon/path/visible，无 borderColor） */
 	interface QuickNavItem {
-		key: string
-		title?: string
-		color?: string
-		bgColor?: string
-		iconPrefix?: string
-		icon?: string
-		path?: string
-		visible?: boolean
+		key : string
+		title ?: string
+		color ?: string
+		bgColor ?: string
+		iconPrefix ?: string
+		icon ?: string
+		path ?: string
+		visible ?: boolean
 	}
 
+	// 是否使用本地的快捷导航数据（本地的可以任意修改图标、路径，插件端的无法修改图标）
+	const useLocalNav = false
 	/** 内置默认项（未配置时回退；字段命名与插件端一致，可作配置缺失字段的兜底） */
-	const DEFAULT_NAV_LIST: QuickNavItem[] = [
+	const DEFAULT_NAV_LIST : QuickNavItem[] = [
 		{
 			key: 'archives',
 			title: '文章归档',
@@ -78,37 +80,16 @@
 
 	/** 快捷导航列表：优先读插件端配置（零映射，visible 过滤）；未配置/为空回退内置默认（保留原显隐推导） */
 	const navList = computed(() => {
-		const socialEnabled = !!(haloConfigs.value.authorConfig?.social as { enabled ?: boolean } | undefined)?.enabled
-		const loveEnabled = !!(haloConfigs.value.loveConfig as { loveEnabled ?: boolean })?.loveEnabled
 		const configured = haloConfigs.value.pageConfig?.homeConfig?.quickNavigation
-		let list: QuickNavItem[]
-		if (configured && configured.length) {
+		let list : QuickNavItem[]
+		if (!useLocalNav && configured && configured.length) {
 			// 配置模式：以配置项为准，缺失字段（icon/iconPrefix/color/path 等）按 key 从默认项兜底
 			list = configured.map(item => {
 				const fallback = DEFAULT_NAV_LIST.find(d => d.key === item.key) || DEFAULT_NAV_LIST[0]
 				return { ...fallback, ...item }
 			})
-		}
-		else {
-			// 默认模式（老部署无配置）：回退内置默认项，保留原显隐推导
-			list = DEFAULT_NAV_LIST.map(item => {
-				if (item.key === 'archives') {
-					return { ...item, title: calcAuditModeEnabled.value ? '内容归档' : item.title }
-				}
-				if (item.key === 'contact-blogger') {
-					return { ...item, visible: socialEnabled }
-				}
-				if (item.key === 'love') {
-					return { ...item, visible: loveEnabled }
-				}
-				if (item.key === 'vote') {
-					return { ...item, visible: calcVotePluginEnabled.value }
-				}
-				if (item.key === 'disclaimers') {
-					return { ...item, visible: calcLinksPluginEnabled.value }
-				}
-				return item
-			})
+		} else {
+			list = DEFAULT_NAV_LIST;
 		}
 		return list.filter(item => item.visible !== false)
 	})
@@ -122,7 +103,8 @@
 </script>
 
 <template>
-	<view v-if="calcIsShowQuickNavigationEnabled && navList.length" class="box-border overflow-hidden rounded-xl p-3 px-4 mb-3">
+	<view v-if="calcIsShowQuickNavigationEnabled && navList.length"
+		class="box-border overflow-hidden rounded-xl p-3 px-4 mb-3">
 		<uh-section-title class="mb-4">
 			快捷导航
 		</uh-section-title>
@@ -134,7 +116,7 @@
 					:style="{
 						backgroundColor: item.bgColor
 					}">
-					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx"/>
+					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx" />
 				</view>
 				<view class="text-xs text-gray-900">
 					{{ item.title }}

@@ -8,26 +8,42 @@
 	type CardLayout = 'image_top' | 'image_right' | 'image_bottom' | 'image_left'
 
 	interface CardLayoutClasses {
-		container: string
-		cover: string
-		contentWrapper: string
-		footer: string
-		authorGroup: string
-		avatar: string
-		nickname: string
-		infoCol: string
-		time: string
-		tagCategory: string
-		visits: string
-		pinned: string
+		container : string
+		cover : string
+		contentWrapper : string
+		footer : string
+		authorGroup : string
+		avatar : string
+		nickname : string
+		infoCol : string
+		time : string
+		tagCategory : string
+		visits : string
+		pinned : string
 	}
 
+	const props = withDefaults(defineProps<{
+		from ?: 'home' | 'articles' | 'archives' | ''
+		auditMode ?: boolean
+		article : IPost
+		variant ?: 'list' | 'grid'
+		layout ?: CardLayout
+	}>(), {
+		auditMode: false,
+		from: '',
+		variant: 'list',
+	})
+
+	const settingStore = useSettingStore()
+
+	const isGrid = computed(() => props.variant === 'grid')
+
 	/** 单一事实源:每种布局的完整形态,模板不再有任何 order / 条件分支 */
-	const CARD_LAYOUTS: Record<CardLayout, CardLayoutClasses> = {
+	const CARD_LAYOUTS = computed(()=> ({
 		image_top: {
-			container: 'flex flex-col gap-y-2',
-			cover: '',
-			contentWrapper: 'w-full',
+			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
+			cover: `${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''}`,
+			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
 			avatar: '',
@@ -36,7 +52,7 @@
 			time: 'flex-1 text-center',
 			tagCategory: '',
 			visits: 'flex-1 justify-end',
-			pinned: 'right-4 top-4',
+			pinned: `${isGrid.value ? 'right-2 top-2' : 'right-4 top-4'}`,
 		},
 		image_bottom: {
 			container: 'flex flex-col gap-y-2',
@@ -80,26 +96,10 @@
 			visits: '',
 			pinned: 'right-3 top-3',
 		},
-	}
-
-	const props = withDefaults(defineProps<{
-		from ?: 'home' | 'articles' | 'archives' | ''
-		auditMode ?: boolean
-		article : IPost
-		variant ?: 'list' | 'grid'
-		layout ?: CardLayout
-	}>(), {
-		auditMode: false,
-		from: '',
-		variant: 'list',
-	})
-
-	const settingStore = useSettingStore()
-
-	const isGrid = computed(() => props.variant === 'grid')
+	}) as Record<CardLayout, CardLayoutClasses>)
 
 	/** 各页面卡片样式字段名(与插件端 preferences 字段一致) */
-	const CARD_TYPE_KEY: Record<'home' | 'articles' | 'archives', string> = {
+	const CARD_TYPE_KEY : Record<'home' | 'articles' | 'archives', string> = {
 		home: 'homeCardType',
 		articles: 'articleCardType',
 		archives: 'archivesCardType',
@@ -124,7 +124,7 @@
 		return raw
 	})
 
-	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value] ?? CARD_LAYOUTS.image_top)
+	const cardLayout = computed(() => CARD_LAYOUTS.value[effectiveLayout.value] ?? CARD_LAYOUTS.value.image_top)
 
 	/** 社交卡片形态(封面在下):左上用户信息(头像 + 昵称/日期垂直)、右上浏览数 */
 	const isSocialCard = computed(() => effectiveLayout.value === 'image_bottom')
@@ -146,7 +146,7 @@
 			url: `/pages-blog/article-detail/article-detail?name=${props.article.metadata.name}`,
 			animationType: 'slide-in-right',
 		})
-	} 
+	}
 </script>
 
 <template>
@@ -157,8 +157,11 @@
 			:class="cardLayout.pinned">
 			置顶
 		</text>
-		<image :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]"
-			:src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
+		<view class="relative overflow-hidden" :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
+			<image class="w-full h-full block" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
+			<!-- <view v-if="isGrid" class="absolute left-0 bottom-0 w-full h-4 bg-gradient-to-b from-white/0 to-white" /> -->
+		</view>
+		
 		<view class="flex flex-col gap-y-2 text-sm" :class="cardLayout.contentWrapper">
 			<view class="truncate font-bold">
 				{{ article.spec.title }}
@@ -182,11 +185,13 @@
 			</view>
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
 				<view class="flex items-center" :class="cardLayout.authorGroup">
-					<image :src="checkAvatarUrl(article.owner?.avatar || '')" class="uh-global-card-glass h-5 w-5 rounded-full"
-						:class="cardLayout.avatar" mode="aspectFill" />
+					<image :src="checkAvatarUrl(article.owner?.avatar || '')"
+						class="uh-global-card-glass h-5 w-5 rounded-full" :class="cardLayout.avatar"
+						mode="aspectFill" />
 					<template v-if="isSocialCard">
 						<view :class="cardLayout.infoCol">
-							<text class="block truncate" :class="cardLayout.nickname">{{ article.owner.displayName }}</text>
+							<text class="block truncate"
+								:class="cardLayout.nickname">{{ article.owner.displayName }}</text>
 							<view class="flex items-center gap-x-2">
 								<text class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
 								<view class="visits flex items-center gap-x-1 text-gray-400">
@@ -201,7 +206,8 @@
 				</view>
 				<text v-if="!isGrid && !isSocialCard" class="text-gray-400"
 					:class="cardLayout.time">{{ publishTimeText }}</text>
-				<view v-if="!isGrid && !isSocialCard" class="visits flex items-center gap-x-1" :class="cardLayout.visits">
+				<view v-if="!isGrid && !isSocialCard" class="visits flex items-center gap-x-1"
+					:class="cardLayout.visits">
 					浏览
 					<text class="number">{{ visitCount }}</text>
 					次

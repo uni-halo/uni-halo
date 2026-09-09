@@ -78,9 +78,9 @@
 		<uh-section-title class="mb-4 px-3 box-border">
 			精选分类
 			<template #right>
-				<view class="box-border flex items-center justify-center rounded-md bg-white p-1.5 text-gray-400"
+				<view class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
 					@click="handleToCategoryPage">
-					<wd-icon name="arrow-right" size="24rpx" />
+					<wd-icon name="arrow-right" size="28rpx" />
 				</view>
 			</template>
 		</uh-section-title>
