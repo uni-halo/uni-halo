@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed } from 'vue'
-	import { checkThumbnailUrl } from '@/utils/url'
+	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { useSettingStore } from '@/store/setting'
 	import { formatTime } from '@/utils/formatTime'
 	import type { ICategory, IPost } from '@/api/types/halo'
@@ -139,16 +139,7 @@
 			url: `/pages-blog/article-detail/article-detail?name=${props.article.metadata.name}`,
 			animationType: 'slide-in-right',
 		})
-	}
-
-	function handleToCategory(category : ICategory) {
-		if (props.auditMode) {
-			return
-		}
-		uni.navigateTo({
-			url: `/pages-blog/category-articles/category-articles?name=${category.metadata.name}&title=${category.spec.displayName}`,
-		})
-	}
+	} 
 </script>
 
 <template>
@@ -171,7 +162,7 @@
 			<view v-if="!isGrid" class="my-1 box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
 				<template v-if="article.categories && article.categories.length !== 0">
 					<text v-for="cate in article.categories" :key="cate.metadata.name"
-						class="box-border uh-global-card-glass border uh-shadow-xs rounded-xl bg-secondary px-2 py-0.5 text-xs" @click.stop="handleToCategory(cate)">
+						class="box-border uh-global-card-glass border uh-shadow-xs rounded-xl bg-secondary px-2 py-0.5 text-xs">
 						{{ cate.spec.displayName }}
 					</text>
 				</template>
@@ -184,7 +175,7 @@
 			</view>
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
 				<view class="flex items-center" :class="cardLayout.authorGroup">
-					<image :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
+					<image :src="checkAvatarUrl(article.owner?.avatar || '')" class="uh-global-card-glass h-5 w-5 rounded-full"
 						:class="cardLayout.avatar" mode="aspectFill" />
 					<template v-if="isSocialCard">
 						<view :class="cardLayout.infoCol">

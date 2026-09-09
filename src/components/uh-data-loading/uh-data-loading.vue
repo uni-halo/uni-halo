@@ -1,18 +1,15 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
 	import { checkUrl } from '@/utils/url'
-	import { useAppConfigStore } from '@/store/appConfig'
 	import type { DataLoadingStatus } from '@/hooks/useDataLoading'
 
 	interface IProps {
-		/** 加载状态(取值同 useDataLoading 返回的 status) */
 		loadingStatus ?: DataLoadingStatus
-		/** 占位区最小高度 */
+		size ?: 'mini' | 'small' | 'large'
 		minHeight ?: string
 		loadingText ?: string
 		errorText ?: string
 		emptyText ?: string
-		/** 各态副文案(留空则不显示副行) */
 		loadingSubText ?: string
 		errorSubText ?: string
 		emptySubText ?: string
@@ -21,6 +18,7 @@
 
 	const props = withDefaults(defineProps<IProps>(), {
 		loadingStatus: 'loading',
+		size: 'large',
 		minHeight: '80vh',
 		loadingText: '稍等，正在加载中哦',
 		errorText: '哎呀，加载失败了呢~',
@@ -33,16 +31,28 @@
 
 	const emit = defineEmits<{ (e : 'refresh') : void }>()
 
-	const appConfigStore = useAppConfigStore()
-	
-	const appInfo = computed(() => {
-		const _appInfo = (appConfigStore.configs?.appConfig?.appInfo as any)
-		return {
-			name: _appInfo.name ?? 'UniHalo',
-			logo: checkUrl(_appInfo?.logo ?? 'https://uni-halo.925i.cn/logo.png')
-		}
+	const SizeClasses = {
+		mini: {
+			icon: '60rpx',
+			stage: 'h-16 w-16',
+			glow: 'h-12 w-12'
+		},
+		small: {
+			icon: '100rpx',
+			stage: 'h-22 w-22',
+			glow: 'h-18 w-18'
+		},
+		large: {
+			icon: '120rpx',
+			stage: 'h-32 w-32',
+			glow: 'h-28 w-28'
+		},
+	}
+
+	const sizeClasses = computed(() => {
+		return SizeClasses[props.size] ?? SizeClasses.large
 	})
-	
+
 	const isLoading = computed(() => props.loadingStatus === 'loading')
 
 	const statusScene = computed(() => {
@@ -76,20 +86,17 @@
 </script>
 
 <template>
-	<view class="relative w-full flex flex-col items-center justify-center gap-y-4 text-sm"
+	<view class="relative w-full flex flex-col items-center justify-center gap-y-3 text-sm"
 		:style="{ minHeight: props.minHeight }">
-		
-		<!-- logo背景 -->
-		<image v-if="false" :src="appInfo.logo" class="absolute left-1/2 top-1/2 -translate-1/2 z-0 opacity-10 w-46 h-46"></image>
-		
-		<view class="scene relative z-1 h-[250rpx] w-[250rpx] flex items-center justify-center"
-			:class="statusScene.stageClass">
-			<view class="glow absolute inset-0 m-auto h-[220rpx] w-[220rpx] rounded-full" />
+
+		<view class="scene relative z-1 flex items-center justify-center"
+			:class="[statusScene.stageClass,sizeClasses.stage]">
+			<view class="glow absolute inset-0 m-auto rounded-full" :class="sizeClasses.glow" />
 			<view class="deco-dot dot-a absolute rounded-full" />
 			<view class="deco-dot dot-b absolute rounded-full" />
-			<view class="bubble relative h-[150rpx] w-[150rpx] flex items-center justify-center rounded-full">
+			<view class="bubble">
 				<text class="bubble-icon">
-					<wd-icon class-prefix="uhemoji-icon" :name="statusScene.icon" size="120rpx" />
+					<wd-icon class-prefix="uhemoji-icon" :name="statusScene.icon" :size="sizeClasses.icon" />
 				</text>
 			</view>
 		</view>
@@ -103,11 +110,12 @@
 						:style="{ animationDelay: `${(n - 1) * 0.15}s` }" />
 				</view>
 			</view>
-			<text v-if="statusScene.subText" class="mt-3 text-xs text-gray-500">
+			<text v-if="statusScene.subText" class="mt-2 text-xs text-gray-500">
 				{{ statusScene.subText }}
 			</text>
-			<view v-if="props.useRefreshButton" class="mt-5">
-				<uh-button custom-class="!rounded-lg uh-global-card-glass uh-shadow-xs border rounded-lg" @click="emit('refresh')">
+			<view v-if="props.useRefreshButton" class="mt-4">
+				<uh-button custom-class="!rounded-lg uh-global-card-glass uh-shadow-xs border"
+					@click="emit('refresh')">
 					刷新试试
 				</uh-button>
 			</view>

@@ -2,6 +2,7 @@ import type { CustomRequestOptions } from '@/http/types';
 import { useTokenStore } from '@/store';
 import { getEnvBaseUrl } from '@/utils';
 import { stringifyQuery } from './tools/queryString';
+// import qs from 'qs'
 
 // 请求基准地址
 const baseUrl = getEnvBaseUrl();
@@ -16,7 +17,17 @@ const httpInterceptor = {
 		
 		// 非 alova 请求，正常执行
 		// 接口请求支持通过 query 参数配置 queryString
+		
+		
 		if (options.query) {
+			// const queryStr = qs.stringify(options.query, {
+			// 	allowDots: true,
+			// 	encodeValuesOnly: true,
+			// 	skipNulls: true,
+			// 	encode: true,
+			// 	arrayFormat: 'repeat'
+			// })
+		
 			const queryStr = stringifyQuery(options.query)
 			if (options.url.includes('?')) {
 				options.url += `&${queryStr}`;

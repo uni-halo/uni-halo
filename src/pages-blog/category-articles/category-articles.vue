@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getCategoryPostList } from '@/api/halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import type { IPost } from '@/api/types/halo'
+import type { IPost, IPostListReq } from '@/api/types/halo'
 
 definePage({
   style: {
@@ -23,6 +23,24 @@ const dataList = ref<IPost[]>([])
 const isLoadMore = ref(false)
 const loadMoreText = ref('')
 
+/* ---------------- 排序切换(sort 参数由接口透传,见 IPostListReq.sort) ---------------- */
+const sortOptions: { key: string; label: string; sort?: string[] }[] = [
+  { key: 'default', label: '默认' },
+  { key: 'pinned', label: '按置顶', sort: ['spec.pinned,desc'] },
+  { key: 'latest', label: '按最新', sort: ['metadata.creationTimestamp,desc'] },
+  { key: 'oldest', label: '按最旧', sort: ['metadata.creationTimestamp,asc'] },
+]
+const activeSort = ref('default')
+
+function handleSortChange(key: string) {
+  if (activeSort.value === key)
+    return
+  activeSort.value = key
+  isLoadMore.value = false
+  queryParams.value.page = 0
+  handleGetData()
+}
+
 async function handleGetData() {
   if (!isLoadMore.value) {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
@@ -30,7 +48,15 @@ async function handleGetData() {
   loadMoreText.value = '加载中...'
 
   try {
-    const res = await getCategoryPostList(name.value, { ...queryParams.value })
+    const reqParams: Record<string, unknown> = { ...queryParams.value }
+    const currentSort = sortOptions.find(opt => opt.key === activeSort.value)?.sort
+    if (currentSort) {
+      reqParams.sort = currentSort
+    }
+    else {
+      delete reqParams.sort
+    }
+    const res = await getCategoryPostList(name.value, reqParams as IPostListReq)
     navbarTitle.value = `${pageTitle.value} （共${res.data.total}篇）`
     hasNext.value = res.data.hasNext
     dataList.value = isLoadMore.value
@@ -59,16 +85,6 @@ function handleToArticleDetail(article: IPost) {
   uni.navigateTo({
     url: `/pages-blog/article-detail/article-detail?name=${article.metadata.name}`,
     animationType: 'slide-in-right',
-  })
-}
-
-function handleToTopPage(duration = 500) {
-  uni.pageScrollTo({
-    scrollTop: 0,
-    duration,
-    fail: (err) => {
-      console.error('回顶失败', err)
-    },
   })
 }
 
@@ -112,6 +128,19 @@ onShareTimeline(() => ({
     <!-- 自定义导航 -->
     <uh-navbar :default-title="navbarTitle" title-color="text-gray-900" />
 
+    <!-- 排序切换:默认 / 按置顶 / 按最新 / 按最旧 -->
+    <view class="box-border flex items-center gap-2 px-3 py-2">
+      <view
+        v-for="opt in sortOptions"
+        :key="opt.key"
+        class="rounded-full px-3 py-1 text-xs"
+        :class="activeSort === opt.key ? 'bg-secondary font-bold' : 'uh-global-card-glass shadow-none border text-gray-500'"
+        @click="handleSortChange(opt.key)"
+      >
+        {{ opt.label }}
+      </view>
+    </view>
+
     <!-- 加载/错误/空占位(状态机) -->
     <view v-if="loadingStatus !== 'success'">
       <uh-data-loading
@@ -122,18 +151,16 @@ onShareTimeline(() => ({
     </view>
 
     <block v-else>
-      <uh-article-card
-        v-for="(article, index) in dataList"
-        :key="index"
-        :article="article"
-        @on-click="handleToArticleDetail"
-      />
-      <view class="load-text py-5 text-center text-[24rpx] text-[#999]">
-        {{ loadMoreText }}
-      </view>
-
-      <view class="to-top-btn fixed bottom-[100rpx] right-6 z-6 h-[72rpx] w-[72rpx] flex items-center justify-center rounded-full bg-white shadow-sm" @click="handleToTopPage()">
-        <wd-icon name="arrow-up" size="20px" color="#03a9f4" />
+      <view class="box-border flex flex-col gap-y-3 p-3">
+        <uh-article-card
+          v-for="(article, index) in dataList"
+          :key="index"
+          :article="article"
+          @on-click="handleToArticleDetail"
+        />
+        <view class="load-text py-5 text-center text-[24rpx] text-[#999]">
+          {{ loadMoreText }}
+        </view>
       </view>
     </block>
   </view>

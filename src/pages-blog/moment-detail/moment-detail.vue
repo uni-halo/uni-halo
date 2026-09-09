@@ -362,7 +362,7 @@
 				kind="Moment" :disallow-comment="!moment.spec.allowComment" @on-comment="handleOnComment" />
 		</view>
 		<!-- 悬浮操作(与文章详情一致:点赞/评论/收藏) -->
-		<view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
+		<view v-if="moment" class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
 			<view
 				class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 				<!-- 点赞 -->
@@ -384,8 +384,8 @@
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 					@click="handleToggleMomentFavorite">
 					<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-					<text class="shrink-0 text-sm text-gray-900 font-semibold"
-						:style="momentFavorited ? { color: '#ffb300' } : ''">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
+					<text class="shrink-0 text-sm font-semibold"
+						:class="momentFavorited ? 'text-primary' : 'text-gray-900'">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
 				</view>
 			</view>
 		</view>
