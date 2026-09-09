@@ -41,11 +41,6 @@
 	const activeTab = ref<'layout' | 'feature'>('layout')
 
 	/* ---------------- 交互 ---------------- */
-	/** 开关事件(模板透传 $event) */
-	function handleSwitchChange(def : PrefDef, detail : { value ?: unknown }) {
-		handleBoolChange(def.path, detail.value === true)
-	}
-
 	/* ---------------- 枚举底部弹层(uh-glass-popup + wd-picker-view) ---------------- */
 	const enumSheet = ref<{ show : boolean, def : PrefDef | null }>({ show: false, def: null })
 	/** 弹层内滚动中的临时选中值(单列;确认时才落库,取消不生效) */
@@ -100,11 +95,11 @@
 	function handleResetAll() {
 		uni.showModal({
 			title: '提示',
-			content: '确定将所有偏好恢复为站点默认吗？本地自定义的偏好将被清除，未配置站点默认的项将恢复为内置默认。',
+			content: '确定将所有偏好恢复为站点默认吗？',
 			showCancel: true,
 			cancelText: '取消',
 			confirmText: '确定',
-			confirmColor: '#03a9f4',
+			confirmColor: '#B9E424',
 			success: (res) => {
 				if (res.confirm) {
 					settingStore.resetPreferences()
@@ -125,8 +120,7 @@
 		<view class="box-border flex flex-col gap-y-6 p-3">
 			<!-- 顶部分段器:布局 / 功能 -->
 			<view class="uh-global-card-glass flex rounded-full p-1">
-				<view v-for="tab in SETTING_TABS" :key="tab.key"
-					class="flex-1 rounded-full py-1.5 text-center text-sm"
+				<view v-for="tab in SETTING_TABS" :key="tab.key" class="flex-1 rounded-full py-1.5 text-center text-sm"
 					:class="activeTab === tab.key ? 'bg-primary font-bold' : 'text-gray-500'"
 					@click="activeTab = tab.key">
 					{{ tab.label }}
@@ -172,27 +166,37 @@
 					</uh-section-title>
 					<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
 						<template v-for="(row, index) in featureRows" :key="row.key">
-							<!-- 布尔开关 -->
-							<view v-if="row.kind === 'bool'" class="switch-row flex items-center justify-between px-4 py-4"
-								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-								<view class="row-left flex flex-col gap-1">
-									<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
-									<view class="flex items-center gap-2">
-										<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
-										<template v-else>
-											<view
-												class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
-												已自定义
-											</view>
-											<text class="revert-text text-2xs text-gray-400 underline"
-												@click.stop="handleRevert(row.path)">
-												恢复默认
-											</text>
-										</template>
-									</view>
-								</view>
-								<wd-switch :model-value="row.boolValue" @change="handleSwitchChange(row, $event)" />
-							</view>
+						 <!-- 布尔项:内联分段器(默认 / 开 / 关) -->
+						 <view v-if="row.kind === 'bool'" class="box-border p-3"
+						  :class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
+						  <view class="flex items-center justify-between">
+						   <text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+						   <view class="flex items-center gap-2">
+						    <text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
+						    <view v-else
+						     class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
+						     已自定义
+						    </view>
+						   </view>
+						  </view>
+						  <view class="mt-3 flex flex-wrap gap-2">
+						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+						    :class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
+						    @click="handleRevert(row.path)">
+						    默认
+						   </view>
+						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+						    :class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+						    @click="handleBoolChange(row.path, true)">
+						    开
+						   </view>
+						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+						    :class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+						    @click="handleBoolChange(row.path, false)">
+						    关
+						   </view>
+						  </view>
+						 </view>
 							<!-- 枚举选择 -->
 							<view v-else class="pick-row flex items-center justify-between px-4 py-4"
 								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''"

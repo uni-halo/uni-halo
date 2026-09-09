@@ -147,16 +147,11 @@ export function usePreferenceRows() {
 
 	/** 开关类:选值等于站点默认则还原为跟随(只存差异) */
 	function handleBoolChange(path: string[], next: boolean): void {
-		if (next === siteDefaultOf(path)) {
-			settingStore.savePreference(buildPatch(path, null));
-		} else {
-			settingStore.savePreference(buildPatch(path, next));
-		}
+		settingStore.savePreference(buildPatch(path, next));
 	}
 
-	/** 枚举选值:null 或等于站点默认则还原为跟随,否则写入差异(内联分段器与弹层共用) */
 	function handleChoose(path: string[], value: string | null): void {
-		if (value === null || value === siteDefaultOf(path)) {
+		if (value === null) {
 			handleRevert(path);
 		} else {
 			settingStore.savePreference(buildPatch(path, value));

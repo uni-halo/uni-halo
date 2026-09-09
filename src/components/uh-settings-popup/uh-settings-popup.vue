@@ -36,10 +36,6 @@
 	})
 
 	/* ---------------- 交互 ---------------- */
-	function handleSwitchChange(def : { path : string[] }, detail : { value ?: unknown }) {
-		handleBoolChange(def.path, detail.value === true)
-	}
-
 	function currentValueOf(path : string[]) : string | null {
 		return isFollowing(path) ? null : String(prefValueOf(path) ?? '')
 	}
@@ -148,30 +144,39 @@
 							</uh-section-title>
 							<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
 								<template v-for="(row, index) in featureRows" :key="row.key">
-									<!-- 布尔开关 -->
-									<view v-if="row.kind === 'bool'"
-										class="switch-row flex items-center justify-between px-4 py-4"
+									<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
+									<view v-if="row.kind === 'bool'" class="box-border p-3"
 										:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-										<view class="row-left flex flex-col gap-1">
-											<text
-												class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+										<view class="flex items-center justify-between">
+											<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
 											<view class="flex items-center gap-2">
-												<text v-if="row.following"
-													class="row-sub text-2xs text-gray-400">跟随站点默认</text>
-												<template v-else>
-													<view
-														class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
-														已自定义
-													</view>
-													<text class="revert-text text-2xs text-gray-400 underline"
-														@click.stop="handleRevert(row.path)">
-														恢复默认
-													</text>
-												</template>
+												<text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
+												<view v-else
+													class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
+													已自定义
+												</view>
 											</view>
 										</view>
-										<wd-switch :model-value="row.boolValue"
-											@change="handleSwitchChange(row, $event)" />
+										<view class="mt-3 flex flex-wrap gap-2">
+											<view
+												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+												:class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
+												@click="handleRevert(row.path)">
+												默认
+											</view>
+											<view
+												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+												:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+												@click="handleBoolChange(row.path, true)">
+												开
+											</view>
+											<view
+												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+												:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+												@click="handleBoolChange(row.path, false)">
+												关
+											</view>
+										</view>
 									</view>
 									<!-- 枚举项:内联分段器(与布局项一致) -->
 									<view v-else class="px-4 py-4"
