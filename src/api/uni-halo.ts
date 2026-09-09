@@ -5,6 +5,7 @@ import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
 import { getCache } from '@/utils/storage'
+import { getLoveModuleToken } from '@/utils/loveModuleToken'
 import { getNologinEmail, getOpenid } from '@/utils/auth'
 import { getPersonalToken } from '@/store/token'
 import type {
@@ -201,51 +202,71 @@ export function getLoveConfig() {
 }
 
 /**
- * 获取恋爱相册列表
+ * 获取恋爱相册列表（lovePhoto 模块设密码时需携带模块解锁 token）
  */
 export function getLoveAlbums(params: ILoveAlbumListReq) {
+  const token = getLoveModuleToken('lovePhoto')
   return http.Get<IResponse<ILoveAlbumListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums', {
-    params,
-	cacheFor: 0,
+    params: { ...params, ...(token ? { token } : {}) },
+ cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
 
 /**
- * 获取恋爱相册详情
+ * 获取恋爱相册详情（lovePhoto 模块设密码时需携带模块解锁 token）
  */
 export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
+  const token = getLoveModuleToken('lovePhoto')
   return http.Get<IResponse<ILoveAlbum>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums/${name}`, {
-    params,
-	cacheFor: 0,
+    params: { ...params, ...(token ? { token } : {}) },
+ cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
 
 /**
- * 密码解锁相册
+ * 密码解锁相册（lovePhoto 模块设密码时需携带模块解锁 token）
  */
 export function unlockAlbum(name: string, password: string, captcha?: ICaptchaQuery | null) {
+  const token = getLoveModuleToken('lovePhoto')
   return http.Post<IResponse<{ token: string, photos?: unknown[] }>>(
     `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums/${name}/unlock`,
     {
       password,
     },
     {
-      params: buildCaptchaQuery(captcha),
+      params: { ...buildCaptchaQuery(captcha), ...(token ? { token } : {}) },
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
 }
 
 /**
- * 获取恋爱清单列表(分页)
+ * 恋爱模块入口解锁（模块密码，签发 30 分钟 token；模块：ourStory/lovePhoto/loveDaily）
+ */
+export function unlockLoveModule(module: string, password: string) {
+  return http.Post<IResponse<{ token: string }>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-modules/unlock',
+    {
+      module,
+      password,
+    },
+    {
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 获取恋爱清单列表(分页)（loveDaily 模块设密码时需携带模块解锁 token）
  */
 export function getLoveDailyItems(params: ILoveDailyItemListReq) {
+  const token = getLoveModuleToken('loveDaily')
   return http.Get<IResponse<ILoveDailyItemListRes>>(
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-daily-items',
     {
-      params,
+      params: { ...params, ...(token ? { token } : {}) },
 	  cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
@@ -253,11 +274,12 @@ export function getLoveDailyItems(params: ILoveDailyItemListReq) {
 }
 
 /**
- * 获取恋爱故事列表
+ * 获取恋爱故事列表（ourStory 模块设密码时需携带模块解锁 token）
  */
 export function getLoveStories(params: ILoveStoryListReq) {
+  const token = getLoveModuleToken('ourStory')
   return http.Get<IResponse<ILoveStoryListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-stories', {
-    params,
+    params: { ...params, ...(token ? { token } : {}) },
     meta: { requestFrom: RequestFrom.Halo },
   })
 }

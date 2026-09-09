@@ -98,19 +98,26 @@
 
 	const isGrid = computed(() => props.variant === 'grid')
 
+	/** 各页面卡片样式字段名(与插件端 preferences 字段一致) */
+	const CARD_TYPE_KEY: Record<'home' | 'articles' | 'archives', string> = {
+		home: 'homeCardType',
+		articles: 'articleCardType',
+		archives: 'archivesCardType',
+	}
+
 	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/文章列表/文章归档)> image_top;窄列场景左右布局回退上图下文 */
 	const effectiveLayout = computed<CardLayout>(() => {
-		const _layout = settingStore.settings.layout
+		const settings = settingStore.settings
 		const page = props.from === 'home' || props.from === 'articles' || props.from === 'archives'
 			? props.from
 			: null
 		let raw = props.layout
 		if (!raw) {
 			raw = page
-				? (_layout[page].cardType as CardLayout)
+				? (settings[CARD_TYPE_KEY[page]] as CardLayout)
 				: 'image_top'
 		}
-		const narrow = isGrid.value || (props.from === 'home' && _layout.home.listLayout === 'double')
+		const narrow = isGrid.value || (props.from === 'home' && settings.homeListLayout === 'double')
 		if (narrow && raw !== 'image_top') {
 			return 'image_top'
 		}

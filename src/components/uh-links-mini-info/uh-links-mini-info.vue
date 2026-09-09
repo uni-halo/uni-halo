@@ -3,7 +3,9 @@
  * 小程序友链信息弹窗
  * 展示本站小程序申请提交的信息,字段结构与小程序提交申请弹窗(uh-links-mini-apply)一致:
  * 小程序名称/太阳码/跳转地址/作者昵称/作者头像/作者网站/描述/申请说明/邮箱
- * 数据源:linksSubmitPlugin 配置(blogName→名称、blogLogo→太阳码、blogUrl→跳转地址、blogDesc→描述)
+ * 数据源:插件端 getConfigs.pluginConfig.linkInfo(字段名与插件端一致,无映射;
+ * displayName/miniProgramCode/link/description/applyRemark/authorName/avatar/website;
+ * email 不在插件端维护,读不到时弹窗该栏自动隐藏)
  */
 import { computed, ref, watch } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -22,18 +24,18 @@ const emit = defineEmits<{
 const isShow = ref(false)
 const appConfigStore = useAppConfigStore()
 
-/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致,从 linksSubmitPlugin 配置读取) */
+/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致,从插件端 linkInfo 配置直接读取,字段名无映射) */
 const miniInfo = computed(() => {
-  const cfg = (appConfigStore.configs.pluginConfig?.linksSubmitPlugin || {}) as Record<string, unknown>
+  const cfg = (appConfigStore.configs.pluginConfig?.linkInfo || {}) as Record<string, unknown>
   const str = (key: string, fallback = '') => String(cfg[key] || fallback || '')
   return {
-    displayName: str('blogName'),
-    miniProgramCode: str('blogLogo'),
-    link: str('blogUrl'),
+    displayName: str('displayName'),
+    miniProgramCode: str('miniProgramCode'),
+    link: str('link'),
     authorName: str('authorName'),
     avatar: str('avatar'),
     website: str('website'),
-    description: str('blogDesc'),
+    description: str('description'),
     applyRemark: str('applyRemark'),
     email: str('email'),
   }

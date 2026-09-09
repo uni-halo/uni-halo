@@ -56,12 +56,12 @@ export function clearLocalPrefs(): void {
 
 /**
  * 把 L0 站点默认(getConfigs 下发值)中与偏好相关的字段收集为本地差异形状的站点默认。
- * 偏好字段与 getConfigs 字段不完全同名,此处维护映射表:
+ * 2026-09-08 起去映射:偏好字段与 getConfigs.preferences 字段名完全一致,只做值校验后透传,
+ * 不再改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套/isAvatarRadius。
+ * 字段对照(与插件端一致):
  * - preferences.homeListLayout/homeCardType/articlesListLayout/articleCardType/
- *   archivesListLayout/archivesCardType(L0 additive 顶层键)→ layout.{home,articles,archives}.{listLayout,cardType};
- *   cardType 值为组件 layout 值(image_top/image_right/image_bottom/image_left),与设置页选项一致;
- * - preferences.avatarRadius → isAvatarRadius;
- * - pageConfig.homeConfig.bannerConfig → banner.useDot / dotPosition。
+ *   archivesListLayout/archivesCardType → 同名顶层字段;
+ * - preferences.avatarRadius → avatarRadius。
  */
 export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
   const result: LocalPrefs = {}
@@ -76,39 +76,25 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
         return undefined
       return v === 'h_row_col2' ? 'double' : v === 'h_row_col1' ? 'single' : v
     }
-    /** 页面布局:后端字段名(列表布局 + 卡片样式)→ 本地嵌套路径 */
-    const setPage = (page: 'home' | 'articles' | 'archives', listKey: string, cardKey: string) => {
+    /** 布局字段透传:字段名与插件端一致,仅做值校验(有值才写入) */
+    const setLayout = (listKey: string, cardKey: string) => {
       const listValue = listLayoutOf(prefs[listKey])
       const cardValue = typeof prefs[cardKey] === 'string' ? prefs[cardKey] : undefined
-      if (listValue === undefined && cardValue === undefined)
-        return
-      result.layout = {
-        ...result.layout,
-        [page]: {
-          ...(listValue !== undefined ? { listLayout: listValue } : {}),
-          ...(cardValue !== undefined ? { cardType: cardValue } : {}),
-        },
+      if (listValue !== undefined) {
+        result[listKey] = listValue
+      }
+      if (cardValue !== undefined) {
+        result[cardKey] = cardValue
       }
     }
-    setPage('home', 'homeListLayout', 'homeCardType')
-    setPage('articles', 'articlesListLayout', 'articleCardType')
-    setPage('archives', 'archivesListLayout', 'archivesCardType')
+    setLayout('homeListLayout', 'homeCardType')
+    setLayout('articlesListLayout', 'articleCardType')
+    setLayout('archivesListLayout', 'archivesCardType')
 
     if (typeof prefs.avatarRadius === 'boolean') {
-      result.isAvatarRadius = prefs.avatarRadius
+      result.avatarRadius = prefs.avatarRadius
     }
   }
-
-  // 轮播渲染参数(L0):站点「显示指示器」→ 本地偏好 banner.useDot
-  const bannerConfig = configs.pageConfig?.homeConfig?.bannerConfig
-  if (bannerConfig && typeof bannerConfig === 'object') {
-    result.banner = {
-      useDot: bannerConfig.showIndicator,
-      dotPosition: bannerConfig.dotPosition,
-    }
-  }
-
-  // 预留:图库瀑布流 L0(galleryConfig.useWaterfall)随二期下发后在此补充
 
   return result
 }

@@ -6,6 +6,7 @@
 	import { computed, ref } from 'vue'
 	import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 	import { getLoveDailyItems } from '@/api/uni-halo'
+	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { checkImageUrl } from '@/utils/url'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
@@ -172,6 +173,8 @@
 		}
 		catch (e) {
 			console.error('获取清单失败', e)
+			// 模块锁 401：清除 token 并提示
+			handleLoveModuleLocked('loveDaily', e)
 			updateLoadingStatus(DataLoadingStatusEnum.Error)
 		}
 		finally {

@@ -3,6 +3,8 @@
 	import { onLoad, onShow } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+	import { unlockLoveModule } from '@/api/uni-halo'
+	import { getLoveModuleToken, setLoveModuleToken, type LoveModuleKey } from '@/utils/loveModuleToken'
 
 	definePage({
 		style: {
@@ -29,9 +31,9 @@
 			waveImageUrl : string
 			heartImageUrl : string
 		}
-		ourStory : { enabled : boolean, iconUrl : string }
-		lovePhoto : { enabled : boolean, iconUrl : string }
-		loveDaily : { enabled : boolean, iconUrl : string }
+		ourStory : { enabled : boolean, passwordEnabled ?: boolean }
+		lovePhoto : { enabled : boolean, passwordEnabled ?: boolean }
+		loveDaily : { enabled : boolean, passwordEnabled ?: boolean }
 		[key : string] : unknown
 	}
 
@@ -50,9 +52,9 @@
 			waveImageUrl: '',
 			heartImageUrl: '',
 		},
-		ourStory: { enabled: false, iconUrl: '' },
-		lovePhoto: { enabled: false, iconUrl: '' },
-		loveDaily: { enabled: false, iconUrl: '' },
+		ourStory: { enabled: false, passwordEnabled: false },
+		lovePhoto: { enabled: false, passwordEnabled: false },
+		loveDaily: { enabled: false, passwordEnabled: false },
 	})
 
 	const loveDayCount = ref({ d: 0, h: 0, m: 0, s: 0 })
@@ -151,11 +153,64 @@
 		countDownFn()
 	}
 
-	/* ---------------- 跳转 ---------------- */
+	/* ---------------- 跳转（模块密码拦截） ---------------- */
+	/** 页面名 → 恋爱模块 scope 映射（stories→ourStory、album→lovePhoto、list→loveDaily） */
+	const MODULE_KEY_MAP: Record<string, LoveModuleKey> = {
+		stories: 'ourStory',
+		album: 'lovePhoto',
+		list: 'loveDaily',
+	}
+
+	/** 模块密码弹窗状态 */
+	const passwordModalVisible = ref(false)
+	const pendingPage = ref('')
+	const pendingModule = ref<LoveModuleKey>('ourStory')
+	const modulePassword = ref('')
+	const unlocking = ref(false)
+
 	function handleToPage(pageName : string) {
+		const module = MODULE_KEY_MAP[pageName]
+		const moduleCfg = module
+			? (loveConfig.value[module] as { enabled ?: boolean, passwordEnabled ?: boolean })
+			: undefined
+		// 模块设了密码且本地无有效 token → 先弹密码框验证
+		if (moduleCfg?.passwordEnabled && !getLoveModuleToken(module)) {
+			pendingPage.value = pageName
+			pendingModule.value = module
+			modulePassword.value = ''
+			passwordModalVisible.value = true
+			return
+		}
 		uni.navigateTo({
 			url: `/pages-blog/love/${pageName}`,
 		})
+	}
+
+	/** 密码确认：unlock 签发 token 后进入模块 */
+	async function handleConfirmPassword() {
+		if (!modulePassword.value.trim()) {
+			uni.showToast({ icon: 'none', title: '请输入密码' })
+			return
+		}
+		try {
+			unlocking.value = true
+			const res = await unlockLoveModule(pendingModule.value, modulePassword.value)
+			const token = res.data?.token
+			if (token) {
+				setLoveModuleToken(pendingModule.value, token)
+				passwordModalVisible.value = false
+				uni.navigateTo({ url: `/pages-blog/love/${pendingPage.value}` })
+			}
+			else {
+				uni.showToast({ icon: 'none', title: '解锁失败，请重试' })
+			}
+		}
+		catch {
+			uni.showToast({ icon: 'none', title: '密码不正确' })
+		}
+		finally {
+			unlocking.value = false
+		}
 	}
 
 	/* ---------------- 生命周期 ---------------- */
@@ -254,6 +309,28 @@
 					</view>
 				</view>
 			</block>
+		</view>
+	</view>
+
+	<!-- 模块密码验证弹窗 -->
+	<view v-if="passwordModalVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+		@click="passwordModalVisible = false">
+		<view class="box-border w-4/5 rounded-2xl bg-white p-6" @click.stop>
+			<view class="text-center text-lg font-bold text-love">请输入访问密码</view>
+			<view class="mt-2 text-center text-xs text-gray-500">
+				{{ pendingModule === 'ourStory' ? '恋爱故事' : pendingModule === 'lovePhoto' ? '恋爱相册' : '恋爱清单' }}已设置访问密码，输入后进入
+			</view>
+			<input v-model="modulePassword" password
+				class="mt-4 h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm outline-none"
+				placeholder="请输入密码" />
+			<view class="mt-5 flex items-center gap-3">
+				<view class="flex-1 rounded-xl bg-gray-100 py-2.5 text-center text-sm text-gray-600"
+					@click="passwordModalVisible = false">取消</view>
+				<view class="flex-1 rounded-xl bg-love py-2.5 text-center text-sm text-white"
+					:class="unlocking ? 'opacity-60' : ''" @click="handleConfirmPassword">
+					{{ unlocking ? '验证中…' : '进入' }}
+				</view>
+			</view>
 		</view>
 	</view>
 </template>

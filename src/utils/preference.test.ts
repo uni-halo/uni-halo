@@ -35,37 +35,38 @@ describe('preference 基础读写', () => {
     expect(readLocalPrefs()).toEqual({})
   })
 
-  it('updateLocalPrefs：嵌套字段增量合并', () => {
-    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
-    updateLocalPrefs({ layout: { home: { cardType: 'image_bottom' } } })
+  it('updateLocalPrefs：字段增量合并(顶层插件字段名,无嵌套)', () => {
+    updateLocalPrefs({ homeListLayout: 'double' })
+    updateLocalPrefs({ homeCardType: 'image_bottom' })
     expect(readLocalPrefs()).toEqual({
-      layout: { home: { listLayout: 'double', cardType: 'image_bottom' } },
+      homeListLayout: 'double',
+      homeCardType: 'image_bottom',
     })
   })
 
   it('updateLocalPrefs：null 删除该键(回退跟随站点默认)', () => {
-    updateLocalPrefs({ layout: { home: { listLayout: 'double', cardType: 'image_bottom' } } })
-    updateLocalPrefs({ layout: { home: null } })
-    expect(readLocalPrefs()).toEqual({ layout: {} })
+    updateLocalPrefs({ homeListLayout: 'double', homeCardType: 'image_bottom' })
+    updateLocalPrefs({ homeListLayout: null })
+    expect(readLocalPrefs()).toEqual({ homeCardType: 'image_bottom' })
   })
 
   it('updateLocalPrefs(null)：整体清空差异', () => {
-    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
+    updateLocalPrefs({ homeListLayout: 'double' })
     updateLocalPrefs(null)
     expect(readLocalPrefs()).toEqual({})
     expect(mem.has(LOCAL_PREFS_KEY)).toBe(false)
   })
 
   it('clearLocalPrefs：删除存储键', () => {
-    updateLocalPrefs({ layout: { home: { listLayout: 'double' } } })
+    updateLocalPrefs({ homeListLayout: 'double' })
     clearLocalPrefs()
     expect(readLocalPrefs()).toEqual({})
   })
 
   it('isLocalOverride：按路径判断是否被本地覆盖', () => {
-    updateLocalPrefs({ gallery: { useWaterfull: false } })
-    expect(isLocalOverride(readLocalPrefs(), ['gallery', 'useWaterfull'])).toBe(true)
-    expect(isLocalOverride(readLocalPrefs(), ['banner', 'useDot'])).toBe(false)
+    updateLocalPrefs({ homeListLayout: 'double' })
+    expect(isLocalOverride(readLocalPrefs(), ['homeListLayout'])).toBe(true)
+    expect(isLocalOverride(readLocalPrefs(), ['homeCardType'])).toBe(false)
   })
 })
 
@@ -76,26 +77,14 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
 
   it('本地优先于站点默认，站点默认优先于内置默认', () => {
     const merged = mergeWithDefaults(
-      { layout: { home: { listLayout: 'single' } }, gallery: { useWaterfull: true } },
-      { layout: { home: { listLayout: 'double' } } },
+      { homeListLayout: 'single' },
+      { homeListLayout: 'double' },
     )
-    expect(merged.layout.home.listLayout).toBe('double')
-    expect(merged.gallery.useWaterfull).toBe(true)
-    expect(merged.isAvatarRadius).toBe(DefaultAppSettings.isAvatarRadius)
+    expect(merged.homeListLayout).toBe('double')
+    expect(merged.avatarRadius).toBe(DefaultAppSettings.avatarRadius)
   })
 
-  it('collectSiteDefaults：banner 站点默认映射(showIndicator→useDot)', () => {
-    const site = collectSiteDefaults({
-      pageConfig: {
-        homeConfig: {
-          bannerConfig: { showIndicator: false, dotPosition: 'bottom' },
-        },
-      },
-    })
-    expect(site.banner).toEqual({ useDot: false, dotPosition: 'bottom' })
-  })
-
-  it('collectSiteDefaults：preferences(L0)映射到 layout 页面分组/isAvatarRadius', () => {
+  it('collectSiteDefaults：preferences(L0)同名字段透传(含旧值归一化)', () => {
     const site = collectSiteDefaults({
       preferences: {
         homeListLayout: 'h_row_col2',
@@ -106,12 +95,12 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
         avatarRadius: true,
       },
     })
-    expect(site.layout).toEqual({
-      home: { listLayout: 'double', cardType: 'image_bottom' },
-      articles: { listLayout: 'single', cardType: 'image_left' },
-      archives: { cardType: 'image_top' },
-    })
-    expect(site.isAvatarRadius).toBe(true)
+    expect(site.homeListLayout).toBe('double')
+    expect(site.homeCardType).toBe('image_bottom')
+    expect(site.articlesListLayout).toBe('single')
+    expect(site.articleCardType).toBe('image_left')
+    expect(site.archivesCardType).toBe('image_top')
+    expect(site.avatarRadius).toBe(true)
   })
 
   it('preferences L0 参与合并,本地未覆盖时跟随站点默认', () => {
@@ -123,9 +112,9 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
       },
     })
     const merged = mergeWithDefaults(site, {})
-    expect(merged.layout.home.listLayout).toBe('double')
-    expect(merged.layout.articles.cardType).toBe('image_bottom')
-    expect(merged.isAvatarRadius).toBe(true)
+    expect(merged.homeListLayout).toBe('double')
+    expect(merged.articleCardType).toBe('image_bottom')
+    expect(merged.avatarRadius).toBe(true)
   })
 
   it('preferences L0 可被本地差异覆盖,重置后回退站点默认', () => {
@@ -136,29 +125,15 @@ describe('mergeWithDefaults / collectSiteDefaults', () => {
         avatarRadius: true,
       },
     })
-    const merged = mergeWithDefaults(site, { layout: { home: { listLayout: 'single' } }, isAvatarRadius: false })
-    expect(merged.layout.home.listLayout).toBe('single')
-    expect(merged.layout.articles.cardType).toBe('image_bottom')
-    expect(merged.isAvatarRadius).toBe(false)
-  })
-
-  it('站点 banner 默认参与合并,本地未覆盖时跟随站点默认', () => {
-    const site = collectSiteDefaults({
-      pageConfig: {
-        homeConfig: {
-          bannerConfig: { showIndicator: false, dotPosition: 'bottom' },
-        },
-      },
-    })
-    const merged = mergeWithDefaults(site, {})
-    expect(merged.banner.useDot).toBe(false)
-    expect(merged.banner.dotPosition).toBe('bottom')
-    expect(merged.layout.home.listLayout).toBe(DefaultAppSettings.layout.home.listLayout)
+    const merged = mergeWithDefaults(site, { homeListLayout: 'single', avatarRadius: false })
+    expect(merged.homeListLayout).toBe('single')
+    expect(merged.articleCardType).toBe('image_bottom')
+    expect(merged.avatarRadius).toBe(false)
   })
 
   it('未知枚举值不回退抛错(跟随默认)', () => {
-    const merged = mergeWithDefaults({}, { layout: { home: { listLayout: 'not-exist' } } })
-    expect(merged.layout.home.listLayout).toBe('not-exist')
+    const merged = mergeWithDefaults({}, { homeListLayout: 'not-exist' })
+    expect(merged.homeListLayout).toBe('not-exist')
   })
 })
 
@@ -168,28 +143,31 @@ describe('migrateLegacyLocalPrefs', () => {
     setupUniStorageMock()
   })
 
-  it('旧 persist 存在时仅迁移被改过的叶子字段', () => {
-    const legacySettings: IAppSettings = JSON.parse(JSON.stringify(DefaultAppSettings))
-    // 旧结构 layout.home 为 string(列表布局),类型上绕过新结构约束
-    ;(legacySettings.layout as unknown as Record<string, unknown>).home = 'h_row_col2'
-    legacySettings.gallery.useWaterfull = false
+  it('旧 persist 存在时仅迁移与新默认结构可对比的叶子字段(旧 layout 嵌套字段不迁移)', () => {
+    // 旧结构 layout.home 为 string(列表布局),类型上绕过新结构约束模拟旧数据
+    const legacySettings = JSON.parse(JSON.stringify(DefaultAppSettings)) as IAppSettings & {
+      layout?: unknown
+    }
+    legacySettings.layout = { home: 'h_row_col2' }
+    legacySettings.avatarRadius = true
     mem.set('setting', JSON.stringify({ settings: legacySettings }))
 
     expect(migrateLegacyLocalPrefs()).toBe(true)
     expect(readLocalPrefs()).toEqual({
-      layout: { home: 'h_row_col2' },
-      gallery: { useWaterfull: false },
+      avatarRadius: true,
     })
   })
 
   it('已存在新差异键时不再重复迁移', () => {
-    updateLocalPrefs({ layout: { home: { listLayout: 'single' } } })
-    const legacySettings = JSON.parse(JSON.stringify(DefaultAppSettings)) as IAppSettings
-    ;(legacySettings.layout as unknown as Record<string, unknown>).home = 'h_row_col2'
+    updateLocalPrefs({ homeListLayout: 'single' })
+    const legacySettings = JSON.parse(JSON.stringify(DefaultAppSettings)) as IAppSettings & {
+      layout?: unknown
+    }
+    legacySettings.layout = { home: 'h_row_col2' }
     mem.set('setting', JSON.stringify({ settings: legacySettings }))
 
     expect(migrateLegacyLocalPrefs()).toBe(false)
-    expect(readLocalPrefs()).toEqual({ layout: { home: { listLayout: 'single' } } })
+    expect(readLocalPrefs()).toEqual({ homeListLayout: 'single' })
   })
 
   it('无旧键或格式异常时返回 false 且不写新键', () => {

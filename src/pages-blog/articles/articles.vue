@@ -24,7 +24,7 @@ const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 const settingStore = useSettingStore()
 
 /** 文章列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
-const articlesListLayout = computed(() => settingStore.settings.layout.articles.listLayout)
+const articlesListLayout = computed(() => settingStore.settings.articlesListLayout)
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()

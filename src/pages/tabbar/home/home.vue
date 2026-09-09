@@ -94,7 +94,7 @@
 	const globalAppSettings = computed(() => settingStore.settings)
 
 	/** 首页列表布局(偏好设置驱动:single=单列 / double=双列) */
-	const homeListLayout = computed(() => settingStore.settings.layout.home.listLayout)
+	const homeListLayout = computed(() => settingStore.settings.homeListLayout)
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleQuery() {

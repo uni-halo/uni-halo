@@ -26,13 +26,13 @@ export const PAGE_GROUPS = [
 	{ key: 'archives', label: '归档页面' }
 ];
 
-/** 布局偏好字段(页面分组 × 列表布局/卡片样式) */
+/** 布局偏好字段(页面分组 × 列表布局/卡片样式;path 直接为插件端顶层字段名,无映射) */
 export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 	{
 		key: `${group.key}ListLayout`,
 		label: '列表布局',
 		kind: 'enum',
-		path: ['layout', group.key, 'listLayout'],
+		path: [`${group.key}ListLayout`],
 		options: [
 			{ label: '单列', value: 'single' },
 			{ label: '双列', value: 'double' }
@@ -42,7 +42,7 @@ export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 		key: `${group.key}CardType`,
 		label: '卡片样式',
 		kind: 'enum',
-		path: ['layout', group.key, 'cardType'],
+		path: [`${group.key}CardType`],
 		options: [
 			{ label: '上图下文', value: 'image_top' },
 			{ label: '左文右图', value: 'image_right' },
@@ -52,8 +52,8 @@ export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 	}
 ]);
 
-/** 功能偏好字段 */
-export const FEATURE_PREFS: PrefDef[] = [{ key: 'isAvatarRadius', label: '是否圆形头像', kind: 'bool', path: ['isAvatarRadius'] }];
+/** 功能偏好字段(字段名与插件端一致) */
+export const FEATURE_PREFS: PrefDef[] = [{ key: 'avatarRadius', label: '是否圆形头像', kind: 'bool', path: ['avatarRadius'] }];
 
 /** 顶部分段器(布局 / 功能) */
 export const SETTING_TABS: { key: 'layout' | 'feature'; label: string }[] = [
@@ -126,12 +126,14 @@ export function usePreferenceRows() {
 	const layoutRows = computed(() => buildRows(LAYOUT_PREFS));
 	const featureRows = computed(() => buildRows(FEATURE_PREFS));
 
-	/** 布局设置按页面分组的展示行 */
+	/** 布局设置按页面分组的展示行（列表布局 + 卡片样式两行） */
 	const layoutGroups = computed(() =>
 		PAGE_GROUPS.map((group) => ({
 			key: group.key,
 			label: group.label,
-			rows: layoutRows.value.filter((row) => row.path[1] === group.key)
+			rows: layoutRows.value.filter((row) =>
+				row.path[0] === `${group.key}ListLayout` || row.path[0] === `${group.key}CardType`
+			)
 		}))
 	);
 
@@ -150,17 +152,20 @@ export function usePreferenceRows() {
 		settingStore.savePreference(buildPatch(path, next));
 	}
 
-	/** 给定页面分组下字段路径,判断该页面列表布局是否为双列 */
+	/** 给定字段路径,判断该页面列表布局是否为双列(path[0] 即插件端顶层字段名；
+	 * 列表布局行直接取值,卡片样式行推导同组 ListLayout 字段) */
 	function isDoubleColumn(path: string[]): boolean {
-		if (path.length >= 2 && path[0] === 'layout') {
-			return prefValueOf(['layout', path[1], 'listLayout']) === 'double';
+		const field = path[0] || ''
+		const listKey = field.endsWith('CardType') ? field.replace(/CardType$/, 'ListLayout') : field
+		if (listKey.endsWith('ListLayout')) {
+			return prefValueOf([listKey]) === 'double';
 		}
 		return false;
 	}
 
 	/** 卡片样式选项是否因双列约束被禁用(双列仅允许 image_top) */
 	function isCardTypeOptionDisabled(path: string[], value: string): boolean {
-		return path[2] === 'cardType' && isDoubleColumn(path) && value !== 'image_top';
+		return path[0].endsWith('CardType') && isDoubleColumn(path) && value !== 'image_top';
 	}
 
 	function handleChoose(path: string[], value: string | null): void {
@@ -169,8 +174,8 @@ export function usePreferenceRows() {
 		} else {
 			settingStore.savePreference(buildPatch(path, value));
 			// 双列约束:列表布局改为双列时,卡片样式强制为 image_top
-			if (path[0] === 'layout' && path[2] === 'listLayout' && value === 'double') {
-				const cardTypePath = ['layout', path[1], 'cardType'];
+			if (path[0].endsWith('ListLayout') && value === 'double') {
+				const cardTypePath = [path[0].replace(/ListLayout$/, 'CardType')];
 				if (prefValueOf(cardTypePath) !== 'image_top') {
 					settingStore.savePreference(buildPatch(cardTypePath, 'image_top'));
 				}

@@ -168,37 +168,37 @@
 					</uh-section-title>
 					<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
 						<template v-for="(row, index) in featureRows" :key="row.key">
-						 <!-- 布尔项:内联分段器(默认 / 开 / 关) -->
-						 <view v-if="row.kind === 'bool'" class="box-border p-3"
-						  :class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-						  <view class="flex items-center justify-between">
-						   <text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
-						   <view class="flex items-center gap-2">
-						    <text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
-						    <view v-else
-						     class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
-						     已自定义
-						    </view>
-						   </view>
-						  </view>
-						  <view class="mt-3 flex flex-wrap gap-2">
-						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-						    :class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
-						    @click="handleRevert(row.path)">
-						    默认
-						   </view>
-						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-						    :class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
-						    @click="handleBoolChange(row.path, true)">
-						    开
-						   </view>
-						   <view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-						    :class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
-						    @click="handleBoolChange(row.path, false)">
-						    关
-						   </view>
-						  </view>
-						 </view>
+							<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
+							<view v-if="row.kind === 'bool'" class="box-border p-3"
+								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
+								<view class="flex items-center justify-between">
+									<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+									<view class="flex items-center gap-2">
+										<text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
+										<view v-else
+											class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
+											已自定义
+										</view>
+									</view>
+								</view>
+								<view class="mt-3 flex flex-wrap gap-2">
+									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+										:class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
+										@click="handleRevert(row.path)">
+										默认
+									</view>
+									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+										:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+										@click="handleBoolChange(row.path, true)">
+										开
+									</view>
+									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
+										:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
+										@click="handleBoolChange(row.path, false)">
+										关
+									</view>
+								</view>
+							</view>
 							<!-- 枚举选择 -->
 							<view v-else class="pick-row flex items-center justify-between px-4 py-4"
 								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''"
@@ -245,7 +245,8 @@
 				</view>
 				<!-- 选择器 -->
 				<wd-picker-view :columns="enumColumns" v-model="pickerValue"
-					custom-class="!p-0 !bg-transparent !rounded-xl overflow-hidden" @change="handlePickerChange" />
+					custom-class="uh-picker-view !p-0 !bg-transparent !rounded-xl overflow-hidden"
+					@change="handlePickerChange" />
 				<!-- 底部操作:取消 / 确认 -->
 				<view class="mt-4 flex items-center justify-center gap-x-3">
 					<uh-button custom-class="flex-1 py-2 uh-global-card-glass border !rounded-xl bg-white/90"
@@ -262,3 +263,14 @@
 		</uh-glass-popup>
 	</view>
 </template>
+
+<style scoped lang="scss">
+	:deep(.uh-picker-view) {
+		.wd-picker-view__mask {
+			background: transparent !important;
+		}
+		.wd-picker-view__roller{
+			border-radius: 16rpx !important;
+		}
+	}
+</style>

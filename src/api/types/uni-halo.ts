@@ -20,6 +20,8 @@ export interface IPluginConfig {
   toolsPlugin?: { Authorization?: string } & Record<string, unknown>
   linksPlugin?: Record<string, unknown>
   linksSubmitPlugin?: { Authorization?: string } & Record<string, unknown>
+  /** 链接配置（插件端 spec.linkInfo 直接下发到本键，字段名无映射：displayName/miniProgramCode/link/description/applyRemark/authorName/avatar/website） */
+  linkInfo?: Record<string, unknown>
   doubanPlugin?: { position?: string } & Record<string, unknown>
   [key: string]: unknown
 }
@@ -63,6 +65,18 @@ export interface IPageConfig {
     /** 是否显示快捷导航(首页) */
     useQuickNavigation?: boolean
     bannerConfig?: IBannerConfig
+    /** 首页快捷导航项（插件端「通用配置 → 页面设置 → 首页」配置，字段命名与插件端一致，
+     * 数组顺序 = 展示顺序；未配置/为空时客户端回退内置默认项） */
+    quickNavigation?: Array<{
+      key?: string
+      title?: string
+      color?: string
+      bgColor?: string
+      iconPrefix?: string
+      icon?: string
+      path?: string
+      visible?: boolean
+    }>
     /** 首页精选分类引用（插件端「通用配置 → 页面设置 → 首页」配置，固定最多 3 个，
      * 快照含名称/封面/排序权重，数组顺序 = 展示顺序；配置模式下直接映射渲染不发请求，
      * 未配置/为空时回退默认取数） */
@@ -127,8 +141,7 @@ export interface IAppConfig {
   auditConfig?: IAuditConfig
   /**
    * 站点级展示偏好默认(L0,插件端 GeneralConfig.preferences 经 getConfigs additive 下发;
-   * 客户端 layout.{home,articles,archives}.{listLayout,cardType}/isAvatarRadius 的站点默认来源,
-   * 本地偏好可覆盖;字段映射见 hermes/preferences.md §3)
+   * 字段名与客户端偏好设置一致,客户端直接透传消费、不做映射,本地偏好可覆盖)
    */
   preferences?: {
     /** 首页列表布局(h_row_col1/2 旧值由前端归一化为 single/double) */

@@ -6,6 +6,7 @@ import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { getCache, setCache } from '@/utils/storage'
+import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
 
@@ -111,6 +112,8 @@ async function handleGetData() {
   }
   catch (e) {
     console.error('获取相册失败', e)
+    // 模块锁 401：清除 token 并提示
+    handleLoveModuleLocked('lovePhoto', e)
     updateLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
@@ -138,6 +141,7 @@ async function handleLoadUnlockedAlbumPhotos() {
       }
       catch (e) {
         console.error('加载相册照片失败', e)
+        handleLoveModuleLocked('lovePhoto', e)
       }
     }
   }

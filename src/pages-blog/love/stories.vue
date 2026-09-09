@@ -3,6 +3,7 @@
 	import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveStories } from '@/api/uni-halo'
+	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -116,7 +117,10 @@
 		}
 		catch (e) {
 			console.error('获取故事失败', e)
-			handleLoadFromLegacy()
+			// 模块锁 401：清除 token 并提示；命中 locked 时不做旧配置降级（需回入口重新解锁）
+			if (!handleLoveModuleLocked('ourStory', e)) {
+				handleLoadFromLegacy()
+			}
 		}
 		finally {
 			setTimeout(() => {
