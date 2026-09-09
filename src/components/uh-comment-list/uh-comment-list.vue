@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { ref } from 'vue'
+	import { onMounted, onUnmounted, ref } from 'vue'
 	import { getPostCommentList } from '@/api/halo'
 	import { checkAvatarUrl } from '@/utils/url'
 	import type { IComment, ICommentListRes } from '@/api/types/halo'
@@ -8,8 +8,11 @@
 		disallowComment ?: boolean
 		postName : string
 		post : { metadata : { name : string } }
+		/** 评论目标 kind(文章 Post / 瞬间 Moment) */
+		kind ?: string
 	}>(), {
 		disallowComment: false,
+		kind: 'Post',
 	})
 
 	const emit = defineEmits<{
@@ -21,7 +24,7 @@
 	const loading = ref<'loading' | 'success' | 'error'>('loading')
 	const queryParams = ref({
 		group: 'content.halo.run',
-		kind: 'Post',
+		kind: props.kind,
 		version: 'v1alpha1',
 		name: props.postName,
 		page: 1,
@@ -91,6 +94,22 @@
 		})
 	}
 
+	/** 外部刷新(评论成功后由宿主调用) */
+	function refresh() {
+		handleGetData()
+	}
+
+	/** 兼容旧广播链路(article-detail 评论成功后 uni.$emit('comment_list_refresh')) */
+	onMounted(() => {
+		uni.$on('comment_list_refresh', handleGetData)
+	})
+
+	onUnmounted(() => {
+		uni.$off('comment_list_refresh', handleGetData)
+	})
+
+	defineExpose({ refresh })
+
 	handleGetData()
 </script>
 
@@ -135,7 +154,7 @@
 					<view v-if="dataList.length === 0" class="empty py-12">
 						<view class="empty-box flex flex-col items-center">
 							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
-							<text class="mt-2 text-sm text-gray-500">{{disallowComment ? '暂无评论' : '暂无评论'}}</text>
+							<text class="mt-2 text-sm text-gray-500">暂无评论</text>
 							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
 								文章已开启禁止评论
 							</view>

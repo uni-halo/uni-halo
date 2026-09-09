@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-	import { getPostByName, getPostCommentReplyList, postTrackersCounter, submitUpvote } from '@/api/halo'
+	import { getPostByName, getPostCommentReplyList, postTrackersCounter } from '@/api/halo'
+	import { useUpvote } from '@/hooks/useUpvote'
 	import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 	import { formatTime } from '@/utils/formatTime'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -188,36 +189,14 @@
 	}
 
 	/* ---------------- 点赞 ---------------- */
-	const upvotedNames = ref<string[]>([])
+	const { hasUpvoted, handleDoLikes } = useUpvote('posts', () => result.value?.metadata.name)
 
-	function hasUpvoted() : boolean {
-		return upvotedNames.value.includes(result.value?.metadata.name || '')
-	}
-
-	async function handleDoLikes() {
-		if (!result.value) {
-			return
-		}
-		if (hasUpvoted()) {
-			uni.showToast({ icon: 'none', title: '已经点过赞啦!' })
-			return
-		}
-		try {
-			await submitUpvote({
-				group: 'content.halo.run',
-				plural: 'posts',
-				name: result.value.metadata.name,
-			})
-			uni.showToast({ icon: 'none', title: '点赞成功!' })
-			upvotedNames.value.push(result.value.metadata.name)
-			if (result.value.stats) {
+	function handleDoLikesClick() {
+		handleDoLikes((name) => {
+			if (result.value?.stats) {
 				result.value.stats.upvote = (result.value.stats.upvote || 0) + 1
 			}
-		}
-		catch (err) {
-			console.error('点赞失败', err)
-			uni.showToast({ icon: 'none', title: '点赞失败' })
-		}
+		})
 	}
 
 	/* ---------------- 收藏 ---------------- */
@@ -356,6 +335,13 @@
 			uni.$emit('comment_list_refresh')
 		}
 		commentModal.value.show = false
+	}
+
+	/** 评论列表加载完成:同步评论计数(统计区展示) */
+	function handleCommentLoaded(list : IComment[]) {
+		if (result.value?.stats) {
+			result.value.stats.comment = list.length
+		}
 	}
 
 	function handleOnShowCommentDetail(data : { postName : string, comment : IComment }) {
@@ -595,8 +581,8 @@
 
 					<!-- 评论区域 -->
 					<uh-comment-list v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
-						:post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
-						@on-comment-detail="handleOnShowCommentDetail" />
+					 :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
+					 @on-comment-detail="handleOnShowCommentDetail" @on-loaded="handleCommentLoaded" />
 				</view>
 			</view>
 
@@ -607,7 +593,7 @@
 					class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 					<view
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-						:class="{ active: hasUpvoted() }" @click="handleDoLikes">
+						:class="{ active: hasUpvoted() }" @click="handleDoLikesClick">
 						<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
 						<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
 					</view>

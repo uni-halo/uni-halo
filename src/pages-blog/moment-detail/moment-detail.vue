@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-	import { getMomentByName, submitUpvote } from '@/api/halo'
+	import { getMomentByName } from '@/api/halo'
+	import { useUpvote } from '@/hooks/useUpvote'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useFavoritesStore } from '@/store/favorites'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
@@ -138,35 +139,15 @@
 	}
 
 	/* ---------------- 点赞 ---------------- */
-	const upvotedNames = ref<string[]>([])
+	const { hasUpvoted, handleDoLikes } = useUpvote('moments', () => moment.value?.metadata.name)
 
-	function hasUpvoted() : boolean {
-		return upvotedNames.value.includes(moment.value?.metadata.name || '')
-	}
-
-	async function handleDoLikes() {
-		const current = moment.value
-		if (!current) { return }
-		if (hasUpvoted()) {
-			uni.showToast({ icon: 'none', title: '已经点过赞啦!' })
-			return
-		}
-		try {
-			await submitUpvote({
-				group: 'content.halo.run',
-				plural: 'moments',
-				name: current.metadata.name,
-			})
-			uni.showToast({ icon: 'none', title: '点赞成功!' })
-			upvotedNames.value.push(current.metadata.name)
-			if (current.stats) {
+	function handleDoLikesClick() {
+		handleDoLikes((name) => {
+			const current = moment.value
+			if (current?.stats) {
 				current.stats.upvote = (current.stats.upvote || 0) + 1
 			}
-		}
-		catch (err) {
-			console.error('点赞失败', err)
-			uni.showToast({ icon: 'none', title: '点赞失败' })
-		}
+		})
 	}
 
 	/* ---------------- 评论 ---------------- */
@@ -176,6 +157,8 @@
 		postName: '',
 		title: '',
 	})
+	/** 评论列表组件实例(评论成功后刷新) */
+	const commentListRef = ref<{ refresh : () => void } | null>(null)
 
 	function handleToComment() {
 		const current = moment.value
@@ -193,8 +176,23 @@
 		}
 	}
 
+	/** 评论列表触发(回复某条评论/新增) */
+	function handleOnComment(data : { isComment : boolean, postName : string, title : string }) {
+		commentModal.value = {
+			show: true,
+			isComment: data.isComment,
+			postName: data.postName,
+			title: data.title,
+		}
+	}
+
 	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean }) {
 		commentModal.value.show = false
+		if (data.isSubmit) {
+			// 评论成功后刷新评论列表与计数
+			commentListRef.value?.refresh()
+			loadMoment()
+		}
 	}
 
 	/* ---------------- 视频互斥 ---------------- */
@@ -358,6 +356,10 @@
 					</view>
 				</view>
 			</view>
+
+			<!-- 评论列表(瞬间评论,kind=Moment) -->
+			<uh-comment-list v-if="moment" ref="commentListRef" :post-name="moment.metadata.name" :post="moment"
+				kind="Moment" :disallow-comment="!moment.spec.allowComment" @on-comment="handleOnComment" />
 		</view>
 		<!-- 悬浮操作(与文章详情一致:点赞/评论/收藏) -->
 		<view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
@@ -366,12 +368,12 @@
 				<!-- 点赞 -->
 				<view
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-					:class="{ active: hasUpvoted() }" @click="handleDoLikes">
+					:class="{ active: hasUpvoted() }" @click="handleDoLikesClick">
 					<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
 					<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
 				</view>
 				<!-- 评论 -->
-				<view
+				<view v-if="moment.spec.allowComment"
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 					@click="handleToComment()">
 					<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />

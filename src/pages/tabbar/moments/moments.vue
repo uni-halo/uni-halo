@@ -13,6 +13,7 @@
 	import { formatTime } from '@/utils/formatTime'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { useUpvote } from '@/hooks/useUpvote'
 	import { markdownConfig } from '@/config/markdown'
 	import type { IMoment } from '@/api/types/halo'
 
@@ -204,6 +205,52 @@
 		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 	}
 
+	/* ---------------- 点赞(useUpvote 持久化防重复) ---------------- */
+	const { hasUpvoted, likeByName } = useUpvote('moments', () => '')
+
+	function handleMomentLike(moment : MomentCard) {
+		if (!moment) { return }
+		likeByName(moment.metadata.name, (name) => {
+			if (moment.stats) {
+				moment.stats.upvote = (moment.stats.upvote || 0) + 1
+			}
+		})
+	}
+
+	/* ---------------- 评论(列表内直接弹评论窗) ---------------- */
+	const commentModal = ref({
+		show: false,
+		isComment: true,
+		postName: '',
+		title: '',
+	})
+
+	function handleMomentComment(moment : MomentCard) {
+		if (!moment) { return }
+		if (!moment.spec.allowComment) {
+			uni.showToast({ icon: 'none', title: '瞬间已开启禁止评论！' })
+			return
+		}
+		commentModal.value = {
+			show: true,
+			isComment: true,
+			postName: moment.metadata.name,
+			title: '新增评论',
+		}
+	}
+
+	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean }) {
+		const postName = commentModal.value.postName
+		commentModal.value.show = false
+		if (data.isSubmit) {
+			// 评论成功后列表计数 +1
+			const target = dataList.value.find(item => item.metadata.name === postName)
+			if (target?.stats) {
+				target.stats.totalComment = (target.stats.totalComment || 0) + 1
+			}
+		}
+	}
+
 	function handleToTopPage(duration = 500) {
 		uni.pageScrollTo({
 			scrollTop: 0,
@@ -311,7 +358,7 @@
 
 						<!-- 正文 -->
 						<view class="box-border px-4 pt-3">
-							<view class="relative box-border rounded-lg bg-page p-3">
+							<view class="relative box-border rounded-lg bg-page p-3 text-gray-900 text-sm">
 								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
 									:loading-img="markdownConfig.loadingGif" scroll-table selectable
 									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
@@ -342,18 +389,22 @@
 						<!--  (点赞/评论) -->
 						<view
 							class="mb-1 mt-2 box-border w-full flex items-center justify-between border-t border-black/5 px-4 py-3 text-xs text-gray-400">
-							<view class="flex items-center gap-x-1">
+							<view class="flex items-center gap-x-1" @click.stop="handleMomentLike(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
-								<text class="text-sm text-gray-600">点赞 {{ moment.stats.upvote || 0 }}</text>
+								<text class="text-sm"
+									:class="hasUpvoted(moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
+									点赞 {{ moment.stats.upvote || 0 }}
+								</text>
 							</view>
-							<view class="flex items-center gap-x-1">
+							<view v-if="moment.spec.allowComment" class="flex items-center gap-x-1"
+								@click.stop="handleMomentComment(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
 								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
 							</view>
 							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
-								<text class="text-sm text-gray-600"
-									:style="isMomentFavorite(moment) ? { color: '#ffb300' } : ''">
+								<text class="text-sm"
+									:class="isMomentFavorite(moment) ? 'text-primary' : 'text-gray-600'">
 									{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}
 								</text>
 							</view>
@@ -366,4 +417,9 @@
 			</view>
 		</template>
 	</view>
+
+	<!-- 评论弹窗(瞬间评论,subjectKind=Moment) -->
+	<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
+		:title="commentModal.title" :post-name="commentModal.postName" subject-kind="Moment"
+		@on-close="handleOnCommentModalClose" />
 </template>
