@@ -3,11 +3,8 @@ import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
-import { useSettingStore } from '@/store/setting'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import { checkThumbnailUrl } from '@/utils/url'
 import { sleep } from '@/utils/common'
-import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IPost } from '@/api/types/halo'
 
 definePage({
@@ -19,10 +16,8 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
-const settingStore = useSettingStore()
 
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-const globalAppSettings = computed(() => settingStore.settings)
 
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -42,17 +37,6 @@ const loadMoreText = ref('加载中...')
 
 const postLabelYearKey = 'content.halo.run/archive-year'
 const postLabelMonthKey = 'content.halo.run/archive-month'
-
-/** 卡片布局偏好 → 原子类(对应旧版 cardType 样式变体) */
-const CARD_LAYOUTS: Record<string, { card: string, thumb: string, info: string }> = {
-  lr_image_text: { card: '', thumb: 'h-[170rpx] w-[200rpx]', info: 'w-0 flex-1 pl-5' },
-  lr_text_image: { card: '', thumb: 'order-2 h-[170rpx] w-[200rpx]', info: 'order-1 w-0 flex-1 pr-5' },
-  tb_image_text: { card: 'flex-col', thumb: 'h-[220rpx] w-full', info: 'w-full pt-3' },
-  tb_text_image: { card: 'flex-col', thumb: 'order-2 h-[220rpx] w-full', info: 'order-1 w-full pb-3' },
-  only_text: { card: '', thumb: 'hidden', info: 'py-1' },
-}
-
-const calcCardLayout = computed(() => CARD_LAYOUTS[globalAppSettings.value.layout.cardType] || CARD_LAYOUTS.lr_image_text)
 
 /* ---------------- 数据处理 ---------------- */
 /** 按 tab 分组文章 */
@@ -124,7 +108,6 @@ async function handleGetData() {
       const posts = handleGetPosts(filtered)
       dataList.value = handleGetShowDataList(posts)
       cacheDataList.value = filtered
-	 c
       updateLoadingStatus(
         dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
       )
@@ -207,15 +190,6 @@ function handleOnTabChange(e: { index: number }) {
   uni.pageScrollTo({ scrollTop: 0, duration: 500 })
 }
 
-function handleToArticleDetail(article: IPost) {
-  if (calcAuditModeEnabled.value)
-    return
-  uni.navigateTo({
-    url: `/pages-blog/article-detail/article-detail?name=${article.metadata.name}`,
-    animationType: 'slide-in-right',
-  })
-}
-
 function handleToTopPage(duration = 500) {
   uni.pageScrollTo({
     scrollTop: 0,
@@ -224,11 +198,6 @@ function handleToTopPage(duration = 500) {
       console.error('回顶失败', err)
     },
   })
-}
-
-function formatTime(time?: string): string {
-  // 与旧项目一致:yyyy年MM月dd日 星期w
-  return time ? formatTimeUtil({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
 }
 
 /* ---------------- 生命周期 ---------------- */
@@ -301,27 +270,14 @@ onReachBottom(() => {
               <text class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-500 leading-none">共 {{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
             </view>
 
-            <view v-if="item.posts.length !== 0">
-              <view
+            <view v-if="item.posts.length !== 0" class="flex flex-col gap-y-4">
+              <uh-article-card
                 v-for="post in item.posts"
                 :key="post.metadata.name"
-                class="uh-global-card-glass mb-4 flex rounded-2xl p-4"
-                :class="calcCardLayout.card"
-                @click="handleToArticleDetail(post)"
-              >
-                <image class="post-thumbnail shrink-0 rounded-lg" :class="calcCardLayout.thumb" :src="checkThumbnailUrl(post.spec.cover)" mode="aspectFill" lazy-load />
-                <view class="post-info min-w-0" :class="calcCardLayout.info">
-                  <view class="post-info-title overflow-hidden text-ellipsis whitespace-nowrap text-[28rpx] text-gray-900 font-bold">
-                    {{ post.spec.title }}
-                  </view>
-                  <view class="post-info-summary line-clamp-2 mt-2 text-[24rpx] text-gray-400">
-                    {{ post.status?.excerpt }}
-                  </view>
-                  <view class="post-info-time mt-2 text-[24rpx] text-gray-400">
-                    日期：{{ formatTime(post.spec.publishTime) }}
-                  </view>
-                </view>
-              </view>
+                from="archives"
+                :article="post"
+                :audit-mode="calcAuditModeEnabled"
+              />
             </view>
             <view v-else class="post-empty py-6 text-[26rpx] text-gray-400">
               该日期下暂无归档文章！

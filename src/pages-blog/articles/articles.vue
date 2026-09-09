@@ -1,9 +1,4 @@
 <script lang="ts" setup>
-/**
- * 文章列表页(替代 unibest 模板占位页)
- * 标准布局:uh-navbar + useDataLoadingStatus 四态 + uh-data-loading + 分页加载 + 回顶
- * 2026-09-08:新增分类筛选 + 排序(参考投票中心胶囊弹层),列表改 grid 两列紧凑卡片
- */
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList, getPostList } from '@/api/halo'
@@ -11,6 +6,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { sleep } from '@/utils/common'
 import type { ICategory, IPost } from '@/api/types/halo'
 
 definePage({
@@ -32,16 +28,13 @@ const hasNext = ref(false)
 const isLoadMore = ref(false)
 const loadMoreText = ref(t('common.loading'))
 
-/* ---------------- 筛选与排序(内联:分类参考图库顶部,排序一排) ---------------- */
 interface IFilterOption {
   label: string
   value: string
 }
 
-/** 分类列表(筛选选项数据源) */
 const categoryList = ref<ICategory[]>([])
 
-/** 排序参数映射 */
 const sortMap: Record<string, string[]> = {
   default: ['spec.pinned,desc', 'spec.publishTime,desc'],
   latest: ['spec.publishTime,desc'],
@@ -49,13 +42,11 @@ const sortMap: Record<string, string[]> = {
   pinned: ['spec.pinned,desc'],
 }
 
-/** 分类选项(含"全部",参考图库顶部设计) */
 const categoryOptions = computed<IFilterOption[]>(() => [
   { label: '全部', value: '' },
   ...categoryList.value.map(c => ({ label: c.spec.displayName, value: c.metadata.name })),
 ])
 
-/** 排序选项(一排内联) */
 const sortOptions: IFilterOption[] = [
   { label: '默认排序', value: 'default' },
   { label: '最新', value: 'latest' },
@@ -63,7 +54,6 @@ const sortOptions: IFilterOption[] = [
   { label: '置顶', value: 'pinned' },
 ]
 
-/** 各维度当前选中值(空串 = 全部) */
 const filterValues = ref<Record<string, string>>({ category: '', sort: 'default' })
 
 /** 切换分类/排序:重置分页并重新查询 */
@@ -91,7 +81,6 @@ async function handleGetCategoryList() {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetArticleList() {
   if (calcAuditModeEnabled.value) {
-    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
     const auditPostNames = appConfigStore.auditData.spec?.posts || []
     try {
       const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
@@ -100,6 +89,7 @@ async function handleGetArticleList() {
         item.owner.avatar = checkAvatarUrl(item.owner.avatar)
         return item
       })
+	  await sleep(600)
       updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
       loadMoreText.value = t('common.noMore')
     }
@@ -120,7 +110,6 @@ async function handleGetArticleList() {
   loadMoreText.value = t('common.loading')
 
   try {
-    // 应用分类筛选与排序参数
     const params = {
       ...queryParams.value,
       category: filterValues.value.category || undefined,
@@ -134,6 +123,7 @@ async function handleGetArticleList() {
       item.owner.avatar = checkAvatarUrl(item.owner.avatar)
       return item
     })
+	await sleep(600)
     updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
     loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
   }
@@ -145,19 +135,8 @@ async function handleGetArticleList() {
   finally {
     uni.stopPullDownRefresh()
   }
-}
+} 
 
-function handleToTopPage(duration = 500) {
-  uni.pageScrollTo({
-    scrollTop: 0,
-    duration,
-    fail: (err) => {
-      console.error('回顶失败', err)
-    },
-  })
-}
-
-/* ---------------- 生命周期 ---------------- */
 onLoad(() => {
   handleGetCategoryList()
   handleGetArticleList()
@@ -191,13 +170,11 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="app-page min-h-screen w-screen flex flex-col bg-page">
-    <!-- 自定义导航 -->
+  <view class="min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar default-title="文章列表" title-color="text-gray-900" />
 
-    <!-- 第一行:分类 Tab(参考图库顶部设计) -->
     <wd-sticky v-if="categoryOptions.length > 1" class="w-full">
-      <scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pt-2">
         <view
           v-for="cate in categoryOptions" :key="cate.value"
           class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1 text-sm"
@@ -209,8 +186,7 @@ onReachBottom(() => {
       </scroll-view>
     </wd-sticky>
 
-    <!-- 第二行:排序一排 -->
-    <scroll-view :scroll-x="true" class="w-full whitespace-nowrap">
+    <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
       <view class="box-border flex gap-2 px-3 py-2">
         <view
           v-for="opt in sortOptions" :key="opt.value"
@@ -223,16 +199,14 @@ onReachBottom(() => {
       </view>
     </scroll-view>
 
-    <!-- 加载/错误/空占位(状态机) -->
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success"
       :loading-status="loadingStatus"
-      empty-text="博主还没有发布文章呢~"
-      min-height="60vh"
+      empty-text="啊偶，还没有任何内容哦~"
+      min-height="75vh"
       @refresh="handleGetArticleList"
     />
 
-    <!-- 文章列表(grid 两列) -->
     <view v-else class="box-border flex flex-col gap-4 p-3">
       <view class="grid grid-cols-2 gap-3">
         <uh-article-card

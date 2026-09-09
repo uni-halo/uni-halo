@@ -1,125 +1,181 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
-import { checkThumbnailUrl } from '@/utils/url'
-import { useSettingStore } from '@/store/setting'
-import { formatTime } from '@/utils/formatTime'
-import type { ICategory, IPost } from '@/api/types/halo'
+	import { computed } from 'vue'
+	import { checkThumbnailUrl } from '@/utils/url'
+	import { useSettingStore } from '@/store/setting'
+	import { formatTime } from '@/utils/formatTime'
+	import type { ICategory, IPost } from '@/api/types/halo'
 
-const props = withDefaults(defineProps<{
-  from?: string
-  auditMode?: boolean
-  article: IPost
-  /** 卡片形态:list=常规列表卡(默认),grid=两列紧凑卡(隐藏分类/标签,摘要单行) */
-  variant?: 'list' | 'grid'
-}>(), {
-  auditMode: false,
-  from: '',
-  variant: 'list',
-})
+	type CardLayout = 'image_top' | 'image_right' | 'image_bottom' | 'image_left'
 
-const settingStore = useSettingStore()
+	interface CardLayoutClasses {
+		container: string
+		cover: string
+		contentWrapper: string
+		footer: string
+		authorGroup: string
+		time: string
+		tagCategory: string
+		visits: string
+	}
 
-/** 卡片布局 class(由全局设置 layout 决定) */
-const cardType = computed(() => {
-  const layout = settingStore.settings.layout
-  // 首页双列时强制上图下文布局,除非显式指定其他
-  if (props.from === 'home' && layout.home === 'h_row_col2') {
-    if (!['tb_image_text', 'tb_text_image', 'only_text'].includes(layout.cardType)) {
-      return [props.from, layout.home, 'tb_image_text']
-    }
-    return [props.from, layout.home, layout.cardType]
-  }
-  return [layout.home, layout.cardType]
-})
+	/** 旧版全局 cardType → 新版 layout;未知值(如 only_text)由 effectiveLayout 兜底 image_top */
+	const CARD_TYPE_TO_LAYOUT: Record<string, CardLayout> = {
+		lr_image_text: 'image_left',
+		lr_text_image: 'image_right',
+		tb_image_text: 'image_top',
+		tb_text_image: 'image_bottom',
+	}
 
-/** grid 紧凑模式(两列:隐藏分类/标签,摘要单行,底部精简) */
-const isGrid = computed(() => props.variant === 'grid')
+	/** 单一事实源:每种布局的完整形态,模板不再有任何 order / 条件分支 */
+	const CARD_LAYOUTS: Record<CardLayout, CardLayoutClasses> = {
+		image_top: {
+			container: 'flex flex-col gap-y-2',
+			cover: '',
+			contentWrapper: 'w-full',
+			footer: 'flex items-center',
+			authorGroup: 'flex-1 items-center justify-start gap-x-1',
+			time: 'flex-1 text-center',
+			tagCategory: '',
+			visits: 'flex-1 justify-end',
+		},
+		image_bottom: {
+			container: 'flex flex-col gap-y-2',
+			cover: 'order-2',
+			contentWrapper: 'w-full',
+			footer: 'flex items-center',
+			authorGroup: 'flex-1 items-center justify-center gap-x-1',
+			time: 'flex-1 text-center',
+			tagCategory: '',
+			visits: 'flex-1 justify-center',
+		},
+		image_left: {
+			container: 'flex gap-x-3 !p-2',
+			cover: 'shrink-0 !w-36 !h-24',
+			contentWrapper: 'w-0 flex-1 justify-between',
+			footer: 'flex items-center justify-between',
+			authorGroup: 'items-center gap-x-1',
+			time: '!hidden',
+			tagCategory: '!hidden',
+			visits: '',
+		},
+		image_right: {
+			container: 'flex gap-x-3 !p-2',
+			cover: 'order-2 shrink-0 !w-36 !h-24',
+			contentWrapper: 'order-1 w-0 flex-1 justify-between',
+			footer: 'flex items-center justify-between',
+			authorGroup: 'items-center gap-x-1',
+			time: '!hidden',
+			tagCategory: '!hidden',
+			visits: '',
+		},
+	}
 
-/** 发布时间格式化 yyyy-MM-dd */
-const publishTimeText = computed(() => {
-  const time = props.article.spec.publishTime
-  return time ? formatTime({ d: time, f: 'yyyy-MM-dd' }) : ''
-})
+	const props = withDefaults(defineProps<{
+		from ?: 'home' | 'articles' | 'archives' | ''
+		auditMode ?: boolean
+		article : IPost
+		variant ?: 'list' | 'grid'
+		layout ?: CardLayout
+	}>(), {
+		auditMode: false,
+		from: '',
+		variant: 'list',
+	})
 
-/** 阅读数(兼容 status.stats.visits 与旧版顶层 stats.visit) */
-const visitCount = computed(() => {
-  return props.article.status?.stats?.visits ?? props.article.stats?.visit ?? 0
-})
+	const settingStore = useSettingStore()
 
-function handleToArticleDetail() {
-  uni.navigateTo({
-    url: `/pages-blog/article-detail/article-detail?name=${props.article.metadata.name}`,
-    animationType: 'slide-in-right',
-  })
-}
+	const isGrid = computed(() => props.variant === 'grid')
 
-function handleToCategory(category: ICategory) {
-  if (props.auditMode) {
-    return
-  }
-  uni.navigateTo({
-    url: `/pages-blog/category-articles/category-articles?name=${category.metadata.name}&title=${category.spec.displayName}`,
-  })
-}
+	/** 实际生效布局:显式 layout > home/archives 跟随全局 cardType > image_top;窄列场景左右布局回退上图下文 */
+	const effectiveLayout = computed<CardLayout>(() => {
+		const followGlobal = props.from === 'home' || props.from === 'archives'
+		let raw = props.layout
+		if (!raw) {
+			raw = followGlobal
+				? CARD_TYPE_TO_LAYOUT[settingStore.settings.layout.cardType] ?? 'image_top'
+				: 'image_top'
+		}
+		const narrow = isGrid.value || (props.from === 'home' && settingStore.settings.layout.home === 'h_row_col2')
+		if (narrow && (raw === 'image_left' || raw === 'image_right')) {
+			return 'image_top'
+		}
+		return raw
+	})
+
+	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value])
+
+	const publishTimeText = computed(() => {
+		const time = props.article.spec.publishTime
+		return time ? formatTime({ d: time, f: 'yyyy/MM/dd' }) : ''
+	})
+
+	const visitCount = computed(() => {
+		return props.article.status?.stats?.visits ?? props.article.stats?.visit ?? 0
+	})
+
+	function handleToArticleDetail() {
+		if (props.auditMode) {
+			return
+		}
+		uni.navigateTo({
+			url: `/pages-blog/article-detail/article-detail?name=${props.article.metadata.name}`,
+			animationType: 'slide-in-right',
+		})
+	}
+
+	function handleToCategory(category : ICategory) {
+		if (props.auditMode) {
+			return
+		}
+		uni.navigateTo({
+			url: `/pages-blog/category-articles/category-articles?name=${category.metadata.name}&title=${category.spec.displayName}`,
+		})
+	}
 </script>
 
 <template>
-  <view
-    class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"
-    @click.stop="handleToArticleDetail()"
-  >
-    <text
-      v-if="article.spec.pinned"
-      class="text-gray-60 absolute right-6 top-6 z-1 rounded-lg bg-secondary px-2 py-1 text-xs"
-    >
-      置顶
-    </text>
-    <image
-      :class="isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg'"
-      :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load
-    />
-    <view class="w-full flex flex-col gap-y-2 text-sm">
-      <view class="mt-2 truncate font-bold">
-        {{ article.spec.title }}
-      </view>
-      <view :class="isGrid ? 'content line-clamp-1 text-gray-600' : 'content line-clamp-2 text-gray-600'">
-        {{ article.status?.excerpt }}
-      </view>
-      <view v-if="!isGrid" class="my-1 box-border flex flex-wrap gap-2">
-        <template v-if="article.categories && article.categories.length !== 0">
-          <text
-            v-for="cate in article.categories" :key="cate.metadata.name"
-            class="rounded-xl bg-secondary px-2 py-1 text-xs" @click.stop="handleToCategory(cate)"
-          >
-            {{ cate.spec.displayName }}
-          </text>
-        </template>
-        <template v-if="article.tags && article.tags.length !== 0">
-          <text
-            v-for="tag in article.tags" :key="tag.metadata.name"
-            class="rounded-xl bg-secondary px-2 py-1 text-xs"
-          >
-            # {{ tag.spec.displayName }}
-          </text>
-        </template>
-      </view>
-      <view class="mt-1 flex items-center justify-between text-xs text-gray-500">
-        <view v-if="!isGrid" class="flex items-center gap-x-1">
-          <image
-            :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
-            mode="aspectFill"
-          />
-          <text>{{ article.owner.displayName }}</text>
-        </view>
-        <view class="flex items-center gap-x-2">
-          {{ publishTimeText }}
-        </view>
-        <view class="visits">
-          浏览
-          <text class="number">{{ visitCount }}</text>
-          次
-        </view>
-      </view>
-    </view>
-  </view>
+	<view class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"
+		:class="cardLayout.container" @click.stop="handleToArticleDetail()">
+		<text v-if="article.spec.pinned"
+			class="text-gray-60 absolute left-2 top-2 z-1 rounded-lg bg-secondary px-2 py-1 text-xs">
+			置顶
+		</text>
+		<image :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]"
+			:src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
+		<view class="flex flex-col gap-y-2 text-sm" :class="cardLayout.contentWrapper">
+			<view class="truncate font-bold">
+				{{ article.spec.title }}
+			</view>
+			<view :class="isGrid ? 'content line-clamp-1 text-gray-600' : 'content line-clamp-2 text-gray-600'">
+				{{ article.status?.excerpt }}
+			</view>
+			<view v-if="!isGrid" class="my-1 box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
+				<template v-if="article.categories && article.categories.length !== 0">
+					<text v-for="cate in article.categories" :key="cate.metadata.name"
+						class="rounded-xl bg-secondary px-2 py-1 text-xs" @click.stop="handleToCategory(cate)">
+						{{ cate.spec.displayName }}
+					</text>
+				</template>
+				<template v-if="article.tags && article.tags.length !== 0">
+					<text v-for="tag in article.tags" :key="tag.metadata.name"
+						class="rounded-xl bg-secondary px-2 py-1 text-xs">
+						# {{ tag.spec.displayName }}
+					</text>
+				</template>
+			</view>
+			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
+				<view v-if="!isGrid" class="flex items-center" :class="cardLayout.authorGroup">
+					<image :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
+						mode="aspectFill" />
+					<text class="truncate">{{ article.owner.displayName }}</text>
+				</view>
+				<text v-if="!isGrid" class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
+				<view class="visits flex items-center gap-x-1" :class="cardLayout.visits">
+					浏览
+					<text class="number">{{ visitCount }}</text>
+					次
+				</view>
+			</view>
+		</view>
+	</view>
 </template>
