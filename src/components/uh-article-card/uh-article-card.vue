@@ -13,9 +13,13 @@
 		contentWrapper: string
 		footer: string
 		authorGroup: string
+		avatar: string
+		nickname: string
+		infoCol: string
 		time: string
 		tagCategory: string
 		visits: string
+		pinned: string
 	}
 
 	/** 旧版全局 cardType → 新版 layout;未知值(如 only_text)由 effectiveLayout 兜底 image_top */
@@ -34,19 +38,27 @@
 			contentWrapper: 'w-full',
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
+			avatar: '',
+			nickname: '',
+			infoCol: 'items-center gap-x-1',
 			time: 'flex-1 text-center',
 			tagCategory: '',
 			visits: 'flex-1 justify-end',
+			pinned: 'right-4 top-4',
 		},
 		image_bottom: {
 			container: 'flex flex-col gap-y-2',
 			cover: 'order-2',
 			contentWrapper: 'w-full',
-			footer: 'flex items-center',
-			authorGroup: 'flex-1 items-center justify-center gap-x-1',
-			time: 'flex-1 text-center',
+			footer: 'order-first flex items-center mb-1',
+			authorGroup: 'items-center gap-x-2',
+			avatar: '!h-9 !w-9 !rounded-xl',
+			nickname: '!text-sm',
+			infoCol: 'flex-col items-start leading-tight',
+			time: '',
 			tagCategory: '',
-			visits: 'flex-1 justify-center',
+			visits: '',
+			pinned: 'right-3 top-3',
 		},
 		image_left: {
 			container: 'flex gap-x-3 !p-2',
@@ -54,9 +66,13 @@
 			contentWrapper: 'w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
+			avatar: '',
+			nickname: '',
+			infoCol: 'items-center gap-x-1',
 			time: '!hidden',
 			tagCategory: '!hidden',
 			visits: '',
+			pinned: 'left-3 top-3',
 		},
 		image_right: {
 			container: 'flex gap-x-3 !p-2',
@@ -64,9 +80,13 @@
 			contentWrapper: 'order-1 w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
+			avatar: '',
+			nickname: '',
+			infoCol: 'items-center gap-x-1',
 			time: '!hidden',
 			tagCategory: '!hidden',
 			visits: '',
+			pinned: 'right-3 top-3',
 		},
 	}
 
@@ -104,6 +124,9 @@
 
 	const cardLayout = computed(() => CARD_LAYOUTS[effectiveLayout.value])
 
+	/** 社交卡片形态(封面在下):左上用户信息(头像 + 昵称/日期垂直)、右上浏览数 */
+	const isSocialCard = computed(() => effectiveLayout.value === 'image_bottom')
+
 	const publishTimeText = computed(() => {
 		const time = props.article.spec.publishTime
 		return time ? formatTime({ d: time, f: 'yyyy/MM/dd' }) : ''
@@ -137,7 +160,8 @@
 	<view class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"
 		:class="cardLayout.container" @click.stop="handleToArticleDetail()">
 		<text v-if="article.spec.pinned"
-			class="text-gray-60 absolute left-2 top-2 z-1 rounded-lg bg-secondary px-2 py-1 text-xs">
+			class="box-border uh-global-card-glass border text-gray-900 absolute z-1 rounded-md bg-secondary px-1.5 py-0.5 text-xs"
+			:class="cardLayout.pinned">
 			置顶
 		</text>
 		<image :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]"
@@ -152,13 +176,13 @@
 			<view v-if="!isGrid" class="my-1 box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
 				<template v-if="article.categories && article.categories.length !== 0">
 					<text v-for="cate in article.categories" :key="cate.metadata.name"
-						class="rounded-xl bg-secondary px-2 py-1 text-xs" @click.stop="handleToCategory(cate)">
+						class="box-border uh-global-card-glass border uh-shadow-xs rounded-xl bg-secondary px-2 py-0.5 text-xs" @click.stop="handleToCategory(cate)">
 						{{ cate.spec.displayName }}
 					</text>
 				</template>
 				<template v-if="article.tags && article.tags.length !== 0">
 					<text v-for="tag in article.tags" :key="tag.metadata.name"
-						class="rounded-xl bg-secondary px-2 py-1 text-xs">
+						class="box-border uh-global-card-glass border uh-shadow-xs rounded-xl bg-secondary px-2 py-0.5 text-xs">
 						# {{ tag.spec.displayName }}
 					</text>
 				</template>
@@ -166,11 +190,25 @@
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
 				<view v-if="!isGrid" class="flex items-center" :class="cardLayout.authorGroup">
 					<image :src="article.owner.avatar" class="uh-global-card-glass h-5 w-5 rounded-full"
-						mode="aspectFill" />
-					<text class="truncate">{{ article.owner.displayName }}</text>
+						:class="cardLayout.avatar" mode="aspectFill" />
+					<template v-if="isSocialCard">
+						<view class="flex" :class="cardLayout.infoCol">
+							<text class="truncate" :class="cardLayout.nickname">{{ article.owner.displayName }}</text>
+							<view class="flex items-center gap-x-2">
+								<text class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
+								<view class="visits flex items-center gap-x-1 text-gray-400">
+									浏览
+									<text class="number">{{ visitCount }}</text>
+									次
+								</view>
+							</view>
+						</view>
+					</template>
+					<text v-else class="truncate">{{ article.owner.displayName }}</text>
 				</view>
-				<text v-if="!isGrid" class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
-				<view class="visits flex items-center gap-x-1" :class="cardLayout.visits">
+				<text v-if="!isGrid && !isSocialCard" class="text-gray-400"
+					:class="cardLayout.time">{{ publishTimeText }}</text>
+				<view v-if="!isSocialCard" class="visits flex items-center gap-x-1" :class="cardLayout.visits">
 					浏览
 					<text class="number">{{ visitCount }}</text>
 					次
