@@ -7,9 +7,7 @@ export const DefaultAppConfigs: IAppConfig = {
   authorConfig: {},
   appConfig: {},
   pluginConfig: {
-    votePlugin: {},
     toolsPlugin: {},
-    linksPlugin: {},
     doubanPlugin: {
       position: 'bottom',
     },

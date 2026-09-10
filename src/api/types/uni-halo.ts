@@ -14,14 +14,12 @@ export interface IImagesConfig {
   [key: string]: unknown
 }
 
-/** 插件配置(toolsPlugin/linksPlugin 等带 Authorization) */
+/** 插件配置(toolsPlugin 等带 Authorization) */
 export interface IPluginConfig {
-  votePlugin?: Record<string, unknown>
   toolsPlugin?: { Authorization?: string } & Record<string, unknown>
-  linksPlugin?: Record<string, unknown>
   /**
    * 链接配置（插件端 spec.linkInfo 直接下发到本键，结构 = {miniInfo, siteInfo, authorInfo}，字段名无映射；
-   * linksSubmitPlugin 旧键已弃用不再下发）
+   * linksSubmitPlugin 旧键已弃用不再下发；votePlugin/linksPlugin 已下线（2026-09-10，app 端改插件启用检测判定））
    */
   linkInfo?: {
     /** 小程序信息（「申请信息」弹窗展示） */

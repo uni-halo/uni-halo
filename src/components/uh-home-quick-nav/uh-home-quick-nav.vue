@@ -7,13 +7,13 @@
 
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
-	const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
-	const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
 
-	/** 快捷导航项（字段命名与插件端 quickNavigation 一致：key/title/color/bgColor/iconPrefix/icon/path/visible，无 borderColor） */
+	/** 快捷导航项（字段命名与插件端 quickNavigation 一致：key/title/subTitle/color/bgColor/iconPrefix/icon/path/visible，无 borderColor） */
 	interface QuickNavItem {
 		key : string
 		title ?: string
+		/** 副标题（对标 about 页 rightText，如「全部文章」；2026-09-10 插件端新增可空字段） */
+		subTitle ?: string
 		color ?: string
 		bgColor ?: string
 		iconPrefix ?: string
@@ -29,6 +29,7 @@
 		{
 			key: 'archives',
 			title: '文章归档',
+			subTitle: '全部文章',
 			color: '#03A9F4',
 			bgColor: 'rgba(3, 169, 244, 0.14)',
 			iconPrefix: 'uhemoji2-icon',
@@ -118,8 +119,13 @@
 					}">
 					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx" />
 				</view>
-				<view class="text-xs text-gray-900">
-					{{ item.title }}
+				<view class="flex flex-col items-center gap-0.5">
+					<text class="max-w-16 truncate text-xs text-gray-900">
+						{{ item.title }}
+					</text>
+					<text v-if="item.subTitle" class="max-w-16 truncate text-[10rpx] text-gray-400">
+						{{ item.subTitle }}
+					</text>
 				</view>
 			</view>
 		</view>

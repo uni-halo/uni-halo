@@ -34,7 +34,22 @@
 		ourStory : { enabled : boolean, passwordEnabled ?: boolean }
 		lovePhoto : { enabled : boolean, passwordEnabled ?: boolean }
 		loveDaily : { enabled : boolean, passwordEnabled ?: boolean }
+		/** 恋爱页入口列表（插件端 spec.love.navList 经 getConfigs 下发，additive；
+		 * 字段 key/title/subTitle/priority/visible，desc 已改名 subTitle） */
+		navList ?: ILoveNavItem[]
 		[key : string] : unknown
+	}
+
+	/** 恋爱页入口项（对齐插件端 GeneralConfig.LoveNavItem；key 固定 stories/album/list） */
+	interface ILoveNavItem {
+		key : string
+		title ?: string
+		/** 副标题（原 app 端 desc 文案改名 subTitle） */
+		subTitle ?: string
+		/** 排序（越大越靠前） */
+		priority ?: number
+		/** 是否展示（不可删除，仅禁用/启用） */
+		visible ?: boolean
 	}
 
 	const loveConfig = ref<ILoveConfigPage>({
@@ -60,8 +75,34 @@
 	const loveDayCount = ref({ d: 0, h: 0, m: 0, s: 0 })
 	let loveDayTimer : ReturnType<typeof setTimeout> | null = null
 
-	const navList = ref<{ key : string, use : boolean, iconPrefix : string, icon : string, title : string, desc : string }[]>([])
+	/** 恋爱页入口渲染项（字段由 initList 从插件端 loveConfig.navList 合成：key 映射图标/路径、desc→subTitle） */
+	interface ILoveNavRenderItem {
+		key : string
+		use : boolean
+		iconPrefix : string
+		icon : string
+		title : string
+		subTitle : string
+	}
 
+	// 是否使用本地的恋爱页入口数据（本地的可以任意修改图标/路径/文案，插件端的仅可配置 title/subTitle/排序/显隐）
+	const useLocalNav = false
+
+	/** 内置默认入口项（未配置时回退；字段命名与插件端 loveConfig.navList 一致，desc 文案改名 subTitle） */
+	const DEFAULT_NAV_LIST : ILoveNavItem[] = [
+		{ key: 'stories', title: '恋爱故事', subTitle: '我们一起度过的那些经历', priority: 1, visible: true },
+		{ key: 'album', title: '恋爱相册', subTitle: '定格了我们的那些小美好', priority: 2, visible: true },
+		{ key: 'list', title: '恋爱清单', subTitle: '你我之间的约定我们都在努力实现', priority: 3, visible: true },
+	]
+
+	/** 入口 key → 图标与跳转页映射（固定：key=stories/album/list，对应恋爱三模块） */
+	const NAV_META: Record<string, { iconPrefix: string, icon: string, page: string }> = {
+		stories: { iconPrefix: 'uhlove-icon', icon: 'gushi', page: 'stories' },
+		album: { iconPrefix: 'uhlove-icon', icon: 'xiangce', page: 'album' },
+		list: { iconPrefix: 'uhlove-icon', icon: 'liebiao', page: 'list' },
+	}
+
+	const navList = ref<ILoveNavRenderItem[]>([])
 
 	/* ---------------- 数据加载 ---------------- */
 	function syncLoveConfigFromStore() {
@@ -88,6 +129,7 @@
 				ourStory: loveModuleConfig.ourStory || loveConfig.value.ourStory,
 				lovePhoto: loveModuleConfig.lovePhoto || loveConfig.value.lovePhoto,
 				loveDaily: loveModuleConfig.loveDaily || loveConfig.value.loveDaily,
+				navList: loveModuleConfig.navList || loveConfig.value.navList,
 			}
 		}
 
@@ -98,34 +140,39 @@
 		}
 	}
 
+	/** 恋爱页入口：优先读插件端 loveConfig.navList（visible 过滤 + priority 排序，desc→subTitle，
+	 *  key 映射图标/路径，模块开关 enabled 与条目 visible 均 true 才展示）；未配置/为空回退内置默认 */
 	function initList() {
 		const configs = loveConfig.value
-		navList.value = [
-			{
-				key: 'stories',
-				use: configs.ourStory.enabled,
-				title: '恋爱故事',
-				desc: '我们一起度过的那些经历',
-				iconPrefix: 'uhlove-icon',
-				icon: 'gushi',
-			},
-			{
-				key: 'album',
-				use: configs.lovePhoto.enabled,
-				title: '恋爱相册',
-				desc: '定格了我们的那些小美好',
-				iconPrefix: 'uhlove-icon',
-				icon: 'xiangce'
-			},
-			{
-				key: 'list',
-				use: configs.loveDaily.enabled,
-				title: '恋爱清单',
-				desc: '你我之间的约定我们都在努力实现',
-				iconPrefix: 'uhlove-icon',
-				icon: 'liebiao'
-			},
-		]
+		const configured = configs.navList
+		let source : ILoveNavItem[]
+		if (!useLocalNav && configured && configured.length) {
+			source = configured
+		} else {
+			source = DEFAULT_NAV_LIST;
+		}
+		// priority 排序（越大越靠前；缺失按默认顺序兜底）
+		const sorted = [...source].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
+		navList.value = sorted.map((item) => {
+			const meta = NAV_META[item.key]
+			if (!meta) {
+				return null
+			}
+			const moduleKey = MODULE_KEY_MAP[item.key]
+			const moduleCfg = moduleKey
+				? (configs[moduleKey] as { enabled ?: boolean } | undefined)
+				: undefined
+			const fallback = DEFAULT_NAV_LIST.find((d) => d.key === item.key)
+			return {
+				key: item.key,
+				// 模块开关与条目显示开关均开启才展示（与插件端语义一致）
+				use: !!moduleCfg?.enabled && item.visible !== false,
+				iconPrefix: meta.iconPrefix,
+				icon: meta.icon,
+				title: item.title || fallback?.title || '',
+				subTitle: item.subTitle || fallback?.subTitle || '',
+			}
+		}).filter((item): item is ILoveNavRenderItem => item !== null)
 	}
 
 	/* ---------------- 恋爱计时 ---------------- */
@@ -300,7 +347,7 @@
 							{{ nav.title }}
 						</view>
 						<view class="text-xs truncate" :class="[index%2===0?'text-love/60':'text-blue-300']">
-							{{ nav.desc }}
+							{{ nav.subTitle }}
 						</view>
 					</view>
 					<view class="shrink-0">

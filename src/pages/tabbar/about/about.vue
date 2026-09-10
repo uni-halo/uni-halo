@@ -27,11 +27,17 @@
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-	const calcVotePluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.votePlugin?.enabled)
-	const calcLinksPluginEnabled = computed(() => !!haloConfigs.value.pluginConfig?.linksPlugin?.enabled)
 	/** 数据看板插件可用性(供导航项显隐判断,参考 gallery 对象传参模式) */
 	const { check: checkDataVisualPlugin } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginDataStatistics,
+	})
+	/** 投票插件可用性（投票中心导航项显隐；pluginConfig.votePlugin 已下线，2026-09-10 改插件启用检测） */
+	const { check: checkVotePluginAvailable } = usePluginAvailable({
+		pluginId: NeedPluginIds.PluginVote,
+	})
+	/** 链接插件可用性（友情链接导航项显隐；pluginConfig.linksPlugin 已下线，2026-09-10 改插件启用检测） */
+	const { check: checkLinksPluginAvailable } = usePluginAvailable({
+		pluginId: NeedPluginIds.PluginLinks,
 	})
 
 	/* ---------------- 计算属性 ---------------- */
@@ -89,6 +95,8 @@
 		icon : string
 		/** 图标块背景色(与首页快捷导航同色板,同一功能同色) */
 		bgColor : string
+		/** 图标颜色（插件端 myPageConfig 条目 color；本地默认缺省由 toSolidColor(bgColor) 派生） */
+		color ?: string
 		rightText : string
 		path : string | null
 		isAdmin ?: boolean
@@ -98,13 +106,41 @@
 		group : 'blog' | 'more'
 	}
 
+	/** 插件端 myPageConfig 条目（pageConfig.myPageConfig.commonFeatures/otherFeatures；
+	 * 字段命名与插件端一致：key/title/subTitle/color/bgColor/iconPrefix/icon/path/visible） */
+	interface IMyPageEntry {
+		key ?: string
+		title ?: string
+		subTitle ?: string
+		color ?: string
+		bgColor ?: string
+		iconPrefix ?: string
+		icon ?: string
+		path ?: string
+		visible ?: boolean
+	}
+
+	// 是否使用本地的功能入口数据（true=忽略插件端 myPageConfig，用内置默认；便于二次开发本地定制）
+	const useLocalNav = false
+
+	/** 插件端 myPageConfig（additive：未配置/为空返回 null，回退本地内置默认） */
+	const configuredFeatures = computed(() => {
+		const mp = haloConfigs.value.pageConfig?.myPageConfig as
+			| { commonFeatures ?: IMyPageEntry[], otherFeatures ?: IMyPageEntry[] }
+			| undefined
+		if (useLocalNav || !mp || (!mp.commonFeatures?.length && !mp.otherFeatures?.length)) {
+			return null
+		}
+		return mp
+	})
+
 	const navList = ref<INavItem[]>([])
 
-	/** 分组渲染(过滤后空组整组隐藏) */
+	/** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
 	const calcNavGroups = computed(() => {
 		const visible = navList.value.filter(n => n.show)
 		const groupDefs : { key : 'blog' | 'more', title : string }[] = [
-			{ key: 'blog', title: '博客功能' },
+			{ key: 'blog', title: '常用功能' },
 			{ key: 'more', title: '其他功能' },
 		]
 		return groupDefs
@@ -132,7 +168,39 @@
 	}
 
 	async function handleGetNavList() {
-		const dataVisualAvailable = await checkDataVisualPlugin()
+		// 配置模式：插件端 myPageConfig 两组（常用功能→blog、其他功能→more），
+		// 未配置/为空时回退本地内置默认（保留原显隐推导）
+		const mp = configuredFeatures.value
+		if (mp) {
+			const mapEntry = (e : IMyPageEntry, group : 'blog' | 'more') : INavItem | null => {
+				if (!e.key)
+					return null
+				return {
+					key: e.key,
+					title: e.title || '',
+					iconPrefix: e.iconPrefix,
+					icon: e.icon || '',
+					bgColor: e.bgColor || 'rgba(150, 150, 150, 0.95)',
+					color: e.color,
+					rightText: e.subTitle || '',
+					path: e.path || null,
+					show: e.visible !== false,
+					group,
+				}
+			}
+			navList.value = [
+				...(mp.commonFeatures || []).map(e => mapEntry(e, 'blog')).filter((n): n is INavItem => n !== null),
+				...(mp.otherFeatures || []).map(e => mapEntry(e, 'more')).filter((n): n is INavItem => n !== null),
+			]
+			syncFavoritesNavText()
+			return
+		}
+
+		const [dataVisualAvailable, voteAvailable, linksAvailable] = await Promise.all([
+			checkDataVisualPlugin(),
+			checkVotePluginAvailable(),
+			checkLinksPluginAvailable(),
+		])
 
 		navList.value = [
 			{
@@ -188,7 +256,7 @@
 				bgColor: 'rgba(0, 188, 212, 0.95)',
 				rightText: '查看和进行投票',
 				path: '/pages-blog/votes/votes',
-				show: !calcAuditModeEnabled.value && calcVotePluginEnabled.value,
+				show: !calcAuditModeEnabled.value && voteAvailable,
 				// show: true,
 				group: 'blog',
 			},
@@ -200,7 +268,7 @@
 				bgColor: 'rgba(0, 150, 136, 0.95)',
 				rightText: '看看博主朋友们吧',
 				path: '/pages-blog/friend-links/friend-links',
-				show: calcLinksPluginEnabled.value,
+				show: linksAvailable,
 				// show: true,
 				group: 'blog',
 			},
@@ -364,7 +432,7 @@
 							class="uh-global-card-glass border uh-shadow-xs h-8 w-8 flex items-center justify-center rounded-xl"
 							:style="{ backgroundColor: toLightBg(nav.bgColor) }">
 							<wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx"
-								:color="toSolidColor(nav.bgColor)" />
+								:color="nav.color || toSolidColor(nav.bgColor)" />
 						</view>
 						<text class="nav-title text-sm text-gray-900 font-bold">{{ nav.title }}</text>
 					</view>
