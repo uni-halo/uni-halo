@@ -8,11 +8,9 @@
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
 
-	/** 快捷导航项（字段命名与插件端 quickNavigation 一致：key/title/subTitle/color/bgColor/iconPrefix/icon/path/visible，无 borderColor） */
 	interface QuickNavItem {
 		key : string
 		title ?: string
-		/** 副标题（对标 about 页 rightText，如「全部文章」；2026-09-10 插件端新增可空字段） */
 		subTitle ?: string
 		color ?: string
 		bgColor ?: string
@@ -22,9 +20,7 @@
 		visible ?: boolean
 	}
 
-	// 是否使用本地的快捷导航数据（本地的可以任意修改图标、路径，插件端的无法修改图标）
 	const useLocalNav = false
-	/** 内置默认项（未配置时回退；字段命名与插件端一致，可作配置缺失字段的兜底；颜色统一 hex8） */
 	const DEFAULT_NAV_LIST : QuickNavItem[] = [
 		{
 			key: 'archives',
@@ -79,12 +75,10 @@
 		},
 	]
 
-	/** 快捷导航列表：优先读插件端配置（零映射，visible 过滤）；未配置/为空回退内置默认（保留原显隐推导） */
 	const navList = computed(() => {
 		const configured = haloConfigs.value.pageConfig?.homeConfig?.quickNavigation
 		let list : QuickNavItem[]
 		if (!useLocalNav && configured && configured.length) {
-			// 配置模式：以配置项为准，缺失字段（icon/iconPrefix/color/path 等）按 key 从默认项兜底
 			list = configured.map(item => {
 				const fallback = DEFAULT_NAV_LIST.find(d => d.key === item.key) || DEFAULT_NAV_LIST[0]
 				return { ...fallback, ...item }
@@ -120,11 +114,8 @@
 					<wd-icon :class-prefix="item.iconPrefix" :name="item.icon" size="64rpx" />
 				</view>
 				<view class="flex flex-col items-center gap-0.5">
-					<text class="max-w-16 truncate text-xs text-gray-900">
+					<text class="max-w-16 truncate text-xs text-gray-900" :style="{color:item.color}">
 						{{ item.title }}
-					</text>
-					<text v-if="item.subTitle" class="max-w-16 truncate text-[10rpx] text-gray-400">
-						{{ item.subTitle }}
 					</text>
 				</view>
 			</view>

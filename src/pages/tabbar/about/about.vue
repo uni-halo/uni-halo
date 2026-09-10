@@ -62,32 +62,12 @@
 
 	const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
 
-	/** 免责声明（2026-09-10 起插件端从 basicConfig 迁入 pageConfig.disclaimers，无 enabled 开关，按内容判定入口显隐） */
-	const pageDisclaimers = computed(() => (haloConfigs.value.pageConfig as { disclaimers ?: { content ?: string } } | undefined)?.disclaimers)
-
-	/** 页脚版权（2026-09-10 起插件端从 basicConfig.copyrightConfig 迁入 pageConfig.aboutConfig.copyrightConfig） */
 	const copyrightConfig = computed(() => pageConfig.value?.copyrightConfig)
 
-	/** 恋爱入口：总开关 loveEnabled 2026-09-10 下线，改按模块入口开关判定（任一开启即展示） */
-	const loveEnabled = computed(() => {
-		const love = haloConfigs.value.loveConfig as
-			| { ourStory ?: { enabled ?: boolean }, lovePhoto ?: { enabled ?: boolean }, loveDaily ?: { enabled ?: boolean } }
-			| undefined
-		return !!(love?.ourStory?.enabled || love?.lovePhoto?.enabled || love?.loveDaily?.enabled)
-	})
-	/** 社交信息入口：2026-09-10 起去 enabled 开关，改按社交项列表判定（存在可见且有内容的社交项即展示） */
-	const socialEnabled = computed(() => {
-		const social = haloConfigs.value.authorConfig?.social as
-			| { items ?: Array<{ visible ?: boolean, content ?: string }> }
-			| undefined
-		return !!(social?.items?.some(item => item.visible !== false && !!item.content))
-	})
-
 	/* ---------------- 状态 ---------------- */
-	const statisticsShowMore = ref(false)
 	const statistics = ref<IBlogStats>({ post: 0, comment: 0, category: 0, visit: 0, upvote: 0 })
 
-	/** 主行统计(常驻展示) */
+	/** 主行统计*/
 	const allStats = computed(() => [
 		{ key: 'post', label: '内容', value: statistics.value.post },
 		{ key: 'visit', label: '访客', value: statistics.value.visit },
@@ -101,21 +81,15 @@
 		title : string
 		iconPrefix ?: string
 		icon : string
-		/** 图标块背景色(与首页快捷导航同色板,同一功能同色) */
 		bgColor : string
-		/** 图标颜色（插件端 myPageConfig 条目 color；本地默认缺省由 toSolidColor(bgColor) 派生） */
 		color ?: string
-		rightText : string
+		subTitle ?: string
 		path : string | null
-		isAdmin ?: boolean
 		openType ?: string
 		show : boolean
-		/** 分组:blog=博客功能 more=更多信息 */
 		group : 'blog' | 'more'
 	}
 
-	/** 插件端 myPageConfig 条目（pageConfig.myPageConfig.commonFeatures/otherFeatures；
-	 * 字段命名与插件端一致：key/title/subTitle/color/bgColor/iconPrefix/icon/path/visible） */
 	interface IMyPageEntry {
 		key ?: string
 		title ?: string
@@ -128,15 +102,11 @@
 		visible ?: boolean
 	}
 
-	// 是否使用本地的功能入口数据（true=忽略插件端 myPageConfig，用内置默认；便于二次开发本地定制）
-	const useLocalNav = false
-
-	/** 插件端 myPageConfig（additive：未配置/为空返回 null，回退本地内置默认） */
 	const configuredFeatures = computed(() => {
 		const mp = haloConfigs.value.pageConfig?.myPageConfig as
 			| { commonFeatures ?: IMyPageEntry[], otherFeatures ?: IMyPageEntry[] }
 			| undefined
-		if (useLocalNav || !mp || (!mp.commonFeatures?.length && !mp.otherFeatures?.length)) {
+		if (!mp || (!mp.commonFeatures?.length && !mp.otherFeatures?.length)) {
 			return null
 		}
 		return mp
@@ -157,23 +127,6 @@
 	})
 
 	/* ---------------- 功能导航 ---------------- */
-	/** 图标块浅色背景:品牌深色 hex8 降透明度 → 轻量底色（#rrggbbaa 后两位替换为 26，≈0.15 透明度） */
-	function toLightBg(hex8 : string) {
-		return (hex8 || '').replace(/(#[0-9a-fA-F]{6})[0-9a-fA-F]{2}$/, (_m, base) => `${base}26`)
-	}
-
-	/** 图标颜色:品牌深色实色（#rrggbbaa 后两位替换为 FF，不透明） */
-	function toSolidColor(hex8 : string) {
-		return (hex8 || '').replace(/(#[0-9a-fA-F]{6})[0-9a-fA-F]{2}$/, (_m, base) => `${base}FF`)
-	}
-
-	/** 收藏导航项右侧文案跟随收藏总数(收藏页返回/切回时刷新) */
-	function syncFavoritesNavText() {
-		const nav = navList.value.find(n => n.key === 'favorites')
-		if (nav) {
-			nav.rightText = `共 ${favoritesStore.counts.total} 条收藏`
-		}
-	}
 
 	async function handleGetNavList() {
 		// 配置模式：插件端 myPageConfig 两组（常用功能→blog、其他功能→more），
@@ -181,8 +134,7 @@
 		const mp = configuredFeatures.value
 		if (mp) {
 			const mapEntry = (e : IMyPageEntry, group : 'blog' | 'more') : INavItem | null => {
-				if (!e.key)
-					return null
+				if (!e.key) { return null }
 				return {
 					key: e.key,
 					title: e.title || '',
@@ -190,17 +142,16 @@
 					icon: e.icon || '',
 					bgColor: e.bgColor || '#969696F2',
 					color: e.color,
-					rightText: e.subTitle || '',
+					subTitle: e.subTitle || '',
 					path: e.path || null,
 					show: e.visible !== false,
 					group,
 				}
 			}
 			navList.value = [
-				...(mp.commonFeatures || []).map(e => mapEntry(e, 'blog')).filter((n): n is INavItem => n !== null),
-				...(mp.otherFeatures || []).map(e => mapEntry(e, 'more')).filter((n): n is INavItem => n !== null),
+				...(mp.commonFeatures || []).map(e => mapEntry(e, 'blog')).filter((n) : n is INavItem => n !== null),
+				...(mp.otherFeatures || []).map(e => mapEntry(e, 'more')).filter((n) : n is INavItem => n !== null),
 			]
-			syncFavoritesNavText()
 			return
 		}
 
@@ -209,128 +160,6 @@
 			checkVotePluginAvailable(),
 			checkLinksPluginAvailable(),
 		])
-
-		navList.value = [
-			{
-				key: 'favorites',
-				title: '我的收藏',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-smiling',
-				bgColor: '#FFB300F2',
-				rightText: '',
-				path: '/pages-blog/favorites/favorites',
-				show: true,
-				group: 'blog',
-			},
-			{
-				key: 'data-visual',
-				title: '数据看板',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-surprised',
-				bgColor: '#663CC9F2',
-				rightText: '站点数据可视化',
-				path: '/pages-blog/data-visual/data-visual',
-				show: dataVisualAvailable,
-				group: 'blog',
-			},
-			{
-				key: 'archives',
-				title: calcAuditModeEnabled.value ? '内容归档' : '文章归档',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-mask',
-				bgColor: '#03A9F4F2',
-				rightText: calcAuditModeEnabled.value ? '全部已归档内容' : '全部已归档文章',
-				path: '/pages-blog/archives/archives',
-				show: true,
-				group: 'blog',
-			},
-			{
-				key: 'love',
-				title: '恋爱日记',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-in-love',
-				bgColor: '#FF4C67F2',
-				rightText: '博主的恋爱日记',
-				path: '/pages-blog/love/love',
-				show: loveEnabled.value,
-				// show: true,
-				group: 'blog',
-			},
-			{
-				key: 'vote',
-				title: '投票中心',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-confused',
-				bgColor: '#00BCD4F2',
-				rightText: '查看和进行投票',
-				path: '/pages-blog/votes/votes',
-				show: !calcAuditModeEnabled.value && voteAvailable,
-				// show: true,
-				group: 'blog',
-			},
-			{
-				key: 'friend-links',
-				title: '友情链接',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-cool',
-				bgColor: '#009688F2',
-				rightText: '看看博主朋友们吧',
-				path: '/pages-blog/friend-links/friend-links',
-				show: linksAvailable,
-				// show: true,
-				group: 'blog',
-			},
-			{
-				key: 'disclaimers',
-				title: '免责声明',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-smirking',
-				bgColor: '#795548F2',
-				rightText: '博客内容免责声明',
-				path: '/pages-blog/disclaimers/disclaimers',
-				// 2026-09-10 起无 enabled 开关，按内容非空判定入口显隐
-				show: !!pageDisclaimers.value?.content,
-				// show: true,
-				group: 'more',
-			},
-			{
-				key: 'contact-blogger',
-				title: '联系博主',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-wink',
-				bgColor: '#FF9800F2',
-				rightText: '博主常用联系方式',
-				path: '/pages-blog/contact/contact',
-				show: socialEnabled.value,
-				// show: true,
-				group: 'more',
-			},
-			{
-				key: 'about',
-				title: '关于项目',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-happy-',
-				bgColor: '#607D8BF2',
-				rightText: '小莫唐尼开源项目',
-				path: '/pages-blog/about/about',
-				// showAboutSystem 2026-09-10 下线（入口由插件端功能入口 myPageConfig 统一管理），默认展示
-				show: true,
-				// show: true,
-				group: 'more',
-			},
-			{
-				key: 'setting',
-				title: '偏好设置',
-				iconPrefix: 'uhemoji2-icon',
-				icon: '-tired',
-				bgColor: '#7986CBF2',
-				rightText: '首页布局、卡片样式等本地偏好',
-				path: '/pages-blog/setting/setting',
-				show: true,
-				group: 'more',
-			},
-		]
-		syncFavoritesNavText()
 	}
 
 	/* ---------------- 数据加载 ---------------- */
@@ -354,24 +183,6 @@
 		if (!path)
 			return
 
-		// 拦截后台管理页面(需超管登录)
-		if (isAdmin && !checkHasAdminLogin()) {
-			uni.showModal({
-				title: '提示',
-				content: '未登录超管账号或登录状态已过期，是否立即登录？',
-				showCancel: true,
-				cancelText: '否',
-				cancelColor: '#999999',
-				confirmText: '是',
-				confirmColor: '#03a9f4',
-				success: (res) => {
-					if (res.confirm) {
-						uni.navigateTo({ url: '/pages/auth/login' })
-					}
-				},
-			})
-			return
-		}
 
 		uni.navigateTo({ url: path })
 	}
@@ -382,11 +193,6 @@
 	}, { deep: true, immediate: true })
 
 	handleGetData()
-
-	// 从收藏页返回/切回时刷新收藏数文案
-	onShow(() => {
-		syncFavoritesNavText()
-	})
 
 	onPullDownRefresh(() => {
 		handleGetData()
@@ -417,10 +223,8 @@
 		<!-- 站点统计 -->
 		<view class="uh-global-card-glass uh-shadow-xs relative z-100 mx-4 flex border rounded-2xl -mt-12">
 			<view v-for="item in allStats" :key="item.key" class="flex-1 py-4 text-center">
-				<wd-count-to
-					:key="`${item.key}-${item.value}`" :start-val="0" :end-val="item.value"
-					:duration="900" separator="" color="#111827" custom-class="text-lg font-bold"
-				/>
+				<wd-count-to :key="`${item.key}-${item.value}`" :start-val="0" :end-val="item.value" :duration="900"
+					separator="" color="#111827" custom-class="text-lg font-bold" />
 				<view class="mt-1 text-xs text-gray-500">
 					{{ item.label }}
 				</view>
@@ -440,15 +244,15 @@
 					<view class="nav-left flex items-center gap-3 py-3">
 						<view
 							class="uh-global-card-glass border uh-shadow-xs h-8 w-8 flex items-center justify-center rounded-xl"
-							:style="{ backgroundColor: toLightBg(nav.bgColor) }">
-							<wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx"
-								:color="nav.color || toSolidColor(nav.bgColor)" />
+							:style="{ backgroundColor: nav.bgColor }">
+							<wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
 						</view>
-						<text class="nav-title text-sm text-gray-900 font-bold">{{ nav.title }}</text>
+						<text class="nav-title text-sm text-gray-900 font-bold"
+							:style="{color:nav.color}">{{ nav.title }}</text>
 					</view>
 					<view class="nav-right flex items-center gap-2">
-						<text class="nav-right-text text-xs text-gray-400">{{ nav.rightText }}</text>
-						<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+						<text class="nav-right-text text-xs text-gray-400">{{ nav.subTitle }}</text>
+						<wd-icon name="arrow-right" size="24rpx" class="text-gray-400" />
 					</view>
 				</view>
 			</view>

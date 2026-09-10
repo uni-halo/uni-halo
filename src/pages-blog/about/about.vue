@@ -11,12 +11,11 @@
 	})
 
 	const appConfigStore = useAppConfigStore()
-	
+
 	const appInfo = computed(() => {
-		const _appInfo = (appConfigStore.configs?.appConfig?.appInfo as any)
 		return {
-			name: _appInfo.name ?? 'UniHalo',
-			logo: checkUrl(_appInfo?.logo ?? 'https://uni-halo.925i.cn/logo.png')
+			name: 'UniHalo',
+			logo: checkUrl('/plugins/plugin-uni-halo/assets/static/logo.png')
 		}
 	})
 
@@ -49,18 +48,18 @@
 		<!-- 自定义导航 -->
 		<uh-navbar default-title="关于项目" title-color="text-gray-900" />
 
+		<view class="fixed -right-8 top-8 h-28 w-28 rounded-full bg-[rgba(185,228,36,0.32)] blur-xl" />
+		<view class="fixed -left-10 top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)]  blur-xl" />
+
 		<view class="relative">
-			<view class="absolute h-[220rpx] w-[220rpx] rounded-full bg-[rgba(185,228,36,0.32)] -right-8 -top-8" />
-			<view
-				class="absolute top-[150rpx] h-[180rpx] w-[180rpx] rounded-full bg-[rgba(215,249,76,0.45)] -left-10" />
 			<view class="uh-global-card-glass relative flex flex-col items-center rounded-2xl px-6 pb-7 pt-10">
-				<image class="h-[140rpx] w-[140rpx] rounded-3xl shadow-lg" :src="appInfo.logo" mode="aspectFill" />
-				<view class="mt-4 text-xl text-gray-900 font-bold">
+				<image class="uh-global-card-glass uh-shadow-xs border h-18 w-18 rounded-2xl" :src="appInfo.logo" mode="aspectFill" />
+				<view class="mt-4 text-xl text- font-bold">
 					{{appInfo.name}}
 				</view>
 				<view class="mt-3 flex items-center gap-2">
-					<text class="rounded-full bg-secondary px-3 py-1 text-[20rpx] text-[#4d7c0f]">AGPL-3.0 开源协议</text>
-					<text class="rounded-full bg-[#f6f3ee] px-3 py-1 text-[20rpx] text-gray-500">UniApp × Halo</text>
+					<text class="rounded-full bg-secondary px-3 py-1 text-[20rpx] text-gray-900">AGPL-3.0 开源协议</text>
+					<text class="rounded-full bg-gray-100 px-3 py-1 text-[20rpx] text-gray-900">UniApp × Halo</text>
 				</view>
 				<view class="mt-4 text-center text-xs text-gray-500 leading-relaxed">
 					基于 uni-app 打造的 Halo 博客跨端客户端
@@ -68,26 +67,23 @@
 			</view>
 		</view>
 
-		<!-- 相关链接 -->
-		<uh-section-title class="mb-3 mt-6">
-			相关链接
-		</uh-section-title>
-		<view class="link-list uh-global-card-glass overflow-hidden rounded-2xl">
-			<view v-for="(link, index) in links" :key="link.title" class="link-item flex items-center gap-3 px-4 py-4"
-				:class="index < links.length - 1 ? 'border-b border-black/5' : ''"
+		<uh-section-title class="mb-3 mt-6"> 相关链接 </uh-section-title>
+		
+		<view class="box-border uh-global-card-glass flex flex-col gap-y-6 rounded-2xl py-4">
+			<view v-for="(link) in links" :key="link.title" class="flex items-center gap-3 px-4"
 				@click="copyText(link.copy, link.tip)">
 				<view
-					class="tile h-[76rpx] w-[76rpx] flex shrink-0 items-center justify-center rounded-xl border border-black/5"
+					class="uh-global-card-glass uh-shadow-xs border h-10 w-10 flex shrink-0 items-center justify-center rounded-xl"
 					:style="{ backgroundColor: `${link.tileColor}1A` }">
-					<text class="text-[30rpx] font-bold" :style="{ color: link.tileColor }">{{ link.tileLetter }}</text>
+					<text class="text-sm font-bold" :style="{ color: link.tileColor }">{{ link.tileLetter }}</text>
 				</view>
 				<view class="min-w-0 flex flex-1 flex-col">
-					<text class="text-[28rpx] text-gray-900 font-bold">{{ link.title }}</text>
-					<view class="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[24rpx] text-gray-400">
+					<text class="text-sm text-gray-900 font-bold">{{ link.title }}</text>
+					<view class="truncate text-xs text-gray-400">
 						{{ link.value }}
 					</view>
 				</view>
-				<wd-icon name="copy" size="28rpx" color="#c8c2b4" class="shrink-0" />
+				<wd-icon name="copy" size="28rpx" class="shrink-0 text-gray-500" />
 			</view>
 		</view>
 
