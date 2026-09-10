@@ -68,6 +68,9 @@ async function handleMiniPluginRefresh() {
     handleGetMiniProgramLinks()
 }
 
+/** 是否开放公开提交申请（通用配置-友链信息-基本配置 submissionEnabled，2026-09-11 由 setting linkConfig 迁入；默认 true） */
+const submissionEnabled = computed(() => (haloPluginConfigs.value?.linkInfo?.submissionEnabled ?? true))
+
 /* ---------------- tabs ---------------- */
 const activeTabIndex = ref(0)
 
@@ -575,8 +578,8 @@ onReachBottom(() => {
             </view>
           </view>
 
-          <!-- 底部悬浮操作栏(通用组件) -->
-          <uh-links-actions :actions="['apply', 'info']" @apply="handleOpenApply" @info="handleOpenMiniInfo" />
+          <!-- 底部悬浮操作栏(通用组件)；提交申请入口按 submissionEnabled 显隐(2026-09-11) -->
+          <uh-links-actions :actions="submissionEnabled ? ['apply', 'info'] : ['info']" @apply="handleOpenApply" @info="handleOpenMiniInfo" />
         </view>
 
         <!-- 小程序详情弹窗 -->

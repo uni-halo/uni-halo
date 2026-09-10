@@ -66,7 +66,7 @@
 	})
 
 	/* ---------------- 计算属性 ---------------- */
-	const postDetailConfig = computed(() => (haloConfigs.value.basicConfig as { postDetailConfig ?: Record<string, unknown> } | undefined)?.postDetailConfig)
+	const postDetailConfig = computed(() => (haloConfigs.value.pageConfig as { postDetailConfig ?: Record<string, unknown> } | undefined)?.postDetailConfig)
 
 	const bloggerInfo = computed(() => {
 		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined

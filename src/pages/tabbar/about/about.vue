@@ -53,7 +53,7 @@
 	})
 
 	const pageConfig = computed(() => haloConfigs.value.pageConfig?.aboutConfig as
-		| { bgImageUrl ?: string, waveImageUrl ?: string }
+		| { bgImageUrl ?: string, waveImageUrl ?: string, copyrightConfig ?: { enabled ?: boolean, content ?: string } }
 		| undefined)
 
 	const calcProfileStyle = computed(() => ({
@@ -62,18 +62,26 @@
 
 	const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
 
-	const basicConfig = computed(() => haloConfigs.value.basicConfig as
-		| {
-			copyrightConfig ?: { enabled ?: boolean, content ?: string }
-			disclaimers ?: { enabled ?: boolean }
-			showAboutSystem ?: boolean
-		}
-		| undefined)
+	/** 免责声明（2026-09-10 起插件端从 basicConfig 迁入 pageConfig.disclaimers，无 enabled 开关，按内容判定入口显隐） */
+	const pageDisclaimers = computed(() => (haloConfigs.value.pageConfig as { disclaimers ?: { content ?: string } } | undefined)?.disclaimers)
 
-	const copyrightConfig = computed(() => basicConfig.value?.copyrightConfig)
+	/** 页脚版权（2026-09-10 起插件端从 basicConfig.copyrightConfig 迁入 pageConfig.aboutConfig.copyrightConfig） */
+	const copyrightConfig = computed(() => pageConfig.value?.copyrightConfig)
 
-	const loveEnabled = computed(() => !!(haloConfigs.value.loveConfig as { loveEnabled ?: boolean } | undefined)?.loveEnabled)
-	const socialEnabled = computed(() => !!(haloConfigs.value.authorConfig?.social as { enabled ?: boolean } | undefined)?.enabled)
+	/** 恋爱入口：总开关 loveEnabled 2026-09-10 下线，改按模块入口开关判定（任一开启即展示） */
+	const loveEnabled = computed(() => {
+		const love = haloConfigs.value.loveConfig as
+			| { ourStory ?: { enabled ?: boolean }, lovePhoto ?: { enabled ?: boolean }, loveDaily ?: { enabled ?: boolean } }
+			| undefined
+		return !!(love?.ourStory?.enabled || love?.lovePhoto?.enabled || love?.loveDaily?.enabled)
+	})
+	/** 社交信息入口：2026-09-10 起去 enabled 开关，改按社交项列表判定（存在可见且有内容的社交项即展示） */
+	const socialEnabled = computed(() => {
+		const social = haloConfigs.value.authorConfig?.social as
+			| { items ?: Array<{ visible ?: boolean, content ?: string }> }
+			| undefined
+		return !!(social?.items?.some(item => item.visible !== false && !!item.content))
+	})
 
 	/* ---------------- 状态 ---------------- */
 	const statisticsShowMore = ref(false)
@@ -280,7 +288,8 @@
 				bgColor: 'rgba(121, 85, 72, 0.95)',
 				rightText: '博客内容免责声明',
 				path: '/pages-blog/disclaimers/disclaimers',
-				show: !!basicConfig.value?.disclaimers?.enabled,
+				// 2026-09-10 起无 enabled 开关，按内容非空判定入口显隐
+				show: !!pageDisclaimers.value?.content,
 				// show: true,
 				group: 'more',
 			},
@@ -304,7 +313,8 @@
 				bgColor: 'rgba(96, 125, 139, 0.95)',
 				rightText: '小莫唐尼开源项目',
 				path: '/pages-blog/about/about',
-				show: !!basicConfig.value?.showAboutSystem,
+				// showAboutSystem 2026-09-10 下线（入口由插件端功能入口 myPageConfig 统一管理），默认展示
+				show: true,
 				// show: true,
 				group: 'more',
 			},

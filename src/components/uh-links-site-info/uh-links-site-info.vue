@@ -26,7 +26,6 @@ const blogDetail = computed(() => (appConfigStore.configs.pluginConfig?.linkInfo
   url?: string
   logo?: string
   description?: string
-  email?: string
   backlink?: string
   feedUrls?: string[]
 } | undefined) || {})

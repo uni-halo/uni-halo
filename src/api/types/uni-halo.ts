@@ -18,10 +18,14 @@ export interface IImagesConfig {
 export interface IPluginConfig {
   toolsPlugin?: { Authorization?: string } & Record<string, unknown>
   /**
-   * 链接配置（插件端 spec.linkInfo 直接下发到本键，结构 = {miniInfo, siteInfo, authorInfo}，字段名无映射；
-   * linksSubmitPlugin 旧键已弃用不再下发；votePlugin/linksPlugin 已下线（2026-09-10，app 端改插件启用检测判定））
+   * 友链信息（插件端 spec.linkInfo 直接下发到本键，结构 = {submissionEnabled, miniInfo, siteInfo}，字段名无映射；
+   * linksSubmitPlugin 旧键已弃用不再下发；votePlugin/linksPlugin 已下线（2026-09-10，app 端改插件启用检测判定）；
+   * 2026-09-11 起新增基本配置 submissionEnabled（公开提交申请开关，原 setting linkConfig）；authorInfo 已下线，
+   * 作者信息改读 authorConfig.blogger）
    */
   linkInfo?: {
+    /** 基本配置：是否开放公开提交申请（默认 true；false 时隐藏「提交申请」入口） */
+    submissionEnabled?: boolean
     /** 小程序信息（「申请信息」弹窗展示） */
     miniInfo?: {
       displayName?: string
@@ -30,21 +34,14 @@ export interface IPluginConfig {
       description?: string
       applyRemark?: string
     }
-    /** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/email/backlink/feedUrls） */
+    /** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/backlink/feedUrls，2026-09-11 起不再含 email） */
     siteInfo?: {
       displayName?: string
       url?: string
       logo?: string
       description?: string
-      email?: string
       backlink?: string
       feedUrls?: string[]
-    }
-    /** 作者信息（小程序端作者区） */
-    authorInfo?: {
-      authorName?: string
-      avatar?: string
-      website?: string
     }
   }
   doubanPlugin?: { position?: string } & Record<string, unknown>
@@ -121,6 +118,23 @@ export interface IPageConfig {
   aboutConfig?: {
     bgImageUrl?: string
     waveImageUrl?: string
+    /** 页脚版权（2026-09-10 起插件端从应用设置迁入，显示于关于页页脚） */
+    copyrightConfig?: {
+      enabled?: boolean
+      content?: string
+    }
+  }
+  /** 免责声明页（2026-09-10 起插件端从应用设置迁入：不再有 enabled 开关，按内容非空展示） */
+  disclaimers?: {
+    content?: string
+  }
+  /** 文章详情页配置（2026-09-10 起插件端从应用设置迁入：评论开关与版权文案） */
+  postDetailConfig?: {
+    showComment?: boolean
+    copyrightEnabled?: boolean
+    copyrightAuthor?: string
+    copyrightDesc?: string
+    copyrightViolation?: string
   }
   [key: string]: unknown
 }
@@ -169,8 +183,16 @@ export interface IAppConfig {
       personalToken?: string
     }
   }
+  /**
+   * 恋爱配置（2026-09-10 起插件端 loveEnabled 总开关下线，入口显隐由模块入口开关
+   * （ourStory/lovePhoto/loveDaily.enabled）与 navList 统一管理，客户端按模块开关判定）
+   */
   loveConfig?: Record<string, unknown>
   imagesConfig?: IImagesConfig
+  /**
+   * 博主与社交（插件端 GeneralConfig.profile.blogger/social 重建；blogger 含
+   * nickname/avatar/email/description/website（官网地址 2026-09-10 新增））
+   */
   authorConfig?: Record<string, unknown>
   appConfig?: Record<string, unknown>
   pluginConfig?: IPluginConfig

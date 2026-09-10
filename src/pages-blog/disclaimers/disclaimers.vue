@@ -16,8 +16,8 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 
 	const disclaimersContent = computed(() => {
-		const basicConfig = haloConfigs.value.basicConfig as { disclaimers ?: { content ?: string } } | undefined
-		return basicConfig?.disclaimers?.content || ''
+		const pageConfig = haloConfigs.value.pageConfig as { disclaimers ?: { content ?: string } } | undefined
+		return pageConfig?.disclaimers?.content || ''
 	})
 
 	const bloggerInfo = computed(() => {
