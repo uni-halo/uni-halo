@@ -157,14 +157,14 @@
 	})
 
 	/* ---------------- 功能导航 ---------------- */
-	/** 图标块浅色背景:品牌深色 rgba 降透明度 → 轻量底色 */
-	function toLightBg(rgba : string) {
-		return rgba.replace('0.95)', '0.15)')
+	/** 图标块浅色背景:品牌深色 hex8 降透明度 → 轻量底色（#rrggbbaa 后两位替换为 26，≈0.15 透明度） */
+	function toLightBg(hex8 : string) {
+		return (hex8 || '').replace(/(#[0-9a-fA-F]{6})[0-9a-fA-F]{2}$/, (_m, base) => `${base}26`)
 	}
 
-	/** 图标颜色:品牌深色实色 */
-	function toSolidColor(rgba : string) {
-		return rgba.replace('0.95)', '1)')
+	/** 图标颜色:品牌深色实色（#rrggbbaa 后两位替换为 FF，不透明） */
+	function toSolidColor(hex8 : string) {
+		return (hex8 || '').replace(/(#[0-9a-fA-F]{6})[0-9a-fA-F]{2}$/, (_m, base) => `${base}FF`)
 	}
 
 	/** 收藏导航项右侧文案跟随收藏总数(收藏页返回/切回时刷新) */
@@ -188,7 +188,7 @@
 					title: e.title || '',
 					iconPrefix: e.iconPrefix,
 					icon: e.icon || '',
-					bgColor: e.bgColor || 'rgba(150, 150, 150, 0.95)',
+					bgColor: e.bgColor || '#969696F2',
 					color: e.color,
 					rightText: e.subTitle || '',
 					path: e.path || null,
@@ -216,7 +216,7 @@
 				title: '我的收藏',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-smiling',
-				bgColor: 'rgba(255, 179, 0, 0.95)',
+				bgColor: '#FFB300F2',
 				rightText: '',
 				path: '/pages-blog/favorites/favorites',
 				show: true,
@@ -227,7 +227,7 @@
 				title: '数据看板',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-surprised',
-				bgColor: 'rgba(102, 60, 201, 0.95)',
+				bgColor: '#663CC9F2',
 				rightText: '站点数据可视化',
 				path: '/pages-blog/data-visual/data-visual',
 				show: dataVisualAvailable,
@@ -238,7 +238,7 @@
 				title: calcAuditModeEnabled.value ? '内容归档' : '文章归档',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-mask',
-				bgColor: 'rgba(3, 169, 244, 0.95)',
+				bgColor: '#03A9F4F2',
 				rightText: calcAuditModeEnabled.value ? '全部已归档内容' : '全部已归档文章',
 				path: '/pages-blog/archives/archives',
 				show: true,
@@ -249,7 +249,7 @@
 				title: '恋爱日记',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-in-love',
-				bgColor: 'rgba(255, 76, 103, 0.95)',
+				bgColor: '#FF4C67F2',
 				rightText: '博主的恋爱日记',
 				path: '/pages-blog/love/love',
 				show: loveEnabled.value,
@@ -261,7 +261,7 @@
 				title: '投票中心',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-confused',
-				bgColor: 'rgba(0, 188, 212, 0.95)',
+				bgColor: '#00BCD4F2',
 				rightText: '查看和进行投票',
 				path: '/pages-blog/votes/votes',
 				show: !calcAuditModeEnabled.value && voteAvailable,
@@ -273,7 +273,7 @@
 				title: '友情链接',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-cool',
-				bgColor: 'rgba(0, 150, 136, 0.95)',
+				bgColor: '#009688F2',
 				rightText: '看看博主朋友们吧',
 				path: '/pages-blog/friend-links/friend-links',
 				show: linksAvailable,
@@ -285,7 +285,7 @@
 				title: '免责声明',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-smirking',
-				bgColor: 'rgba(121, 85, 72, 0.95)',
+				bgColor: '#795548F2',
 				rightText: '博客内容免责声明',
 				path: '/pages-blog/disclaimers/disclaimers',
 				// 2026-09-10 起无 enabled 开关，按内容非空判定入口显隐
@@ -298,7 +298,7 @@
 				title: '联系博主',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-wink',
-				bgColor: 'rgba(255, 152, 0, 0.95)',
+				bgColor: '#FF9800F2',
 				rightText: '博主常用联系方式',
 				path: '/pages-blog/contact/contact',
 				show: socialEnabled.value,
@@ -310,7 +310,7 @@
 				title: '关于项目',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-happy-',
-				bgColor: 'rgba(96, 125, 139, 0.95)',
+				bgColor: '#607D8BF2',
 				rightText: '小莫唐尼开源项目',
 				path: '/pages-blog/about/about',
 				// showAboutSystem 2026-09-10 下线（入口由插件端功能入口 myPageConfig 统一管理），默认展示
@@ -323,7 +323,7 @@
 				title: '偏好设置',
 				iconPrefix: 'uhemoji2-icon',
 				icon: '-tired',
-				bgColor: 'rgba(121, 134, 203, 0.95)',
+				bgColor: '#7986CBF2',
 				rightText: '首页布局、卡片样式等本地偏好',
 				path: '/pages-blog/setting/setting',
 				show: true,

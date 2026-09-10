@@ -11,7 +11,6 @@ export const markdownConfig = {
       margin-bottom: 18px;
       overflow: hidden;
       font-size: 13px;
-      color: var(--routine);
       background: #f2f6fc;
       border: 1px solid #dcdcdc;
       border-radius: 4px;

@@ -14,10 +14,8 @@
 	})
 
 	interface ISoical {
-		key ?: string
 		name : string
 		content : string
-		icon ?: string,
 		color : string,
 		bgColor : string,
 		priority ?: number,
@@ -45,11 +43,11 @@
 			return []
 		}
 		return [...configured]
-			.filter(item => item.visible !== false)
+			.filter(item => item.visible && item.content.trim())
 			.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
 	})
 
-	const isNotEmpty = computed(() => socialList.value.some(item => item.visible && !!item.content))
+	const isNotEmpty = computed(() => socialList.value.some(item => item.visible && item.content.trim()))
 
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	watchEffect(() => {
@@ -67,7 +65,6 @@
 		})
 	}
 
-	/* ---------------- 实时时间(收信日期,formatTime 工具每秒刷新) ---------------- */
 	const nowText = ref('')
 	let clock : ReturnType<typeof setInterval> | null = null
 	function refreshNowText() {
@@ -121,11 +118,16 @@
 					<view class="text-md text-gray-900">
 						展信安：
 					</view>
-					<mp-html v-if="bloggerInfo.intro" lazy-load :domain="markdownConfig.domain ?? ''"
-						:loading-img="markdownConfig.loadingGif" scroll-table selectable
-						:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-						:content="bloggerInfo.intro" :markdown="true" :show-line-number="true"
-						:show-language-name="true" copy-by-long-press />
+					<view v-if="bloggerInfo.intro" class="text-gray-900 text-sm">
+						<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+							:loading-img="markdownConfig.loadingGif" scroll-table selectable
+							:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+							:content="bloggerInfo.intro" :markdown="true" :show-line-number="true"
+							:show-language-name="true" copy-by-long-press />
+					</view>
+					<view v-else class="text-gray-600 text-sm py-4">
+						祝你早安，午安，晚安。每天都有好心情，生活愉快！
+					</view>
 					<view class="mt-2 w-full flex items-end flex-col gap-y-3">
 						<text class="text-md font-semibold text-gray-900">{{ bloggerInfo.nickname }}</text>
 						<text class="text-xs text-black/60">{{ nowText }}</text>
@@ -133,16 +135,21 @@
 				</view>
 
 				<view class="box-border pt-4 w-full flex flex-col gap-y-2 border-t border-t-dashed border-gray-200">
+					<view class="mb-2 text-md text-gray-900">
+						若有意，可依此觅：
+					</view>
 					<view v-for="item in socialList" :key="item.name" class="flex items-center gap-3"
 						@click="handleOnClick(item)">
 						<view
-							class="uh-global-card-glass uh-shadow-xs border h-10 w-10 flex shrink-0 items-center justify-center rounded-xl"
+							class="uh-global-card-glass uh-shadow-xs border h-11 w-11 flex shrink-0 items-center justify-center rounded-xl"
 							:style="{ backgroundColor: item.bgColor ,color:item.color }">
-							<text class="text-sm text-gray-500 font-bold"> {{ item.icon }} </text>
+							<text class="text-sm font-bold" :style="{ color:item.color }">
+								{{ item.name ? item.name.charAt(0) : '' }}
+							</text>
 						</view>
 						<view class="min-w-0 flex flex-1 flex-col">
-							<text class="text-xs text-gray-500">{{ item.name }}</text>
-							<view class="mt-1 break-all text-sm text-gray-900 leading-snug">
+							<text class="text-xs text-gray-500" >{{ item.name }}</text>
+							<view class="mt-1 break-all text-xs text-gray-900">
 								{{ item.content }}
 							</view>
 						</view>

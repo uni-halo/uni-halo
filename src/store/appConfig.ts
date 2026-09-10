@@ -1,6 +1,5 @@
 /**
- * 应用配置 store(源自旧项目 store/config.js 的 configs/auditData 部分)
- * 注意:旧 fetchConfigs 中会把 basicConfig.tokenConfig 写入缓存,供 getPersonalToken 使用,此处保留
+ * 应用配置
  */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -10,8 +9,6 @@ import { deepMerge } from '@/utils/merge'
 import { setCache } from '@/utils/storage'
 import type { IAppConfig, IAuditDataResult } from '@/api/types/uni-halo'
 
-/** 个人令牌存储 key(与 src/store/token.ts 的 getPersonalToken 保持一致) */
-const APP_TOKENS_KEY = 'APP_TOKENS'
 /** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
 const APP_GLOBAL_CONFIGS_KEY = 'APP_GLOBAL_CONFIGS'
 /**
@@ -30,8 +27,7 @@ export interface IStaticLoveConfig {
   }
 }
 /**
- * 静态配置后台刷新间隔(ms): onShow 距上次拉取在 TTL 内则不再重复请求(设计见
- *  .docs/static-config-unified-fetch-design.md)
+ * 静态配置后台刷新间隔(ms): onShow 距上次拉取在 TTL 内则不再重复请求
  */
 const STATIC_TTL = 5 * 60 * 1000
 
@@ -65,14 +61,7 @@ export const useAppConfigStore = defineStore(
         if (body) {
           configs.value = deepMerge(JSON.parse(JSON.stringify(DefaultAppConfigs)), body)
 
-          // 合并结果写入 APP_GLOBAL_CONFIGS 缓存,供 utils/url.ts 图片兜底与
-          // api/uni-halo.ts 第三方插件授权头等按 storage 路径读取
           setCache(APP_GLOBAL_CONFIGS_KEY, configs.value)
-
-          // 存储个人令牌(供 getPersonalToken 使用,如非匿名投票)
-          if (body?.basicConfig?.tokenConfig) {
-            setCache(APP_TOKENS_KEY, body.basicConfig.tokenConfig)
-          }
           return body
         }
         setDefaultAppSettings()

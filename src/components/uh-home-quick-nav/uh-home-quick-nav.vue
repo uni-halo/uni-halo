@@ -24,14 +24,14 @@
 
 	// 是否使用本地的快捷导航数据（本地的可以任意修改图标、路径，插件端的无法修改图标）
 	const useLocalNav = false
-	/** 内置默认项（未配置时回退；字段命名与插件端一致，可作配置缺失字段的兜底） */
+	/** 内置默认项（未配置时回退；字段命名与插件端一致，可作配置缺失字段的兜底；颜色统一 hex8） */
 	const DEFAULT_NAV_LIST : QuickNavItem[] = [
 		{
 			key: 'archives',
 			title: '文章归档',
 			subTitle: '全部文章',
 			color: '#03A9F4',
-			bgColor: 'rgba(3, 169, 244, 0.14)',
+			bgColor: '#03A9F424',
 			iconPrefix: 'uhemoji2-icon',
 			icon: '-mask',
 			path: '/pages-blog/archives/archives',
@@ -41,7 +41,7 @@
 			key: 'vote',
 			title: '投票中心',
 			color: '#00BCD4',
-			bgColor: 'rgba(0, 188, 212, 0.14)',
+			bgColor: '#00BCD424',
 			iconPrefix: 'uhemoji2-icon',
 			icon: '-confused',
 			path: '/pages-blog/votes/votes',
@@ -51,7 +51,7 @@
 			key: 'disclaimers',
 			title: '友情链接',
 			color: '#009688',
-			bgColor: 'rgba(0, 150, 136, 0.14)',
+			bgColor: '#00968824',
 			iconPrefix: 'uhemoji2-icon',
 			icon: '-wink',
 			path: '/pages-blog/friend-links/friend-links',
@@ -61,7 +61,7 @@
 			key: 'love',
 			title: '恋爱日记',
 			color: '#FF4C67',
-			bgColor: 'rgba(255, 76, 103, 0.14)',
+			bgColor: '#FF4C6724',
 			iconPrefix: 'uhemoji2-icon',
 			icon: '-in-love',
 			path: '/pages-blog/love/love',
@@ -71,7 +71,7 @@
 			key: 'contact-blogger',
 			title: '联系博主',
 			color: '#FF9800',
-			bgColor: 'rgba(255, 152, 0, 0.14)',
+			bgColor: '#FF980024',
 			iconPrefix: 'uhemoji2-icon',
 			icon: '-cool',
 			path: '/pages-blog/contact/contact',

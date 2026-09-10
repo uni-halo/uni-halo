@@ -1,5 +1,4 @@
- 
-<script setup lang="ts">
+ <script setup lang="ts">
 	import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 	import { getCurrentInstance, onMounted, onUnmounted } from 'vue'
 	import { navigateToInterceptor } from '@/router/interceptor'
@@ -14,8 +13,8 @@
 
 	onLaunch((options) => {
 		// 初始化获取配置
-		useAppConfigStore()
-
+	    useAppConfigStore().refreshStatic()
+		
 		console.log('App.vue onLaunch', options)
 	})
 	onShow((options) => {
@@ -50,8 +49,8 @@
 		window.removeEventListener('pageshow', syncTabbarWhenPageVisible)
 	})
 	// #endif
-</script>
+ </script>
 
-<style lang="scss">
+ <style lang="scss">
 
-</style>
+ </style>
