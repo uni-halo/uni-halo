@@ -1,6 +1,5 @@
 /**
  * 插件清单与可用性 hook
- * 源自旧项目 utils/plugin.js(TS 化)与 utils/plugin.ts,整体迁移至 hooks 目录。
  * 提供:
  * - 依赖插件 ID 常量(NeedPluginIds)与插件清单(NeedPlugins)
  * - 底层可用性检查(checkNeedPluginAvailable)

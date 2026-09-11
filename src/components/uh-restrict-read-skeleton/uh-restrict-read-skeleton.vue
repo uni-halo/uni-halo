@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 受限阅读骨架屏(源自旧项目 components/restrict-read-skeleton,新建复刻)
+ * 受限阅读骨架屏
  * 受限内容遮挡 + 提示文字 + 验证按钮
  */
 withDefaults(defineProps<{

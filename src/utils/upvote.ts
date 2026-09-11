@@ -1,5 +1,5 @@
 /**
- * 点赞状态工具(源自旧项目 utils/upvote.js,按需命名导出)
+ * 点赞状态工具
  * 文章/瞬间点赞状态本地缓存
  */
 import { getCache, setCache } from './storage'

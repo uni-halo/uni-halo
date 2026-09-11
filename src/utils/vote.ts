@@ -1,5 +1,5 @@
 /**
- * 投票工具(源自旧项目 utils/vote.js,按需命名导出)
+ * 投票工具
  * 投票状态计算、UID 缓存、投票周期判断
  */
 import { getCache, setCache } from './storage';
@@ -10,7 +10,7 @@ const UnihaloVoteUid = 'unihalo_vote_uid';
 export type VoteType = 'single' | 'multiple' | 'pk';
 export type VoteState = 'not-voted' | 'voting' | 'voted' | 'vote-ended';
 
-/** 投票类型中文映射(与旧项目一致:key 为插件小写 type) */
+/** 投票类型中文映射(key 为插件小写 type) */
 export const VOTE_TYPES: Record<string, string> = {
 	pk: '双选PK',
 	multiple: '多选',
@@ -25,7 +25,7 @@ export const VOTE_STATES: { NOT_VOTED: VoteState; VOTING: VoteState; VOTED: Vote
 	VOTE_ENDED: 'vote-ended'
 };
 
-/** 投票展示状态(与旧项目 VOTE_STATES 一致:中文 + unocss 文字/背景色类) */
+/** 投票展示状态(中文 + unocss 文字/背景色类) */
 export const VOTE_STATE_LABELS: Record<string, { state: string; color: string; bgColor: string }> = {
 	未开始: { state: '未开始', color: 'text-orange-400', bgColor: 'bg-orange-100' },
 	进行中: { state: '进行中', color: 'text-green-400', bgColor: 'bg-green-100' },
@@ -45,7 +45,7 @@ export function getOrCreateVoteUid(): string {
 }
 
 /**
- * 计算投票展示状态(与旧项目 calcVoteState 一致)
+ * 计算投票展示状态
  * 非 custom 期限(permanent 等)直接看 hasEnded;custom 按起止时间判断
  * @param vote 投票对象(含 spec.timeLimit/hasEnded/startDate/endDate)
  * @returns { state: '未开始' | '进行中' | '已结束', color: unocss 文字色类, bgColor: unocss 背景色类 }
@@ -73,7 +73,7 @@ export function calcVoteState(vote: { spec?: { timeLimit?: string; hasEnded?: bo
 }
 
 /**
- * 计算选项票数占比(与旧项目一致:整数百分比)
+ * 计算选项票数占比(整数百分比)
  * @param vote 投票对象(含 stats.voteCount)
  * @param option 选项(含 count)
  */
@@ -95,7 +95,7 @@ interface IVoteCacheData {
 }
 
 /**
- * 投票缓存工具(源自旧项目 utils/vote.js 的 voteCacheUtil)
+ * 投票缓存工具
  */
 export const voteCacheUtil = {
 	/** 是否已缓存(已投票) */

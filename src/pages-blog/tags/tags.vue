@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 文章标签页(源自旧项目 pagesA/tags,新建复刻)
+ * 文章标签页
  */
 definePage({
   style: {

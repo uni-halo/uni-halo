@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 站点友链信息弹窗(源自旧页面 pages-blog/submit-link 的博客详情弹窗,重设计为底部玻璃弹窗)
+ * 站点友链信息弹窗
  * 展示本站友链交换信息(博客名片 + 复制交换信息 + 站点缩略图)
  * 数据源为插件端 linkInfo.siteInfo 配置(字段对齐 Halo 官方友链提交 API:displayName/url/logo/description/email/backlink/feedUrls)
  */

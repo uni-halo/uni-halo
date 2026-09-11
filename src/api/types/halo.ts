@@ -42,7 +42,7 @@ export interface IPostSpec {
   excerpt?: string
   cover?: string
   owner:IOwner
-  /** 发布时间(Halo 2.x 结构,旧项目直接使用) */
+  /** 发布时间(Halo 2.x 结构) */
   publishTime?: string
   deleted: boolean
   publish: boolean
@@ -97,7 +97,7 @@ export interface IPost {
   categories?: ICategory[]
   tags?: ITag[]
   contributors?: IContributor[]
-  /** 旧项目使用的顶层统计(兼容 Halo 旧版结构) */
+  /** 顶层统计(兼容 Halo 旧版结构) */
   stats?: {
     visit?: number
     upvote?: number
@@ -123,7 +123,7 @@ export type IPostListRes = IListResult<IPost>
 /** 文章搜索请求参数(关键字) */
 export interface ISearchReq {
   keyword?: string
-  /** 返回条数上限(旧版默认 50) */
+  /** 返回条数上限(默认 50) */
   limit?: number
   page?: number
   size?: number
@@ -152,7 +152,7 @@ export interface ICategory {
     visiblePostCount?: number
   }
   children?: ICategory[]
-  /** 文章数(旧项目首页直接读取/排序用) */
+  /** 文章数 */
   postCount?: number
 }
 
@@ -355,7 +355,7 @@ export interface IPhoto {
     displayName: string
     description?: string
     url: string
-    /** 封面图(部分接口返回,兼容旧代码) */
+    /** 封面图(部分接口返回) */
     cover?: string
     priority?: number
     takeTime?: string
@@ -447,7 +447,7 @@ export interface ITrackerCounterReq {
   title?: string
   referrer?: string
   language?: string
-  /** 访问页面路径(旧项目埋点 url 字段) */
+  /** 访问页面路径(埋点 url 字段) */
   url?: string
 }
 

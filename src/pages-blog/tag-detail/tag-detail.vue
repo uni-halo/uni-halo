@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 标签详情页(源自旧项目 pagesA/tag-detail,新建复刻)
+ * 标签详情页
  * 展示某标签下的文章列表,分页加载
  */
 import { ref } from 'vue'

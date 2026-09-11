@@ -1,7 +1,6 @@
 /**
- * 统一弹窗工具(源自旧项目 js_sdk/fy-showModal,改 utils 按需导出)
+ * 统一弹窗工具
  * 新架构简单场景直接用 uni.showModal + Promise 包装;需要统一视觉时用 wot-ui wd-dialog/wd-message-box
- * 替代旧项目的 uni.$eShowModal 全局挂载
  */
 import { isWechat } from './platform'
 

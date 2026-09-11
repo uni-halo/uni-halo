@@ -1,5 +1,5 @@
 /**
- * 时间格式化工具(源自旧项目 common/filters/index.js 的 formatTime,改 utils 按需导出)
+ * 时间格式化工具
  * 支持格式化 yyyy年MM月dd日 HH点mm分ss秒 星期w q季
  * 兼容对象形式传入 { d: '2021-06-04', f: 'yyyy年' }(d 必传,f 默认 yyyy-MM-dd HH:mm:ss)
  */

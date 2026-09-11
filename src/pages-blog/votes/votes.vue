@@ -67,7 +67,7 @@
 		options : IFilterOption[]
 	}
 
-	/** 筛选维度(与旧项目 tm-dropDownMenu 一致) */
+	/** 筛选维度 */
 	const filterConfig : IFilterItem[] = [
 		{
 			key: 'type',
@@ -150,7 +150,7 @@
 	}
 
 	/* ---------------- 搜索 ---------------- */
-	/** 实时搜索:输入防抖 400ms 后触发(对应旧版 tm-search 的 @input) */
+	/** 实时搜索:输入防抖 400ms 后触发 */
 	const handleOnInput = debounce(() => {
 		queryParams.value.page = 1
 		isLoadMore.value = false
@@ -196,12 +196,12 @@
 				? dataList.value.concat(tempItems)
 				: tempItems
 
-			// 未投优先排序(与旧项目一致)
+			// 未投优先排序
 			dataList.value = dataList.value.sort((a, b) => {
 				return Number(a.spec?.isVoted) - Number(b.spec?.isVoted)
 			})
 
-			// 是否已投过滤(与旧项目一致)
+			// 是否已投过滤
 			if (filterIsVoted.value !== undefined) {
 				dataList.value = dataList.value.filter(x => x.spec?.isVoted === filterIsVoted.value)
 			}
@@ -221,7 +221,7 @@
 		}
 	}
 
-	/** 卡片点击跳详情(与旧项目 VoteCard @on-click 一致) */
+	/** 卡片点击跳详情 */
 	function handleOnVoteClick(vote : IVoteItem) {
 		const name = vote.metadata?.name
 		if (!name)

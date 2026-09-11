@@ -1,5 +1,5 @@
 /**
- * Cookie 处理工具(源自旧项目 utils/cookies.js,按需命名导出)
+ * Cookie 处理工具
  */
 
 /**

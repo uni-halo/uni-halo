@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 文章迷你卡片(源自旧项目 components/article-min-card,新建复刻)
+ * 文章迷你卡片
  * 用于分类页 list-post 视图的文章列表
  */
 import { computed } from 'vue'

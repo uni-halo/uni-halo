@@ -1,5 +1,5 @@
 /**
- * URL 参数工具(源自旧项目 utils/url.params.js,按需命名导出)
+ * URL 参数工具
  */
 
 /**

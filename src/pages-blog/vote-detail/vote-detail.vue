@@ -57,7 +57,7 @@ const isEnded = computed(() => vote.value?.spec?.hasEnded || false)
 
 /* ---------------- 工具 ---------------- */
 function formatTime(date?: string, fmt = 'yyyy-MM-dd HH:mm'): string {
-  // 与旧项目一致:yyyy-MM-dd HH:mm
+  // yyyy-MM-dd HH:mm
   return date ? formatTimeUtil({ d: date, f: fmt }) : ''
 }
 
@@ -88,7 +88,7 @@ async function handleGetData() {
       tempVote.spec.disabled = isVoted.value
       tempVote.spec._uh_type = VOTE_TYPES[typeKey] || tempVote.spec.type
 
-      // 计算状态(与旧项目 calcVoteState 一致,含 timeLimit 非 custom 时 hasEnded 兜底)
+      // 计算状态(含 timeLimit 非 custom 时 hasEnded 兜底)
       tempVote.spec._uh_state = calcVoteState(tempVote)
       if (tempVote.spec._uh_state.state === '已结束')
         tempVote.spec.hasEnded = true
@@ -327,7 +327,7 @@ onShareTimeline(() => ({
             </text>
           </view>
           <view class="options flex flex-col gap-3 w-full">
-            <!-- PK 对抗条(与旧项目 pk-container 一致;样式需顶层定义,勿嵌套在 .vote-card 下) -->
+            <!-- PK 对抗条(样式需顶层定义,勿嵌套在 .vote-card 下) -->
             <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border w-full flex">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"

@@ -1,5 +1,5 @@
 /**
- * JSON 解析工具(源自旧项目 utils/index.js 的 checkJsonAndParse,按需命名导出)
+ * JSON 解析工具
  */
 
 export interface IParseResult<T = unknown> {

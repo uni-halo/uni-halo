@@ -54,7 +54,7 @@
 		updateTimestamp ?: string
 	}[]>([])
 
-	/* ---------------- 动画(对应旧版 mixin calcAniWait) ---------------- */
+	/* ---------------- 动画 ---------------- */
 	/** 预计算列表项入场延迟(每 10 项重置一轮,每项递增 50ms);必须在渲染外算好,渲染中修改响应式状态会导致递归更新 */
 	const calcAniDelays = computed(() => {
 		let wait = 0
@@ -103,7 +103,7 @@
 		}
 	}
 
-	/** 实时搜索:输入防抖 400ms 后触发(对应旧版 tm-search 的 @input) */
+	/** 实时搜索:输入防抖 400ms 后触发 */
 	const handleOnInput = debounce(() => {
 		handleOnSearch()
 	}, 400)

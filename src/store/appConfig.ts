@@ -105,7 +105,7 @@ export const useAppConfigStore = defineStore(
     }
 
     /**
-     * 统一拉取静态配置(设计见 .docs/static-config-unified-fetch-design.md):
+     * 统一拉取静态配置:
      * getConfigs + audit-data + love-config 并行一次;TTL 内(默认 5 分钟,persist 恢复后
      * 亦生效)直接返回缓存,避免每次冷启动/onShow 重复请求;force=true 强制刷新。
      * 返回 ok = getConfigs 是否成功(失败时走内置默认/旧缓存,由调用方决定后续)。

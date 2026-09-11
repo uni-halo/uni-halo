@@ -408,7 +408,7 @@
 
 	/* ---------------- 格式化 ---------------- */
 	function formatPublishTime(time ?: string) : string {
-		// 与旧项目一致:yyyy年MM月dd日 星期w
+		// yyyy年MM月dd日 星期w
 		return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
 	}
 

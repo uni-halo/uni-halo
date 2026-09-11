@@ -25,7 +25,7 @@ const isShow = ref(false)
 const appConfigStore = useAppConfigStore()
 
 /** 小程序申请信息(字段与 uh-links-mini-apply 表单一致；小程序信息读 linkInfo.miniInfo；
- * 作者信息 2026-09-10 起改读应用设置-博主资料 authorConfig.blogger（linkInfo.authorInfo 已下线），字段名无映射) */
+ * 作者信息读应用设置-博主资料 authorConfig.blogger，字段名无映射) */
 const miniInfo = computed(() => {
   const miniCfg = (appConfigStore.configs.pluginConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
   const blogger = (appConfigStore.configs.authorConfig?.blogger || {}) as Record<string, unknown>
@@ -34,7 +34,7 @@ const miniInfo = computed(() => {
     displayName: str(miniCfg, 'displayName'),
     miniProgramCode: str(miniCfg, 'miniProgramCode'),
     link: str(miniCfg, 'link'),
-    // 作者信息：博主资料 nickname/avatar/website（官网地址 2026-09-10 新增）
+    // 作者信息：博主资料 nickname/avatar/website
     authorName: str(blogger, 'nickname'),
     avatar: str(blogger, 'avatar'),
     website: str(blogger, 'website'),

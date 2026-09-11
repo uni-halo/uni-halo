@@ -127,7 +127,7 @@ export function getQRCodeInfo(key: string) {
   })
 }
 
-/* ==================== 防刷验证码(plugin-uni-halo,2026-09-03 客户端接入) ==================== */
+/* ==================== 防刷验证码(plugin-uni-halo) ==================== */
 
 /** 防刷验证码(服务端 captcha/generate 返回;受保护写接口 403 时响应体亦附带新验证码) */
 export interface IPluginCaptcha {
@@ -158,7 +158,7 @@ export function buildCaptchaQuery(captcha?: ICaptchaQuery | null): ICaptchaQuery
   return { captchaId: captcha.captchaId, captchaCode: captcha.captchaCode }
 }
 
-/* ==================== 通知公告(plugin-uni-halo,2026-09-03 客户端接入) ==================== */
+/* ==================== 通知公告(plugin-uni-halo) ==================== */
 
 /**
  * 公告分页列表(公开,仅已发布;脱敏不含 content,内嵌类型信息)。

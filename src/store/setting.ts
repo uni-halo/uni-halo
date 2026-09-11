@@ -5,8 +5,6 @@
  * - applySiteDefaults(site):启动 fetchConfigs 后把 getConfigs 收集的 L0 与本地差异合并(含旧数据迁移);
  * - savePreference(patch):写本地差异(uh_pref_local_v1)并立即重合并;
  * - resetPreferences:清本地差异,立即回退「站点默认」(无 L0 时回退内置默认)。
- *
- * 设计依据:插件仓库 .docs/config-system-v2-redesign.md §3-4(v2.2:远端=站点默认,无用户级远端层)。
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -36,7 +34,7 @@ export const useSettingStore = defineStore(
 
     /**
      * 应用站点默认并合并本地差异(启动 fetchConfigs 成功后调用;site 为 null/空时仅本地差异覆盖内置默认)
-     * 首次运行时顺带迁移旧版全量 persist(见 utils/preference.migrateLegacyLocalPrefs)
+     * 首次运行时顺带迁移旧版全量 persist
      */
     const applySiteDefaults = (site: LocalPrefs | null): void => {
       siteDefaults.value = site && typeof site === 'object' ? site : null

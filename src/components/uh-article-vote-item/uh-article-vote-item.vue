@@ -334,7 +334,7 @@
 				</view>
 			</view>
 
-			<!-- 提交按钮(与旧项目一致:选择后才出现状态机) -->
+			<!-- 提交按钮(选择后才出现状态机) -->
 			<view v-if="submitForm.voteData.length !== 0" class="mt-3">
 				<wd-button v-if="isVoted" disabled block>
 					您已参与投票

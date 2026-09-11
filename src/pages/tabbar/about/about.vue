@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	/**
- * 关于页(源自旧项目 pages/tabbar/about/about.vue,新建复刻)
+ * 关于页
  * 功能:博主信息 + 站点统计 + 功能导航 + 版权
  * 风格:对齐全站设计语言(bg-page + uh-global-card-glass + uh-section-title + 彩色图标块)
  */
@@ -31,11 +31,11 @@
 	const { check: checkDataVisualPlugin } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginDataStatistics,
 	})
-	/** 投票插件可用性（投票中心导航项显隐；pluginConfig.votePlugin 已下线，2026-09-10 改插件启用检测） */
+	/** 投票插件可用性(投票中心导航项显隐) */
 	const { check: checkVotePluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginVote,
 	})
-	/** 链接插件可用性（友情链接导航项显隐；pluginConfig.linksPlugin 已下线，2026-09-10 改插件启用检测） */
+	/** 链接插件可用性(友情链接导航项显隐) */
 	const { check: checkLinksPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginLinks,
 	})

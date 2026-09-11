@@ -1,5 +1,5 @@
 /**
- * Halo 全局配置 store(源自旧项目 store/config.js 的 haloConfig 部分)
+ * Halo 全局配置 store
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'

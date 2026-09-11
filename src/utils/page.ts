@@ -1,5 +1,5 @@
 /**
- * 页面通用工具(源自旧项目 common/mixins/index.js 的 methods/computed,改 utils 按需导出)
+ * 页面通用工具
  * haloConfig/haloPluginsConfig/globalAppSettings 对应新架构用 Pinia store 读取,此处不再提供
  */
 import { useAppConfigStore } from '@/store/appConfig'

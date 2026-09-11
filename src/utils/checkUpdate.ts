@@ -1,5 +1,5 @@
 /**
- * 检查更新工具(源自旧项目 uni_modules/uhalo-upgrade/utils/check-update.ts,新建复刻)
+ * 检查更新工具
  * 业务侧调用 uni-halo 的 checkVersion 接口,有新版时弹窗提示并下载安装(APP 端)
  * 使用方式:App.vue onLaunch 中调用 checkUpdate(import.meta.env.VITE_SERVER_BASEURL)
  */

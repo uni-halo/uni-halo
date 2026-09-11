@@ -1,6 +1,5 @@
 /**
  * 通用缓存(带过期时间)
- * 源自旧项目 utils/storage.js,按需命名导出
  */
 
 interface ICacheItem<T> {

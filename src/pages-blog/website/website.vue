@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 网站浏览页(源自旧项目 pagesC/website,新建复刻)
+ * 网站浏览页
  * 内嵌 web-view 展示外部链接
  */
 import { ref } from 'vue'

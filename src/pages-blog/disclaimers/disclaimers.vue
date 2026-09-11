@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	/**
- * 免责声明页(源自旧项目 pagesA/disclaimers,新建复刻)
+ * 免责声明页
  */
 	import { computed } from 'vue'
 	import { useAppConfigStore } from '@/store/appConfig'

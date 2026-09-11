@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 贡献热度图(源自旧项目 components/heatmap,新建复刻,精简版)
+ * 贡献热度图
  * 按日期统计文章发布数量,以年度格子图展示
  */
 import { computed, ref } from 'vue'

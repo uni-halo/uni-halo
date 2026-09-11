@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 友链底部悬浮操作栏(通用组件)
- * 参考瞬间详情页底部悬浮按钮设计;通过 :actions 控制显示的按钮,事件回调 emit('apply') / emit('info')
+ * 通过 :actions 控制显示的按钮,事件回调 emit('apply') / emit('info')
  * 站点 tab / 小程序 tab 分别引入(如 :actions="['apply','info']" @apply=... @info=...)
  */
 withDefaults(defineProps<{

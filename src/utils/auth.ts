@@ -1,9 +1,8 @@
 /**
  * 认证信息工具(请求头来源)
- * 源自旧项目 utils/auth.js,按需命名导出
  */
 
-/** 管理员登录 token 存储 key(旧项目 APP_ADMIN_LOGIN_TOKEN) */
+/** 管理员登录 token 存储 key */
 const ADMIN_LOGIN_TOKEN_KEY = 'APP_ADMIN_LOGIN_TOKEN'
 
 /**

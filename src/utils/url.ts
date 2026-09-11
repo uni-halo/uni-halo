@@ -1,5 +1,5 @@
 /**
- * URL 处理工具(源自旧项目 utils/index.js 的 URL 相关方法,按需命名导出)
+ * URL 处理工具
  * 依赖 BASE_API(env)与应用图片配置(storage)
  */
 import { getCache } from './storage'

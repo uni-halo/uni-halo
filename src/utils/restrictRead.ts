@@ -1,5 +1,5 @@
 /**
- * 受限阅读工具(源自旧项目 utils/restrictRead.js,按需命名导出)
+ * 受限阅读工具
  * 处理文章受限内容(密码/验证码/登录/付费/评论)的检测与占位符替换
  */
 import type { IPost } from '@/api/types/halo'

@@ -1,5 +1,5 @@
 /**
- * 对象合并/克隆工具(源自旧项目 utils/index.js 的 deepMerge/deepClone,按需命名导出)
+ * 对象合并/克隆工具
  */
 
 /** 判断是否为普通对象(非数组、非 null) */

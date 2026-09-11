@@ -15,11 +15,11 @@ import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { useUserStore } from './user'
 import { getCache } from '@/utils/storage'
 
-/** 个人令牌存储 key(源自旧项目 utils/token.js,含 basicConfig.tokenConfig) */
+/** 个人令牌存储 key */
 const APP_TOKENS_KEY = 'APP_TOKENS'
 
 /**
- * 获取个人令牌(旧项目 getPersonalToken)
+ * 获取个人令牌
  * 用于需要个人 token 的接口(如非匿名投票 submitVote)
  * @returns 个人令牌,未配置时为空字符串
  */

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	/**
- * 恋爱清单页(源自旧项目 pagesA/love/list.vue,新建复刻)
+ * 恋爱清单页
  * 恋爱清单卡片列表(未开始/进行中/已完成),展开查看详情与回忆图片
  */
 	import { computed, ref } from 'vue'

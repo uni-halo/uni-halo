@@ -1,5 +1,5 @@
 /**
- * 图片缓存工具(源自旧项目 utils/imageCache.js,按需命名导出)
+ * 图片缓存工具
  * 下载图片到本地缓存(APP 端),返回本地路径
  */
 import { checkIsUrl } from './url'

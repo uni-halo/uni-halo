@@ -1,5 +1,5 @@
 /**
- * 节流工具(源自旧项目 utils/throttle.js,按需命名导出)
+ * 节流工具
  * 首次立即执行,之后在 wait 时间窗口内最多执行一次
  */
 let timer: ReturnType<typeof setTimeout> | null = null

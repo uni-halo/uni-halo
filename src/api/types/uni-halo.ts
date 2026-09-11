@@ -18,10 +18,7 @@ export interface IImagesConfig {
 export interface IPluginConfig {
   toolsPlugin?: { Authorization?: string } & Record<string, unknown>
   /**
-   * 友链信息（插件端 spec.linkInfo 直接下发到本键，结构 = {submissionEnabled, miniInfo, siteInfo}，字段名无映射；
-   * linksSubmitPlugin 旧键已弃用不再下发；votePlugin/linksPlugin 已下线（2026-09-10，app 端改插件启用检测判定）；
-   * 2026-09-11 起新增基本配置 submissionEnabled（公开提交申请开关，原 setting linkConfig）；authorInfo 已下线，
-   * 作者信息改读 authorConfig.blogger）
+   * 友链信息（插件端 spec.linkInfo 直接下发到本键，结构 = {submissionEnabled, miniInfo, siteInfo}，字段名无映射）
    */
   linkInfo?: {
     /** 基本配置：是否开放公开提交申请（默认 true；false 时隐藏「提交申请」入口） */
@@ -34,7 +31,7 @@ export interface IPluginConfig {
       description?: string
       applyRemark?: string
     }
-    /** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/backlink/feedUrls，2026-09-11 起不再含 email） */
+    /** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/backlink/feedUrls） */
     siteInfo?: {
       displayName?: string
       url?: string
@@ -118,17 +115,17 @@ export interface IPageConfig {
   aboutConfig?: {
     bgImageUrl?: string
     waveImageUrl?: string
-    /** 页脚版权（2026-09-10 起插件端从应用设置迁入，显示于关于页页脚） */
+    /** 页脚版权（显示于关于页页脚） */
     copyrightConfig?: {
       enabled?: boolean
       content?: string
     }
   }
-  /** 免责声明页（2026-09-10 起插件端从应用设置迁入：不再有 enabled 开关，按内容非空展示） */
+  /** 免责声明页（按内容非空展示） */
   disclaimers?: {
     content?: string
   }
-  /** 文章详情页配置（2026-09-10 起插件端从应用设置迁入：评论开关与版权文案） */
+  /** 文章详情页配置（评论开关与版权文案） */
   postDetailConfig?: {
     showComment?: boolean
     copyrightEnabled?: boolean
@@ -184,14 +181,14 @@ export interface IAppConfig {
     }
   }
   /**
-   * 恋爱配置（2026-09-10 起插件端 loveEnabled 总开关下线，入口显隐由模块入口开关
+   * 恋爱配置（入口显隐由模块入口开关
    * （ourStory/lovePhoto/loveDaily.enabled）与 navList 统一管理，客户端按模块开关判定）
    */
   loveConfig?: Record<string, unknown>
   imagesConfig?: IImagesConfig
   /**
-   * 博主与社交（插件端 GeneralConfig.profile.blogger/social 重建；blogger 含
-   * nickname/avatar/email/description/website（官网地址 2026-09-10 新增））
+   * 博主与社交（blogger 含
+   * nickname/avatar/email/description/website）
    */
   authorConfig?: Record<string, unknown>
   appConfig?: Record<string, unknown>
@@ -219,7 +216,7 @@ export interface IAppConfig {
     avatarRadius?: boolean
   }
   /**
-   * 维护模式(additive,2026-09-04 插件端 GeneralConfig.spec.maintenance 经 getConfigs
+   * 维护模式(additive,插件端 GeneralConfig.spec.maintenance 经 getConfigs
    * 下发;仅 scheduled/active 时存在,键缺失=未维护或已到点自动结束)
    */
   maintenance?: IPublicMaintenance
@@ -228,7 +225,7 @@ export interface IAppConfig {
 
 /**
  * getConfigs 顶层 maintenance 键(插件端输出;status 判定权威在服务端,客户端仅据此
- *  展示维护页与倒计时,设计见插件 .docs/maintenance-config-design.md)
+ *  展示维护页与倒计时)
  */
 export interface IPublicMaintenance {
   /** scheduled 维护预告(倒计时至 startTime)/ active 维护中(倒计时至 endTime) */
@@ -428,7 +425,7 @@ export interface ICommentCaptcha {
   [key: string]: unknown
 }
 
-/* ---------- 通知公告(plugin-uni-halo notice,2026-09-03 客户端接入) ---------- */
+/* ---------- 通知公告(plugin-uni-halo notice) ---------- */
 
 /** 公告公开列表项(脱敏,不含 content;内嵌类型信息 typeDisplayName/typeColor) */
 export interface INoticeListVo {

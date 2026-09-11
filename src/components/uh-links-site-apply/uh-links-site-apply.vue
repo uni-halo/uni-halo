@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 /**
- * 友链申请表单弹窗(站点版,源自旧页面 pages-blog/submit-link)
- * 参考小程序申请弹窗 uh-links-mini-apply 的封装方式(uh-glass-popup bottom + 表单 + 提交)
+ * 友链申请表单弹窗(站点版)
  * 提交后等待站长审核,通过后展示在「站点」列表中
  */
 import { ref, watch } from 'vue'
@@ -86,8 +85,7 @@ async function handleSubmit() {
   if (!validateForm())
     return
 
-  // linksSubmitPlugin 已弃用（2026-09-08），第三方友链自助提交暂未开放；
-  // 后续可对接 Halo 官方 plugin-links link-applications 接口
+  // 第三方友链自助提交暂未开放
   uni.showToast({ icon: 'none', title: '友链申请功能暂未开放，请联系站长' })
 }
 
