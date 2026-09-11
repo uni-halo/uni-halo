@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
+import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { getCache, setCache } from '@/utils/storage'
 import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
+import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
 
@@ -57,7 +58,8 @@ function mapAlbumCard(item: ILoveAlbum): ILoveAlbumCard {
 }
 
 /* ---------------- 状态 ---------------- */
-const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
+const queryParams = ref({ page: 1, size: 10 })
 const dataList = ref<ILoveAlbumCard[]>([])
 const unlockedAlbums = ref<Record<string, string>>({})
 
@@ -101,12 +103,24 @@ function handleSaveUnlockedAlbums() {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
-  updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  if (!loadMoreStatus.value.active) {
+    updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  }
   try {
-    const res = await getLoveAlbums({})
-    const items = res.data?.items || []
-    dataList.value = items.map(mapAlbumCard)
-    updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+    const res = await getLoveAlbums({ ...queryParams.value })
+    const items = (res.data?.items || []).map(mapAlbumCard)
+    dataList.value = loadMoreStatus.value.active
+      ? dataList.value.concat(items)
+      : items
+    if (!loadMoreStatus.value.active) {
+      await sleep(600)
+      updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+    }
+    updateLoadMoreStatus({
+      active: false,
+      status: res.data?.hasNext ? 'loadMore' : 'noMore',
+      hasNext: !!res.data?.hasNext,
+    })
     if (dataList.value.length > 0)
       handleLoadUnlockedAlbumPhotos()
   }
@@ -114,12 +128,18 @@ async function handleGetData() {
     console.error('获取相册失败', e)
     // 模块锁 401：清除 token 并提示
     handleLoveModuleLocked('lovePhoto', e)
-    updateLoadingStatus(DataLoadingStatusEnum.Error)
+    if (loadMoreStatus.value.active) {
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
+    }
   }
   finally {
-    setTimeout(() => {
-      uni.stopPullDownRefresh()
-    }, 200)
+    uni.stopPullDownRefresh()
   }
 }
 
@@ -195,7 +215,25 @@ onLoad(() => {
 })
 
 onPullDownRefresh(() => {
+  resetLoadMoreStatus()
+  queryParams.value.page = 1
   handleGetData()
+})
+
+onReachBottom(() => {
+  // 正在加载时阻止重复请求
+  if (loadMoreStatus.value.active) {
+    return
+  }
+  // 有更多数据时继续加载
+  if (loadMoreStatus.value.hasNext) {
+    queryParams.value.page += 1
+    updateLoadMoreStatus({
+      active: true,
+      status: 'loading',
+    })
+    handleGetData()
+  }
 })
 </script>
 
@@ -241,8 +279,9 @@ onPullDownRefresh(() => {
         </view>
 		
 	  </view>
-    </view>
-    <!-- 密码解锁弹窗 -->
+	    </view>
+	    <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
+	    <!-- 密码解锁弹窗 -->
     <uh-album-unlock-popup
       v-if="currentUnlockAlbum" v-model="showUnlockModal" :show="showUnlockModal" :album-name="unlockAlbumName"
       :album-key="unlockAlbumKey" @update:show="showUnlockModal = $event" @success="handleOnUnlockSuccess"

@@ -112,6 +112,13 @@ export interface IPageConfig {
   categoryConfig?: { type?: string }
   momentConfig?: { useTagRandomColor?: boolean }
   galleryConfig?: { pageTitle?: string }
+  /** 恋爱日记页（插件端「通用配置 → 页面设置 → 恋爱日记」配置；
+   * 2026-09-11 起恋爱页背景图由 loveConfig.pageImages 迁入此处） */
+  loveDiaryConfig?: {
+    pageTitle?: string
+    /** 恋爱页背景图（留空客户端内置回退） */
+    bgImageUrl?: string
+  }
   aboutConfig?: {
     bgImageUrl?: string
     waveImageUrl?: string

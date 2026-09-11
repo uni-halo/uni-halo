@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
-	import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
+	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveStories } from '@/api/uni-halo'
 	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
+	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { ILoveStory } from '@/api/types/uni-halo'
 
@@ -41,6 +42,8 @@
 		images : string[]
 		/** 时间轴封面图(最多 3 张,已预处理 URL) */
 		coverImages : string[]
+		/** 排序优先级(仅脚本跨页排序用,模板不展示) */
+		priority : number
 	}
 
 	/** 空故事占位(弹窗未打开时) */
@@ -56,6 +59,7 @@
 		content: '',
 		images: [],
 		coverImages: [],
+		priority: 0,
 	}
 
 	/** 中文星期(dayjs day():0=周日) */
@@ -88,11 +92,18 @@
 			content: spec.content || '',
 			images,
 			coverImages: images.slice(0, 3),
+			priority: spec.priority || 0,
 		}
 	}
 
+	/** 故事列表排序(priority 越大越靠前;跨页 concat 后整体重排) */
+	function sortStories(list : IStoryCard[]) : IStoryCard[] {
+		return [...list].sort((a, b) => (b.priority || 0) - (a.priority || 0))
+	}
+
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
+	const queryParams = ref({ page: 1, size: 10 })
 	const stories = ref<IStoryCard[]>([])
 	const showDetail = ref(false)
 	const currentStory = ref<IStoryCard>(EMPTY_STORY)
@@ -100,15 +111,31 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetStories() {
-		updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		if (!loadMoreStatus.value.active) {
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		}
 		try {
-			const res = await getLoveStories({})
+			const res = await getLoveStories({ ...queryParams.value })
 			const items = res.data?.items || []
-			if (items.length > 0) {
-				// 按 priority 排序(越大越靠前)
-				const sorted = [...items].sort((a, b) => (b.spec?.priority || 0) - (a.spec?.priority || 0))
-				stories.value = sorted.map(mapStoryCard)
+			if (loadMoreStatus.value.active) {
+				// 分页加载:追加并按 priority 整体重排(跨页保持全局有序)
+				stories.value = sortStories([...stories.value, ...items.map(mapStoryCard)])
+				updateLoadMoreStatus({
+					active: false,
+					status: res.data?.hasNext ? 'loadMore' : 'noMore',
+					hasNext: !!res.data?.hasNext,
+				})
+			}
+			else if (items.length > 0) {
+				// 首屏:按 priority 排序(越大越靠前)
+				stories.value = sortStories(items.map(mapStoryCard))
+				await sleep(600)
 				updateLoadingStatus(DataLoadingStatusEnum.Success)
+				updateLoadMoreStatus({
+					active: false,
+					status: res.data?.hasNext ? 'loadMore' : 'noMore',
+					hasNext: !!res.data?.hasNext,
+				})
 			}
 			else {
 				// 降级:从旧配置读取单条故事
@@ -121,11 +148,18 @@
 			if (!handleLoveModuleLocked('ourStory', e)) {
 				handleLoadFromLegacy()
 			}
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
-			setTimeout(() => {
-				uni.stopPullDownRefresh()
-			}, 200)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -144,6 +178,7 @@
 				content: loveModuleConfig.ourStory.content,
 				images: [],
 				coverImages: [],
+				priority: 0,
 			}]
 			updateLoadingStatus(DataLoadingStatusEnum.Success)
 			return
@@ -194,7 +229,25 @@
 	})
 
 	onPullDownRefresh(() => {
+		resetLoadMoreStatus()
+		queryParams.value.page = 1
 		handleGetStories()
+	})
+
+	onReachBottom(() => {
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
+		}
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page += 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetStories()
+		}
 	})
 </script>
 
@@ -252,6 +305,7 @@
 					</view>
 				</view>
 			</view>
+			<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 		</view>
 
 		<!-- 故事详情弹窗 -->

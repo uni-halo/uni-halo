@@ -7,6 +7,7 @@ import { getAppConfigs, getAuditData, getLoveConfig } from '@/api/uni-halo'
 import { DefaultAppConfigs } from '@/config/appConfig'
 import { deepMerge } from '@/utils/merge'
 import { setCache } from '@/utils/storage'
+import { clearLoveModuleToken } from '@/utils/loveModuleToken'
 import type { IAppConfig, IAuditDataResult } from '@/api/types/uni-halo'
 
 /** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
@@ -87,7 +88,9 @@ export const useAppConfigStore = defineStore(
       }
     }
 
-    /** 获取恋爱配置内容(公开 /love-config) */
+    /** 获取恋爱配置内容(公开 /love-config;恋爱日记入口 loveDiary 设密码时
+     * 需携带模块解锁 token;401 locked 表示 token 缺失/失效,清除本地 token
+     * 交由 love.vue 重新弹密码框解锁) */
     const fetchLoveConfig = async () => {
       try {
         const res = await getLoveConfig()
@@ -99,6 +102,11 @@ export const useAppConfigStore = defineStore(
       }
       catch (err) {
         console.error('获取恋爱配置失败', err)
+        // 401 locked：恋爱日记锁定且本地 token 失效/缺失，清除后由 love.vue 引导解锁
+        const status = (err as { cause?: { response?: { status?: number } } })?.cause?.response?.status
+        if (status === 401) {
+          clearLoveModuleToken('loveDiary')
+        }
         loveConfig.value = { enabled: false }
         return loveConfig.value
       }

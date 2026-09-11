@@ -20,6 +20,7 @@ export const DefaultAppConfigs: IAppConfig = {
     momentConfig: {
       useTagRandomColor: true,
     },
+    loveDiaryConfig: {},
   },
   auditConfig: {
     auditModeEnabled: false,

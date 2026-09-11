@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-	/**
- * 恋爱清单页
- * 恋爱清单卡片列表(未开始/进行中/已完成),展开查看详情与回忆图片
- */
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
+	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getLoveDailyItems } from '@/api/uni-halo'
 	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { checkImageUrl } from '@/utils/url'
+	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
 
@@ -53,7 +50,8 @@
 	}
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
+	const queryParams = ref({ page: 1, size: 10 })
 	const list = ref<ILoveItemCard[]>([])
 
 	/* ---------------- 筛选与排序 ---------------- */
@@ -164,23 +162,41 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetList() {
-		updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		if (!loadMoreStatus.value.active) {
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		}
 		try {
-			const res = await getLoveDailyItems({})
-			const items = res.data?.items || []
-			list.value = items.map(mapItemCard)
-			updateLoadingStatus(list.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			const res = await getLoveDailyItems({ ...queryParams.value })
+			const items = (res.data?.items || []).map(mapItemCard)
+			list.value = loadMoreStatus.value.active
+				? list.value.concat(items)
+				: items
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(list.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			}
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data?.hasNext ? 'loadMore' : 'noMore',
+				hasNext: !!res.data?.hasNext,
+			})
 		}
 		catch (e) {
 			console.error('获取清单失败', e)
 			// 模块锁 401：清除 token 并提示
 			handleLoveModuleLocked('loveDaily', e)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
-			setTimeout(() => {
-				uni.stopPullDownRefresh()
-			}, 200)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -238,7 +254,25 @@
 	})
 
 	onPullDownRefresh(() => {
+		resetLoadMoreStatus()
+		queryParams.value.page = 1
 		handleGetList()
+	})
+
+	onReachBottom(() => {
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
+		}
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page += 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetList()
+		}
 	})
 </script>
 
@@ -341,9 +375,7 @@
 					</view>
 				</view>
 			</block>
-			<view class="box-border py-10 text-center text-xs text-gray-500">
-
-			</view>
+			<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			<uh-data-loading v-if="showList.length === 0" :loading-status="DataLoadingStatusEnum.Empty"
 				min-height="42vh" empty-text="该筛选条件下暂无清单~" :use-refresh-button="false" />
 		</view>
