@@ -45,6 +45,7 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha';
 export function getPostList(params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>('/apis/api.content.halo.run/v1alpha1/posts', {
 		query: params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -58,6 +59,7 @@ export function getPostByName(name: string) {
 			'Wechat-Session-Id': getOpenid(),
 			'nologin-email': getNologinEmail()
 		},
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -67,6 +69,7 @@ export function getPostByName(name: string) {
  */
 export function getPostListByKeyword(params: ISearchReq) {
 	return http.Post<IResponse<ISearchRes>>('/apis/api.halo.run/v1alpha1/indices/-/search', params, {
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -79,6 +82,7 @@ export function getPostListByKeyword(params: ISearchReq) {
 export function getCategoryList(params: ICategoryListReq) {
 	return http.Get<IResponse<ICategoryListRes>>('/apis/api.content.halo.run/v1alpha1/categories', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -88,7 +92,8 @@ export function getCategoryList(params: ICategoryListReq) {
  */
 export function getCategoryPostList(name: string, params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>(`/apis/api.content.halo.run/v1alpha1/categories/${name}/posts`, {
-		params,
+		query: params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -99,6 +104,7 @@ export function getCategoryPostList(name: string, params: IPostListReq) {
 export function getTagList(params: ICategoryListReq) {
 	return http.Get<IResponse<ITagListRes>>('/apis/api.content.halo.run/v1alpha1/tags', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -109,6 +115,7 @@ export function getTagList(params: ICategoryListReq) {
 export function getPostByTagName(tagName: string, params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>(`/apis/api.content.halo.run/v1alpha1/tags/${tagName}/posts`, {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -167,6 +174,7 @@ export function addPostComment(data: IAddCommentReq) {
 	if (cookie) headers.Cookie = cookie;
 	return http.Post<IResponse<IComment>>('/apis/api.halo.run/v1alpha1/comments', rest, {
 		headers,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -184,6 +192,7 @@ export function addPostCommentReply(commentName: string, data: IAddCommentReq) {
 	if (cookie) headers.Cookie = cookie;
 	return http.Post<IResponse<IComment>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, rest, {
 		headers,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -196,6 +205,7 @@ export function addPostCommentReply(commentName: string, data: IAddCommentReq) {
 export function getMomentList(params: IMomentListReq) {
 	return http.Get<IResponse<IMomentListRes>>('/apis/api.moment.halo.run/v1alpha1/moments', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -205,6 +215,7 @@ export function getMomentList(params: IMomentListReq) {
  */
 export function getMomentByName(name: string) {
 	return http.Get<IResponse<IMoment>>(`/apis/api.moment.halo.run/v1alpha1/moments/${name}`, {
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -217,6 +228,7 @@ export function getMomentByName(name: string) {
 export function getPhotoGroupList(params: IPhotoGroupListReq) {
 	return http.Get<IResponse<IPhotoGroupListRes>>('/apis/api.photo.halo.run/v1alpha1/photogroups', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -227,6 +239,7 @@ export function getPhotoGroupList(params: IPhotoGroupListReq) {
 export function getPhotoListByGroupName(params: IPhotoListReq) {
 	return http.Get<IResponse<IPhotoListRes>>('/apis/api.photo.halo.run/v1alpha1/photos', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -239,6 +252,7 @@ export function getPhotoListByGroupName(params: IPhotoListReq) {
 export function getFriendLinkGroupList(params: ICategoryListReq) {
 	return http.Get<IResponse<Array<ILinkGroup>>>('/apis/api.link.halo.run/v1alpha1/linkgroups', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -249,6 +263,7 @@ export function getFriendLinkGroupList(params: ICategoryListReq) {
 export function getFriendLinkList(params: ICategoryListReq) {
 	return http.Get<IResponse<ILinkListRes>>('/apis/api.link.halo.run/v1alpha1/links', {
 		params,
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -260,6 +275,7 @@ export function getFriendLinkList(params: ICategoryListReq) {
  */
 export function getBlogStatistics() {
 	return http.Get<IResponse<IBlogStats>>('/apis/api.halo.run/v1alpha1/stats/-', {
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -269,6 +285,7 @@ export function getBlogStatistics() {
  */
 export function submitUpvote(data: IUpvoteReq) {
 	return http.Post<IResponse<unknown>>('/apis/api.halo.run/v1alpha1/trackers/upvote', data, {
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }
@@ -278,6 +295,7 @@ export function submitUpvote(data: IUpvoteReq) {
  */
 export function postTrackersCounter(data: ITrackerCounterReq) {
 	return http.Post<IResponse<unknown>>('/apis/api.halo.run/v1alpha1/trackers/counter', data, {
+		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
 	});
 }

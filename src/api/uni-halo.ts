@@ -77,6 +77,7 @@ export function getAuditData() {
  */
 export function getBanners() {
   return http.Get<IResponse<IBannerPublicItem[]>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/banners', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -86,6 +87,7 @@ export function getBanners() {
  */
 export function getBannerDetail(name: string) {
   return http.Get<IResponse<IBannerPublicDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/banners/${name}`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -95,6 +97,7 @@ export function getBannerDetail(name: string) {
  */
 export function getHaloGlobalInfo() {
   return http.Get<IResponse<IHaloGlobalConfig>>('/actuator/globalinfo', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -104,6 +107,7 @@ export function getHaloGlobalInfo() {
  */
 export function getCommentWidgetConfig() {
   return http.Get<IResponse<ICommentWidgetConfig>>('/apis/api.commentwidget.halo.run/v1alpha1/config', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -114,6 +118,7 @@ export function getCommentWidgetConfig() {
 export function checkVersion(baseUrl: string) {
   return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/upgrade/checkVersion', {
     params: { baseUrl },
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -123,6 +128,7 @@ export function checkVersion(baseUrl: string) {
  */
 export function getQRCodeInfo(key: string) {
   return http.Get<IResponse<IQRCodeInfo>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/getQRCodeInfo/${key}`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -147,6 +153,7 @@ export interface ICaptchaQuery {
  */
 export function getPluginCaptcha() {
   return http.Get<IResponse<IPluginCaptcha>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/captcha/generate', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -167,6 +174,7 @@ export function buildCaptchaQuery(captcha?: ICaptchaQuery | null): ICaptchaQuery
 export function getNotices(params: { page?: number, size?: number }) {
   return http.Get<IResponse<INoticeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices', {
     params,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -176,6 +184,7 @@ export function getNotices(params: { page?: number, size?: number }) {
  */
 export function getNoticeLatest() {
   return http.Get<IResponse<INoticeListVo | null>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices/latest', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -185,6 +194,7 @@ export function getNoticeLatest() {
  */
 export function getNoticeDetail(name: string) {
   return http.Get<IResponse<INoticeDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/notices/${name}`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -192,10 +202,13 @@ export function getNoticeDetail(name: string) {
 /* ==================== 恋爱模块 ==================== */
 
 /**
- * 获取恋爱配置(纪念日 + 恋人信息)
+ * 获取恋爱配置(纪念日 + 恋人信息；恋爱日记入口 loveDiary 设密码时
+ * 需携带模块解锁 token，未解锁返回 401 locked)
  */
 export function getLoveConfig() {
+  const token = getLoveModuleToken('loveDiary')
   return http.Get<IResponse<ILoveConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-config', {
+    params: token ? { token } : {},
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -208,7 +221,7 @@ export function getLoveAlbums(params: ILoveAlbumListReq) {
   const token = getLoveModuleToken('lovePhoto')
   return http.Get<IResponse<ILoveAlbumListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums', {
     params: { ...params, ...(token ? { token } : {}) },
- cacheFor: 0,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -220,7 +233,7 @@ export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
   const token = getLoveModuleToken('lovePhoto')
   return http.Get<IResponse<ILoveAlbum>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-albums/${name}`, {
     params: { ...params, ...(token ? { token } : {}) },
- cacheFor: 0,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -237,15 +250,17 @@ export function unlockAlbum(name: string, password: string, captcha?: ICaptchaQu
     },
     {
       params: { ...buildCaptchaQuery(captcha), ...(token ? { token } : {}) },
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
 }
 
 /**
- * 恋爱模块入口解锁（模块密码，签发 30 分钟 token；模块：ourStory/lovePhoto/loveDaily）
+ * 恋爱模块入口解锁（入口密码，签发 30 分钟 token；module：loveDiary(恋爱日记入口)/
+ * ourStory/lovePhoto/loveDaily；插件端要求验证码，失败 403 返回新验证码）
  */
-export function unlockLoveModule(module: string, password: string) {
+export function unlockLoveModule(module: string, password: string, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<{ token: string }>>(
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-modules/unlock',
     {
@@ -253,6 +268,8 @@ export function unlockLoveModule(module: string, password: string) {
       password,
     },
     {
+      params: buildCaptchaQuery(captcha),
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -267,7 +284,8 @@ export function getLoveDailyItems(params: ILoveDailyItemListReq) {
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-daily-items',
     {
       params: { ...params, ...(token ? { token } : {}) },
-	  cacheFor: 0,
+
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -280,6 +298,7 @@ export function getLoveStories(params: ILoveStoryListReq) {
   const token = getLoveModuleToken('ourStory')
   return http.Get<IResponse<ILoveStoryListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-stories', {
     params: { ...params, ...(token ? { token } : {}) },
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -294,6 +313,7 @@ export function getMiniProgramLinkGroupedList() {
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links',
     {
       params: { grouped: true },
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -306,6 +326,7 @@ export function getMiniProgramLinkTypes() {
   return http.Get<IResponse<IMiniProgramLinkGroupOption[]>>(
     '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/types',
     {
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -318,6 +339,7 @@ export function getMiniProgramLinkDetail(name: string) {
   return http.Get<IResponse<IMiniProgramLink>>(
     `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/mini-program-links/${name}`,
     {
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -335,6 +357,7 @@ export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissio
     },
     {
       params: buildCaptchaQuery(captcha),
+      cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
   )
@@ -358,6 +381,7 @@ export function requestRestrictReadCheck(restrictType: RestrictReadType, code: s
       'Wechat-Session-Id': getOpenid(),
       'nologin-email': getNologinEmail(),
     },
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -371,6 +395,7 @@ export function createVerificationCode() {
       'Authorization': getToolsAuthorization(),
       'Wechat-Session-Id': getOpenid(),
     },
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -385,6 +410,7 @@ export function createVerificationCode() {
 export function getVoteList(params: IVoteListReq) {
   return http.Get<IResponse<IVoteListRes>>('/apis/api.vote.kunkunyu.com/v1alpha1/votes', {
     params,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -394,6 +420,7 @@ export function getVoteList(params: IVoteListReq) {
  */
 export function getVoteDetail(name: string) {
   return http.Get<IResponse<IVoteDetail>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/detail`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -403,6 +430,7 @@ export function getVoteDetail(name: string) {
  */
 export function getVoteUserList(name: string) {
   return http.Get<IResponse<unknown[]>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/user-list`, {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -420,6 +448,7 @@ export function submitVote(name: string, data: IVoteSubmitReq, canAnonymously = 
   }
   return http.Post<IResponse<unknown>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/submit`, data, {
     headers,
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -432,6 +461,7 @@ export function submitVote(name: string, data: IVoteSubmitReq, canAnonymously = 
 export function getDoubanDetail(url: string) {
   return http.Get<IResponse<IDoubanDetail>>('/apis/api.douban.moony.la/v1alpha1/doubanmovies/-/getDoubanDetail', {
     params: { url },
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -466,6 +496,7 @@ export interface IDataStatistics {
  */
 export function getChartData() {
   return http.Get<IResponse<IDataStatistics>>('/apis/api.data.statistics.xhhao.com/v1alpha1/chart/data', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -475,6 +506,7 @@ export function getChartData() {
  */
 export function getGithubConfig() {
   return http.Get<IResponse<unknown>>('/apis/api.data.statistics.xhhao.com/v1alpha1/github/config', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
@@ -484,6 +516,7 @@ export function getGithubConfig() {
  */
 export function getUptimeKumaStatus() {
   return http.Get<IResponse<unknown>>('/apis/api.data.statistics.xhhao.com/v1alpha1/uptime/status', {
+    cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
