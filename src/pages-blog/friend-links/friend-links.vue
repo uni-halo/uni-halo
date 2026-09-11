@@ -92,12 +92,9 @@ watch(() => appConfigStore.auditModeEnabled, (enabled) => {
 
 /* ==================== 站点 tab(plugin-links) ==================== */
 /* ---------------- 状态 ---------------- */
-const { loadingStatus: siteLoadingStatus, updateLoadingStatus: updateSiteLoadingStatus } = useDataLoadingStatus()
+const { loadingStatus: siteLoadingStatus, loadMoreStatus: siteLoadMoreStatus, updateLoadingStatus: updateSiteLoadingStatus, updateLoadMoreStatus: updateSiteLoadMoreStatus, resetLoadMoreStatus: resetSiteLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 1 })
 const detail = ref<{ show: boolean, data: ILink | null }>({ show: false, data: null })
-const hasNext = ref(false)
-const isLoadMore = ref(false)
-const loadMoreText = ref('')
 const linkGroupList = ref<ILinkGroup[]>([])
 const dataList = ref<ILink[]>([])
 
@@ -122,14 +119,12 @@ async function handleGetLinkGroupData() {
 }
 
 async function handleGetData() {
-  if (!isLoadMore.value) {
+  if (!siteLoadMoreStatus.value.active) {
     updateSiteLoadingStatus(DataLoadingStatusEnum.Loading)
   }
-  loadMoreText.value = ''
 
   try {
     const res = await getFriendLinkList({ ...queryParams.value })
-    hasNext.value = res.data.hasNext
     // 审核模式:站点链接仅展示选中 LinkGroup 分组内的
     let items = res.data.items
     if (appConfigStore.auditModeEnabled) {
@@ -145,17 +140,30 @@ async function handleGetData() {
       },
     }))
     // 分页加载时累加,首次/刷新时覆盖(修复重复数据)
-    dataList.value = isLoadMore.value ? dataList.value.concat(list) : list
-    await sleep(600)
-    updateSiteLoadingStatus(
-      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-    )
-    loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
+    dataList.value = siteLoadMoreStatus.value.active ? dataList.value.concat(list) : list
+    if (!siteLoadMoreStatus.value.active) {
+      await sleep(600)
+      updateSiteLoadingStatus(
+        dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
+    }
+    updateSiteLoadMoreStatus({
+      active: false,
+      status: res.data.hasNext ? 'loadMore' : 'noMore',
+      hasNext: res.data.hasNext,
+    })
   }
   catch (err) {
     console.error(err)
-    updateSiteLoadingStatus(DataLoadingStatusEnum.Error)
-    loadMoreText.value = '加载失败，请下拉刷新！'
+    if (siteLoadMoreStatus.value.active) {
+      updateSiteLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateSiteLoadingStatus(DataLoadingStatusEnum.Error)
+    }
   }
   finally {
     uni.stopPullDownRefresh()
@@ -358,7 +366,7 @@ onPullDownRefresh(() => {
       uni.stopPullDownRefresh()
       return
     }
-    isLoadMore.value = false
+    resetSiteLoadMoreStatus()
     queryParams.value.page = 1
     dataList.value = []
     handleGetData()
@@ -376,13 +384,18 @@ onReachBottom(() => {
   if (activeTabIndex.value === 0) {
     if (!sitePluginAvailable.value)
       return
-    if (hasNext.value) {
-      queryParams.value.page += 1
-      isLoadMore.value = true
-      handleGetData()
+    // 正在加载时阻止重复请求
+    if (siteLoadMoreStatus.value.active) {
+      return
     }
-    else {
-      uni.showToast({ icon: 'none', title: '没有更多数据了' })
+    // 有更多数据时继续加载
+    if (siteLoadMoreStatus.value.hasNext) {
+      queryParams.value.page += 1
+      updateSiteLoadMoreStatus({
+        active: true,
+        status: 'loading',
+      })
+      handleGetData()
     }
   }
   else {
@@ -513,9 +526,7 @@ onReachBottom(() => {
             </scroll-view>
           </uh-glass-popup>
 
-          <view class="load-text py-5 text-center text-xs text-gray-400">
-            {{ loadMoreText }}
-          </view>
+          <uh-data-loadmore :status="siteLoadMoreStatus.status" :text="siteLoadMoreStatus.text" />
         </view>
       </template>
     </template>

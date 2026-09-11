@@ -40,11 +40,8 @@
 	}
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const dataList = ref<IVoteItem[]>([])
-	const hasNext = ref(false)
-	const isLoadMore = ref(false)
-	const loadMoreText = ref('加载中...')
 	const filterIsVoted = ref<boolean | undefined>(undefined)
 	const queryParams = ref<Record<string, unknown>>({
 		keyword: '',
@@ -145,7 +142,7 @@
 		}
 
 		queryParams.value.page = 1
-		isLoadMore.value = false
+		resetLoadMoreStatus()
 		handleGetData()
 	}
 
@@ -153,35 +150,39 @@
 	/** 实时搜索:输入防抖 400ms 后触发 */
 	const handleOnInput = debounce(() => {
 		queryParams.value.page = 1
-		isLoadMore.value = false
+		resetLoadMoreStatus()
 		handleGetData()
 	}, 400)
 
 	function handleOnSearch() {
 		queryParams.value.page = 1
-		isLoadMore.value = false
+		resetLoadMoreStatus()
 		handleGetData()
 	}
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
 		if (calcAuditModeEnabled.value) {
+			// 审核模式:一次拉取不分页
+			resetLoadMoreStatus()
 			updateLoadingStatus(
 				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
 			)
-			loadMoreText.value = '呜呜，没有更多数据啦~'
+			updateLoadMoreStatus({
+				active: false,
+				status: 'noMore',
+				hasNext: false,
+			})
 			uni.stopPullDownRefresh()
 			return
 		}
 
-		if (!isLoadMore.value) {
+		if (!loadMoreStatus.value.active) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
-		loadMoreText.value = '加载中...'
 
 		try {
 			const res = await getVoteList({ ...queryParams.value })
-			hasNext.value = res.data.hasNext || false
 
 			const tempItems = res.data.items.map((item) => {
 				item.spec = item.spec || {}
@@ -192,7 +193,7 @@
 				return item
 			})
 
-			dataList.value = isLoadMore.value
+			dataList.value = loadMoreStatus.value.active
 				? dataList.value.concat(tempItems)
 				: tempItems
 
@@ -205,16 +206,29 @@
 			if (filterIsVoted.value !== undefined) {
 				dataList.value = dataList.value.filter(x => x.spec?.isVoted === filterIsVoted.value)
 			}
-			await sleep(600)
-			updateLoadingStatus(
-				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-			)
-			loadMoreText.value = hasNext.value ? '上拉加载更多' : '呜呜，没有更多数据啦~'
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(
+					dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+				)
+			}
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data.hasNext ? 'loadMore' : 'noMore',
+				hasNext: res.data.hasNext,
+			})
 		}
 		catch (err) {
 			console.error(err)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
-			loadMoreText.value = '加载失败，请下拉刷新！'
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
 			uni.stopPullDownRefresh()
@@ -256,7 +270,7 @@
 			uni.stopPullDownRefresh()
 			return
 		}
-		isLoadMore.value = false
+		resetLoadMoreStatus()
 		queryParams.value.page = 1
 		handleGetData()
 	})
@@ -268,13 +282,18 @@
 			uni.showToast({ icon: 'none', title: '没有更多数据了' })
 			return
 		}
-		if (hasNext.value) {
-			queryParams.value.page = Number(queryParams.value.page) + 1
-			isLoadMore.value = true
-			handleGetData()
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
 		}
-		else {
-			uni.showToast({ icon: 'none', title: '没有更多数据了' })
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page = Number(queryParams.value.page) + 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetData()
 		}
 	})
 </script>
@@ -319,9 +338,7 @@
 				<block v-if="dataList.length !== 0">
 					<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote"
 						@click="handleOnVoteClick(vote)" />
-					<view class="box-border py-5 text-center text-xs text-gray-400">
-						{{ loadMoreText }}
-					</view>
+					<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 				</block>
 			</view>
 		</template>

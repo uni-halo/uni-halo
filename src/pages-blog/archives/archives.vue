@@ -26,10 +26,9 @@ const settingStore = useSettingStore()
 const archivesListLayout = computed(() => settingStore.settings.archivesListLayout)
 
 /* ---------------- 状态 ---------------- */
-const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const activeTabIndex = ref(0)
 const queryParams = ref({ size: 10, page: 1 })
-const result = ref<{ hasNext: boolean }>({ hasNext: false })
 const cacheDataList = ref<IPost[]>([])
 const dataList = ref<{
   sort: number
@@ -38,8 +37,6 @@ const dataList = ref<{
   month: string
   posts: IPost[]
 }[]>([])
-const isLoadMore = ref(false)
-const loadMoreText = ref('加载中...')
 
 const postLabelYearKey = 'content.halo.run/archive-year'
 const postLabelMonthKey = 'content.halo.run/archive-month'
@@ -104,7 +101,8 @@ function handleUniqueCacheDatalist(list: IPost[]): IPost[] {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
   if (calcAuditModeEnabled.value) {
-    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序)
+    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
+    resetLoadMoreStatus()
     const auditPostNames = appConfigStore.auditData.spec?.posts || []
     try {
       const res = await getPostList({ page: 1, size: 99999, sort: ['spec.publishTime,desc'] })
@@ -117,33 +115,35 @@ async function handleGetData() {
       updateLoadingStatus(
         dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
       )
-      loadMoreText.value = '呜呜，没有更多数据啦~' 
+      updateLoadMoreStatus({
+        active: false,
+        status: 'noMore',
+        hasNext: false,
+      })
       uni.stopPullDownRefresh()
     }
     catch (err) {
       console.error(err)
       updateLoadingStatus(DataLoadingStatusEnum.Error)
-      loadMoreText.value = '加载失败，请下拉刷新！'
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
     }
     return
   }
 
-  if (isLoadMore.value) {
-    uni.showLoading({ title: '加载中...' })
-  }
-  else {
+  if (!loadMoreStatus.value.active) {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
-  loadMoreText.value = '加载中...'
 
   try {
     // getPostList 返回 IResponse<IPostListRes>,数据在 .data 下
     const res = await getPostList({ ...queryParams.value })
-    result.value = { hasNext: res.data.hasNext }
     const posts = handleGetPosts(res.data.items)
     const showDataList = handleGetShowDataList(posts)
 
-    if (isLoadMore.value) {
+    if (loadMoreStatus.value.active) {
       cacheDataList.value = handleUniqueCacheDatalist([...cacheDataList.value, ...res.data.items])
       // 合并增量数据
       showDataList.forEach((item) => {
@@ -167,18 +167,31 @@ async function handleGetData() {
       dataList.value = showDataList
       cacheDataList.value = res.data.items
     }
-	await sleep(500)
-    updateLoadingStatus(
-      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-    )
-    loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
+    if (!loadMoreStatus.value.active) {
+      await sleep(500)
+      updateLoadingStatus(
+        dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
+    }
+    updateLoadMoreStatus({
+      active: false,
+      status: res.data.hasNext ? 'loadMore' : 'noMore',
+      hasNext: res.data.hasNext,
+    })
   }
   catch (err) {
     console.error(err)
-    updateLoadingStatus(DataLoadingStatusEnum.Error)
-    loadMoreText.value = '加载失败，请下拉刷新！'
+    if (loadMoreStatus.value.active) {
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
+    }
   }
-  finally { 
+  finally {
     uni.stopPullDownRefresh()
   }
 }
@@ -210,7 +223,7 @@ function handleToTopPage(duration = 500) {
 handleGetData()
 
 onPullDownRefresh(() => {
-  isLoadMore.value = false
+  resetLoadMoreStatus()
   queryParams.value.page = 1
   handleGetData()
 })
@@ -220,13 +233,18 @@ onReachBottom(() => {
     uni.showToast({ icon: 'none', title: '没有更多数据了' })
     return
   }
-  if (result.value.hasNext) {
-    queryParams.value.page += 1
-    isLoadMore.value = true
-    handleGetData()
+  // 正在加载时阻止重复请求
+  if (loadMoreStatus.value.active) {
+    return
   }
-  else {
-    uni.showToast({ icon: 'none', title: '没有更多数据了' })
+  // 有更多数据时继续加载
+  if (loadMoreStatus.value.hasNext) {
+    queryParams.value.page += 1
+    updateLoadMoreStatus({
+      active: true,
+      status: 'loading',
+    })
+    handleGetData()
   }
 })
 </script>
@@ -263,7 +281,7 @@ onReachBottom(() => {
     <block v-else>
       <!-- 时间线 -->
       <view class="timeline px-4 pt-3">
-        <view v-for="(item, index) in dataList" :key="item.key" class="timeline-item flex">
+        <view v-for="item in dataList" :key="item.key" class="timeline-item flex">
         <!--  <view class="timeline-left w-[96rpx] flex shrink-0 flex-col items-center">
             <view class="timeline-dot mt-2 h-4 w-4 rounded-full bg-secondary shadow-[0_0_0_8rpx_rgba(215,249,76,0.3)]" />
             <view v-if="index !== dataList.length - 1" class="timeline-line mt-2 w-[2rpx] flex-1 bg-black/5" />
@@ -294,9 +312,7 @@ onReachBottom(() => {
         </view>
       </view>
 
-      <view class="load-text pb-6 text-center text-[24rpx] text-gray-400">
-        {{ loadMoreText }}
-      </view> 
+      <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
     </block>
   </view>
 </template>

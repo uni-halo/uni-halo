@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getCategoryPostList } from '@/api/halo'
+import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IPost, IPostListReq } from '@/api/types/halo'
 
@@ -13,15 +14,12 @@ definePage({
   },
 })
 
-const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
 const pageTitle = ref('加载中...')
 const navbarTitle = ref('分类详情')
-const hasNext = ref(false)
 const dataList = ref<IPost[]>([])
-const isLoadMore = ref(false)
-const loadMoreText = ref('')
 
 /* ---------------- 排序切换(sort 参数由接口透传,见 IPostListReq.sort) ---------------- */
 const sortOptions: { key: string; label: string; sort?: string[] }[] = [
@@ -36,16 +34,15 @@ function handleSortChange(key: string) {
   if (activeSort.value === key)
     return
   activeSort.value = key
-  isLoadMore.value = false
+  resetLoadMoreStatus()
   queryParams.value.page = 0
   handleGetData()
 }
 
 async function handleGetData() {
-  if (!isLoadMore.value) {
+  if (!loadMoreStatus.value.active) {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
-  loadMoreText.value = '加载中...'
 
   try {
     const reqParams: Record<string, unknown> = { ...queryParams.value }
@@ -58,26 +55,35 @@ async function handleGetData() {
     }
     const res = await getCategoryPostList(name.value, reqParams as IPostListReq)
     navbarTitle.value = `${pageTitle.value} （共${res.data.total}篇）`
-    hasNext.value = res.data.hasNext
-    dataList.value = isLoadMore.value
+    dataList.value = loadMoreStatus.value.active
       ? dataList.value.concat(res.data.items)
       : res.data.items
-    loadMoreText.value = res.data.hasNext ? '上拉加载更多' : '呜呜，没有更多数据啦~'
-    setTimeout(() => {
+    if (!loadMoreStatus.value.active) {
+      await sleep(600)
       updateLoadingStatus(
         dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
       )
-    }, 500)
+    }
+    updateLoadMoreStatus({
+      active: false,
+      status: res.data.hasNext ? 'loadMore' : 'noMore',
+      hasNext: res.data.hasNext,
+    })
   }
   catch (err) {
     console.error(err)
-    updateLoadingStatus(DataLoadingStatusEnum.Error)
-    loadMoreText.value = '加载失败，请下拉刷新！'
+    if (loadMoreStatus.value.active) {
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
+    }
   }
   finally {
-    setTimeout(() => {
-      uni.stopPullDownRefresh()
-    }, 500)
+    uni.stopPullDownRefresh()
   }
 }
 
@@ -96,19 +102,24 @@ onLoad((options) => {
 })
 
 onPullDownRefresh(() => {
-  isLoadMore.value = false
+  resetLoadMoreStatus()
   queryParams.value.page = 0
   handleGetData()
 })
 
 onReachBottom(() => {
-  if (hasNext.value) {
-    queryParams.value.page += 1
-    isLoadMore.value = true
-    handleGetData()
+  // 正在加载时阻止重复请求
+  if (loadMoreStatus.value.active) {
+    return
   }
-  else {
-    uni.showToast({ icon: 'none', title: '没有更多数据了' })
+  // 有更多数据时继续加载
+  if (loadMoreStatus.value.hasNext) {
+    queryParams.value.page += 1
+    updateLoadMoreStatus({
+      active: true,
+      status: 'loading',
+    })
+    handleGetData()
   }
 })
 
@@ -158,9 +169,7 @@ onShareTimeline(() => ({
           :article="article"
           @on-click="handleToArticleDetail"
         />
-        <view class="load-text py-5 text-center text-[24rpx] text-[#999]">
-          {{ loadMoreText }}
-        </view>
+        <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
     </block>
   </view>

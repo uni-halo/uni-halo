@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { computed, ref, watch } from 'vue'
+	import { computed, ref } from 'vue'
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -39,15 +39,12 @@
 	})
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const category = ref<{ activeIndex : number, list : IPhotoGroup[] }>({
 		activeIndex: 0,
 		list: [],
 	})
 	const queryParams = ref({ size: 10, page: 1, group: '' })
-	const isLoadMore = ref(false)
-	const loadMoreText = ref('')
-	const hasNext = ref(false)
 	const dataList = ref<IPhoto[]>([])
 	const lock = ref(false)
 
@@ -67,7 +64,11 @@
 					handleGetData(true)
 				}
 				else {
-					loadMoreText.value = t('common.noMore')
+					updateLoadMoreStatus({
+						active: false,
+						status: 'noMore',
+						hasNext: false,
+					})
 					uni.stopPullDownRefresh()
 				}
 			}
@@ -97,33 +98,45 @@
 		if (isClearList) {
 			dataList.value = []
 			queryParams.value.page = 1
+			resetLoadMoreStatus()
 		}
 
-		if (!isLoadMore.value) {
+		if (!loadMoreStatus.value.active) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
-		loadMoreText.value = ''
 
 		try {
 			const res = await getPhotoListByGroupName({ ...queryParams.value })
-			hasNext.value = res.data.hasNext
 			if (res.data.items.length !== 0) {
 				const list = res.data.items.map(item => ({
 					...item,
 					spec: { ...item.spec, url: checkImageUrl(item.spec.url || item.spec.cover) },
 				}))
-				dataList.value = isLoadMore.value
+				dataList.value = loadMoreStatus.value.active
 					? dataList.value.concat(list)
 					: list
 			}
-			await sleep(600)
-			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
-			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			}
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data.hasNext ? 'loadMore' : 'noMore',
+				hasNext: res.data.hasNext,
+			})
 		}
 		catch (err) {
 			console.error(err)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
-			loadMoreText.value = t('common.loadFailed')
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
 			uni.stopPullDownRefresh()
@@ -167,7 +180,6 @@
 			return
 		}
 		dataList.value = []
-		isLoadMore.value = false
 		queryParams.value.page = 1
 		handleGetData(true)
 	})
@@ -178,13 +190,18 @@
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 			return
 		}
-		if (hasNext.value) {
-			queryParams.value.page += 1
-			isLoadMore.value = true
-			handleGetData(false)
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
 		}
-		else {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page += 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetData(false)
 		}
 	})
 </script>
@@ -226,9 +243,7 @@
 						</view>
 					</view>
 				</view>
-				<view class="load-text w-full py-4 text-center text-xs text-gray-500">
-					{{ loadMoreText }}
-				</view>
+				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 	</view>

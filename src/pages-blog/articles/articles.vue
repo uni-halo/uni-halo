@@ -5,7 +5,6 @@ import { getCategoryList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl } from '@/utils/url'
-import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
 import type { ICategory, IPost } from '@/api/types/halo'
@@ -27,12 +26,9 @@ const settingStore = useSettingStore()
 const articlesListLayout = computed(() => settingStore.settings.articlesListLayout)
 
 /* ---------------- 状态 ---------------- */
-const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const articleList = ref<IPost[]>([])
 const queryParams = ref({ size: 10, page: 1 })
-const hasNext = ref(false)
-const isLoadMore = ref(false)
-const loadMoreText = ref(t('common.loading'))
 
 interface IFilterOption {
   label: string
@@ -67,7 +63,7 @@ function handleSelectFilter(key: 'category' | 'sort', value: string) {
   if (filterValues.value[key] === value)
     return
   filterValues.value[key] = value
-  isLoadMore.value = false
+  resetLoadMoreStatus()
   articleList.value = []
   queryParams.value.page = 1
   handleGetArticleList()
@@ -87,6 +83,8 @@ async function handleGetCategoryList() {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetArticleList() {
   if (calcAuditModeEnabled.value) {
+    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
+    resetLoadMoreStatus()
     const auditPostNames = appConfigStore.auditData.spec?.posts || []
     try {
       const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
@@ -95,14 +93,21 @@ async function handleGetArticleList() {
         item.owner.avatar = checkAvatarUrl(item.owner.avatar)
         return item
       })
-	  await sleep(600)
+      await sleep(600)
       updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
-      loadMoreText.value = t('common.noMore')
+      updateLoadMoreStatus({
+        active: false,
+        status: 'noMore',
+        hasNext: false,
+      })
     }
     catch (err) {
       console.error('获取审核文章失败', err)
       updateLoadingStatus(DataLoadingStatusEnum.Error)
-      loadMoreText.value = t('common.loadFailed')
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
     }
     finally {
       uni.stopPullDownRefresh()
@@ -110,10 +115,9 @@ async function handleGetArticleList() {
     return
   }
 
-  if (!isLoadMore.value) {
+  if (!loadMoreStatus.value.active) {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
-  loadMoreText.value = t('common.loading')
 
   try {
     const params = {
@@ -122,26 +126,38 @@ async function handleGetArticleList() {
       sort: sortMap[filterValues.value.sort] || sortMap.default,
     }
     const res = await getPostList(params)
-    hasNext.value = res.data.hasNext
-    articleList.value = (isLoadMore.value
+    articleList.value = (loadMoreStatus.value.active
       ? articleList.value.concat(res.data.items)
       : res.data.items).map((item) => {
       item.owner.avatar = checkAvatarUrl(item.owner.avatar)
       return item
     })
-	await sleep(600)
-    updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
-    loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
+    if (!loadMoreStatus.value.active) {
+      await sleep(600)
+      updateLoadingStatus(articleList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+    }
+    updateLoadMoreStatus({
+      active: false,
+      status: res.data.hasNext ? 'loadMore' : 'noMore',
+      hasNext: res.data.hasNext,
+    })
   }
   catch (err) {
-    updateLoadingStatus(DataLoadingStatusEnum.Error)
-    loadMoreText.value = t('common.loadFailed')
     console.error('获取文章失败', err)
+    if (loadMoreStatus.value.active) {
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
+    }
   }
   finally {
     uni.stopPullDownRefresh()
   }
-} 
+}
 
 onLoad(() => {
   handleGetCategoryList()
@@ -153,7 +169,7 @@ onPullDownRefresh(() => {
     uni.stopPullDownRefresh()
     return
   }
-  isLoadMore.value = false
+  resetLoadMoreStatus()
   queryParams.value.page = 1
   articleList.value = []
   handleGetArticleList()
@@ -164,13 +180,18 @@ onReachBottom(() => {
     uni.showToast({ icon: 'none', title: '没有更多数据了' })
     return
   }
-  if (hasNext.value) {
-    queryParams.value.page += 1
-    isLoadMore.value = true
-    handleGetArticleList()
+  // 正在加载时阻止重复请求
+  if (loadMoreStatus.value.active) {
+    return
   }
-  else {
-    uni.showToast({ icon: 'none', title: '没有更多数据了' })
+  // 有更多数据时继续加载
+  if (loadMoreStatus.value.hasNext) {
+    queryParams.value.page += 1
+    updateLoadMoreStatus({
+      active: true,
+      status: 'loading',
+    })
+    handleGetArticleList()
   }
 })
 </script>
@@ -224,9 +245,7 @@ onReachBottom(() => {
           :audit-mode="calcAuditModeEnabled"
         />
       </view>
-      <view class="box-border py-5 text-center text-xs text-gray-400">
-        {{ loadMoreText }}
-      </view>
+      <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
     </view>
   </view>
 </template>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app'
+	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPostListByKeyword } from '@/api/halo'
 	import { sleep } from '@/utils/common'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -38,10 +38,11 @@
 	}
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({
 		keyword: '',
-		limit: 50,
+		page: 1,
+		size: 10,
 		highlightPreTag: '',
 		highlightPostTag: '',
 	})
@@ -73,32 +74,53 @@
 	async function handleGetData() {
 		if (calcAuditModeEnabled.value)
 			{return}
-		updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		if (!loadMoreStatus.value.active) {
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		}
 		try {
 			const res = await getPostListByKeyword({ ...queryParams.value })
-			dataList.value = (res.data as unknown as { hits ?: typeof dataList.value }).hits || []
-			await sleep(600)
-			updateLoadingStatus(
-				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-			)
+			const hits = (res.data as unknown as { hits ?: typeof dataList.value }).hits || []
+			dataList.value = loadMoreStatus.value.active
+				? dataList.value.concat(hits)
+				: hits
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(
+					dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+				)
+			}
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data.hasNext ? 'loadMore' : 'noMore',
+				hasNext: res.data.hasNext,
+			})
 		}
 		catch (err) {
 			console.error(err)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
-			setTimeout(() => {
-				uni.stopPullDownRefresh()
-			}, 800)
+			uni.stopPullDownRefresh()
 		}
 	}
 
 	function handleOnSearch() {
 		if (!queryParams.value.keyword) {
 			dataList.value = []
+			resetLoadMoreStatus()
 			updateLoadingStatus(DataLoadingStatusEnum.Empty)
 		}
 		else {
+			resetLoadMoreStatus()
+			queryParams.value.page = 1
 			handleGetData()
 		}
 	}
@@ -156,6 +178,29 @@
 		}
 		handleOnSearch()
 	})
+
+	onReachBottom(() => {
+		if (!uniHaloPluginAvailable.value)
+			return
+		if (calcAuditModeEnabled.value)
+			return
+		// 无关键词不触发分页
+		if (!queryParams.value.keyword)
+			return
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
+		}
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page += 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetData()
+		}
+	})
 </script>
 
 <template>
@@ -208,6 +253,7 @@
 							:show-language-name="true" copy-by-long-press />
 					</view>
 				</block>
+				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 	</view>
