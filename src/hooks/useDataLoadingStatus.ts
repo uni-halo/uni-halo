@@ -18,35 +18,41 @@ const LoadMoreStatusText = {
 
 export type LoadMoreStatus = keyof typeof LoadMoreStatusText
 
+/** 加载更多内部状态(完整形态,区别于可选的 LoadMoreStatusOption) */
+export interface LoadMoreStatusState {
+ active: boolean;
+ hasNext: boolean;
+ status: LoadMoreStatus;
+ text: string;
+}
+
 export interface LoadMoreStatusOption {
-	// 是否激活加载
-	active?: boolean;
-	status?: LoadMoreStatus;
-	text?: string;
-	hasNext?: boolean;
+ // 是否激活加载
+ active?: boolean;
+ status?: LoadMoreStatus;
+ text?: string;
+ hasNext?: boolean;
 }
 
 export function useDataLoadingStatus(defaultStatus?: DataLoadingStatus) {
-	const loadingStatus = ref<DataLoadingStatus>(defaultStatus ?? DataLoadingStatusEnum.Loading);
+ const loadingStatus = ref<DataLoadingStatus>(defaultStatus ?? DataLoadingStatusEnum.Loading);
 
-	const _loadMoreStatus = ref<LoadMoreStatus>({
-		active: false,
-		hasNext: false,
-		status: 'loadMore',
-		text: ''
-	});
+ const _loadMoreStatus = ref<LoadMoreStatusState>({
+  active: false,
+  hasNext: false,
+  status: 'loadMore',
+  text: ''
+ });
 
-	const loadMoreStatus = computed(() => {
-		const result = {
-			..._loadMoreStatus.value
-		};
-		if (!_loadMoreStatus.value.text) {
-			result.text = LoadMoreStatusText[_loadMoreStatus.value.status];
-		}
-		console.log('会触发吗？', _loadMoreStatus.value);
-		console.log('会触发吗 result', result);
-		return result;
-	});
+ const loadMoreStatus = computed(() => {
+  const result = {
+   ..._loadMoreStatus.value
+  };
+  if (!_loadMoreStatus.value.text) {
+   result.text = LoadMoreStatusText[_loadMoreStatus.value.status];
+  }
+  return result;
+ });
 
 	function resetLoadMoreStatus() {
 		_loadMoreStatus.value.active = false;
@@ -65,10 +71,10 @@ export function useDataLoadingStatus(defaultStatus?: DataLoadingStatus) {
 	}
 
 	function updateLoadMoreStatus(status: LoadMoreStatusOption) {
-		_loadMoreStatus.value.active = status.active;
-		_loadMoreStatus.value.status = status.status;
-		_loadMoreStatus.value.hasNext = status.hasNext;
-		_loadMoreStatus.value.text = status.text;
+		_loadMoreStatus.value.active = status.active ?? false;
+		_loadMoreStatus.value.status = status.status ?? 'loadMore';
+		_loadMoreStatus.value.hasNext = status.hasNext ?? false;
+		_loadMoreStatus.value.text = status.text ?? '';
 	}
 
 	return {

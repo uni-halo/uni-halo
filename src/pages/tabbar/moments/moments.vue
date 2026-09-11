@@ -62,9 +62,8 @@
 	}
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ size: 10, page: 1 })
-	const hasNext = ref(false)
 	/** 列表卡片 */
 	type MomentCard = IMoment & {
 		images ?: { type ?: string, url : string }[]
@@ -77,8 +76,6 @@
 		weekend : string
 	}
 	const dataList = ref<MomentCard[]>([])
-	const isLoadMore = ref(false)
-	const loadMoreText = ref(t('common.loading'))
 	const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
 	const currentVideoId = ref<string | null>(null)
 
@@ -125,6 +122,8 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
 		if (calcAuditModeEnabled.value) {
+			// 审核模式:按 audit-data moments 顺序展示,一次拉取不分页
+			resetLoadMoreStatus()
 			const auditMomentNames = appConfigStore.auditData.spec?.moments || []
 			try {
 				const res = await getMomentList({ page: 1, size: 0 })
@@ -136,42 +135,61 @@
 				dataList.value = tempItems
 				await sleep(600)
 				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
-				loadMoreText.value = t('common.noMore')
+				updateLoadMoreStatus({
+					active: false,
+					status: 'noMore',
+					hasNext: false,
+				})
 				uni.stopPullDownRefresh()
 			}
 			catch (err) {
 				console.error(err)
 				updateLoadingStatus(DataLoadingStatusEnum.Error)
-				loadMoreText.value = t('common.loadFailed')
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
 			}
 			return
 		}
 
-		if (!isLoadMore.value) {
+		if (!loadMoreStatus.value.active) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
-		loadMoreText.value = t('common.loading')
 
 		try {
 			const res = await getMomentList({ ...queryParams.value })
-			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
-			hasNext.value = res.data.hasNext
 
 			const tempItems = res.data.items
 				.filter(x => x.spec.visible === 'PUBLIC')
 				.map(mapMomentItem)
 
-			dataList.value = isLoadMore.value
+			dataList.value = loadMoreStatus.value.active
 				? dataList.value.concat(tempItems)
 				: tempItems
 
-			await sleep(600)
-			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			}
+
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data.hasNext ? 'loadMore' : 'noMore',
+				hasNext: res.data.hasNext,
+			})
 		}
 		catch (err) {
 			console.error(err)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
-			loadMoreText.value = t('common.loadFailed')
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
 			uni.stopPullDownRefresh()
@@ -282,7 +300,7 @@
 			uni.stopPullDownRefresh()
 			return
 		}
-		isLoadMore.value = false
+		resetLoadMoreStatus()
 		queryParams.value.page = 1
 		videoContexts.value = {}
 		currentVideoId.value = null
@@ -292,17 +310,23 @@
 	onReachBottom(() => {
 		if (!uniHaloPluginAvailable.value)
 			return
+		// 审核模式:一次拉取不分页,直接提示到底
 		if (calcAuditModeEnabled.value) {
 			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
 			return
 		}
-		if (hasNext.value) {
-			queryParams.value.page += 1
-			isLoadMore.value = true
-			handleGetData()
+		// 正在加载时阻止重复请求
+		if (loadMoreStatus.value.active) {
+			return
 		}
-		else {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
+		// 有更多数据时继续加载
+		if (loadMoreStatus.value.hasNext) {
+			queryParams.value.page += 1
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading',
+			})
+			handleGetData()
 		}
 	})
 </script>
@@ -411,9 +435,7 @@
 						</view>
 					</view>
 				</view>
-				<view class="load-text pb-5 pt-1 text-center text-xs text-gray-500">
-					{{ loadMoreText }}
-				</view>
+				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 	</view>

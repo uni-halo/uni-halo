@@ -27,7 +27,7 @@
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadingStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({
-		size: 3,
+		size: 10,
 		page: 1,
 		fieldSelector: ['spec.hideFromList=false'],
 	})

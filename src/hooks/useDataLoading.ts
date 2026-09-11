@@ -1,8 +1,8 @@
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 
-/** 数据加载四态(取值与旧 DataLoadingStatusEnum 一致,二者可互相兼容) */
-export type DataLoadingStatus = 'loading' | 'error' | 'empty' | 'success' |'no-network'
+/** 数据加载四态(取值与 DataLoadingStatusEnum 一致,二者可互相兼容) */
+export type DataLoadingStatus = 'loading' | 'error' | 'empty' | 'success' | 'noNetwork'
 
 export interface IUseDataLoadingOptions<T> {
   /** 自定义判空;默认:数组看长度、对象看键数、空值视为空 */
