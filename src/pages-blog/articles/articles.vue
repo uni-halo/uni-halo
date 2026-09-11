@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import { getCategoryList, getPostList } from '@/api/halo'
+import { getCategoryList, getCategoryPostList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl } from '@/utils/url'
@@ -60,8 +60,7 @@ const filterValues = ref<Record<string, string>>({ category: '', sort: 'default'
 
 /** 切换分类/排序:重置分页并重新查询 */
 function handleSelectFilter(key: 'category' | 'sort', value: string) {
-  if (filterValues.value[key] === value)
-    return
+  if (filterValues.value[key] === value){ return }
   filterValues.value[key] = value
   resetLoadMoreStatus()
   articleList.value = []
@@ -83,7 +82,7 @@ async function handleGetCategoryList() {
 /* ---------------- 数据加载 ---------------- */
 async function handleGetArticleList() {
   if (calcAuditModeEnabled.value) {
-    // 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
+    // 审核模式
     resetLoadMoreStatus()
     const auditPostNames = appConfigStore.auditData.spec?.posts || []
     try {
@@ -120,12 +119,15 @@ async function handleGetArticleList() {
   }
 
   try {
+    const category = filterValues.value.category || ''
     const params = {
       ...queryParams.value,
-      category: filterValues.value.category || undefined,
       sort: sortMap[filterValues.value.sort] || sortMap.default,
     }
-    const res = await getPostList(params)
+    // 注意:/posts 公开接口不支持 category 过滤参数,分类筛选需走分类下文章接口
+    const res = category
+      ? await getCategoryPostList(category, params)
+      : await getPostList(params)
     articleList.value = (loadMoreStatus.value.active
       ? articleList.value.concat(res.data.items)
       : res.data.items).map((item) => {
