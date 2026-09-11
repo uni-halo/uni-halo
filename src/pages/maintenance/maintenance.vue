@@ -329,7 +329,7 @@
 						<text v-for="(line, index) in noticeLines" :key="index" class="block">{{ line }}</text>
 					</template>
 					<template v-else>
-						<text>为了给你带来更好的体验，站点正在维护升级中</text>
+						<text>为了给你带来更好的体验，正在维护升级中</text>
 						<text class="block">
 							别担心，我们很快就回来！
 						</text>

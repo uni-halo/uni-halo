@@ -25,23 +25,18 @@
 	const categoryConfig = computed(() => haloConfigs.value.pageConfig?.categoryConfig)
 
 	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadingStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({
-		size: 20,
+		size: 3,
 		page: 1,
 		fieldSelector: ['spec.hideFromList=false'],
 	})
-	const hasNext = ref(false)
 	const dataList = ref<ICategory[]>([])
-	const isLoadMore = ref(false)
-	const loadMoreText = ref(t('common.loading'))
 
 	function handleResetInit() {
 		dataList.value = []
 		queryParams.value.page = 1
-		hasNext.value = false
-		isLoadMore.value = false
-		loadMoreText.value = t('common.loading')
+		resetLoadingStatus()
 	}
 
 	function handleInitPage() {
@@ -51,11 +46,12 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
-		updateLoadingStatus(DataLoadingStatusEnum.Loading)
-		// 增加延迟，提升用户体验
-		await sleep(800)
-		// 审核模式：直接使用审核配置分类快照(categoryDetails)映射 ICategory,免请求
+		if (!loadMoreStatus.value.active) {
+			updateLoadingStatus(DataLoadingStatusEnum.Loading)
+		}
+		// 审核模式
 		if (calcAuditModeEnabled.value) {
+			resetLoadMoreStatus()
 			const auditCategoryDetails = appConfigStore.auditData.categoryDetails || []
 			try {
 				dataList.value = auditCategoryDetails.map(item => ({
@@ -68,29 +64,24 @@
 					},
 					postCount: item.postCount ?? 0,
 				} as ICategory))
+				await sleep(600)
 				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
-				loadMoreText.value = t('common.noMore')
-				uni.hideLoading()
+				updateLoadMoreStatus({
+					active: false,
+					status: 'noMore',
+					hasNext: false
+				})
 				uni.stopPullDownRefresh()
 			}
 			catch (err) {
 				console.error(err)
 				updateLoadingStatus(DataLoadingStatusEnum.Error)
-				loadMoreText.value = t('common.loadFailed')
 			}
 			return
 		}
 
-		if (!isLoadMore.value) {
-			updateLoadingStatus(DataLoadingStatusEnum.Loading)
-		}
-		loadMoreText.value = t('common.loading')
-
 		try {
 			const res = await getCategoryList({ ...queryParams.value })
-
-			loadMoreText.value = res.data.hasNext ? t('common.loadMore') : t('common.noMore')
-			hasNext.value = res.data.hasNext
 
 			const tempItems = res.data.items.map(item => ({
 				...item,
@@ -98,21 +89,35 @@
 				spec: { ...item.spec, cover: checkThumbnailUrl(item.spec.cover, true) },
 			}))
 
-			dataList.value = isLoadMore.value
+			dataList.value = loadMoreStatus.value.active
 				? dataList.value.concat(tempItems)
 				: tempItems
-			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+
+			if (!loadMoreStatus.value.active) {
+				await sleep(600)
+				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
+			}
+
+			updateLoadMoreStatus({
+				active: false,
+				status: res.data.hasNext ? 'loadMore' : 'noMore',
+				hasNext: res.data.hasNext
+			})
 		}
 		catch (err) {
 			console.error(err)
-			updateLoadingStatus(DataLoadingStatusEnum.Error)
-			loadMoreText.value = t('common.loadFailed')
+			if (loadMoreStatus.value.active) {
+				updateLoadMoreStatus({
+					active: false,
+					status: 'error',
+				})
+			}
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Error)
+			}
 		}
 		finally {
-			setTimeout(() => {
-				uni.hideLoading()
-				uni.stopPullDownRefresh()
-			}, 500)
+			uni.stopPullDownRefresh()
 		}
 	}
 
@@ -135,25 +140,26 @@
 	})
 
 	onReachBottom(() => {
-		if (calcAuditModeEnabled.value) {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
-			return
+		// 如果正在请求，需要阻止继续发起请求
+		if (loadMoreStatus.value.active && loadMoreStatus.value.loading) {
+			return;
 		}
-		if (hasNext.value) {
+		// 有更多数据时，继续加载数据
+		if (loadMoreStatus.value.hasNext) {
 			queryParams.value.page += 1
-			isLoadMore.value = true
+			updateLoadMoreStatus({
+				active: true,
+				status: 'loading'
+			})
 			handleGetData()
-		}
-		else {
-			uni.showToast({ icon: 'none', title: t('common.noMoreData') })
-		}
+		} 
 	})
 </script>
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :use-back="false" default-title="分类" title-color="text-gray-900"></uh-navbar>
-		
+
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
 
 		<block v-else>
@@ -174,9 +180,7 @@
 					</view>
 				</view>
 			</view>
-			<view class="w-full py-5 text-center text-xs text-gray-400">
-				{{ loadMoreText }}
-			</view>
+			<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text"></uh-data-loadmore>
 		</block>
 	</view>
 </template>

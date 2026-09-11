@@ -20,7 +20,7 @@
 		loadingStatus: 'loading',
 		size: 'large',
 		minHeight: '80vh',
-		loadingText: '稍等，正在加载中哦',
+		loadingText: '稍等，正在加载中哦~',
 		errorText: '哎呀，加载失败了呢~',
 		emptyText: '啊偶，暂时没有数据呢~',
 		loadingSubText: '',
