@@ -214,12 +214,12 @@
 		<!-- 自定义导航 -->
 		<uh-navbar :scroll-y="scrollY" default-title="内容搜索" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="min-h-[80vh]" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
 			<!-- 顶部搜索框-->
-			<wd-sticky class="">
+			<wd-sticky>
 				<view class="w-screen box-border px-3 py-2">
 					<view class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full pl-1 pr-3">
 						<wd-icon name="search" size="16px" />

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { computed } from 'vue'
+	import { computed, ref, watch } from 'vue'
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
 	import { checkAvatarUrl } from '@/utils/url'
@@ -40,6 +40,26 @@
 
 	const avatar = computed(() => checkAvatarUrl(props.comment.spec.owner.avatar))
 
+	/** 用户是否提供了头像(无头像时用昵称首字占位) */
+	const hasAvatar = computed(() => !!props.comment.spec.owner.avatar?.trim())
+
+	/** 昵称首字(头像占位) */
+	const avatarText = computed(() => {
+		const name = props.comment.spec.owner.displayName?.trim()
+		return name ? Array.from(name)[0] : '?'
+	})
+
+	/** 头像加载失败标记(失败后回退首字占位) */
+	const avatarError = ref(false)
+
+	/** 是否渲染图片头像(有头像且未加载失败) */
+	const showImage = computed(() => hasAvatar.value && !avatarError.value)
+
+	/** 头像地址变化时重置加载失败标记(组件复用时) */
+	watch(() => props.comment.spec.owner.avatar, () => {
+		avatarError.value = false
+	})
+
 	/** 引用回复标识(被引用人在父级已加载回复映射中可查到时显示) */
 	const quoteReplyText = computed(() => {
 		const quoteName = props.comment.spec.quoteReply
@@ -61,7 +81,8 @@
 	})
 
 	function handleOnImageError() {
-		// 头像加载失败时回退默认头像(由 checkAvatarUrl 兜底,此处保持简单)
+		// 头像加载失败时回退昵称首字占位
+		avatarError.value = true
 	}
 
 	function handleOnCopy() {
@@ -82,8 +103,12 @@
 		'pl-10':props.isChild,
 	}">
 		<view class="flex shrink-0">
-			<image class="box-border h-10 w-10 shrink-0 rounded-full border border-white uh-shadow-xs border-solid" :src="avatar" mode="aspectFill"
-				@error="handleOnImageError" />
+			<image v-if="showImage"
+				class="box-border h-10 w-10 shrink-0 rounded-full border border-white uh-shadow-xs border-solid" :src="avatar"
+				mode="aspectFill" @error="handleOnImageError" />
+			<view v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#bbe52a6b]">
+				<text class="text-sm font-bold text-gray-900">{{ avatarText }}</text>
+			</view>
 		</view>
 		<view class="flex-1 box-border pl-2">
 			<view class="text-sm text-gray-500">

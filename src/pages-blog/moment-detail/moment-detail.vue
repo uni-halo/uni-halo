@@ -285,7 +285,7 @@
 		<uh-data-loading v-if="status !== 'success'" :loading-status="status" min-height="60vh" error-text="瞬间内容加载失败"
 			empty-text="瞬间不存在或已被删除" @refresh="loadMoment" />
 
-		<view v-else-if="moment" class="box-border px-3 pt-2 pb-12">
+		<view v-else-if="moment" class="box-border px-3 pt-2 pb-14">
 			<view class="mb-3 uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl  box-border pb-4">
 				<!-- 刊头:大字日期 -->
 				<view v-if="moment.spec.releaseTime" class="px-4 pt-4">
@@ -303,17 +303,17 @@
 					<image class="h-[80rpx] w-[80rpx] shrink-0 rounded-full"
 						:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)" mode="aspectFill" />
 					<view class="ml-3 flex flex-col">
-						<view class="text-[30rpx] text-[#5c7c0f] font-bold">
+						<view class="text-md text-gray-600 font-medium">
 							{{ moment.owner?.displayName || bloggerInfo.nickname }}
 						</view>
-						<view class="mt-0.5 text-[22rpx] text-gray-400">
+						<view class="mt-0.5 text-xs text-gray-400">
 							记录了这美好的一刻
 						</view>
 					</view>
 				</view>
 
 				<!-- 正文 -->
-				<view class="content px-4 mt-6 text-gray-900 text-sm">
+				<view class="content px-4 mt-6 text-gray-900 text-2xs">
 					<mp-html lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
 						scroll-table selectable :tag-style="markdownConfig.tagStyle"
 						:container-style="markdownConfig.containStyle" :content="moment.spec.newHtml || ''"
@@ -368,7 +368,7 @@
 
 		<!-- 悬浮操作 -->
 		<view v-if="moment"
-			class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
+			class="fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
 			<view
 				class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 				<!-- 点赞 -->
@@ -376,21 +376,21 @@
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 					:class="[hasUpvoted()?'text-primary':'text-gray-900']" @click="handleDoLikesClick">
 					<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-					<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
+					<text class="shrink-0 text-xs text-gray-900 font-semibold">点赞</text>
 				</view>
 				<!-- 评论 -->
 				<view v-if="moment.spec.allowComment"
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 					@click="handleToComment()">
 					<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-					<text class="shrink-0 text-sm text-gray-900 font-semibold">评论</text>
+					<text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
 				</view>
 				<!-- 收藏 -->
 				<view
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 					@click="handleToggleMomentFavorite">
 					<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-					<text class="shrink-0 text-sm font-semibold"
+					<text class="shrink-0 text-xs font-semibold"
 						:class="[momentFavorited ? 'text-primary' : 'text-gray-900']">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
 				</view>
 			</view>

@@ -111,7 +111,7 @@
 			</swiper>
 			<view v-if="currentBanner"
 				class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5 backdrop-blur-[2rpx]">
-				<text class="text-sm text-gray-900 font-bold bg-secondary px-3 py-0.5 rounded-xl">
+				<text class="text-2xs text-gray-900 font-bold bg-secondary px-3 py-1 rounded-xl">
 					{{ currentBanner.title }}
 				</text>
 				<text
@@ -122,7 +122,7 @@
 		<view class="absolute bottom-0 left-0 right-0 h-12 w-full bg-gradient-to-b from-white/0 to-page" />
 		<view class="absolute left-0 right-0 z-10 flex items-center justify-center uh-translate-y-n6">
 			<view
-				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2 text-sm text-gray-600 flex items-center justify-center gap-x-2"
+				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2.5 text-2xs text-gray-600 flex items-center justify-center gap-x-2"
 				@click="handleToSearch()">
 				<wd-icon name="search-line" size="32rpx"></wd-icon>
 				<text>哈喽，想看些什么 <text class="bg-secondary rounded-xl px-1">{ 内容 }</text> 呢~</text>

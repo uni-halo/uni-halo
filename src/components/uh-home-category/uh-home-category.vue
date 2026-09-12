@@ -100,7 +100,7 @@
 				<image :src="category.spec.cover" class="w-full h-full" mode="aspectFill" lazy-load />
 				<view class="absolute bottom-0 left-0 h-16 w-full bg-gradient-to-b from-black/0 to-black/30" />
 				<view class="absolute left-2 bottom-2 flex z-2 flex-col text-left">
-					<text class="text-2xs font-semibold">
+					<text class="text-xs font-semibold">
 						{{ category.spec.displayName }}
 					</text>
 					<text class="mt-1 text-xs text-gray-200">共 {{ category.postCount ?? 0 }} 篇</text>

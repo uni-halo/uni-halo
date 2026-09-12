@@ -106,7 +106,7 @@
 
 		<!-- 文案区 -->
 		<view class="relative z-2 flex flex-col items-center">
-			<view class="flex items-center justify-center text-sm font-bold" :class="statusScene.mainTextClass">
+			<view class="flex items-center justify-center text-2xs font-medium" :class="statusScene.mainTextClass">
 				<text>{{ statusScene.mainText }}</text>
 				<view v-if="isLoading" class="ml-1 flex items-end gap-1">
 					<view v-for="n in 3" :key="n" class="typing-dot bg-primary"
@@ -117,7 +117,7 @@
 				{{ statusScene.subText }}
 			</text>
 			<view v-if="props.useRefreshButton" class="mt-4">
-				<uh-button :custom-class="'uh-global-card-glass uh-shadow-xs border' + sizeClasses.button"
+				<uh-button :custom-class="'uh-global-card-glass text-xs py-2 uh-shadow-xs border' + sizeClasses.button"
 					@click="emit('refresh')">
 					刷新试试
 				</uh-button>

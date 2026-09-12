@@ -27,10 +27,11 @@
 		backClass: 'text-gray-900',
 	})
 
-	const maxAlpha = ref(0.65) 
+	const maxAlpha = ref(0.75) 
 	const customStyle = computed(() => {
 		const alpha = Math.min(props.scrollY / 360, maxAlpha.value)
 		return {
+			backdropFilter: 'blur(2rpx)',
 			backgroundColor: `rgba(255, 255, 255, ${alpha})`,
 		}
 	})
@@ -88,7 +89,7 @@
 
 <template>
 	<view class="fixed left-0 top-0 z-100 box-border w-full pt-safe" :class="customCalss" :style="[customStyle]">
-		<view class="box-border h-[46px] w-full flex items-center gap-x-4 px-3" style="backdrop-filter: blur(2rpx);">
+		<view class="box-border h-[46px] w-full flex items-center gap-x-4 px-3">
 			<!-- 左边 -->
 			<view class="min-w-18 shrink-0" @click="handleBack()">
 				<view v-if="props.useBack"
@@ -101,7 +102,7 @@
 			</view>
 			<!-- 中间 -->
 			<view class="flex-1 truncate text-center font-bold transition-colors duration-300" :class="titleColorClass">
-			{{props.scrollY}}	<slot> {{ visibleTitle }} </slot>
+				<slot> {{ visibleTitle }} </slot>
 			</view>
 			<!-- 右边 -->
 			<view class="min-w-18 shrink-0">

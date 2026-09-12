@@ -31,24 +31,24 @@
 		class="max-w-3/5 mx-auto my-auto box-border flex flex-col items-center justify-center gap-6 text-sm"
 		:class="props.customClass">
 
-		<wd-icon class-prefix="uhemoji-icon" name="-cry" size="160rpx"></wd-icon>
+		<wd-icon class-prefix="uhemoji-icon" name="-cry" size="140rpx"></wd-icon>
 
-		<view class="box-border text-lg text-gray-900 font-bold">
+		<view class="box-border text-sm text-gray-900 font-bold">
 			{{ pluginInfo.name }}
 		</view>
 
-		<view v-if="errorText" class=" text-yellow-500 text-sm">
+		<view v-if="errorText" class="text-yellow-500 text-2xs">
 			{{ errorText }}
 		</view>
 
 		<view class="w-full flex flex-col gap-y-4">
-			<uh-button custom-class="!rounded-full py-2 !uh-shadow-xs" @click="handleRefresh()">
+			<uh-button custom-class="!rounded-full text-xs py-2 !uh-shadow-xs" @click="handleRefresh()">
 				{{props.checking?'正在刷新':'刷新试试'}}
 			</uh-button>
 			<!-- #ifdef MP-WEIXIN -->
 			<!-- 微信端客服会话只能由原生 button 的 open-type="contact" 唤起,故此处不用 uh-button(view 实现) -->
 			<button
-				class="uh-contact-btn bg-white py-2 px-4 !rounded-full text-black text-sm leading-none flex items-center justify-center"
+				class="uh-contact-btn w-full bg-white py-2.5 px-4 !rounded-full text-black text-xs leading-none flex items-center justify-center"
 				open-type="contact" hover-class="none">提交反馈</button>
 			<!-- #endif -->
 		</view>

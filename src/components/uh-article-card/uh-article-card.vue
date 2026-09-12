@@ -68,7 +68,7 @@
 			pinned: 'right-3 top-3',
 		},
 		image_left: {
-			container: 'flex gap-x-3 !p-2',
+			container: 'flex gap-x-3 !p-3',
 			cover: 'shrink-0 !w-36 !h-24',
 			contentWrapper: 'w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
@@ -79,10 +79,10 @@
 			time: '!hidden',
 			tagCategory: '!hidden',
 			visits: '',
-			pinned: 'left-3 top-3',
+			pinned: 'left-4 top-4',
 		},
 		image_right: {
-			container: 'flex gap-x-3 !p-2',
+			container: 'flex gap-x-3 !p-3',
 			cover: 'order-2 shrink-0 !w-36 !h-24',
 			contentWrapper: 'order-1 w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
@@ -93,7 +93,7 @@
 			time: '!hidden',
 			tagCategory: '!hidden',
 			visits: '',
-			pinned: 'right-3 top-3',
+			pinned: 'right-4 top-4',
 		},
 	}) as Record<CardLayout, CardLayoutClasses>)
 

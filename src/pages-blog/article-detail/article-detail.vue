@@ -459,7 +459,7 @@
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus"
 			@refresh="handleGetData()" />
 
-		<view v-else class="box-border pt-72">
+		<view v-else class="box-border pt-72 pb-4">
 			<!-- 顶部背景封面区域 -->
 			<view class="fixed left-0 top-0 h-72 w-full">
 				<image v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill" />
@@ -567,7 +567,7 @@
 					<view v-if="postDetailConfig?.copyrightEnabled" class="box-border px-2 mb-3">
 						<view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
 							<uh-section-title>版权声明</uh-section-title>
-							<view class="mt-3 flex flex-col gap-y-2 text-gray-600 text-2xs">
+							<view class="mt-3 flex flex-col gap-y-2 text-gray-600 text-xs">
 								<view v-if="postDetailConfig.copyrightAuthor" class="leading-5">
 									版权归属：{{ postDetailConfig.copyrightAuthor }}
 								</view>
@@ -592,26 +592,26 @@
 			</view>
 
 			<!-- 悬浮操作 -->
-			<view class="fixed bottom-2 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
+			<view class="fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
 				<view
 					class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 					<view
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 						:class="[hasUpvoted()?'text-primary':'text-gray-900']" @click="handleDoLikesClick">
 						<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-						<text class="shrink-0 text-3xs  font-semibold">点赞</text>
+						<text class="shrink-0 text-xs font-semibold">点赞</text>
 					</view>
 					<view v-if="calcIsShowComment"
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 						@click="handleToComment()">
 						<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-						<text class="shrink-0 text-3xs text-gray-900 font-semibold">评论</text>
+						<text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
 					</view>
 					<view
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 						@click="handleTogglePostFavorite">
 						<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-						<text class="shrink-0 text-3xs font-semibold"
+						<text class="shrink-0 text-xs font-semibold"
 							:class="[hasFavorited()?'text-primary':'text-gray-900']">
 							{{ hasFavorited() ? '已收藏' : '收藏' }}
 						</text>

@@ -106,7 +106,7 @@
 				<view class="text-sm font-bold leading-snug text-gray-900">
 					{{ notice.title }}
 				</view>
-				<view v-if="notice.summary" class="mt-3 text-2xs leading-relaxed text-gray-600">
+				<view v-if="notice.summary" class="mt-3 text-xs leading-relaxed text-gray-900">
 					{{ notice.summary }}
 				</view>
 				<view v-if="notice.publishTime" class="mt-3 text-xs text-gray-600">
@@ -119,7 +119,7 @@
 				<view class="text-xs text-gray-600 " @click="handleDismissForever">
 					今日不再提醒
 				</view>
-				<uh-button custom-class="font-semibold text-xs" @click="handleViewAll">
+				<uh-button custom-class="text-xs" @click="handleViewAll">
 					查看全文 →
 				</uh-button>
 			</view>

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 	import { onMounted, onUnmounted, reactive, ref } from 'vue'
 	import { getPostCommentList, getPostCommentReplyList } from '@/api/halo'
-	import { checkAvatarUrl } from '@/utils/url'
 	import type { IComment, ICommentListRes, ICommentReply } from '@/api/types/halo'
 
 	const props = withDefaults(defineProps<{
@@ -54,11 +53,7 @@
 		try {
 			const res = await getPostCommentList({ ...queryParams.value })
 			result.value = res.data
-			dataList.value = res.data.items.map((item) => {
-				// todo：临时
-				item.spec.owner.avatar = checkAvatarUrl(item.spec.owner.avatar ?? 'https://api.dicebear.com/10.x/adventurer-neutral/svg')
-				return item
-			})
+			dataList.value = res.data.items
 			// 列表刷新后清空展开缓存,保证回复区展示最新数据
 			expanded.clear()
 			repliesMap.clear()
@@ -217,10 +212,7 @@
 			<uh-section-title>
 				评论列表
 				<template #right>
-					<view class="flex items-center gap-1.5 text-xs text-gray-500 font-normal" @click="handleGetData">
-						<wd-icon name="refresh" size="28rpx" />
-						<text class="">刷新</text>
-					</view>
+					<text class="text-xs text-gray-500 font-normal" @click="handleGetData">刷新</text>
 				</template>
 			</uh-section-title>
 
@@ -243,14 +235,14 @@
 				</view>
 
 				<block v-else>
-					<view v-if="dataList.length === 0" class=" py-12">
-						<view class=" flex flex-col items-center">
+					<view v-if="dataList.length === 0" class="py-12">
+						<view class="flex flex-col items-center">
 							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
-							<text class="mt-2 text-sm text-gray-500">暂无评论</text>
+							<text class="mt-2 text-xs text-gray-500">暂无评论</text>
 							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
 								文章已开启禁止评论
 							</view>
-							<view v-else class="mt-2 bg-primary text-black text-sm px-4 py-1.5 rounded-lg"
+							<view v-else class="mt-2 bg-primary text-black text-xs px-4 py-1.5 rounded-lg"
 								@click="handleToComment()">
 								抢沙发
 							</view>
@@ -279,7 +271,8 @@
 										class="mt-2 ml-10 text-xs text-red-400" @click="loadReplies(comment)">
 										回复加载失败,点击重试
 									</view>
-									<view v-else-if="getRepliesState(comment)?.status === 'loading' && getRepliesState(comment)?.list.length === 0"
+									<view
+										v-else-if="getRepliesState(comment)?.status === 'loading' && getRepliesState(comment)?.list.length === 0"
 										class="mt-2 ml-10 text-xs text-gray-400">
 										回复加载中...
 									</view>
@@ -288,8 +281,8 @@
 											:key="childComment.metadata.name" :use-content-bg="false" :is-child="true"
 											:comment="childComment" :post-name="postName"
 											:disallow-comment="disallowComment"
-											:quote-reply-map="buildQuoteReplyMap(comment)"
-											@on-copy="handleCopyContent" @on-comment="(d) => handleToComment(d, comment)"
+											:quote-reply-map="buildQuoteReplyMap(comment)" @on-copy="handleCopyContent"
+											@on-comment="(d) => handleToComment(d, comment)"
 											@on-detail="handleShowCommentDetail" />
 
 										<!-- 加载更多(响应 hasNext) -->

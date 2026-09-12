@@ -37,7 +37,7 @@ function isActive(index: number) {
     <template v-if="item.iconType === 'image'">
       <image :src="getImageByIndex(index, item)" mode="scaleToFill" class="shrink-0 h-6 w-6" />
     </template>
-    <view class="mt-1px text-xs shrink-0">
+    <view class="mt-1px text-10px shrink-0">
       {{ getI18nText(item.text) }}
     </view>
     <!-- 角标显示 -->
