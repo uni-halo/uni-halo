@@ -2,7 +2,8 @@
 import { computed, ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
+import { getLoveAlbumByName, getLoveAlbums, unlockAlbum } from '@/api/uni-halo'
+import type { ICaptchaQuery } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { getCache, setCache } from '@/utils/storage'
@@ -106,7 +107,6 @@ const showPhotoViewer = ref(false)
 const currentViewerAlbum = ref<ILoveAlbumCard | null>(null)
 
 const unlockAlbumName = computed(() => currentUnlockAlbum.value?.displayName || '')
-const unlockAlbumKey = computed(() => currentUnlockAlbum.value?.name || '')
 const viewerAlbumName = computed(() => currentViewerAlbum.value?.displayName || '')
 const viewerAlbumKey = computed(() => currentViewerAlbum.value?.name || '')
 const viewerAlbumToken = computed(() => currentViewerAlbum.value
@@ -219,13 +219,28 @@ function handleOpenPhotoViewer(item: ILoveAlbumCard) {
   // 照片数据由 uh-album-photo-viewer 内部自请求(见组件 handleLoadPhotos)
 }
 
-function handleOnUnlockSuccess(data: { albumKey: string, token: string, photos: unknown[] }) {
-  unlockedAlbums.value[data.albumKey] = data.token
+/** 相册解锁请求(uh-unlock-popup 注入;返回含 token + photos 表示成功) */
+async function handleAlbumUnlockRequest(password: string, captcha?: ICaptchaQuery | null) {
+  const album = currentUnlockAlbum.value
+  if (!album) {
+    return null
+  }
+  const res = await unlockAlbum(album.name, password, captcha)
+  return res.data as { token?: string, photos?: unknown[] } | null | undefined
+}
+
+/** 相册解锁成功:存 token + photos,自动打开相册查看 */
+function handleAlbumUnlockSuccess(data: { token?: string, photos?: unknown[] }) {
+  const album = currentUnlockAlbum.value
+  if (!album || !data.token) {
+    return
+  }
+  unlockedAlbums.value[album.name] = data.token
   handleSaveUnlockedAlbums()
 
-  const albumIndex = dataList.value.findIndex(a => a.name === data.albumKey)
+  const albumIndex = dataList.value.findIndex(a => a.name === album.name)
   if (albumIndex !== -1) {
-    dataList.value[albumIndex].photos = data.photos as ILovePhoto[]
+    dataList.value[albumIndex].photos = (data.photos || []) as ILovePhoto[]
     dataList.value[albumIndex].locked = false
   }
   currentUnlockAlbum.value = null
@@ -257,7 +272,9 @@ onLoad(() => {
 async function handlePageInit() {
   handleRestoreUnlockedAlbums()
   await appConfigStore.bootstrap()
-  if (!ensureUnlocked()) { return }
+  if (!ensureUnlocked()) {
+    return
+  }
   canLoad.value = true
   handleGetData()
 }
@@ -287,16 +304,13 @@ onReachBottom(() => {
 
 <template>
   <view class="app-page box-border min-h-screen w-screen flex flex-col pb-safe">
-    <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" default-title="恋爱相册" title-color="text-love" back-class="text-love" />
 
-    <!-- 加载/错误/空占位(状态机) -->
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
       min-height="75vh" empty-text="相册暂时还没有数据~" @refresh="handleGetData"
     />
 
-    <!-- 相册列表(两列网格) -->
     <view v-else class="grid grid-cols-2 box-border gap-3 p-3 pt-2">
       <view
         v-for="(item) in dataList" :key="item.name"
@@ -306,7 +320,7 @@ onReachBottom(() => {
           <image class="h-full w-full" :src="item.image" mode="aspectFill" lazy-load />
           <view
             v-if="item.locked && !unlockedAlbums[item.name]"
-            class="absolute right-0 top-0 px-2 py-1 rounded-lb-md flex items-center justify-center gap-1 bg-black/30"
+            class="absolute right-0 top-0 flex items-center justify-center gap-1 rounded-lb-md bg-black/30 px-2 py-1"
           >
             <wd-icon name="lock" size="30rpx" class="text-white" />
             <view class="text-xs text-white">
@@ -314,25 +328,26 @@ onReachBottom(() => {
             </view>
           </view>
         </view>
-      
-		<view class="absolute left-0 right-0 bottom-0 box-border p-3 pt-6 bg-gradient-to-b from-white/0 to-white/60">
-          <view
-            class="truncate text-sm text-love font-bold"
-          >
+
+        <view
+          class="absolute bottom-0 left-0 right-0 box-border from-white/0 to-white/60 bg-gradient-to-b p-3 pt-6"
+        >
+          <view class="truncate text-sm text-love font-bold">
             {{ item.displayName }}
           </view>
           <view class="album-count mt-1 text-xs text-white">
             {{ item.photoCount }} 张照片
           </view>
         </view>
-		
-	  </view>
-	    </view>
-	    <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
-	    <!-- 密码解锁弹窗 -->
-    <uh-album-unlock-popup
-      v-if="currentUnlockAlbum" v-model="showUnlockModal" :show="showUnlockModal" :album-name="unlockAlbumName"
-      :album-key="unlockAlbumKey" @update:show="showUnlockModal = $event" @success="handleOnUnlockSuccess"
+      </view>
+    </view>
+    <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
+
+    <!-- 相册密码解锁弹窗(通用解锁弹窗;解锁成功自动打开相册查看) -->
+    <uh-unlock-popup
+      v-if="currentUnlockAlbum" v-model:show="showUnlockModal" title="解锁相册" captcha-enabled
+      :tip="`【${unlockAlbumName}】已加密，请输入密码查看`" placeholder="请输入相册密码" confirm-text="解锁"
+      :request="handleAlbumUnlockRequest" @success="handleAlbumUnlockSuccess"
     />
 
     <!-- 相册图片查看弹窗(数据在组件内部自请求) -->
@@ -343,14 +358,16 @@ onReachBottom(() => {
     />
 
     <!-- 模块级密码解锁弹窗(强制不可关闭,防分享直达) -->
-    <uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
-      :tip="unlockTip" placeholder="请输入密码" confirm-text="进入" :closeable="false"
-      :request="handleUnlockRequest" @success="handlePageUnlockSuccess" />
+    <uh-unlock-popup
+      v-model:show="unlockModalVisible" title="请解锁" captcha-enabled :tip="unlockTip"
+      placeholder="请输入密码" confirm-text="进入" :closeable="false" :request="handleUnlockRequest"
+      @success="handlePageUnlockSuccess"
+    />
   </view>
 </template>
 
 <style scoped>
-.app-page {
+  .app-page {
   background: linear-gradient(
     -135deg,
     rgb(247 149 51 / 10%),
