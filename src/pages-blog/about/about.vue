@@ -83,7 +83,7 @@
 					:style="{ backgroundColor: `${link.tileColor}1A` }">
 					<text class="text-sm font-bold" :style="{ color: link.tileColor }">{{ link.tileLetter }}</text>
 				</view>
-				<view class="min-w-0 flex flex-1 flex-col">
+				<view class="min-w-0 flex flex-1 flex-col justify-center">
 					<text class="text-2xs text-gray-900 font-bold">{{ link.title }}</text>
 					<view class="truncate text-xs text-gray-400">
 						{{ link.value }}

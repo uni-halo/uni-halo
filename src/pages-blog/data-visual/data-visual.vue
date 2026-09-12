@@ -41,13 +41,20 @@
 	})
 
 	/* ---------------- 图表配置 ---------------- */
-	const chartColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#ea7ccc', '#0EA5E9']
+	/** 主题色(与 style/index.scss 的 --wot-color-theme 保持一致) */
+	const themeColor = '#b9e424'
+	/** 图表系列色板:以主题色为基调配色,黄→绿→青相邻色系,避免杂乱 */
+	const chartColors = [themeColor, '#8bc34a', '#4caf50', '#26a69a', '#ffd54f', '#d4e157', '#66bb6a', '#9ccc65', '#00bcd4', '#ffb300']
 
 	/** 标签统计(环形图) */
 	const tagChart = ref({
 		isExpand: true,
 		type: 'ring',
 		data: { series: [{ data: [] as { name : string, value : number }[] }] },
+		/** 环形图中间标题(默认会被 uCharts 填充"收益率",需显式覆盖) */
+		title: { name: '', fontSize: 13, color: '#909399' },
+		/** 环形图中间数值 */
+		subtitle: { name: '', fontSize: 24, color: themeColor },
 	})
 
 	/** 分类统计(柱状图) */
@@ -79,8 +86,11 @@
 	})
 
 	/* ---------------- 数据处理 ---------------- */
+	/** 环形图最大展示标签数(标签过多时扇区过密,占比难读) */
+	const TAG_CHART_TOP_N = 8
+
 	function handleTagChart() {
-		const data = [...statistics.value.tags].sort((a, b) => b.count - a.count)
+		const data = [...statistics.value.tags].sort((a, b) => b.count - a.count).slice(0, TAG_CHART_TOP_N)
 		tagChart.value.data = {
 			series: [
 				{
@@ -88,6 +98,10 @@
 				},
 			],
 		}
+		// 中间文案:文章总数(articles 按日 articleTotal 求和,避免多标签文章重复计数)
+		const total = statistics.value.articles.reduce((sum, item) => sum + item.articleTotal, 0)
+		tagChart.value.title = { name: '文章总数', fontSize: 13, color: '#909399' }
+		tagChart.value.subtitle = { name: `${total} 篇`, fontSize: 24, color: themeColor }
 	}
 
 	function handleCategoriesChart() {
@@ -101,7 +115,7 @@
 	function handleTrendArticlesChart() {
 		trandArticleChart.value.data = statistics.value.articles.map(item => ({
 			date: item.date,
-			count: item.count,
+			count: item.articleTotal,
 		}))
 	}
 
@@ -202,7 +216,7 @@
 					</uh-section-title>
 					<view v-show="tagChart.isExpand" class="box-border w-full mt-3">
 						<qiun-data-charts type="ring" :chart-data="tagChart.data"
-							:opts="{ color: chartColors, padding: [5, 5, 5, 5], dataLabel: false, legend: { show: false }, extra: { ring: { ringWidth: 36, offsetAngle: -90, border: true, borderWidth: 1, borderColor: '#FFFFFF' } } }" />
+							:opts="{ color: chartColors, padding: [5, 5, 5, 5], dataLabel: false, legend: { show: false }, title: tagChart.title, subtitle: tagChart.subtitle, extra: { ring: { ringWidth: 36, offsetAngle: -90, border: true, borderWidth: 1, borderColor: '#FFFFFF' } } }" />
 					</view>
 				</view>
 
@@ -220,7 +234,7 @@
 					</uh-section-title>
 					<view v-show="categoryChart.isExpand" class="box-border w-full mt-3">
 						<qiun-data-charts type="column" :chart-data="categoryChart.data"
-							:opts="{ color: chartColors, padding: [20, 15, 10, 15], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 6 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: ['#F59E0B'] } } }" />
+							:opts="{ color: chartColors, padding: [20, 15, 10, 15], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 6 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: [themeColor] } } }" />
 					</view>
 				</view>
 
@@ -255,7 +269,7 @@
 					</uh-section-title>
 					<view v-show="userCommentsChart.isExpand" class="box-border w-full mt-3">
 						<qiun-data-charts type="column" :chart-data="userCommentsChart.data"
-							:opts="{ color: chartColors, padding: [20, 15, 10, 10], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 5 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: ['#F59E0B'] } } }" />
+							:opts="{ color: chartColors, padding: [20, 15, 10, 10], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 5 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: [themeColor] } } }" />
 					</view>
 				</view>
 
@@ -273,7 +287,7 @@
 					</uh-section-title>
 					<view v-show="top10ArticlesChart.isExpand" class="box-border w-full mt-3">
 						<qiun-data-charts type="column" :chart-data="top10ArticlesChart.data"
-							:opts="{ color: chartColors, padding: [20, 15, 10, 10], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 5 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: ['#F59E0B'] } } }" />
+							:opts="{ color: chartColors, padding: [20, 15, 10, 10], legend: { show: false }, xAxis: { disableGrid: true, fontSize: 10, itemCount: 5 }, yAxis: { gridType: 'dash', dashLength: 4 }, extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: [themeColor] } } }" />
 					</view>
 				</view>
 			</view>

@@ -21,7 +21,8 @@ const weeks = ['一', '二', '三', '四', '五', '六', '日']
 const currentYear = ref(new Date().getFullYear())
 const currentMonth = ref(new Date().getMonth() + 1)
 
-const intensityColors = ['#ebedf0', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af']
+/** 颜色分级(主题色系黄绿渐变,由浅到深) */
+const intensityColors = ['#ebedf0', '#f4fad8', '#e9f79f', '#d7ee52', '#b9e424']
 
 const yearOptions = computed(() => {
   const years = new Set<number>()
@@ -58,9 +59,16 @@ const daysInYear = computed(() => {
     : 366
 })
 
+/** 单元格:日粒度,isEmpty=前置空位(非本年日期) */
+interface IHeatmapCell {
+  date: string
+  count: number
+  isEmpty: boolean
+}
+
 /** 单元格列表:前置空位 + 全年每日 */
-const displayCells = computed(() => {
-  const cells: { date: string, count: number, isEmpty: boolean }[] = []
+const displayCells = computed<IHeatmapCell[]>(() => {
+  const cells: IHeatmapCell[] = []
   for (let i = 0; i < firstDayOffset.value; i++) {
     cells.push({ date: '', count: 0, isEmpty: true })
   }
@@ -69,6 +77,31 @@ const displayCells = computed(() => {
     cells.push({ date, count: yearDataMap.value[date] || 0, isEmpty: false })
   }
   return cells
+})
+
+/** 按周分组为列(每列 7 天,周一~周日;跨年补足空位),列不换行,横向滚动 */
+const weekColumns = computed<IHeatmapCell[][]>(() => {
+  const cells = displayCells.value
+  const columns: IHeatmapCell[][] = []
+  for (let i = 0; i < cells.length; i += 7) {
+    columns.push(cells.slice(i, i + 7))
+  }
+  return columns
+})
+
+/** 每列顶部月份标签:取该列第一个非空日期所属月份,与上一列同月则空占位(保证列高一致) */
+const columnMonths = computed<string[]>(() => {
+  let lastMonth = -1
+  return weekColumns.value.map((column) => {
+    const firstReal = column.find(cell => !cell.isEmpty)
+    if (!firstReal)
+      return ''
+    const month = dayjs(firstReal.date).month()
+    if (month === lastMonth)
+      return ''
+    lastMonth = month
+    return `${month + 1}月`
+  })
 })
 
 /** 颜色分级 */
@@ -98,15 +131,6 @@ const totalCount = computed(() => props.chartData.reduce((sum, item) => sum + it
 /** 本年总数 */
 const currentYearCount = computed(() => Object.values(yearDataMap.value).reduce((sum, n) => sum + n, 0))
 
-/** 月份标签(按 5 周跨度取整月位置,简化:每两月一个标签) */
-const monthLabels = computed(() => {
-  const labels: { index: number, name: string }[] = []
-  for (let m = 0; m < 12; m++) {
-    labels.push({ index: m * 5, name: `${m + 1}月` })
-  }
-  return labels
-})
-
 function changeYear(value: number) {
   currentYear.value = value
 }
@@ -132,27 +156,27 @@ function changeYear(value: number) {
     </view>
 
     <view class="heatmap-container flex gap-2">
-      <view class="weeks flex flex-col gap-1 pt-8">
-        <view v-for="(week, index) in weeks" :key="index" class="week-label h-5 text-[16rpx] text-[#999] leading-5">
+      <!-- 周标签列(固定,不随横向滚动) -->
+      <view class="weeks flex shrink-0 flex-col gap-1">
+        <view class="h-6 shrink-0" />
+        <view v-for="(week, index) in weeks" :key="index" class="week-label h-6 text-[16rpx] text-[#999] leading-6">
           {{ week }}
         </view>
       </view>
-      <view class="heatmap-content flex-1 overflow-x-auto">
-        <view class="months mb-1 flex">
-          <view v-for="month in monthLabels" :key="month.index" class="month-label w-[100rpx] shrink-0 text-[16rpx] text-[#999]">
-            {{ month.name }}
+      <!-- 主体:每列顶部带月份标签,整列横向排列(不换行),整体横向滚动 -->
+      <scroll-view scroll-x :show-scrollbar="false" class="heatmap-content flex-1">
+        <view class="inline-flex flex-col">
+          <view class="flex gap-1">
+            <view v-for="(column, ci) in weekColumns" :key="ci" class="flex shrink-0 flex-col">
+              <view class="month-label h-6 w-6 whitespace-nowrap text-center text-[16rpx] text-[#999] leading-6">
+                {{ columnMonths[ci] }}
+              </view>
+              <view v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
+                :style="{ backgroundColor: getDayColor(day) }" @click="getDayTip(day)" />
+            </view>
           </view>
         </view>
-        <view class="days-container h-[220rpx] flex flex-wrap gap-1">
-          <view
-            v-for="(day, index) in displayCells"
-            :key="index"
-            class="day-cell box-border h-6 w-6 rounded"
-            :style="{ backgroundColor: getDayColor(day) }"
-            @click="getDayTip(day)"
-          />
-        </view>
-      </view>
+      </scroll-view>
     </view>
 
     <view class="footer mt-6 flex items-center justify-between">
@@ -181,8 +205,8 @@ function changeYear(value: number) {
     background-color: #f5f5f5;
 
     &.active {
-      color: #fff;
-      background-color: #03a9f4;
+      color: #303133;
+      background-color: #b9e424;
     }
   }
 }
