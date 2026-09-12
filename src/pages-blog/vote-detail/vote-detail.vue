@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -17,11 +17,10 @@ definePage({
 })
 
 /* ---------------- 状态 ---------------- */
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const submitLoading = ref(false)
 const pageTitle = ref('加载中...')
-const safeAreaBottom = ref(24)
 const name = ref('')
 const detail = ref<unknown>(null)
 const vote = ref<(IVote & {
@@ -235,12 +234,12 @@ async function handleSubmit() {
 }
 
 /* ---------------- 生命周期 ---------------- */
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
+
 onLoad((options) => {
   name.value = options?.name || ''
-  // #ifndef H5
-  const systemInfo = uni.getSystemInfoSync()
-  safeAreaBottom.value = systemInfo.safeAreaInsets?.bottom ? systemInfo.safeAreaInsets.bottom + 12 : 24
-  // #endif
   handleGetData()
 })
 

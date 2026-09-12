@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList, getCategoryPostList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
@@ -18,7 +18,7 @@ definePage({
   },
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -162,6 +162,10 @@ async function handleGetArticleList() {
     uni.stopPullDownRefresh()
   }
 }
+
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 
 onLoad(() => {
   handleGetCategoryList()

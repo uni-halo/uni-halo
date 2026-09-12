@@ -5,7 +5,7 @@
  * 外链平台差异(条件编译):非 APP-PLUS(小程序/H5)提供复制链接,APP-PLUS 提供访问按钮(web-view)
  */
 import { computed, ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { getBannerDetail } from '@/api/uni-halo'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
@@ -23,7 +23,7 @@ definePage({
 	},
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const name = ref('')
 const detail = ref<IBannerPublicDetail | null>(null)
@@ -73,6 +73,10 @@ async function loadDetail() {
 		updateLoadingStatus(code === 404 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Error)
 	}
 }
+
+onPageScroll((option: Page.PageScrollOption) => {
+	updatePageScrollValue(option.scrollTop)
+})
 
 onLoad((options) => {
 	name.value = options?.name || ''

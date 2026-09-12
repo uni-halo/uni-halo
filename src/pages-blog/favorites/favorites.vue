@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watchEffect } from 'vue'
+import { onPageScroll } from '@dcloudio/uni-app'
 import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -13,7 +14,7 @@ definePage({
   },
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const favoritesStore = useFavoritesStore()
 
 /* ---------------- Tab(文章/瞬间) ---------------- */
@@ -67,6 +68,11 @@ function handleRemove(item: IFavoriteItem) {
 
 /* ---------------- 空态文案 ---------------- */
 const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏文章' : '还没有收藏瞬间'))
+
+/* ---------------- 滚动 ---------------- */
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 </script>
 
 <template>

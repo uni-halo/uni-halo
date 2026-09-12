@@ -1,4 +1,5 @@
 <script setup lang="ts">
+	import { onPageScroll } from '@dcloudio/uni-app'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 
@@ -8,8 +9,12 @@
 			navigationStyle: 'custom',
 		},
 	})
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+
+	onPageScroll((option : Page.PageScrollOption) => {
+	 updatePageScrollValue(option.scrollTop)
+	})
 
 	setTimeout(() => {
 		updateLoadingStatus(DataLoadingStatusEnum.Success)

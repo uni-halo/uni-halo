@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getMomentByName } from '@/api/halo'
 	import { useUpvote } from '@/hooks/useUpvote'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -23,7 +23,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -91,8 +91,8 @@
 		try {
 			const res = await getMomentByName(queryName.value)
 			const card = buildMomentCard(res.data)
-			moment.value = card
-			// 对象无键视为空 → 空态(与原 useDataLoading 默认判空一致)
+			moment.value = card 
+			
 			updateLoadingStatus(
 				Object.keys(card).length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
 			)
@@ -134,8 +134,7 @@
 	/** 切换收藏(收藏/取消),收藏时按当前详情内容生成快照入库 */
 	function handleToggleMomentFavorite() {
 		const card = moment.value
-		if (!card)
-			return
+		if (!card) { return }
 		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(card))
 		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 	}
@@ -158,6 +157,7 @@
 		isComment: false,
 		postName: '',
 		title: '',
+		quoteReply: '',
 	})
 	/** 评论列表组件实例(评论成功后刷新) */
 	const commentListRef = ref<{ refresh : () => void } | null>(null)
@@ -175,16 +175,18 @@
 			isComment: true,
 			postName: current.metadata.name,
 			title: '新增评论',
+			quoteReply: '',
 		}
 	}
 
 	/** 评论列表触发(回复某条评论/新增) */
-	function handleOnComment(data : { isComment : boolean, postName : string, title : string }) {
+	function handleOnComment(data : { isComment : boolean, postName : string, title : string, quoteReply ?: string }) {
 		commentModal.value = {
 			show: true,
 			isComment: data.isComment,
 			postName: data.postName,
 			title: data.title,
+			quoteReply: data.quoteReply ?? '',
 		}
 	}
 
@@ -249,6 +251,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad((options) => {
 		queryName.value = options?.name || ''
 		loadMoment()
@@ -270,10 +276,6 @@
 		title: moment.value?.owner?.displayName || '',
 		query: moment.value ? `name=${moment.value.metadata.name}` : '',
 	}))
-
-	onPageScroll((e : any) => {
-		console.log('滚动', e)
-	})
 </script>
 
 <template>
@@ -397,7 +399,7 @@
 		<!-- 评论弹窗 -->
 		<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
 			:title="commentModal.title" :post-name="commentModal.postName" subject-kind="Moment"
-			@on-close="handleOnCommentModalClose" />
+			:quote-reply="commentModal.quoteReply" @on-close="handleOnCommentModalClose" />
 	</view>
 </template>
 

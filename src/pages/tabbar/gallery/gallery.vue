@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
@@ -20,7 +20,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -167,6 +167,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(async () => {
 		// 检查插件可用性
 		await checkPluginAvailable()

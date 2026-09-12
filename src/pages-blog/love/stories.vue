@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveStories } from '@/api/uni-halo'
 	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
@@ -19,7 +19,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 
 	/* ---------------- 展示层类型 ---------------- */
@@ -226,6 +226,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(() => {
 		handleGetStories()
 	})

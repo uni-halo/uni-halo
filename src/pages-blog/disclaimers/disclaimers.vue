@@ -3,6 +3,7 @@
  * 免责声明页
  */
 	import { computed } from 'vue'
+	import { onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 
@@ -13,7 +14,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 
@@ -39,6 +40,10 @@
 			},
 		})
 	}
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
@@ -17,7 +17,7 @@ definePage({
   },
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -222,6 +222,10 @@ function handleToTopPage(duration = 500) {
 }
 
 /* ---------------- 生命周期 ---------------- */
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
+
 handleGetData()
 
 onPullDownRefresh(() => {

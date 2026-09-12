@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
-	import { onPullDownRefresh } from '@dcloudio/uni-app'
+	import { onPageScroll, onPullDownRefresh } from '@dcloudio/uni-app'
 	import { getChartData } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -17,7 +17,7 @@
 	})
 
 	/** 依赖插件(plugin-data-statistics,参考 gallery 对象传参模式) */
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginDataStatistics,
 		tips: '阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员',
@@ -158,6 +158,10 @@
 		}
 		handleGetData()
 	}
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
 
 	onPullDownRefresh(() => {
 		if (!uniHaloPluginAvailable.value) {

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 	import { getNoticeDetail } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -16,7 +16,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const name = ref('')
 	const detail = ref<INoticeDetail | null>(null)
@@ -82,6 +82,10 @@
 			updateLoadingStatus(code === 404 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Error)
 		}
 	}
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
 
 	onLoad((options) => {
 		name.value = options?.name || ''

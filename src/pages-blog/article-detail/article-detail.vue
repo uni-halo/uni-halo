@@ -26,7 +26,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const settingStore = useSettingStore()
@@ -58,6 +58,7 @@
 		isComment: false,
 		postName: '',
 		title: '',
+		quoteReply: '',
 	})
 	const commentDetail = ref({
 		show: false,
@@ -78,6 +79,7 @@
 		}
 	})
 
+	const globalAppSettings = computed(() => settingStore.settings)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
 	const doubanPluginConfig = computed(() => (haloConfigs.value.pluginConfig?.doubanPlugin as { position ?: string } | undefined) || {})
@@ -194,7 +196,7 @@
 	const { hasUpvoted, handleDoLikes } = useUpvote('posts', () => result.value?.metadata.name)
 
 	function handleDoLikesClick() {
-		handleDoLikes((name) => {
+		handleDoLikes(() => {
 			if (result.value?.stats) {
 				result.value.stats.upvote = (result.value.stats.upvote || 0) + 1
 			}
@@ -314,15 +316,17 @@
 			isComment: true,
 			postName: result.value.metadata.name,
 			title: '新增评论',
+			quoteReply: '',
 		}
 	}
 
-	function handleOnComment(data : { isComment : boolean, postName : string, title : string }) {
+	function handleOnComment(data : { isComment : boolean, postName : string, title : string, quoteReply ?: string }) {
 		commentModal.value = {
 			show: true,
 			isComment: data.isComment,
 			postName: data.postName,
 			title: data.title,
+			quoteReply: data.quoteReply ?? '',
 		}
 	}
 
@@ -419,6 +423,10 @@
 		handleGetData()
 	})
 
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onPullDownRefresh(() => {
 		handleGetData()
 	})
@@ -439,12 +447,6 @@
 			query: result.value ? `name=${result.value.metadata.name}` : '',
 			imageUrl: cover,
 		}
-	})
-
-	const globalAppSettings = computed(() => settingStore.settings)
-
-	onPageScroll((e : any) => {
-		console.log('滚动', e)
 	})
 </script>
 
@@ -470,11 +472,11 @@
 					  boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
 					}">
 				<!-- 顶部信息 -->
-				<view class="box-border flex flex-col gap-3 p-4 pb-2">
+				<view class="box-border flex flex-col gap-3 p-3 pb-2">
 					<view class="flex items-center gap-x-2">
 						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
 							mode="aspectFill" />
-						<text class="text-sm font-semibold">{{ result?.owner?.displayName }}</text>
+						<text class="text-sm font-medium text-gray-600">{{ result?.owner?.displayName }}</text>
 					</view>
 					<view class="font-semibold">
 						{{ result?.spec.title }}
@@ -525,7 +527,7 @@
 				</view>
 
 				<!-- 内容区域 -->
-				<view class="box-border flex flex-col gap-y-3 p-4 pt-2 text-gray-900 text-3xs">
+				<view class="box-border flex flex-col gap-y-3 p-3 pt-2 text-gray-900 text-3xs">
 					<!-- 受限阅读 -->
 					<template v-if="checkPostRestrictRead(result!)">
 						<view v-if="showContentArr.length === 0">
@@ -590,7 +592,7 @@
 			</view>
 
 			<!-- 悬浮操作 -->
-			<view class="fixed bottom-4 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
+			<view class="fixed bottom-2 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
 				<view
 					class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 					<view
@@ -638,7 +640,8 @@
 
 		<!-- 评论弹窗 -->
 		<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
-			:title="commentModal.title" :post-name="commentModal.postName" @on-close="handleOnCommentModalClose" />
+			:title="commentModal.title" :post-name="commentModal.postName" :quote-reply="commentModal.quoteReply"
+			@on-close="handleOnCommentModalClose" />
 	</view>
 </template>
 

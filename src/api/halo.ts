@@ -14,6 +14,7 @@ import type {
 	IComment,
 	ICommentListReq,
 	ICommentListRes,
+	ICommentReplyListRes,
 	ILink,
 	ILinkGroup,
 	ILinkListRes,
@@ -44,9 +45,8 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha';
  */
 export function getPostList(params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>('/apis/api.content.halo.run/v1alpha1/posts', {
-		query: params,
 		cacheFor: 0,
-		meta: { requestFrom: RequestFrom.Halo }
+		meta: { requestFrom: RequestFrom.Halo, query: params }
 	});
 }
 
@@ -92,9 +92,8 @@ export function getCategoryList(params: ICategoryListReq) {
  */
 export function getCategoryPostList(name: string, params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>(`/apis/api.content.halo.run/v1alpha1/categories/${name}/posts`, {
-		query: params,
 		cacheFor: 0,
-		meta: { requestFrom: RequestFrom.Halo }
+		meta: { requestFrom: RequestFrom.Halo, query: params }
 	});
 }
 
@@ -137,7 +136,7 @@ export function getPostCommentList(params: ICommentListReq) {
  * 评论回复列表
  */
 export function getPostCommentReplyList(commentName: string, params: ICommentListReq) {
-	return http.Get<IResponse<ICommentListRes>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, {
+	return http.Get<IResponse<ICommentReplyListRes>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, {
 		params,
 		cacheFor: 0,
 		meta: { requestFrom: RequestFrom.Halo }
@@ -159,6 +158,8 @@ export interface IAddCommentReq {
 	};
 	/** 验证码,提交时转入 X-Captcha-Code 头 */
 	captchaCode?: string;
+	/** 回复的回复:被引用回复(CommentReply)的 name */
+	quoteReply?: string;
 }
 
 /**

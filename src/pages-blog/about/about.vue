@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { onLoad } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -11,7 +11,7 @@
 		},
 	})
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 
 	const appInfo = computed(() => {
@@ -38,6 +38,10 @@ const appConfigStore = useAppConfigStore()
 			},
 		})
 	}
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
 
 	onLoad(() => {
 		uni.setNavigationBarTitle({ title: '关于项目' })

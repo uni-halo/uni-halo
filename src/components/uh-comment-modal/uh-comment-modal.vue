@@ -12,10 +12,13 @@
 		postName : string
 		/** 评论目标 kind(文章 Post / 瞬间 Moment) */
 		subjectKind ?: string
+		/** 回复的回复:被引用回复(CommentReply)的 name,提交时转 quoteReply */
+		quoteReply ?: string
 	}>(), {
 		isComment: false,
 		title: '',
 		subjectKind: 'Post',
+		quoteReply: '',
 	})
 
 	const emit = defineEmits<{
@@ -211,6 +214,7 @@
 						email: form.value.email,
 						website: form.value.authorUrl,
 					},
+					quoteReply: props.quoteReply || undefined,
 					captchaCode: config.value?.security?.captcha?.anonymousCommentCaptcha ? form.value.captchaCode : undefined,
 				})
 				uni.showToast({ icon: 'none', title: '回复成功，可能需要审核！' })

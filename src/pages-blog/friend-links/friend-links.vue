@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo'
 import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -21,7 +21,7 @@ definePage({
   },
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
 
@@ -349,6 +349,10 @@ function handleSaveMiniProgramCode(link: IMiniProgramLink) {
 }
 
 /* ---------------- 生命周期 ---------------- */
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
+
 onLoad(async () => {
   await Promise.all([
     checkSitePluginAvailable(),

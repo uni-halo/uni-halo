@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getCategoryList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkThumbnailUrl } from '@/utils/url'
@@ -19,7 +19,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	
 	const appConfigStore = useAppConfigStore()
 	
@@ -136,6 +136,10 @@
 
 	onMounted(() => {
 		handleInitPage()
+	})
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
 	})
 
 	onPullDownRefresh(() => {

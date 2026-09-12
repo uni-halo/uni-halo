@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -26,7 +26,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -287,6 +287,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(async () => {
 		uni.setNavigationBarTitle({ title: t('page.moments.title') })
 		await checkPluginAvailable()

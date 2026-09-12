@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { onPageScroll } from '@dcloudio/uni-app'
 import { useAppConfigStore } from '@/store/appConfig'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -23,7 +24,7 @@ interface ISoical {
   visible?: boolean
 }
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const authorConfig = computed(() => appConfigStore.configs.authorConfig)
 
@@ -78,6 +79,10 @@ onUnmounted(() => {
   if (clock) {
     clearInterval(clock)
   }
+})
+
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
 })
 </script>
 

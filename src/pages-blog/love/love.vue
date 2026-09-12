@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, onBeforeUnmount, ref } from 'vue'
-	import { onLoad, onShow } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onShow } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { getPluginCaptcha, unlockLoveModule, type ICaptchaQuery, type IPluginCaptcha } from '@/api/uni-halo'
@@ -15,7 +15,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 
 	/* ---------------- 恋爱配置 ---------------- */
@@ -205,6 +205,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(() => {
 		syncLoveConfigFromStore()
 	})

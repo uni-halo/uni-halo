@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -15,7 +15,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const settingStore = useSettingStore()
 	const appConfigStore = useAppConfigStore()
 
@@ -33,6 +33,10 @@
 	} = usePreferenceRows()
 
 	/** 确保启动合并已执行(入口页未跑或 H5 直达时兜底) */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(() => {
 		if (!settingStore.siteDefaults) {
 			settingStore.applySiteDefaults(collectSiteDefaults(appConfigStore.configs))

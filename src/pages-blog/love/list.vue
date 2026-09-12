@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getLoveDailyItems } from '@/api/uni-halo'
 	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { checkImageUrl } from '@/utils/url'
@@ -17,7 +17,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 
 	/* ---------------- 展示层类型 ---------------- */
 	/** 清单展示卡片(script 预处理后的干净展示数据) */
@@ -252,6 +252,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(() => {
 		handleGetList()
 	})

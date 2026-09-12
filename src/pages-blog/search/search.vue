@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPostListByKeyword } from '@/api/halo'
 	import { sleep } from '@/utils/common'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -18,7 +18,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -158,6 +158,10 @@
 	}
 
 	/* ---------------- 生命周期 ---------------- */
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
+
 	onLoad(async () => {
 		await checkPluginAvailable()
 		if (!uniHaloPluginAvailable.value) {

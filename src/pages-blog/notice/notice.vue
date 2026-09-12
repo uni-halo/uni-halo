@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getNotices } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -16,7 +16,7 @@
 		},
 	})
 
-	const { scrollY } = usePageScroll()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const PAGE_SIZE = 100
 
 	/** 状态机:首屏/下拉刷新 loading、empty、error;触底加载失败仅提示,不切整页错误态 */
@@ -155,6 +155,10 @@
 		if (fetching.value || allItems.value.length >= total.value) { return }
 		loadNotices(false)
 	}
+
+	onPageScroll((option : Page.PageScrollOption) => {
+		updatePageScrollValue(option.scrollTop)
+	})
 
 	onLoad(() => {
 		loadNotices(true)

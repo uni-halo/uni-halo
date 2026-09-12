@@ -78,21 +78,23 @@
 <template>
 	<uh-glass-popup v-model="isShow" position="center" :z-index="9999" custom-class="rounded-xl" @close="handleClose">
 		<view v-if="notice" class="box-border w-[80vw] p-4">
-			<!-- 头部:标题 + 关闭 -->
 			<view class="flex items-center justify-between">
 				<view class="flex items-center gap-2">
 					<wd-icon class-prefix="uhemoji2-icon" name="-happy-" size="36rpx" />
 					<text class="text-md font-semibold text-gray-900">
 						最新公告
 					</text>
-					<view v-if="notice.typeDisplayName" class="rounded px-1.5 py-0.5 text-xs" :style="{
-						  color: notice.typeColor || '#f83856',
-						  backgroundColor: notice.typeColor ? `${notice.typeColor}1a` : '#fdeef1',
+					<view v-if="notice.typeDisplayName" class="rounded px-1.5 py-0.5 text-xs text-primary bg-gray-100"
+						:style="{
+						  color: notice.typeColor,
+						  backgroundColor: notice.typeColor ? `${notice.typeColor}1a` : '',
 						}">
 						{{ notice.typeDisplayName }}
 					</view>
 				</view>
-				<view class="uh-global-card-glass !bg-white/5 border flex h-6 w-6 rounded-lg items-center justify-center text-gray-500" @click="handleClose">
+				<view
+					class="uh-global-card-glass !bg-white/5 border flex h-6 w-6 rounded-lg items-center justify-center text-gray-500"
+					@click="handleClose">
 					<wd-icon name="close" size="16px" />
 				</view>
 			</view>
@@ -101,13 +103,13 @@
 			<view class="mt-4">
 				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2">
 				</image>
-				<view class="text-md font-bold leading-snug text-gray-900">
+				<view class="text-sm font-bold leading-snug text-gray-900">
 					{{ notice.title }}
 				</view>
-				<view v-if="notice.summary" class="mt-3 text-sm leading-relaxed text-gray-500">
+				<view v-if="notice.summary" class="mt-3 text-2xs leading-relaxed text-gray-600">
 					{{ notice.summary }}
 				</view>
-				<view v-if="notice.publishTime" class="mt-3 text-xs text-gray-400">
+				<view v-if="notice.publishTime" class="mt-3 text-xs text-gray-600">
 					日期：{{ formatDate(notice.publishTime) }}
 				</view>
 			</view>

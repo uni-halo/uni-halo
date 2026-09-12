@@ -17,10 +17,10 @@ const httpInterceptor = {
 		
 		// 非 alova 请求，正常执行
 		// 接口请求支持通过 query 参数配置 queryString
+		console.log('==========options',options)
 		
-		
-		if (options.query) {
-			// const queryStr = qs.stringify(options.query, {
+		if (options?.meta?.query) {
+			// const queryStr = qs.stringify(options?.meta?.query, {
 			// 	allowDots: true,
 			// 	encodeValuesOnly: true,
 			// 	skipNulls: true,
@@ -28,7 +28,7 @@ const httpInterceptor = {
 			// 	arrayFormat: 'repeat'
 			// })
 		
-			const queryStr = stringifyQuery(options.query)
+			const queryStr = stringifyQuery(options?.meta?.query)
 			if (options.url.includes('?')) {
 				options.url += `&${queryStr}`;
 			} else {

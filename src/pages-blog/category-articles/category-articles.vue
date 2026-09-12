@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { onLoad, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getCategoryPostList } from '@/api/halo'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -15,7 +15,7 @@ definePage({
   },
 })
 
-const { scrollY } = usePageScroll()
+const { scrollY, updatePageScrollValue } = usePageScroll()
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
@@ -95,6 +95,10 @@ function handleToArticleDetail(article: IPost) {
     animationType: 'slide-in-right',
   })
 }
+
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 
 onLoad((options) => {
   name.value = options?.name || ''

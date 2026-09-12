@@ -1,13 +1,11 @@
 import { ref } from 'vue';
-import { onPageScroll } from '@dcloudio/uni-app';
 
-export function usePageScroll() {
-	const scrollY = ref(0);
+export function usePageScroll(defaultScrollValue: number = 0) {
+	const scrollY = ref(defaultScrollValue);
 
-	onPageScroll((e: any) => {
-		scrollY.value = e.scrollTop;
-		console.log('滚动数据', scrollY.value);
-	});
+	function updatePageScrollValue(scrollValue: number) {
+		scrollY.value = scrollValue;
+	}
 
-	return { scrollY };
+	return { scrollY, updatePageScrollValue };
 }
