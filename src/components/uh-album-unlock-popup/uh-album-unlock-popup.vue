@@ -68,6 +68,7 @@
 		}
 	}
 
+	// immediate:组件 v-if 条件创建时 show 可能已为 true,需立即同步(如相册解锁弹窗)
 	watch(() => props.show, (val) => {
 		isShow.value = val
 		if (val) {
@@ -76,7 +77,7 @@
 			// 插件端开启验证码时打开即拉取显示,避免首次提交 403 后才出现
 			handleRefreshCaptcha()
 		}
-	})
+	}, { immediate: true })
 
 	/** 弹窗开关同步(遮罩/关闭按钮/取消):关闭时复位输入并通知父组件 */
 	function handleOnPopupClose(val : boolean) {

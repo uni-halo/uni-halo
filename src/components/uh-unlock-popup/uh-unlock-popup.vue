@@ -2,6 +2,12 @@
 	import { computed, ref, watch } from 'vue'
 	import { getPluginCaptcha } from '@/api/uni-halo'
 	import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
+	
+	defineOptions({
+		options: {
+			styleIsolation: 'apply-shared'
+		}
+	})
 
 	interface IProps {
 		show : boolean
@@ -83,6 +89,7 @@
 		}
 	}
 
+	// immediate:组件 v-if 条件创建时 show 可能已为 true,需立即同步(如相册解锁弹窗)
 	watch(() => props.show, (val) => {
 		isShow.value = val
 		if (val) {
@@ -93,7 +100,7 @@
 				handleRefreshCaptcha()
 			}
 		}
-	})
+	}, { immediate: true })
 
 	/** 弹窗开关同步(遮罩/关闭按钮/取消):关闭时复位输入并通知父组件 */
 	function handleOnPopupClose(val : boolean) {
@@ -193,9 +200,9 @@
 			</view>
 
 			<!-- 操作按钮:取消 + 解锁(强制解锁场景隐藏取消) -->
-			<view class="mt-6 box-border flex gap-4">
+			<view class="w-full mt-6 box-border flex items-center justify-center gap-4">
 				<uh-button v-if="closeable" class="flex-1"
-					custom-class="py-2 flex-1 uh-global-card-glass text-xs rounded-xl bg-white/90"
+					custom-class="py-2 flex-1 uh-global-card-glass text-xs border rounded-xl bg-white/90"
 					@click="handleOnCancel">
 					取消
 				</uh-button>
