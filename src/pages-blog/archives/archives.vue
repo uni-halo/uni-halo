@@ -5,6 +5,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { sleep } from '@/utils/common'
 	import type { IPost } from '@/api/types/halo'
@@ -17,6 +18,7 @@
 		},
 	})
 
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 
@@ -259,15 +261,13 @@
 	<view class="min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" default-title="内容归档" title-color="text-gray-900" />
 
-		<wd-sticky>
-			<scroll-view scroll-x class="w-full whitespace-nowrap">
-				<view class="box-border flex gap-2 px-3 pb-1">
-					<view v-for="(tab, index) in archiveTabs" :key="tab.key"
-						class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-2 text-2xs"
-						:class="activeTabIndex === index ? 'bg-primary font-medium' : 'text-gray-500'"
-						@click="handleOnTabChange({ index })">
-						{{ tab.label }}
-					</view>
+		<wd-sticky :offset-top="offsetTop">
+			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+				<view v-for="(tab, index) in archiveTabs" :key="tab.key"
+					class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+					:class="activeTabIndex === index ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+					@click="handleOnTabChange({ index })">
+					{{ tab.label }}
 				</view>
 			</scroll-view>
 		</wd-sticky>

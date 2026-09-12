@@ -4,6 +4,7 @@
 	import { getNotices } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import type { INoticeListVo } from '@/api/types/uni-halo'
@@ -16,6 +17,7 @@
 		},
 	})
 
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const PAGE_SIZE = 100
 
@@ -188,21 +190,19 @@
 		<!-- 自定义导航 -->
 		<uh-navbar :scroll-y="scrollY" default-title="公告中心" title-color="text-gray-900" />
 
-		<wd-sticky>
-			<scroll-view scroll-x class="w-full whitespace-nowrap" :show-scrollbar="false">
-				<view class="box-border flex gap-2 px-3 pb-1 pt-2">
-					<view class="flex-1 uh-global-card-glass uh-shadow-xs inline-flex border rounded-2xl px-4 py-1.5 text-sm"
-						:class="activeType === '' ? 'bg-primary font-bold' : 'text-gray-500'" @click="activeType = ''">
-						全部
-					</view>
-					<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
-						class="flex-1 box-border uh-global-card-glass uh-shadow-xs inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-sm"
-						:class="activeType === type.typeName ? 'bg-primary font-bold' : 'text-gray-500'"
-						@click="activeType = activeType === type.typeName ? '' : type.typeName">
-						<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
-							:style="{ backgroundColor: type.typeColor }" />
-						<view class="shrink-0">{{ type.typeDisplayName }}</view>
-					</view>
+		<wd-sticky :offset-top="offsetTop">
+			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+				<view class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+					:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'" @click="activeType = ''">
+					全部
+				</view>
+				<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
+					class="mb-2 ml-3 box-border uh-global-card-glass uh-shadow-xs inline-flex items-center gap-1 border rounded-2xl px-4 py-2 text-xs"
+					:class="activeType === type.typeName ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+					@click="activeType = activeType === type.typeName ? '' : type.typeName">
+					<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
+						:style="{ backgroundColor: type.typeColor }" />
+					<view class="shrink-0">{{ type.typeDisplayName }}</view>
 				</view>
 			</scroll-view>
 		</wd-sticky>

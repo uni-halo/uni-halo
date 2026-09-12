@@ -6,6 +6,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { markdownConfig } from '@/config/markdown'
 	import { debounce } from '@/utils/debounce'
@@ -18,6 +19,7 @@
 		},
 	})
 
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -219,7 +221,7 @@
 
 		<template v-else>
 			<!-- 顶部搜索框-->
-			<wd-sticky>
+			<wd-sticky :offset-top="offsetTop">
 				<view class="w-screen box-border px-3 py-2">
 					<view class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full pl-1 pr-3">
 						<wd-icon name="search" size="16px" />

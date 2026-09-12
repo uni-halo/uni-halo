@@ -9,6 +9,7 @@
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
 
 	definePage({
@@ -19,6 +20,7 @@
 		},
 	})
 
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 
 	/* ---------------- 展示层类型 ---------------- */
@@ -331,7 +333,7 @@
 	<view class="uh-global-love-page box-border min-h-screen w-screen flex flex-col">
 		<uh-navbar :scroll-y="scrollY" default-title="恋爱清单" title-color="text-love" back-class="text-love"/>
 
-		<wd-sticky>
+		<wd-sticky :offset-top="offsetTop">
 			<view class="box-border px-3 pb-1 pt-2">
 				<view class="box-border flex items-center justify-between gap-x-2">
 					<view v-for="f in filterConfig" :key="f.key"

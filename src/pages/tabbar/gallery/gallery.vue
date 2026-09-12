@@ -225,7 +225,7 @@
 			<wd-sticky v-if="category.list.length!==0" class="w-full" :offset-top="offsetTop">
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
-						class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+						class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
 						:class="{ 'bg-primary text-gray-900 font-semibold': index === category.activeIndex }"
 						@click="handleGetDataByCategory(index, cate)">
 						{{ cate.spec.displayName }}

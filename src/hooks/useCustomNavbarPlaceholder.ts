@@ -10,12 +10,13 @@ export function useCustomNavbarPlaceholder(customNavbarHeight?: number) {
 		const winInfo = uni.getWindowInfo();
 		const safeAreaTop = winInfo.safeArea.top;
 
-		height.value += safeAreaTop + 10;
+		height.value += safeAreaTop;
+		// #ifdef H5
+		height.value += 10;
+		// #endif
 		// #ifndef H5
 		height.value += customNavbarHeight ?? 46;
 		// #endif
-		
-		console.log('最终高度', height.value);
 	}
 
 	onMounted(init);

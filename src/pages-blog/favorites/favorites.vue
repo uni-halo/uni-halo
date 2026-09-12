@@ -5,6 +5,7 @@ import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
 
 definePage({
@@ -14,6 +15,7 @@ definePage({
   },
 })
 
+const { height: offsetTop } = useCustomNavbarPlaceholder()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const favoritesStore = useFavoritesStore()
 
@@ -81,18 +83,16 @@ onPageScroll((option: Page.PageScrollOption) => {
 	<uh-navbar :scroll-y="scrollY" default-title="我的收藏" title-color="text-gray-900"></uh-navbar>
 	  
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
-    <wd-sticky>
-      <scroll-view scroll-x class="w-full whitespace-nowrap">
-        <view class="flex gap-2 px-3 pb-1 pt-3">
-          <view
-            v-for="tab in tabList" :key="tab.key"
-            class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-1.5 text-sm"
-            :class="tab.key === activeKind ? 'bg-primary font-bold' : 'text-gray-500'"
-            @click="handleSwitchTab(tab.key)"
-          >
-            {{ tab.label }}
-            <text v-if="tab.count > 0">({{ tab.count }})</text>
-          </view>
+    <wd-sticky :offset-top="offsetTop">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+        <view
+          v-for="tab in tabList" :key="tab.key"
+          class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+          :class="tab.key === activeKind ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+          @click="handleSwitchTab(tab.key)"
+        >
+          {{ tab.label }}
+          <text v-if="tab.count > 0">({{ tab.count }})</text>
         </view>
       </scroll-view>
     </wd-sticky>

@@ -8,6 +8,7 @@ import { useSettingStore } from '@/store/setting'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { ILink, ILinkGroup } from '@/api/types/halo'
@@ -21,6 +22,7 @@ definePage({
   },
 })
 
+const { height: offsetTop } = useCustomNavbarPlaceholder()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
@@ -416,17 +418,15 @@ onReachBottom(() => {
     <uh-navbar :scroll-y="scrollY" default-title="友情链接" title-color="text-gray-900" />
 
     <!-- 顶部 -->
-    <wd-sticky>
-      <scroll-view scroll-x class="w-full whitespace-nowrap">
-        <view class="flex gap-2 px-3 pb-1 pt-3">
-          <view
-            v-for="(tab, index) in friendLinkTabs" :key="tab.key"
-            class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-5 py-1.5 text-sm"
-            :class="activeTabIndex === index ? 'bg-primary font-bold' : 'text-gray-500'"
-            @click="handleOnTabChange({ index })"
-          >
-            {{ tab.label }}
-          </view>
+    <wd-sticky :offset-top="offsetTop">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+        <view
+          v-for="(tab, index) in friendLinkTabs" :key="tab.key"
+          class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+          :class="activeTabIndex === index ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+          @click="handleOnTabChange({ index })"
+        >
+          {{ tab.label }}
         </view>
       </scroll-view>
     </wd-sticky>
