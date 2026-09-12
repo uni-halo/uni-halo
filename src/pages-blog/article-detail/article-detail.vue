@@ -472,11 +472,11 @@
 					  boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
 					}">
 				<!-- 顶部信息 -->
-				<view class="box-border flex flex-col gap-3 p-3 pb-2">
+				<view class="box-border flex flex-col gap-3 p-4 pb-2">
 					<view class="flex items-center gap-x-2">
 						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
 							mode="aspectFill" />
-						<text class="text-sm font-medium text-gray-600">{{ result?.owner?.displayName }}</text>
+						<text class="text-sm text-gray-900">{{ result?.owner?.displayName }}</text>
 					</view>
 					<view class="font-semibold">
 						{{ result?.spec.title }}
@@ -494,7 +494,7 @@
 						</text>
 					</view>
 
-					<view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-2 rounded-xl p-3">
+					<view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-4">
 						<view v-if="originalURL" class="flex flex-1 items-center gap-x-2 text-gray-500">
 							<text class="text-xs">原文</text>
 							<text class="text-xs text-gray-900" @click.stop="handleToOriginal(originalURL)">
@@ -527,7 +527,7 @@
 				</view>
 
 				<!-- 内容区域 -->
-				<view class="box-border flex flex-col gap-y-3 p-3 pt-2 text-gray-900 text-3xs">
+				<view class="box-border flex flex-col gap-y-4 p-4 pt-2 text-gray-900 text-3xs">
 					<!-- 受限阅读 -->
 					<template v-if="checkPostRestrictRead(result!)">
 						<view v-if="showContentArr.length === 0">
@@ -562,9 +562,9 @@
 				<!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
 				<uh-article-vote :vote-ids="result?._voteIds || []" />
 
-				<view class="box-border px-1">
+				<view class="box-border px-4">
 					<!-- 版权声明 -->
-					<view v-if="postDetailConfig?.copyrightEnabled" class="box-border px-2 mb-3">
+					<view v-if="postDetailConfig?.copyrightEnabled" class="box-border mb-4">
 						<view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
 							<uh-section-title>版权声明</uh-section-title>
 							<view class="mt-3 flex flex-col gap-y-2 text-gray-600 text-xs">
@@ -582,7 +582,7 @@
 					</view>
 
 					<!-- 评论区域 -->
-					<view class="box-border px-2">
+					<view class="box-border">
 						<uh-comment-list v-if="calcIsShowComment && result"
 							:disallow-comment="!result.spec.allowComment" :post-name="result.metadata.name"
 							:post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"

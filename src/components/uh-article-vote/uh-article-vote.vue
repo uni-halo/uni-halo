@@ -19,8 +19,8 @@
 </script>
 
 <template>
-	<view v-if="votePluginAvailable && voteIds.length > 0" class="box-border px-3">
-		<view class="box-border uh-global-card-glass mb-3 rounded-xl p-3">
+	<view v-if="votePluginAvailable && voteIds.length > 0" class="box-border px-4 mb-4">
+		<view class="box-border uh-global-card-glass  rounded-xl p-3">
 			<uh-section-title>
 				相关投票
 				<template #right>
