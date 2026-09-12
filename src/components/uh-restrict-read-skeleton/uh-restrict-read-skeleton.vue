@@ -74,7 +74,7 @@ function onTouchEnd() {
       <slot />
     </view>
 
-    <view v-if="showButton" class="button-container absolute left-1/2 top-1/2 z-2 flex flex-col items-center -translate-x-1/2 -translate-y-1/2">
+    <view v-if="showButton" class="button-container absolute left-1/2 top-1/2 z-2 flex flex-col items-center uh-translate-center">
       <text
         v-if="tipText"
         class="tip-text mb-5 text-center leading-[1.4]"
@@ -153,5 +153,10 @@ function onTouchEnd() {
   100% {
     background-position: 0 50%;
   }
+}
+
+/* 完全居中定位 */
+.uh-translate-center {
+  transform: translate(-50%, -50%);
 }
 </style>

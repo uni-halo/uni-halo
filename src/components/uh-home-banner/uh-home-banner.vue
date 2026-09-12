@@ -120,7 +120,7 @@
 		</view>
 
 		<view class="absolute bottom-0 left-0 right-0 h-12 w-full bg-gradient-to-b from-white/0 to-page" />
-		<view class="absolute left-0 right-0 z-10 flex items-center justify-center -translate-y-6">
+		<view class="absolute left-0 right-0 z-10 flex items-center justify-center uh-translate-y-n6">
 			<view
 				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2 text-sm text-gray-600 flex items-center justify-center gap-x-2"
 				@click="handleToSearch()">
@@ -130,3 +130,10 @@
 		</view>
 	</view>
 </template>
+
+<style scoped lang="scss">
+/* 向上偏移定位 */
+.uh-translate-y-n6 {
+  transform: translateY(-1.5rem);
+}
+</style>

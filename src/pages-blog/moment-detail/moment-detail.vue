@@ -12,6 +12,7 @@
 	import { randomTagColor } from '@/utils/random'
 	import { markdownConfig } from '@/config/markdown'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import type { IMoment } from '@/api/types/halo'
 
 	definePage({
@@ -22,6 +23,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -268,18 +270,19 @@
 		title: moment.value?.owner?.displayName || '',
 		query: moment.value ? `name=${moment.value.metadata.name}` : '',
 	}))
+
+	onPageScroll((e : any) => {
+		console.log('滚动', e)
+	})
 </script>
 
 <template>
 	<view class="app-page box-border min-h-screen w-screen bg-page pb-safe">
-		<!-- 自定义导航 -->
-		<uh-navbar default-title="瞬间详情" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="瞬间详情" title-color="text-gray-900" />
 
-		<!-- 状态区(加载中/失败可重试/空) -->
 		<uh-data-loading v-if="status !== 'success'" :loading-status="status" min-height="60vh" error-text="瞬间内容加载失败"
 			empty-text="瞬间不存在或已被删除" @refresh="loadMoment" />
 
-		<!-- 瞬间内页(日记式:大字日期刊头 + 阅读正文 + 媒体 + 互动脚注) -->
 		<view v-else-if="moment" class="box-border px-3 pt-2 pb-12">
 			<view class="mb-3 uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl  box-border pb-4">
 				<!-- 刊头:大字日期 -->
@@ -309,11 +312,10 @@
 
 				<!-- 正文 -->
 				<view class="content px-4 mt-6 text-gray-900 text-sm">
-					<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-						:loading-img="markdownConfig.loadingGif" scroll-table selectable
-						:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-						:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
-						:show-language-name="true" copy-by-long-press />
+					<mp-html lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
+						scroll-table selectable :tag-style="markdownConfig.tagStyle"
+						:container-style="markdownConfig.containStyle" :content="moment.spec.newHtml || ''"
+						:markdown="true" :show-line-number="true" :show-language-name="true" copy-by-long-press />
 				</view>
 
 				<!-- 图片附件 -->
@@ -351,7 +353,7 @@
 				<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
 					class="tags flex flex-wrap gap-2 px-4 pt-6">
 					<view v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
-						class="rounded-full bg-primary px-3 py-1 text-xs font-bold" >
+						class="rounded-full bg-primary px-3 py-1 text-xs font-bold">
 						# {{ tag }}
 					</view>
 				</view>
@@ -361,14 +363,16 @@
 			<uh-comment-list v-if="moment" ref="commentListRef" :post-name="moment.metadata.name" :post="moment"
 				kind="Moment" :disallow-comment="!moment.spec.allowComment" @on-comment="handleOnComment" />
 		</view>
-		<!-- 悬浮操作(与文章详情一致:点赞/评论/收藏) -->
-		<view v-if="moment" class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
+
+		<!-- 悬浮操作 -->
+		<view v-if="moment"
+			class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
 			<view
 				class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 				<!-- 点赞 -->
 				<view
 					class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-					:class="{ active: hasUpvoted() }" @click="handleDoLikesClick">
+					:class="[hasUpvoted()?'text-primary':'text-gray-900']" @click="handleDoLikesClick">
 					<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
 					<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
 				</view>
@@ -385,7 +389,7 @@
 					@click="handleToggleMomentFavorite">
 					<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
 					<text class="shrink-0 text-sm font-semibold"
-						:class="momentFavorited ? 'text-primary' : 'text-gray-900'">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
+						:class="[momentFavorited ? 'text-primary' : 'text-gray-900']">{{ momentFavorited ? '已收藏' : '收藏' }}</text>
 				</view>
 			</view>
 		</view>
@@ -396,3 +400,10 @@
 			@on-close="handleOnCommentModalClose" />
 	</view>
 </template>
+
+<style scoped lang="scss">
+	/* 水平居中定位 */
+	.uh-translate-x-center {
+		transform: translateX(-50%);
+	}
+</style>

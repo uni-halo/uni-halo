@@ -1,5 +1,6 @@
 <script setup lang="ts">
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 
 	definePage({
 		style: {
@@ -7,6 +8,7 @@
 			navigationStyle: 'custom',
 		},
 	})
+	const { scrollY } = usePageScroll()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 	setTimeout(() => {
@@ -16,7 +18,7 @@
 
 <template>
 	<view class="w-full min-h-screen bg-page">
-		<uh-navbar default-title="测试页面" :need-placeholder="true" title-color="text-gray-900"></uh-navbar>
+		<uh-navbar :scroll-y="scrollY" default-title="测试页面" :need-placeholder="true" title-color="text-gray-900"></uh-navbar>
 
 		<!-- 内容区：由于 uh-navbar 内置有占位，所以我们的页面的主要内容应该从这里开始，比如这里就可以设置内边距或者其他样式，最外层的 	<view class="w-full min-h-screen bg-page"> 仅作为容器-->
 		<view class="box-border px-3">

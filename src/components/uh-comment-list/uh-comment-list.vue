@@ -146,13 +146,8 @@
 				</view>
 
 				<block v-else>
-					<view v-if="disallowComment && dataList.length !== 0"
-						class="rounded-xl bg-gray-50 px-3 py-2 text-xs text-red-400">
-						Ծ‸Ծ 博主已设置该文章禁止评论!
-					</view>
-
-					<view v-if="dataList.length === 0" class="empty py-12">
-						<view class="empty-box flex flex-col items-center">
+					<view v-if="dataList.length === 0" class=" py-12">
+						<view class=" flex flex-col items-center">
 							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
 							<text class="mt-2 text-sm text-gray-500">暂无评论</text>
 							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">

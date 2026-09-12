@@ -19,7 +19,6 @@ import type {
   ILoveAlbum,
   ILoveAlbumListReq,
   ILoveAlbumListRes,
-  ILoveConfig,
   ILoveDailyItem,
   ILoveDailyItemListReq,
   ILoveDailyItemListRes,
@@ -200,19 +199,6 @@ export function getNoticeDetail(name: string) {
 }
 
 /* ==================== 恋爱模块 ==================== */
-
-/**
- * 获取恋爱配置(纪念日 + 恋人信息；恋爱日记入口 loveDiary 设密码时
- * 需携带模块解锁 token，未解锁返回 401 locked)
- */
-export function getLoveConfig() {
-  const token = getLoveModuleToken('loveDiary')
-  return http.Get<IResponse<ILoveConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/plugin-uni-halo/love-config', {
-    params: token ? { token } : {},
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
 
 /**
  * 获取恋爱相册列表（lovePhoto 模块设密码时需携带模块解锁 token）

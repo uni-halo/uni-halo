@@ -3,30 +3,14 @@
  */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { getAppConfigs, getAuditData, getLoveConfig } from '@/api/uni-halo'
+import { getAppConfigs, getAuditData } from '@/api/uni-halo'
 import { DefaultAppConfigs } from '@/config/appConfig'
 import { deepMerge } from '@/utils/merge'
 import { setCache } from '@/utils/storage'
-import { clearLoveModuleToken } from '@/utils/loveModuleToken'
 import type { IAppConfig, IAuditDataResult } from '@/api/types/uni-halo'
 
 /** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
 const APP_GLOBAL_CONFIGS_KEY = 'APP_GLOBAL_CONFIGS'
-/**
- * 恋爱配置内容(公开 GET /love-config 返回: enabled + 纪念日/恋人信息;
- *  恋爱开关与页面图片仍在 configs.loveConfig, 由 love.vue 组合读取)
- */
-export interface IStaticLoveConfig {
-  enabled?: boolean
-  loveDateTitle?: string
-  loveDate?: string
-  loveInfo?: {
-    boyNickname?: string
-    boyAvatar?: string
-    girlNickname?: string
-    girlAvatar?: string
-  }
-}
 /**
  * 静态配置后台刷新间隔(ms): onShow 距上次拉取在 TTL 内则不再重复请求
  */
@@ -42,8 +26,6 @@ export const useAppConfigStore = defineStore(
     const auditModeEnabled = computed(() => !!auditData.value.enabled)
     /** 维护模式信息(configs 顶层 additive maintenance 键;undefined=未维护/已到点自动结束) */
     const maintenance = computed(() => configs.value.maintenance)
-    /** 恋爱配置内容(公开 /love-config;bootstrap 统一拉取,随 store persist 持久化) */
-    const loveConfig = ref<IStaticLoveConfig>({ enabled: false })
     /** 最近一次静态配置拉取时间戳(ms,0=从未拉取;TTL 判定依据) */
     const fetchedAt = ref(0)
 
@@ -51,7 +33,6 @@ export const useAppConfigStore = defineStore(
     const setDefaultAppSettings = () => {
       configs.value = JSON.parse(JSON.stringify(DefaultAppConfigs))
       auditData.value = { enabled: false }
-      loveConfig.value = { enabled: false }
     }
 
     /** 获取应用配置(与默认值深合并,并存储 token) */
@@ -88,42 +69,20 @@ export const useAppConfigStore = defineStore(
       }
     }
 
-    /** 获取恋爱配置内容(公开 /love-config;恋爱日记入口 loveDiary 设密码时
-     * 需携带模块解锁 token;401 locked 表示 token 缺失/失效,清除本地 token
-     * 交由 love.vue 重新弹密码框解锁) */
-    const fetchLoveConfig = async () => {
-      try {
-        const res = await getLoveConfig()
-        const body = res.data as unknown as IStaticLoveConfig | undefined
-        loveConfig.value = body && Object.keys(body).length > 0
-          ? body
-          : { enabled: false }
-        return loveConfig.value
-      }
-      catch (err) {
-        console.error('获取恋爱配置失败', err)
-        // 401 locked：恋爱日记锁定且本地 token 失效/缺失，清除后由 love.vue 引导解锁
-        const status = (err as { cause?: { response?: { status?: number } } })?.cause?.response?.status
-        if (status === 401) {
-          clearLoveModuleToken('loveDiary')
-        }
-        loveConfig.value = { enabled: false }
-        return loveConfig.value
-      }
-    }
-
     /**
      * 统一拉取静态配置:
-     * getConfigs + audit-data + love-config 并行一次;TTL 内(默认 5 分钟,persist 恢复后
+     * getConfigs + audit-data 并行一次;TTL 内(默认 5 分钟,persist 恢复后
      * 亦生效)直接返回缓存,避免每次冷启动/onShow 重复请求;force=true 强制刷新。
      * 返回 ok = getConfigs 是否成功(失败时走内置默认/旧缓存,由调用方决定后续)。
+     * 恋爱配置已并入 getConfigs 的 loveConfig 组(2026-09-12 起 /love-config 下线),
+     * 由 love.vue 直接读 configs.loveConfig。
      */
     const bootstrap = async (options?: { force?: boolean }): Promise<{ ok: boolean, fromCache: boolean }> => {
       const force = options?.force ?? false
       if (!force && fetchedAt.value > 0 && Date.now() - fetchedAt.value < STATIC_TTL) {
         return { ok: true, fromCache: true }
       }
-      const [cfg] = await Promise.all([fetchConfigs(), fetchAuditData(), fetchLoveConfig()])
+      const [cfg] = await Promise.all([fetchConfigs(), fetchAuditData()])
       fetchedAt.value = Date.now()
       return { ok: !!cfg, fromCache: false }
     }
@@ -136,12 +95,10 @@ export const useAppConfigStore = defineStore(
       auditData,
       auditModeEnabled,
       maintenance,
-      loveConfig,
       fetchedAt,
       fetchConfigs,
       setDefaultAppSettings,
       fetchAuditData,
-      fetchLoveConfig,
       bootstrap,
       refreshStatic,
     }

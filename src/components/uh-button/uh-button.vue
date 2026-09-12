@@ -1,4 +1,10 @@
 <script setup lang="ts">
+	defineOptions({
+		options: {
+			styleIsolation: 'apply-shared'
+		}
+	})
+
 	interface IProps {
 		customClass ?: string | Array<string>;
 	}
@@ -8,11 +14,13 @@
 	}
 
 	const props = defineProps<IProps>();
-	const emit = defineEmits<IEmits>();
+	const emits = defineEmits<IEmits>();
 </script>
 
 <template>
-	<view class="box-border bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg" :class="props.customClass" @click="emit('click')">
-		<slot></slot>
+	<view
+		class="box-border bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg"
+		:class="props.customClass" @click="emits('click')">
+		<slot />
 	</view>
 </template>

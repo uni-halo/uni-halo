@@ -6,6 +6,7 @@
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
 
 	definePage({
@@ -15,6 +16,8 @@
 			enablePullDownRefresh: true,
 		},
 	})
+
+	const { scrollY } = usePageScroll()
 
 	/* ---------------- 展示层类型 ---------------- */
 	/** 清单展示卡片(script 预处理后的干净展示数据) */
@@ -278,7 +281,7 @@
 
 <template>
 	<view class="uh-global-love-page box-border min-h-screen w-screen flex flex-col">
-		<uh-navbar default-title="恋爱清单" title-color="text-love" back-class="text-love"/>
+		<uh-navbar :scroll-y="scrollY" default-title="恋爱清单" title-color="text-love" back-class="text-love"/>
 
 		<wd-sticky>
 			<view class="box-border px-3 pb-1 pt-2">

@@ -50,8 +50,8 @@ export const nativeTabbarList: NativeTabBarItem[] = [
 	{
 		iconPath: 'static/tabbar/select_mine.png',
 		selectedIconPath: 'static/tabbar/select_mine_active.png',
-		pagePath: 'pages/tabbar/about/about',
-		text: '%tabbar.about%'
+		pagePath: 'pages/tabbar/mine/mine',
+		text: '%tabbar.mine%'
 	}
 ];
 
@@ -162,8 +162,8 @@ export const customTabbarList: CustomTabBarItem[] = [
 		icon: '/static/tabbar/select_mine.png',
 		iconActive: '/static/tabbar/select_mine_active.png',
 		iconType: 'image',
-		pagePath: 'pages/tabbar/about/about',
-		text: '%tabbar.about%'
+		pagePath: 'pages/tabbar/mine/mine',
+		text: '%tabbar.mine%'
 	},
 
 	// 搜索按钮

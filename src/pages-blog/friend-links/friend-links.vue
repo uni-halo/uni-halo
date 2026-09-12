@@ -7,6 +7,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { ILink, ILinkGroup } from '@/api/types/halo'
@@ -20,6 +21,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
 
@@ -407,7 +409,7 @@ onReachBottom(() => {
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col bg-page">
     <!-- 自定义导航 -->
-    <uh-navbar default-title="友情链接" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" default-title="友情链接" title-color="text-gray-900" />
 
     <!-- 顶部 -->
     <wd-sticky>

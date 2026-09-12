@@ -16,43 +16,41 @@ const LoadMoreStatusText = {
 	noNetwork: '呜呜，网络好像有点问题哦~'
 } as const;
 
-export type LoadMoreStatus = keyof typeof LoadMoreStatusText
+export type LoadMoreStatus = keyof typeof LoadMoreStatusText;
 
-/** 加载更多内部状态(完整形态,区别于可选的 LoadMoreStatusOption) */
 export interface LoadMoreStatusState {
- active: boolean;
- hasNext: boolean;
- status: LoadMoreStatus;
- text: string;
+	active: boolean;
+	hasNext: boolean;
+	status: LoadMoreStatus;
+	text: string;
 }
 
 export interface LoadMoreStatusOption {
- // 是否激活加载
- active?: boolean;
- status?: LoadMoreStatus;
- text?: string;
- hasNext?: boolean;
+	active?: boolean;
+	status?: LoadMoreStatus;
+	text?: string;
+	hasNext?: boolean;
 }
 
 export function useDataLoadingStatus(defaultStatus?: DataLoadingStatus) {
- const loadingStatus = ref<DataLoadingStatus>(defaultStatus ?? DataLoadingStatusEnum.Loading);
+	const loadingStatus = ref<DataLoadingStatus>(defaultStatus ?? DataLoadingStatusEnum.Loading);
 
- const _loadMoreStatus = ref<LoadMoreStatusState>({
-  active: false,
-  hasNext: false,
-  status: 'loadMore',
-  text: ''
- });
+	const _loadMoreStatus = ref<LoadMoreStatusState>({
+		active: false,
+		hasNext: false,
+		status: 'loadMore',
+		text: ''
+	});
 
- const loadMoreStatus = computed(() => {
-  const result = {
-   ..._loadMoreStatus.value
-  };
-  if (!_loadMoreStatus.value.text) {
-   result.text = LoadMoreStatusText[_loadMoreStatus.value.status];
-  }
-  return result;
- });
+	const loadMoreStatus = computed(() => {
+		const result = {
+			..._loadMoreStatus.value
+		};
+		if (!_loadMoreStatus.value.text) {
+			result.text = LoadMoreStatusText[_loadMoreStatus.value.status];
+		}
+		return result;
+	});
 
 	function resetLoadMoreStatus() {
 		_loadMoreStatus.value.active = false;

@@ -3,6 +3,7 @@
 	import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getVoteList } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { debounce } from '@/utils/debounce'
@@ -18,6 +19,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -300,7 +302,7 @@
 
 <template>
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar default-title="投票中心" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="投票中心" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />

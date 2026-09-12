@@ -13,7 +13,6 @@
 
 	definePage({
 		style: {
-			navigationBarTitleText: '首页',
 			enablePullDownRefresh: true,
 			navigationStyle: 'custom',
 		},
@@ -241,29 +240,27 @@
 		<uh-home-category />
 
 		<!-- 最新文章 -->
-		<uh-section-title class="mb-4 box-border px-3">
-			最新推荐
-			<template #right>
-				<view class="flex items-center gap-2">
-					<!-- 推荐模式分段器:默认 / 置顶 / 最新 -->
-					<view class="uh-global-card-glass uh-shadow-xs flex items-center border rounded-lg p-0.5">
-						<view v-for="tab in recommendTabs" :key="tab.value" class="rounded-md px-2 py-0.5 text-xs"
-							:class="recommendMode === tab.value ? 'bg-secondary text-gray-900' : 'text-gray-500'"
-							@click="handleRecommendModeChange(tab.value as 'default' | 'pinned' | 'latest' | 'oldest')">
-							{{ tab.label }}
+		<view class="mb-4 box-border px-3">
+			<uh-section-title>
+				最新推荐
+				<template #right>
+					<view class="flex items-center gap-2">
+						<view class="uh-global-card-glass uh-shadow-xs flex items-center border rounded-lg p-0.5">
+							<view v-for="tab in recommendTabs" :key="tab.value" class="rounded-md px-2 py-0.5 text-10px"
+								:class="recommendMode === tab.value ? 'bg-secondary text-gray-900' : 'text-gray-500'"
+								@click="handleRecommendModeChange(tab.value as 'default' | 'pinned' | 'latest' | 'oldest')">
+								{{ tab.label }}
+							</view>
 						</view>
-						<view v-if="false" class="rounded-md px-2 py-0.5 text-xs text-gray-500" @click="handleToArticles()">
-							更多
+						<view
+							class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
+							@click="handleToArticles()">
+							<wd-icon name="arrow-right" size="14px" />
 						</view>
 					</view>
-					<view 
-						class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
-						@click="handleToArticles()">
-						<wd-icon name="arrow-right" size="28rpx" />
-					</view>
-				</view>
-			</template>
-		</uh-section-title>
+				</template>
+			</uh-section-title>
+		</view>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 			min-height="36vh" @refresh="handleQuery" />
@@ -277,5 +274,6 @@
 			<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 		</block>
 	</view>
+
 	<uh-notify-dialog />
 </template>

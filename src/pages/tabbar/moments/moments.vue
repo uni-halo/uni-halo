@@ -5,6 +5,7 @@
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { useFavoritesStore } from '@/store/favorites'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
@@ -25,6 +26,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -333,7 +335,7 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :use-back="false" default-title="我的日常" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="我的日常" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
@@ -342,7 +344,7 @@
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				min-height="75vh" @refresh="handleGetData" />
 
-			<view v-else class="box-border flex flex-col gap-3 p-3 pt-0">
+			<view v-else class="box-border flex flex-col gap-3 px-3">
 				<!-- 瞬间卡片 -->
 				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
 					<view class="shrink-0 flex flex-col gap-y-2 w-13">
@@ -363,8 +365,8 @@
 								<image class="avatar h-9 w-9 shrink-0 rounded-full"
 									:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
 									mode="aspectFill" />
-								<view class="ml-2 flex flex-col">
-									<view class="text-sm text-gray-900 font-bold">
+								<view class="ml-2 flex flex-col gap-y-1">
+									<view class="text-3xs text-gray-900 font-bold">
 										{{ moment.owner?.displayName || bloggerInfo.nickname }}
 									</view>
 									<view class="text-xs text-gray-400">
@@ -373,7 +375,7 @@
 								</view>
 							</view>
 							<view class="shrink-0">
-								<uh-button custom-class="!py-1 bg-secondary text-xs font-semibold"
+								<uh-button custom-class="!py-1.5 bg-secondary text-xs"
 									@click="handleToMomentDetail(moment)">
 									详情
 								</uh-button>
@@ -382,7 +384,7 @@
 
 						<!-- 正文 -->
 						<view class="box-border px-4 pt-3">
-							<view class="relative box-border rounded-lg bg-page p-3 text-gray-900 text-sm">
+							<view class="relative box-border rounded-lg bg-page p-3 text-gray-900 text-3xs">
 								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
 									:loading-img="markdownConfig.loadingGif" scroll-table selectable
 									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
@@ -412,10 +414,11 @@
 
 						<!--  (点赞/评论) -->
 						<view
-							class="mb-1 mt-2 box-border w-full flex items-center justify-between border-t border-black/5 px-4 py-3 text-xs text-gray-400">
+							class="mb-1 mt-2 box-border w-full flex items-center  border-t border-black/5 px-4 py-3 text-xs text-gray-400"
+							:class="[moment.spec.allowComment?'justify-between':'gap-x-6']">
 							<view class="flex items-center gap-x-1" @click.stop="handleMomentLike(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
-								<text class="text-sm"
+								<text class="text-3xs"
 									:class="hasUpvoted(moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
 									点赞 {{ moment.stats.upvote || 0 }}
 								</text>
@@ -423,11 +426,11 @@
 							<view v-if="moment.spec.allowComment" class="flex items-center gap-x-1"
 								@click.stop="handleMomentComment(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
-								<text class="text-sm text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
+								<text class="text-3xs text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
 							</view>
 							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
 								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
-								<text class="text-sm"
+								<text class="text-3xs"
 									:class="isMomentFavorite(moment) ? 'text-primary' : 'text-gray-600'">
 									{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}
 								</text>

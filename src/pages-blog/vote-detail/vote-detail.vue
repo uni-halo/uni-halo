@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
@@ -16,6 +17,7 @@ definePage({
 })
 
 /* ---------------- 状态 ---------------- */
+const { scrollY } = usePageScroll()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const submitLoading = ref(false)
 const pageTitle = ref('加载中...')
@@ -262,7 +264,7 @@ onShareTimeline(() => ({
 <template>
   <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
     <!-- 自定义导航 -->
-    <uh-navbar :default-title="pageTitle" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <!-- 加载/错误/空占位(状态机) -->
     <uh-data-loading

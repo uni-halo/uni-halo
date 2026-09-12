@@ -4,6 +4,7 @@
  */
 	import { computed } from 'vue'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 
 	definePage({
 		style: {
@@ -12,6 +13,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 
@@ -42,7 +44,7 @@
 <template>
 	<view class="box-border min-h-screen bg-page p-3 pt-2">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="免责声明" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="免责声明" title-color="text-gray-900" />
 		
 		<view class="w-full h-full uh-global-card-glass uh-shadow-xs rounded-xl">
 			<!-- 通过配置 -->

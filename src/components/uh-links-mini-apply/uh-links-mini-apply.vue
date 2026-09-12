@@ -3,6 +3,12 @@
 	import { getPluginCaptcha, submitMiniProgramLinkApplication } from '@/api/uni-halo'
 	import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 
+	defineOptions({
+		options: {
+			styleIsolation: 'apply-shared'
+		}
+	})
+	
 	const props = withDefaults(defineProps<{
 		show ?: boolean
 	}>(), {

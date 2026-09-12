@@ -2,8 +2,22 @@
 	import { ref } from 'vue'
 	import { useSettingStore } from '@/store/setting'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
-	import { useSettingsPopup } from '@/hooks/useSettingsPopup' 
+	import { isWechat } from '@/utils/platform'
+
 	const settingStore = useSettingStore()
+
+	defineOptions({
+		options: {
+			styleIsolation: 'apply-shared'
+		}
+	})
+
+	interface IProps {
+		/** v-model:是否显示 */
+		modelValue : boolean
+	}
+
+	const props = defineProps<IProps>()
 
 	const {
 		SETTING_TABS,
@@ -17,13 +31,21 @@
 		isCardTypeOptionDisabled,
 	} = usePreferenceRows()
 
-	const { settingsPopupVisible } = useSettingsPopup()
+	interface IEmits {
+		(e : 'update:modelValue', value : boolean) : void,
+	}
 
-	const emits = defineEmits(['close', 'open'])
+	const emits = defineEmits<IEmits>()
+
+	/** v-model 代理:将 uh-glass-popup 的 modelValue 转发给父组件,避免直接写 readonly props */
+	const popupVisible = computed({
+		get : () => props.modelValue,
+		set : (value : boolean) => emits('update:modelValue', value),
+	})
 
 	const activeTab = ref<'layout' | 'feature'>('layout')
-	
-// 进行过滤，只保留当前页面的布局和功能
+
+	// 进行过滤，只保留当前页面的布局和功能
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const filterLayoutGroups = computed(() => {
@@ -31,7 +53,7 @@
 			return currentPage.route.split('/').pop() === group.key
 		})
 	})
-	
+
 	/* ---------------- 交互 ---------------- */
 	function currentValueOf(path : string[]) : string | null {
 		return isFollowing(path) ? null : String(prefValueOf(path) ?? '')
@@ -59,23 +81,20 @@
 		})
 	}
 
-	function onClose() {
-		emits('close')
-	}
-	function onOpen() {
-		emits('open')
+	function handleClose() {
+		emits('update:modelValue', false)
 	}
 </script>
 
 <template>
-	<uh-glass-popup v-model="settingsPopupVisible" position="bottom" custom-class="rounded-xl !border"
-		safe-area-inset-bottom :z-index="110" hide-when-close @close="onClose" @open="onOpen">
+	<uh-glass-popup v-model="popupVisible" position="bottom" custom-class="rounded-xl !border"
+		safe-area-inset-bottom :z-index="110" hide-when-close>
 		<view class="box-border px-3 pt-3">
 			<view class="mb-3 flex items-center justify-between">
 				<text class="text-md font-bold">偏好设置</text>
 				<view
 					class="uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
-					@click="onClose()">
+					@click="handleClose()">
 					<wd-icon name="close" size="16px" />
 				</view>
 			</view>
@@ -123,8 +142,7 @@
 											:class="[
 												currentValueOf(row.path) === opt.value ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500',
 												isCardTypeOptionDisabled(row.path, opt.value) ? 'opacity-40' : ''
-											]"
-											@click="isCardTypeOptionDisabled(row.path, opt.value) ? null : handleInlineChoose(row.path, opt.value)">
+											]" @click="isCardTypeOptionDisabled(row.path, opt.value) ? null : handleInlineChoose(row.path, opt.value)">
 											{{ opt.label }}
 										</view>
 									</view>
@@ -148,9 +166,11 @@
 									<view v-if="row.kind === 'bool'" class="box-border p-3"
 										:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 										<view class="flex items-center justify-between">
-											<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
+											<text
+												class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
 											<view class="flex items-center gap-2">
-												<text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
+												<text v-if="row.following"
+													class="row-sub text-2xs text-gray-400">默认</text>
 												<view v-else
 													class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
 													已自定义
@@ -215,15 +235,16 @@
 			</scroll-view>
 
 			<!-- 底部操作栏 -->
-			<view class="box-border w-full pb-4 pt-3 flex items-center gap-x-2">
-				<uh-button custom-class="flex-1 uh-global-card-glass bg-white/90 border py-2 !rounded-xl"
-					@click="onClose()">
+			<view class="box-border w-full pt-3 flex items-center gap-x-2" :class="[isWechat?'':'pb-3']">
+				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass bg-white/90 border py-2 !rounded-xl"
+					@click="handleClose()">
 					关闭
 				</uh-button>
-				<uh-button custom-class="flex-1 uh-global-card-glass border py-2 !rounded-xl" @click="handleResetAll">
+				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass border py-2 !rounded-xl"
+					@click="handleResetAll">
 					恢复默认
 				</uh-button>
 			</view>
 		</view>
 	</uh-glass-popup>
-</template> 
+</template>

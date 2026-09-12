@@ -4,6 +4,7 @@ import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
 import type { IPost } from '@/api/types/halo'
@@ -16,6 +17,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -252,7 +254,7 @@ onReachBottom(() => {
 <template>
   <view class="min-h-screen w-screen flex flex-col bg-page">
     <!-- 自定义导航 -->
-    <uh-navbar default-title="内容归档" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" default-title="内容归档" title-color="text-gray-900" />
 
     <!-- 顶部-->
     <wd-sticky>

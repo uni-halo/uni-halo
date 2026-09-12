@@ -5,6 +5,7 @@
 	import { sleep } from '@/utils/common'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { markdownConfig } from '@/config/markdown'
 	import { debounce } from '@/utils/debounce'
@@ -17,6 +18,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -206,7 +208,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-6">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="内容搜索" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="内容搜索" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />

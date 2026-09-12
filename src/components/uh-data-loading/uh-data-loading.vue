@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
 	import { checkUrl } from '@/utils/url'
-	import type { DataLoadingStatus } from '@/hooks/useDataLoading'
+	import type { DataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 
 	interface IProps {
 		loadingStatus ?: DataLoadingStatus

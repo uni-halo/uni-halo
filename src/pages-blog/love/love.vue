@@ -5,6 +5,8 @@
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { getPluginCaptcha, unlockLoveModule, type ICaptchaQuery, type IPluginCaptcha } from '@/api/uni-halo'
 	import { getLoveModuleToken, setLoveModuleToken, type LoveModuleKey } from '@/utils/loveModuleToken'
+	import { usePageScroll } from '@/hooks/usePageScroll'
+	import type { ILoveConfigGroup, ILoveModuleConfig } from '@/api/types/uni-halo'
 
 	definePage({
 		style: {
@@ -13,127 +15,72 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 
 	/* ---------------- 恋爱配置 ---------------- */
-	interface ILoveConfigPage {
+	/** 恋爱配置（数据源为 getConfigs.loveConfig 组：恋爱日记仅密码状态；
+	 * 三模块入口即 app 端入口列表数据，2026-09-12 起 /love-config 已下线） */
+	interface ILoveConfigPage extends Partial<ILoveConfigGroup> {
 		enabled : boolean
 		loveDateTitle : string
 		loveDate : string
-		loveInfo : {
-			boyNickname : string
-			boyAvatar : string
-			girlNickname : string
-			girlAvatar : string
-		}
-		pageImages : {
-			bgImageUrl : string
-			waveImageUrl : string
-			heartImageUrl : string
-		}
-		loveDiary : { enabled : boolean, passwordEnabled ?: boolean }
-		ourStory : { enabled : boolean, passwordEnabled ?: boolean }
-		lovePhoto : { enabled : boolean, passwordEnabled ?: boolean }
-		loveDaily : { enabled : boolean, passwordEnabled ?: boolean }
-		navList ?: ILoveNavItem[]
-		[key : string] : unknown
-	}
-
-	interface ILoveNavItem {
-		key : string
-		title ?: string
-		subTitle ?: string
-		priority ?: number
-		visible ?: boolean
 	}
 
 	const loveConfig = ref<ILoveConfigPage>({
 		enabled: false,
 		loveDateTitle: '',
 		loveDate: '',
-		loveInfo: {
-			boyNickname: '',
-			boyAvatar: '',
-			girlNickname: '',
-			girlAvatar: '',
-		},
-		pageImages: {
-			bgImageUrl: '',
-			waveImageUrl: '',
-			heartImageUrl: '',
-		},
-		loveDiary: { enabled: false, passwordEnabled: false },
+		loveDiary: { passwordEnabled: false },
 		ourStory: { enabled: false, passwordEnabled: false },
 		lovePhoto: { enabled: false, passwordEnabled: false },
 		loveDaily: { enabled: false, passwordEnabled: false },
 	})
 
+	/** 恋爱页背景图 */
+	const loveBgImage = ref('')
+
 	const loveDayCount = ref({ d: 0, h: 0, m: 0, s: 0 })
 	let loveDayTimer : ReturnType<typeof setTimeout> | null = null
 
 	interface ILoveNavRenderItem {
-		key : string
+		moduleKey : LoveModuleKey
 		use : boolean
-		locked: boolean
+		locked : boolean
 		iconPrefix : string
 		icon : string
+		/** 跳转路径（插件下发，直接 navigateTo） */
+		path : string
 		title : string
 		subTitle : string
-	}
-
-	const useLocalNav = false
-
-	const DEFAULT_NAV_LIST : ILoveNavItem[] = [
-		{ key: 'stories', title: '恋爱故事', subTitle: '我们一起度过的那些经历', priority: 1, visible: true },
-		{ key: 'album', title: '恋爱相册', subTitle: '定格了我们的那些小美好', priority: 2, visible: true },
-		{ key: 'list', title: '恋爱清单', subTitle: '你我之间的约定我们都在努力实现', priority: 3, visible: true },
-	]
-
-	const NAV_META: Record<string, { iconPrefix: string, icon: string, page: string }> = {
-		stories: { iconPrefix: 'uhlove-icon', icon: 'gushi', page: 'stories' },
-		album: { iconPrefix: 'uhlove-icon', icon: 'xiangce', page: 'album' },
-		list: { iconPrefix: 'uhlove-icon', icon: 'liebiao', page: 'list' },
+		titleColor : string
+		subTitleColor : string
+		iconBgColor : string
 	}
 
 	const navList = ref<ILoveNavRenderItem[]>([])
 
 	/* ---------------- 数据加载 ---------------- */
 	function syncLoveConfigFromStore() {
-		const storeLove = appConfigStore.loveConfig
-		const appConfigs = appConfigStore.configs
+		const loveConfigs = appConfigStore.configs.loveConfig
 
 		loveConfig.value = {
 			...loveConfig.value,
-			...(storeLove.loveDateTitle ? { loveDateTitle: storeLove.loveDateTitle } : {}),
-			...(storeLove.loveDate ? { loveDate: storeLove.loveDate } : {}),
-			...(storeLove.enabled !== undefined ? { enabled: storeLove.enabled } : {}),
-			loveInfo: {
-				...loveConfig.value.loveInfo,
-				...(storeLove.loveInfo || {}),
-			},
+			...(loveConfigs?.loveInfo?.loveDateTitle ? { loveDateTitle: loveConfigs.loveInfo.loveDateTitle } : {}),
+			...(loveConfigs?.loveInfo?.loveDate ? { loveDate: loveConfigs.loveInfo.loveDate } : {}),
 		}
 
-		const loveModuleConfig = appConfigs.loveConfig as Partial<ILoveConfigPage> | undefined
-		// 恋爱页背景图：2026-09-11 起插件端由 loveConfig.pageImages 迁至
-		// pageConfig.loveDiaryConfig.bgImageUrl，优先读新位置、兼容回退旧值
-		const loveDiaryPageConfig = appConfigs.pageConfig?.loveDiaryConfig as
+		// 恋爱页背景图：读自 pageConfig.loveDiaryConfig.bgImageUrl
+		const loveDiaryPageConfig = appConfigStore.configs.pageConfig?.loveDiaryConfig as
 			{ bgImageUrl ?: string } | undefined
-		const pageImagesBg =
-			loveDiaryPageConfig?.bgImageUrl
-			|| loveModuleConfig?.pageImages?.bgImageUrl
-			|| loveConfig.value.pageImages.bgImageUrl
-		if (loveModuleConfig || loveDiaryPageConfig) {
+		loveBgImage.value = loveDiaryPageConfig?.bgImageUrl || ''
+		if (loveConfigs) {
 			loveConfig.value = {
 				...loveConfig.value,
-				pageImages: {
-					...loveConfig.value.pageImages,
-					bgImageUrl: pageImagesBg,
-				},
-				loveDiary: loveModuleConfig?.loveDiary || loveConfig.value.loveDiary,
-				ourStory: loveModuleConfig?.ourStory || loveConfig.value.ourStory,
-				lovePhoto: loveModuleConfig?.lovePhoto || loveConfig.value.lovePhoto,
-				loveDaily: loveModuleConfig?.loveDaily || loveConfig.value.loveDaily,
-				navList: loveModuleConfig?.navList || loveConfig.value.navList,
+				loveDiary: loveConfigs.loveDiary || loveConfig.value.loveDiary,
+				ourStory: loveConfigs.ourStory || loveConfig.value.ourStory,
+				lovePhoto: loveConfigs.lovePhoto || loveConfig.value.lovePhoto,
+				loveDaily: loveConfigs.loveDaily || loveConfig.value.loveDaily,
 			}
 		}
 
@@ -143,37 +90,36 @@
 		}
 	}
 
+	/** 入口列表：由三模块配置构建（模块 key 即唯一标识，图标/跳转路径均用插件下发字段） */
 	function initList() {
 		const configs = loveConfig.value
-		const configured = configs.navList
-		let source : ILoveNavItem[]
-		if (!useLocalNav && configured && configured.length) {
-			source = configured
-		} else {
-			source = DEFAULT_NAV_LIST;
-		}
-		const sorted = [...source].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
-		navList.value = sorted.map((item) => {
-			const meta = NAV_META[item.key]
-			if (!meta) {
+		const moduleKeys : LoveModuleKey[] = ['ourStory', 'lovePhoto', 'loveDaily']
+		// 插件端已按 priority 降序输出，此处仍按 priority 排序兜底（缺失视为 0）
+		const sorted = [...moduleKeys].sort((a, b) =>
+			((configs[b] as ILoveModuleConfig | undefined)?.priority ?? 0) -
+			((configs[a] as ILoveModuleConfig | undefined)?.priority ?? 0))
+		navList.value = sorted.map((moduleKey) => {
+			const moduleCfg = configs[moduleKey] as ILoveModuleConfig | undefined
+			if (!moduleCfg) {
 				return null
 			}
-			const moduleKey = MODULE_KEY_MAP[item.key]
-			const moduleCfg = moduleKey
-				? (configs[moduleKey] as { enabled ?: boolean, passwordEnabled ?: boolean } | undefined)
-				: undefined
-			const fallback = DEFAULT_NAV_LIST.find((d) => d.key === item.key)
 			return {
-				key: item.key,
-				use: !!moduleCfg?.enabled && item.visible !== false,
-				// 模块设了密码且本地无有效 token → 显示 lock;解锁后恢复箭头
-				locked: !!moduleCfg?.passwordEnabled && !(moduleKey && getLoveModuleToken(moduleKey)),
-				iconPrefix: meta.iconPrefix,
-				icon: meta.icon,
-				title: item.title || fallback?.title || '',
-				subTitle: item.subTitle || fallback?.subTitle || '',
+				moduleKey,
+				use: !!moduleCfg.enabled,
+				// 模块设了密码且本地无有效 token → 锁定态；解锁后恢复箭头
+				locked: !!moduleCfg.passwordEnabled && !getLoveModuleToken(moduleKey),
+				// 图标/跳转路径直接消费插件下发字段（不再本地映射）
+				iconPrefix: moduleCfg.iconPrefix || 'uhlove-icon',
+				icon: moduleCfg.icon || '',
+				path: moduleCfg.path || '',
+				title: moduleCfg.title || '',
+				subTitle: moduleCfg.subTitle || '',
+				// 颜色直接消费插件下发的 hex8（#rrggbbaa），缺失回退内置默认
+				titleColor: moduleCfg.titleColor || '#f83856',
+				subTitleColor: moduleCfg.subTitleColor || '#f8385699',
+				iconBgColor: moduleCfg.iconBgColor || '#fce7f3',
 			}
-		}).filter((item): item is ILoveNavRenderItem => item !== null)
+		}).filter((item) : item is ILoveNavRenderItem => item !== null)
 	}
 
 	/* ---------------- 恋爱计时 ---------------- */
@@ -202,36 +148,37 @@
 	}
 
 	/* ---------------- 跳转（模块密码拦截） ---------------- */
-	const MODULE_KEY_MAP: Record<string, LoveModuleKey> = {
-		stories: 'ourStory',
-		album: 'lovePhoto',
-		list: 'loveDaily',
-	}
-
 	/** 模块密码弹窗状态 */
 	const unlockModalVisible = ref(false)
-	const pendingPage = ref('')
+	/** 待跳转路径（模块下发的完整 path，解锁成功后 navigateTo） */
+	const pendingPath = ref('')
 	const pendingModule = ref<LoveModuleKey>('ourStory')
 
 	/** 恋爱日记入口（love 页本身）是否锁定：设了密码且本地无有效 token */
 	const loveDiaryLocked = computed(() =>
 		!!loveConfig.value.loveDiary?.passwordEnabled && !getLoveModuleToken('loveDiary'))
 
-	function handleToPage(pageName : string) {
-		const module = MODULE_KEY_MAP[pageName]
-		const moduleCfg = module
-			? (loveConfig.value[module] as { enabled ?: boolean, passwordEnabled ?: boolean })
-			: undefined
+	const unlockTip = computed(() => {
+		const moduleCfg = loveConfig.value[pendingModule.value] as ILoveModuleConfig | undefined
+		const tip = moduleCfg?.title || ''
+		return `${tip}已设置访问密码，输入后进入`
+	})
+
+	function handleToPage(moduleKey : LoveModuleKey) {
+		const moduleCfg = loveConfig.value[moduleKey] as ILoveModuleConfig | undefined
 		// 模块设了密码且本地无有效 token → 先弹密码框验证
-		if (moduleCfg?.passwordEnabled && !getLoveModuleToken(module)) {
-			pendingPage.value = pageName
-			pendingModule.value = module
+		if (moduleCfg?.passwordEnabled && !getLoveModuleToken(moduleKey)) {
+			pendingPath.value = moduleCfg.path || ''
+			pendingModule.value = moduleKey
 			unlockModalVisible.value = true
 			return
 		}
-		uni.navigateTo({
-			url: `/pages-blog/love/${pageName}`,
-		})
+		// 跳转直接使用插件下发的 path
+		if (moduleCfg?.path) {
+			uni.navigateTo({
+				url: moduleCfg.path,
+			})
+		}
 	}
 
 	/** 通用解锁弹窗请求：unlock 签发 token（插件端要求验证码，403 附新码由弹窗展示重试） */
@@ -240,16 +187,16 @@
 		return res.data as { token ?: string, [key : string] : unknown } | null | undefined
 	}
 
-	/** 解锁成功：存 token；恋爱日记入口（loveDiary）重新拉取恋爱信息，其余进入模块 */
+	/** 解锁成功：存 token；恋爱日记入口（loveDiary）重新拉取配置，其余进入模块 */
 	function handleUnlockSuccess(data : { token ?: string }) {
 		if (data.token) {
 			setLoveModuleToken(pendingModule.value, data.token)
 			if (pendingModule.value === 'loveDiary') {
-				// 恋爱日记入口解锁：重新拉取 /love-config 并刷新页面状态
-				appConfigStore.fetchLoveConfig().then(() => syncLoveConfigFromStore())
+				// 恋爱日记入口解锁：恋爱配置已并入 getConfigs loveConfig 组，刷新后重读
+				appConfigStore.refreshStatic().then(() => syncLoveConfigFromStore())
 			}
-			else {
-				uni.navigateTo({ url: `/pages-blog/love/${pendingPage.value}` })
+			else if (pendingPath.value) {
+				uni.navigateTo({ url: pendingPath.value })
 			}
 		}
 		else {
@@ -267,7 +214,7 @@
 		syncLoveConfigFromStore()
 		// 恋爱日记入口（love 页本身）设了密码且本地无 token → 先弹密码框验证
 		if (loveDiaryLocked.value) {
-			pendingPage.value = ''
+			pendingPath.value = ''
 			pendingModule.value = 'loveDiary'
 			unlockModalVisible.value = true
 		}
@@ -282,32 +229,33 @@
 
 <template>
 	<view class="bg-pink-50 min-h-screen w-screen">
-		<uh-navbar default-title="恋爱日记" :need-placeholder="false" back-class="text-love"
+		<uh-navbar :scroll-y="scrollY" default-title="恋爱日记" :need-placeholder="false" back-class="text-love"
 			title-color="!text-love"></uh-navbar>
 
 		<!-- 情侣信息 -->
 		<view class="box-border pt-12 relative z-10 h-92 w-screen flex flex-col items-center justify-center">
 			<view class="relative z-10 w-full h-full flex items-center justify-center rounded-xl">
-				<view class="boy flex flex-col items-center justify-center translate-x-0.5">
+				<view class="boy flex flex-col items-center justify-center uh-boy-offset">
 					<image class="uh-global-card-glass border-3 box-border border-blue-400 h-26 w-26 rounded-full"
-						:src="checkAvatarUrl(loveConfig.loveInfo.boyAvatar)" mode="aspectFill" />
+						:src="checkAvatarUrl(loveConfig.loveInfo?.boyAvatar)" mode="aspectFill" />
 					<view class="bg-blue-500 mt-2 text-center text-xs text-white font-bold px-2 py-1 rounded-lg">
-						{{ loveConfig.loveInfo.boyNickname }}
+						{{ loveConfig.loveInfo?.boyNickname }}
 					</view>
 				</view>
 				<!-- 心动呼吸动画 -->
-				<text class="heart-beat absolute z-10"><wd-icon class-prefix="uhlove-icon" name="aixin" size="72rpx"></wd-icon></text>
-				<view class="girl flex flex-col items-center justify-center -translate-x-0.5">
+				<text class="heart-beat absolute z-10"><wd-icon class-prefix="uhlove-icon" name="aixin"
+						size="72rpx"></wd-icon></text>
+				<view class="girl flex flex-col items-center justify-center uh-girl-offset">
 					<image class="uh-global-card-glass border-3 box-border border-love h-26 w-26 rounded-full"
-						:src="checkAvatarUrl(loveConfig.loveInfo.girlAvatar)" mode="aspectFill" />
+						:src="checkAvatarUrl(loveConfig.loveInfo?.girlAvatar)" mode="aspectFill" />
 					<view class="bg-love mt-2 text-center text-xs text-white font-bold px-2 py-1 rounded-lg">
-						{{ loveConfig.loveInfo.girlNickname }}
+						{{ loveConfig.loveInfo?.girlNickname }}
 					</view>
 				</view>
 			</view>
-			<image :src="checkImageUrl(loveConfig.pageImages.bgImageUrl)" class="absolute z-0 inset-0 w-full h-full"
-				mode="aspectFill" />
-			<view class="absolute z-2 left-0 bottom-0 w-full h-36 bg-gradient-to-b from-white/0 via-pink-50/50 to-pink-50" />
+			<image :src="checkImageUrl(loveBgImage)" class="absolute z-0 inset-0 w-full h-full" mode="aspectFill" />
+			<view
+				class="absolute z-2 left-0 bottom-0 w-full h-36 bg-gradient-to-b from-white/0 via-pink-50/50 to-pink-50" />
 		</view>
 
 		<!-- 恋爱记时 -->
@@ -338,33 +286,34 @@
 
 		<!-- 功能导航 -->
 		<view class="mt-6 box-border flex flex-col items-center justify-center gap-y-4 px-4">
-			<block v-for="(nav, index) in navList" :key="index">
+			<block v-for="(nav, index) in navList" :key="nav.moduleKey">
 				<view v-if="nav.use"
 					class="box-border list-item uh-global-card-glass bg-white/60 p-3 w-full flex items-center justify-around gap-x-4 rounded-2xl"
-					:class="`list-item-${index + 1}`" @click="handleToPage(nav.key)">
-					<view class="flex items-center justify-center h-12 w-12 rounded-xl opacity-70" :class="[index%2===0?'bg-pink-100':'bg-blue-100']">
+					:class="`list-item-${index + 1}`" @click="handleToPage(nav.moduleKey)">
+					<view class="flex items-center justify-center h-12 w-12 rounded-xl opacity-70"
+						:style="{ backgroundColor: nav.iconBgColor }">
 						<wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="66rpx" />
 					</view>
 					<view class="box-border flex flex-1 flex-col justify-center gap-y-1">
-						<view class="name text-md font-bold" :class="[index%2===0?'text-love':'text-blue-400']">
+						<view class="name text-md font-bold" :style="{ color: nav.titleColor }">
 							{{ nav.title }}
 						</view>
-						<view class="text-xs truncate" :class="[index%2===0?'text-love/60':'text-blue-300']">
+						<view class="text-xs truncate" :style="{ color: nav.subTitleColor }">
 							{{ nav.subTitle }}
 						</view>
 					</view>
 					<view class="shrink-0">
-						<wd-icon :name="nav.locked ? 'lock' : 'arrow-right'" :class="[index%2===0?'text-love':'text-blue-400']"
-							size="32rpx"></wd-icon>
+						<wd-icon :name="nav.locked ? 'lock' : 'arrow-right'"
+							:style="{ color: nav.titleColor }" size="32rpx"></wd-icon>
 					</view>
 				</view>
 			</block>
 		</view>
 	</view>
 
-	<!-- 模块密码验证弹窗(通用解锁弹窗;恋爱日记入口与模块共用;插件端要求验证码,403 附新码) -->
+	<!-- 模块密码验证弹窗-->
 	<uh-unlock-popup v-model:show="unlockModalVisible" title="请输入访问密码" captcha-enabled
-		:tip="`${pendingModule === 'loveDiary' ? '恋爱日记' : pendingModule === 'ourStory' ? '恋爱故事' : pendingModule === 'lovePhoto' ? '恋爱相册' : '恋爱清单'}已设置访问密码，输入后进入`"
+		:tip="unlockTip"
 		placeholder="请输入密码" confirm-text="进入" :request="handleUnlockRequest" @success="handleUnlockSuccess" />
 </template>
 
@@ -375,6 +324,7 @@
 	}
 
 	@keyframes heartBeat {
+
 		0%,
 		100% {
 			transform: translateY(-1rem) scale(1);
@@ -445,5 +395,15 @@
 		100% {
 			transform: translateY(0);
 		}
+	}
+
+	/* 男孩头像微偏右 */
+	.uh-boy-offset {
+		transform: translateX(0.125rem);
+	}
+
+	/* 女孩头像微偏左 */
+	.uh-girl-offset {
+		transform: translateX(-0.125rem);
 	}
 </style>

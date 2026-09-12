@@ -5,8 +5,10 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
 	import { usePluginAvailable } from '@/hooks/usePluginAvailable'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
+	import { isWechat } from '@/utils/platform'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
@@ -18,6 +20,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -207,17 +210,17 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-6">
-		<uh-navbar :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
+		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="checkPluginAvailable" />
 
 		<template v-else>
-			<wd-sticky v-if="category.list.length!==0" class="w-full">
+			<wd-sticky v-if="category.list.length!==0" class="w-full" :offset-top="isWechat?56:0">
 				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
-						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1 text-sm"
+						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-2xs"
 						:class="{ 'bg-primary text-gray-900 font-bold': index === category.activeIndex }"
 						@click="handleGetDataByCategory(index, cate)">
 						{{ cate.spec.displayName }}
@@ -231,7 +234,7 @@
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				@refresh="handleGetCategory" />
 
-			<view v-else class="box-border w-full p-3">
+			<view v-else class="box-border w-full p-3 pb-0">
 				<view class="grid grid-cols-2 gap-2.5">
 					<view v-for="(item, index) in dataList" :key="index"
 						class="relative uh-global-card-glass h-38 w-full overflow-hidden rounded-xl">

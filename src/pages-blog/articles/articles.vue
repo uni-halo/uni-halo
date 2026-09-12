@@ -4,6 +4,7 @@ import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getCategoryList, getCategoryPostList, getPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import { checkAvatarUrl } from '@/utils/url'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
@@ -17,6 +18,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -200,7 +202,7 @@ onReachBottom(() => {
 
 <template>
   <view class="min-h-screen w-screen flex flex-col bg-page">
-    <uh-navbar default-title="文章列表" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" default-title="文章列表" title-color="text-gray-900" />
 
     <wd-sticky v-if="categoryOptions.length > 1" class="w-full">
       <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pt-2">

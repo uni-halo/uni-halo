@@ -6,7 +6,7 @@
 	}
 	const props = withDefaults(defineProps<IProps>(), {
 		customClass: '',
-		lineClass: '!h-2/5 -rotate-5',
+		lineClass: '!h-2/5 uh-rotate-n5',
 		textClass: 'font-bold'
 	})
 </script>
@@ -19,4 +19,10 @@
  		<text class="absolute z-1 -right-1 -bottom-0.5 transform rounded-xl bg-secondary h-3/5 w-4/5" :class="[props.lineClass]"></text>
  	</text>
  </template>
- 
+
+<style scoped lang="scss">
+/* 下划线轻微旋转 */
+.uh-rotate-n5 {
+  transform: rotate(-5deg);
+}
+</style>

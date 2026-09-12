@@ -3,6 +3,7 @@
 	import { onLoad } from '@dcloudio/uni-app'
 	import { getNoticeDetail } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { checkImageUrl, checkIsUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import { markdownConfig } from '@/config/markdown'
@@ -15,6 +16,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 	const name = ref('')
 	const detail = ref<INoticeDetail | null>(null)
@@ -90,7 +92,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen bg-page pb-safe">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="公告详情" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="公告详情" title-color="text-gray-900" />
 
 		<!-- 加载/错误/空态(状态机) -->
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="75vh"

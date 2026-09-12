@@ -82,7 +82,7 @@
 			<view class="flex items-center justify-between">
 				<view class="flex items-center gap-2">
 					<wd-icon class-prefix="uhemoji2-icon" name="-happy-" size="36rpx" />
-					<text class="text-md font-bold text-gray-900">
+					<text class="text-md font-semibold text-gray-900">
 						最新公告
 					</text>
 					<view v-if="notice.typeDisplayName" class="rounded px-1.5 py-0.5 text-xs" :style="{

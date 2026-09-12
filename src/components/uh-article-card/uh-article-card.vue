@@ -38,11 +38,10 @@
 
 	const isGrid = computed(() => props.variant === 'grid')
 
-	/** 单一事实源:每种布局的完整形态,模板不再有任何 order / 条件分支 */
 	const CARD_LAYOUTS = computed(()=> ({
 		image_top: {
 			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
-			cover: `${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''}`,
+			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''}`,
 			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
@@ -159,17 +158,16 @@
 		</text>
 		<view class="relative overflow-hidden" :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
 			<image class="w-full h-full block" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
-			<!-- <view v-if="isGrid" class="absolute left-0 bottom-0 w-full h-4 bg-gradient-to-b from-white/0 to-white" /> -->
 		</view>
 		
-		<view class="flex flex-col gap-y-2 text-sm" :class="cardLayout.contentWrapper">
-			<view class="truncate font-bold">
+		<view class="flex flex-col gap-y-3 text-sm" :class="cardLayout.contentWrapper">
+			<view class="truncate font-bold text-3xs">
 				{{ article.spec.title }}
 			</view>
-			<view :class="isGrid ? 'content line-clamp-1 text-gray-600' : 'content line-clamp-2 text-gray-600'">
+			<view class="text-xs" :class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
 				{{ article.status?.excerpt }}
 			</view>
-			<view v-if="!isGrid" class="my-1 box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
+			<view v-if="!isGrid" class="box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
 				<template v-if="article.categories && article.categories.length !== 0">
 					<text v-for="cate in article.categories" :key="cate.metadata.name"
 						class="box-border uh-global-card-glass border uh-shadow-xs rounded-xl bg-secondary px-2 py-0.5 text-xs">

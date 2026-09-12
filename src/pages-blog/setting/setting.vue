@@ -3,6 +3,7 @@
 	import { onLoad } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { collectSiteDefaults } from '@/utils/preference'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
 	import type { PrefDef } from '@/hooks/usePreferenceRows'
@@ -14,6 +15,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const settingStore = useSettingStore()
 	const appConfigStore = useAppConfigStore()
 
@@ -116,7 +118,7 @@
 <template>
 	<view class="box-border min-h-screen bg-page">
 		<!-- 自定义标题 -->
-		<uh-navbar default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true" />
+		<uh-navbar :scroll-y="scrollY" default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true" />
 
 		<!-- 内容区域 -->
 		<view class="box-border flex flex-col gap-y-6 p-3">

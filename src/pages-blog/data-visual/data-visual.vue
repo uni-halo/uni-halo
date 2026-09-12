@@ -3,6 +3,7 @@
 	import { onPullDownRefresh } from '@dcloudio/uni-app'
 	import { getChartData } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import type { IDataStatistics } from '@/api/uni-halo'
 	import { sleep } from '@/utils/common'
@@ -16,6 +17,7 @@
 	})
 
 	/** 依赖插件(plugin-data-statistics,参考 gallery 对象传参模式) */
+	const { scrollY } = usePageScroll()
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginDataStatistics,
 		tips: '阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员',
@@ -171,7 +173,7 @@
 <template>
 	<view class="bg-page box-border min-h-screen w-screen p-3">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="数据看板" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" default-title="数据看板" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />

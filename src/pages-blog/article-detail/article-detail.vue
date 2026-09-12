@@ -3,6 +3,7 @@
 	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getPostByName, getPostCommentReplyList, postTrackersCounter } from '@/api/halo'
 	import { useUpvote } from '@/hooks/useUpvote'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 	import { formatTime } from '@/utils/formatTime'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -25,6 +26,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const settingStore = useSettingStore()
@@ -297,8 +299,6 @@
 
 	/* ---------------- 评论 ---------------- */
 	function handleToComment() {
-		console.log('calcIsShowComment.value', calcIsShowComment.value)
-		console.log('result.value', result.value)
 		if (!result.value) {
 			return
 		}
@@ -442,17 +442,17 @@
 	})
 
 	const globalAppSettings = computed(() => settingStore.settings)
-	
-	onMounted(() => {
-		console.log('获取当前所有的页面')
-		console.log(getCurrentPages())
+
+	onPageScroll((e : any) => {
+		console.log('滚动', e)
 	})
 </script>
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
 		<!-- 顶部导航 -->
-		<uh-navbar default-title="内容详情" :need-placeholder="false" :scroll-title="result?.spec?.title" />
+		<uh-navbar :scroll-y="scrollY" default-title="内容详情" :need-placeholder="false"
+			:scroll-title="result?.spec?.title" />
 
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus"
 			@refresh="handleGetData()" />
@@ -465,12 +465,12 @@
 			</view>
 
 			<view
-				class="uh-global-card-glass box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none -translate-y-12"
+				class="uh-global-card-glass box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none uh-content-lift"
 				:style="{
 					  boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
 					}">
 				<!-- 顶部信息 -->
-				<view class="box-border flex flex-col gap-3 p-3 pb-2">
+				<view class="box-border flex flex-col gap-3 p-4 pb-2">
 					<view class="flex items-center gap-x-2">
 						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
 							mode="aspectFill" />
@@ -525,7 +525,7 @@
 				</view>
 
 				<!-- 内容区域 -->
-				<view class="box-border flex flex-col gap-y-3 p-3 text-gray-900 text-sm">
+				<view class="box-border flex flex-col gap-y-3 p-4 pt-2 text-gray-900 text-3xs">
 					<!-- 受限阅读 -->
 					<template v-if="checkPostRestrictRead(result!)">
 						<view v-if="showContentArr.length === 0">
@@ -565,14 +565,14 @@
 					<view v-if="postDetailConfig?.copyrightEnabled" class="box-border px-2 mb-3">
 						<view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
 							<uh-section-title>版权声明</uh-section-title>
-							<view class="mt-3 flex flex-col gap-y-2 text-gray-600">
-								<view v-if="postDetailConfig.copyrightAuthor" class="text-sm leading-5">
+							<view class="mt-3 flex flex-col gap-y-2 text-gray-600 text-2xs">
+								<view v-if="postDetailConfig.copyrightAuthor" class="leading-5">
 									版权归属：{{ postDetailConfig.copyrightAuthor }}
 								</view>
-								<view v-if="postDetailConfig.copyrightDesc" class="text-sm leading-5">
+								<view v-if="postDetailConfig.copyrightDesc" class="leading-5">
 									版权说明：{{ postDetailConfig.copyrightDesc }}
 								</view>
-								<view v-if="postDetailConfig.copyrightViolation" class="text-sm text-red-400 leading-5">
+								<view v-if="postDetailConfig.copyrightViolation" class="text-red-400 leading-5">
 									侵权处理：{{ postDetailConfig.copyrightViolation }}
 								</view>
 							</view>
@@ -581,36 +581,38 @@
 
 					<!-- 评论区域 -->
 					<view class="box-border px-2">
-						<uh-comment-list v-if="calcIsShowComment && result" :disallow-comment="!result.spec.allowComment"
-						 :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
-						 @on-comment-detail="handleOnShowCommentDetail" @on-loaded="handleCommentLoaded" />
+						<uh-comment-list v-if="calcIsShowComment && result"
+							:disallow-comment="!result.spec.allowComment" :post-name="result.metadata.name"
+							:post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"
+							@on-loaded="handleCommentLoaded" />
 					</view>
 				</view>
 			</view>
 
 			<!-- 悬浮操作 -->
-			<view class="fixed bottom-8 left-1/2 z-10 flex items-center justify-center pb-safe -translate-x-1/2">
-				<!-- #7BE200 -->
+			<view class="fixed bottom-4 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
 				<view
 					class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
 					<view
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-						:class="{ active: hasUpvoted() }" @click="handleDoLikesClick">
+						:class="[hasUpvoted()?'text-primary':'text-gray-900']" @click="handleDoLikesClick">
 						<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-						<text class="shrink-0 text-sm text-gray-900 font-semibold">点赞</text>
+						<text class="shrink-0 text-3xs  font-semibold">点赞</text>
 					</view>
 					<view v-if="calcIsShowComment"
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 						@click="handleToComment()">
 						<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-						<text class="shrink-0 text-sm text-gray-900 font-semibold">评论</text>
+						<text class="shrink-0 text-3xs text-gray-900 font-semibold">评论</text>
 					</view>
 					<view
 						class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
 						@click="handleTogglePostFavorite">
 						<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-						<text class="shrink-0 text-sm text-gray-900 font-semibold"
-							:style="hasFavorited() ? { color: '#ffb300' } : ''">{{ hasFavorited() ? '已收藏' : '收藏' }}</text>
+						<text class="shrink-0 text-3xs font-semibold"
+							:class="[hasFavorited()?'text-primary':'text-gray-900']">
+							{{ hasFavorited() ? '已收藏' : '收藏' }}
+						</text>
 					</view>
 				</view>
 			</view>
@@ -639,3 +641,15 @@
 			:title="commentModal.title" :post-name="commentModal.postName" @on-close="handleOnCommentModalClose" />
 	</view>
 </template>
+
+<style scoped lang="scss">
+	/* 内容区域上移 */
+	.uh-content-lift {
+		transform: translateY(-3rem);
+	}
+
+	/* 水平居中定位 */
+	.uh-translate-x-center {
+		transform: translateX(-50%);
+	}
+</style>

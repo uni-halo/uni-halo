@@ -100,15 +100,15 @@
 </script>
 
 <template>
-	<view v-if="customTabbarEnable" class="h-56px pb-safe bg-page">
-		<view class="box-border fixed bottom-3 z-100 w-full px-3">
+	<view v-if="customTabbarEnable" class="h-56px pb-safe bg-page overflow-hidden">
+		<view class="box-border fixed bottom-0 z-100 w-full px-12">
 			<view class="flex box-border w-full items-center justify-between gap-x-2" @touchmove.stop.prevent>
 				<view
-					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 h-50px flex items-center gap-x-1">
+					class="flex-1 box-border uh-global-card-glass bg-white/75 border rounded-full p-1 flex items-center gap-x-1">
 					<view v-for="(item, index) in noRightTabbarList" :key="index" class="text-gray-900 flex-1"
 						:style="{ color: getColorByIndex(index) }" @click="handleClick(index)">
-						<TabbarItem :item="item" :index="index" class="relative"
-							:class="[isActive(index)?'uh-global-card-glass bg-white/0 border':'']" />
+						<TabbarItem :item="item" :index="index"
+							:custom-class="isActive(index)?'relative uh-global-card-glass border':''" />
 					</view>
 				</view>
 				<view v-if="rightButton.item"
@@ -120,4 +120,4 @@
 			<view class="pb-safe" />
 		</view>
 	</view>
-</template> 
+</template>

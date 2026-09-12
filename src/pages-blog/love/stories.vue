@@ -8,6 +8,7 @@
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import type { ILoveStory } from '@/api/types/uni-halo'
 
 	definePage({
@@ -18,6 +19,7 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 
 	/* ---------------- 展示层类型 ---------------- */
@@ -254,7 +256,7 @@
 <template>
 	<view class="app-page box-border min-h-screen w-screen flex flex-col">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="恋爱故事" title-color="text-love" back-class="text-love" />
+		<uh-navbar :scroll-y="scrollY" default-title="恋爱故事" title-color="text-love" back-class="text-love" />
 
 		<!-- 加载/错误/空占位(状态机) -->
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"

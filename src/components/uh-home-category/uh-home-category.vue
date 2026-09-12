@@ -75,8 +75,8 @@
 </script>
 
 <template>
-	<view v-if="isEnableCategoryModule" class="mb-6">
-		<uh-section-title class="mb-4 px-3 box-border">
+	<view v-if="isEnableCategoryModule" class="overflow-hidden box-border mb-6 px-3">
+		<uh-section-title>
 			精选分类
 			<template #right>
 				<view class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
@@ -86,21 +86,21 @@
 			</template>
 		</uh-section-title>
 
-		<view v-if="loading!=='success'" class="box-border px-3">
+		<view v-if="loading!=='success'" class="mt-4 box-border">
 			<view class="uh-global-card-glass shadow-none rounded-xl">
 				<uh-data-loading :loading-status="loading" min-height="28vh" size="small" :use-refresh-button="true"
 					@refresh="handleGetCategoryList()" />
 			</view>
 		</view>
 
-		<view v-else class="w-full grid grid-cols-2 grid-rows-auto h-42 box-border px-3 gap-2">
+		<view v-else class="mt-4 w-full grid grid-cols-2 grid-rows-auto h-42 box-border gap-2">
 			<view v-for="(category,index) in categoryList" :key="category.metadata.name"
 				class="uh-global-card-glass relative w-full h-full overflow-hidden rounded-xl text-center text-white"
 				:class="{'grid-row-span-2':index===0 }" @click="handleToCategoryBy(category)">
 				<image :src="category.spec.cover" class="w-full h-full" mode="aspectFill" lazy-load />
-				<view class="absolute bottom-0 left-0 h-[140rpx] w-full bg-gradient-to-b from-black/0 to-black/30" />
+				<view class="absolute bottom-0 left-0 h-16 w-full bg-gradient-to-b from-black/0 to-black/30" />
 				<view class="absolute left-2 bottom-2 flex z-2 flex-col text-left">
-					<text class="text-sm font-bold">
+					<text class="text-2xs font-semibold">
 						{{ category.spec.displayName }}
 					</text>
 					<text class="mt-1 text-xs text-gray-200">共 {{ category.postCount ?? 0 }} 篇</text>

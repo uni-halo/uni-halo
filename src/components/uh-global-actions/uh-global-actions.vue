@@ -1,5 +1,9 @@
 <script setup lang="ts">
-	 
+	 defineOptions({
+	 	options: {
+	 		styleIsolation: 'apply-shared'
+	 	}
+	 })
 </script>
 
 <template>

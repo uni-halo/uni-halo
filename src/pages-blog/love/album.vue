@@ -9,6 +9,7 @@ import { getCache, setCache } from '@/utils/storage'
 import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
 
 definePage({
@@ -19,6 +20,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const loveConfig = computed(() => appConfigStore.configs.loveConfig)
 
@@ -240,7 +242,7 @@ onReachBottom(() => {
 <template>
   <view class="app-page box-border min-h-screen w-screen flex flex-col pb-safe">
     <!-- 自定义导航 -->
-    <uh-navbar default-title="恋爱相册" title-color="text-love" back-class="text-love" />
+    <uh-navbar :scroll-y="scrollY" default-title="恋爱相册" title-color="text-love" back-class="text-love" />
 
     <!-- 加载/错误/空占位(状态机) -->
     <uh-data-loading

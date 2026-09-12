@@ -13,6 +13,7 @@ import { copyToClipboard } from '@/utils/restrictRead'
 import { sleep } from '@/utils/common'
 import { markdownConfig } from '@/config/markdown'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import type { IBannerPublicDetail } from '@/api/types/uni-halo'
 
 definePage({
@@ -22,6 +23,7 @@ definePage({
 	},
 })
 
+const { scrollY } = usePageScroll()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const name = ref('')
 const detail = ref<IBannerPublicDetail | null>(null)
@@ -106,7 +108,7 @@ function handleOpenLink() {
 <template>
 	<view class="box-border min-h-screen w-screen bg-page pb-safe">
 		<!-- 自定义导航 -->
-		<uh-navbar default-title="轮播详情" title-color="text-gray-900" :scroll-title="detail?.title" />
+		<uh-navbar :scroll-y="scrollY" default-title="轮播详情" title-color="text-gray-900" :scroll-title="detail?.title" />
 
 		<!-- 加载/错误/空态(状态机) -->
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="75vh"

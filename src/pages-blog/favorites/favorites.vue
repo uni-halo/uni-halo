@@ -3,6 +3,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
 
 definePage({
@@ -12,6 +13,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const favoritesStore = useFavoritesStore()
 
 /* ---------------- Tab(文章/瞬间) ---------------- */
@@ -70,7 +72,7 @@ const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-10">
 	  <!-- 自定义导航 -->
-	<uh-navbar default-title="我的收藏" title-color="text-gray-900"></uh-navbar>
+	<uh-navbar :scroll-y="scrollY" default-title="我的收藏" title-color="text-gray-900"></uh-navbar>
 	  
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
     <wd-sticky>

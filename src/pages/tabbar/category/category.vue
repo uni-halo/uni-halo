@@ -5,6 +5,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkThumbnailUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
+	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { ICategory } from '@/api/types/halo'
@@ -18,7 +19,10 @@
 		},
 	})
 
+	const { scrollY } = usePageScroll()
+	
 	const appConfigStore = useAppConfigStore()
+	
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -158,7 +162,7 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :use-back="false" default-title="分类" title-color="text-gray-900"></uh-navbar>
+		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="分类" title-color="text-gray-900"></uh-navbar>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
 
@@ -171,7 +175,7 @@
 					<view
 						class="absolute bottom-0 left-0 h-[140rpx] w-full from-black/0 to-black/30 bg-gradient-to-b" />
 					<view class="absolute bottom-0 left-0 box-border w-full flex flex-col gap-1 p-2.5">
-						<text class="truncate text-sm text-white font-bold">
+						<text class="truncate text-2xs text-white font-bold">
 							{{ item.spec.displayName }}
 						</text>
 						<text class="text-xs text-white opacity-80">

@@ -112,8 +112,7 @@ export interface IPageConfig {
   categoryConfig?: { type?: string }
   momentConfig?: { useTagRandomColor?: boolean }
   galleryConfig?: { pageTitle?: string }
-  /** 恋爱日记页（插件端「通用配置 → 页面设置 → 恋爱日记」配置；
-   * 2026-09-11 起恋爱页背景图由 loveConfig.pageImages 迁入此处） */
+  /** 恋爱日记页（插件端「通用配置 → 页面设置 → 恋爱日记」配置） */
   loveDiaryConfig?: {
     pageTitle?: string
     /** 恋爱页背景图（留空客户端内置回退） */
@@ -188,10 +187,11 @@ export interface IAppConfig {
     }
   }
   /**
-   * 恋爱配置（入口显隐由模块入口开关
-   * （ourStory/lovePhoto/loveDaily.enabled）与 navList 统一管理，客户端按模块开关判定）
+   * 恋爱配置（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据：
+   * title/subTitle/颜色（hex8）/iconBgColor/path/priority，按 priority 降序下发；
+   * app 端按模块 key 直接渲染入口列表，locked=passwordEnabled 且本地无有效 token）
    */
-  loveConfig?: Record<string, unknown>
+  loveConfig?: ILoveConfigGroup
   imagesConfig?: IImagesConfig
   /**
    * 博主与社交（blogger 含
@@ -482,13 +482,57 @@ export interface INoticeDetail {
 
 /* ---------- 恋爱模块(plugin-uni-halo love) ---------- */
 
-export interface ILoveConfig {
-  /** 纪念日 */
-  anniversary?: string
-  /** 恋人信息 */
-  lovers?: {
-    name?: string
-    avatar?: string
+/** 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段） */
+export interface ILoveModuleConfig {
+  /** 是否在恋爱页展示该模块入口（loveDiary 不使用：入口显隐由快捷导航/功能入口注册表控制） */
+  enabled?: boolean
+  /** 入口名称（app 端入口列表标题） */
+  title?: string
+  /** 入口副标题（app 端入口列表副标题） */
+  subTitle?: string
+  /** 标题颜色（hex8 #rrggbbaa） */
+  titleColor?: string
+  /** 副标题颜色（hex8 #rrggbbaa） */
+  subTitleColor?: string
+  /** 图标背景色（hex8 #rrggbbaa） */
+  iconBgColor?: string
+  /** 图标字体前缀（如 uhlove-icon，app 端渲染入口图标） */
+  iconPrefix?: string
+  /** 图标名（app 端渲染入口图标） */
+  icon?: string
+  /** app 端跳转路径 */
+  path?: string
+  /** 排序字段（越大越靠前，插件端按 priority 降序输出） */
+  priority?: number
+  /** 是否已设置密码（app 端据此显示锁定态：passwordEnabled && 本地无有效 token） */
+  passwordEnabled?: boolean
+  [key: string]: unknown
+}
+
+/** getConfigs loveConfig 组（恋爱日记仅密码状态；三模块入口即 app 端入口列表数据） */
+export interface ILoveConfigGroup {
+  /** 恋爱日记入口（恋爱页本身，仅密码状态，无 enabled 开关） */
+  loveDiary?: Pick<ILoveModuleConfig, 'passwordEnabled'>
+  /** 恋爱故事模块入口 */
+  ourStory?: ILoveModuleConfig
+  /** 恋爱相册模块入口 */
+  lovePhoto?: ILoveModuleConfig
+  /** 恋爱清单模块入口 */
+  loveDaily?: ILoveModuleConfig
+  /** 恋爱信息（纪念日 + 恋人信息；经 getConfigs loveConfig.loveInfo 下发） */
+  loveInfo?: {
+    /** 纪念日标题（默认「这是我们一起走过的」） */
+    loveDateTitle?: string
+    /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
+    loveDate?: string
+    /** 男生昵称 */
+    boyNickname?: string
+    /** 男生头像 */
+    boyAvatar?: string
+    /** 女生昵称 */
+    girlNickname?: string
+    /** 女生头像 */
+    girlAvatar?: string
     [key: string]: unknown
   }
   [key: string]: unknown

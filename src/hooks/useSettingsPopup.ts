@@ -9,7 +9,6 @@ export function useSettingsPopup() {
 
 	function closeSettingsPopup() {
 		settingsPopupVisible.value = false;
-		console.log('Settings popup closed', settingsPopupVisible.value);
 	}
 
 	return { settingsPopupVisible, openSettingsPopup, closeSettingsPopup };

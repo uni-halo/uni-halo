@@ -266,17 +266,17 @@
 </script>
 
 <template>
-	<view class="relative min-h-screen flex flex-col justify-center bg-[#f5fae8]">
+	<view class="relative min-h-screen w-screen flex flex-col justify-center bg-[#f5fae8] overflow-hidden">
 		<!-- 背景 -->
 		<view
-			class="absolute lef-0 top-0  w-full h-[46vh] from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b" />
+			class="fixed lef-0 top-0 z-0 w-full h-[46vh] from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b" />
 
 		<!-- 刷新 -->
 		<uh-data-loading v-if="viewState === 'loading'" />
 
-		<!-- 拉取失败(手动进入,通常为服务器停机中) -->
+		<!-- 拉取失败 -->
 		<view v-else-if="viewState === 'error'"
-			class="relative z-10 flex flex-col items-center justify-center px-10 py-48 text-center">
+			class="w-full relative z-10 flex flex-col items-center justify-center px-10 py-48 text-center">
 			<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="140rpx" />
 			<text class="mt-6 text-md text-gray-900 font-bold">
 				服务暂时无法访问
@@ -290,38 +290,37 @@
 			</view>
 		</view>
 		<!-- 维护页-->
-		<view v-else class="relative z-10 w-full min-h-screen flex items-center justify-center flex-col ">
-			<view
-				class="w-full relative overflow-hidden px-[40rpx] pb-[64rpx] pt-[calc(var(--status-bar-height)+76rpx)] text-center">
+		<view v-else class="w-full relative z-10 w-full min-h-screen flex items-center justify-center flex-col">
+			<view class="w-full relative px-[40rpx] pb-[64rpx] pt-[calc(var(--status-bar-height)+76rpx)] text-center">
 				<view
-					class="breathe pointer-events-none absolute left-[-60rpx] top-[104rpx] z-0 h-[260rpx] w-[260rpx] rounded-full bg-white/40 blur-[52rpx]" />
+					class="breathe pointer-events-none absolute left-[-60rpx] top-[104rpx] z-0 h-[260rpx] w-[260rpx] rounded-full bg-white/40 uh-blur-52" />
 				<view
-					class="pointer-events-none absolute right-[-48rpx] top-[40rpx] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[rgba(184,236,63,0.28)] blur-[52rpx]" />
+					class="pointer-events-none absolute right-[-48rpx] top-[40rpx] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[rgba(184,236,63,0.28)] uh-blur-52" />
 				<view
-					class="pointer-events-none absolute bottom-[-40rpx] right-[72rpx] z-0 h-[160rpx] w-[160rpx] rounded-full bg-white/40 blur-[52rpx]" />
+					class="pointer-events-none absolute bottom-[-40rpx] right-[72rpx] z-0 h-[160rpx] w-[160rpx] rounded-full bg-white/40 uh-blur-52" />
 
 				<view class="relative z-2 mx-auto mt-[44rpx] h-[236rpx] w-[236rpx]">
 					<view
-						class="bob flex items-center justify-center absolute inset-0 rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br shadow-[0_0_0_12rpx_#fff,0_28rpx_60rpx_rgba(98,124,44,0.22)]">
+						class="bob flex items-center justify-center absolute inset-0 rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass border-4 border-white">
 						<image v-if="appLogo" class="h-full w-full rounded-full" :src="appLogo" mode="aspectFill" />
 						<wd-icon v-else class-prefix="uhemoji-icon" name="-thinking" size="140rpx"
 							class="text-gray-900" />
 					</view>
 					<view
 						class="gear-spin absolute right-[-28rpx] top-[-16rpx] h-[68rpx] w-[68rpx] flex items-center justify-center">
-						<wd-icon name="settings" size="24px" />
+						<wd-icon name="settings" size="45rpx" />
 					</view>
 					<view
 						class="gear-spin-reverse absolute bottom-[16rpx] left-[-32rpx] h-[48rpx] w-[48rpx] flex items-center justify-center">
-						<wd-icon name="settings" size="16px" />
+						<wd-icon name="settings" size="32rpx" />
 					</view>
 					<view
-						class="absolute bottom-[-28rpx] left-1/2 inline-flex items-center whitespace-nowrap border-2 border-solid border-[#ebfabf] rounded-full bg-[#ebfabf] px-[24rpx] py-[12rpx] text-[22rpx] font-extrabold leading-none shadow-[0_10rpx_28rpx_rgba(90,110,45,0.18)] -translate-x-1/2 -rotate-5">
+						class="absolute bottom-[-28rpx] left-1/2 inline-flex items-center whitespace-nowrap border-2 border-solid border-[#ebfabf] rounded-full bg-[#ebfabf] px-[24rpx] py-[12rpx] text-[22rpx] font-extrabold leading-none uh-shadow-sm uh-badge">
 						MAINTENANCE
 					</view>
 				</view>
 
-				<view class="relative z-2 mt-8 text-6 font-black leading-8">
+				<view class="relative z-2 mt-8 text-5 font-black leading-8">
 					<uh-text-underline>{{ title }}</uh-text-underline>
 				</view>
 				<view class="relative z-2 mt-6 px-[16rpx] text-[25rpx] text-balck/50 font-medium leading-[1.7]">
@@ -340,14 +339,14 @@
 			<!-- ===== 内容区 ===== -->
 			<view class="relative z-10 w-full">
 				<view
-					class="pointer-events-none absolute left-[64rpx] top-[-52rpx] z-0 h-[192rpx] w-[192rpx] rounded-full bg-[#ebfabf] opacity-90 blur-[44rpx]" />
+					class="pointer-events-none absolute left-[64rpx] top-[-52rpx] z-0 h-[192rpx] w-[192rpx] rounded-full bg-[#ebfabf] opacity-90 uh-blur-44" />
 				<view
-					class="pointer-events-none absolute right-[-52rpx] top-[300rpx] z-0 h-[168rpx] w-[168rpx] rounded-full bg-[#ffd53d] opacity-20 blur-[44rpx]" />
+					class="pointer-events-none absolute right-[-52rpx] top-[300rpx] z-0 h-[168rpx] w-[168rpx] rounded-full bg-[#ffd53d] opacity-20 uh-blur-44" />
 				<view
 					class="relative box-border w-full z-1 flex flex-col items-center gap-[28rpx] px-6 pb-[68rpx] pt-[32rpx]">
 					<!-- 恢复倒计时 -->
 					<view v-if="countdownParts"
-						class="relative w-full uh-global-card-glass overflow-hidden border rounded-2xl  p-[32rpx] text-center shadow-[0_4rpx_24rpx_rgba(98,124,44,0.08)]">
+						class="relative w-full uh-global-card-glass border rounded-2xl overflow-hidden p-[32rpx] text-center shadow-[0_4rpx_24rpx_rgba(98,124,44,0.08)]">
 						<view
 							class="absolute bottom-[-48rpx] right-[-12rpx] text-[176rpx] text-[#a7e93b] font-black leading-none opacity-10">
 							GO!
@@ -393,10 +392,11 @@
 
 					<!-- 操作 -->
 					<view class="mt-2 w-full flex flex-col gap-4">
-						<uh-button custom-class="uh-global-card-glass border flex-1 py-3 !rounded-full font-semibold"
+						<uh-button
+							custom-class="uh-global-card-glass w-full border flex-1 py-3 !rounded-full font-semibold"
 							@click="handleRefresh">{{ spinning?'请稍等...':'刷新试试'}}</uh-button>
 						<view v-if="detailHtml"
-							class="uh-global-card-glass py-2 flex flex-1 items-center justify-center rounded-full bg-white text-sm text-primary font-extrabold uh-shadow-xs"
+							class="uh-global-card-glass w-full py-2 flex flex-1 items-center justify-center rounded-full bg-white text-sm text-primary font-extrabold uh-shadow-xs"
 							@click="showDetail = true">
 							维护详情
 						</view>
@@ -414,7 +414,7 @@
 			</view>
 
 			<view v-if="toast"
-				class="uh-global-card-glass border fixed bottom-[calc(72rpx+env(safe-area-inset-bottom))] left-1/2 z-60 whitespace-nowrap rounded-full px-6 py-2 text-xs font-bold -translate-x-1/2">
+				class="uh-global-card-glass border fixed bottom-[calc(72rpx+env(safe-area-inset-bottom))] left-1/2 z-60 whitespace-nowrap rounded-full px-6 py-2 text-xs font-bold uh-translate-x-center">
 				{{ toast }}
 			</view>
 
@@ -424,6 +424,14 @@
 </template>
 
 <style scoped lang="scss">
+	.uh-blur-44 {
+		filter: blur(44rpx);
+	}
+
+	.uh-blur-52 {
+		filter: blur(52rpx);
+	}
+
 	/* 光斑呼吸 */
 	.breathe {
 		animation: breathe 5s ease-in-out infinite;
@@ -491,5 +499,15 @@
 
 	.press:active {
 		transform: scale(0.94);
+	}
+
+	/* MAINTENANCE 徽章：居中 + 轻微旋转 */
+	.uh-badge {
+		transform: translateX(-50%) rotate(-5deg);
+	}
+
+	/* 水平居中定位 */
+	.uh-translate-x-center {
+		transform: translateX(-50%);
 	}
 </style>

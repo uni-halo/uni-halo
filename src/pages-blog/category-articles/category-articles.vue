@@ -4,6 +4,7 @@ import { onLoad, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTim
 import { getCategoryPostList } from '@/api/halo'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import type { IPost, IPostListReq } from '@/api/types/halo'
 
 definePage({
@@ -14,6 +15,7 @@ definePage({
   },
 })
 
+const { scrollY } = usePageScroll()
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
@@ -137,7 +139,7 @@ onShareTimeline(() => ({
 <template>
   <view class="app-page min-h-screen w-screen flex flex-col" style="background-color: #fafafd;">
     <!-- 自定义导航 -->
-    <uh-navbar :default-title="navbarTitle" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :default-title="navbarTitle" title-color="text-gray-900" />
 
     <!-- 排序切换:默认 / 按置顶 / 按最新 / 按最旧 -->
     <view class="box-border flex items-center gap-2 px-3 py-2">
