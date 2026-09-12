@@ -176,8 +176,7 @@
 	}
 
 	async function handleHandle() {
-		if (!validateForm())
-			return
+		if (!validateForm()) { return }
 
 		uni.showLoading({ title: '正在提交...' })
 
@@ -269,54 +268,55 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-2xl"
-		:z-index="100" @close="handleOnChange(false)">
+	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-2xl" :z-index="100"
+		@close="handleOnChange(false)">
 		<view class="box-border p-4">
 			<view
-				class="relative w-full flex items-center justify-around box-border px-12  text-md font-bold text-center">
-				{{ calcTitle }}
-				<view class="absolute right-0 top-1 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg"
+				class="relative w-full flex items-center justify-around box-border px-12 text-md font-bold text-center">
+				<text>{{ calcTitle }} </text>
+				<view
+					class="absolute right-0 top-0 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg flex items-center justify-center"
 					@click="handleClose">
-					<wd-icon name="close" size="32rpx" class="text-gray-500"></wd-icon>
+					<wd-icon name="close" size="28rpx" class="text-gray-500"></wd-icon>
 				</view>
 			</view>
 
 			<scroll-view :scroll-y="true" class="form mt-6">
 				<view class="form-item mb-4 flex items-center">
 					<textarea v-model="form.content"
-						class="h-22 uh-global-card-glass shadow-none border box-border w-full rounded-xl  p-5 text-sm"
+						class="h-22 uh-global-card-glass shadow-none border box-border w-full rounded-xl px-3 py-2 text-xs"
 						:placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200" />
 				</view>
 
 				<view class="form-item mb-4 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的昵称</text>
+					<text class="label w-16 shrink-0 text-xs text-gray-500">我的昵称</text>
 					<input v-model="form.author"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
 						placeholder="请输入您的昵称...">
 				</view>
 
 				<view class="form-item mb-4 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的邮箱</text>
+					<text class="label w-16 shrink-0 text-sm text-gray-500">我的邮箱</text>
 					<input v-model="form.email"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
 						placeholder="请输入您的邮箱...">
 				</view>
 
 				<view class="form-item mb-4 flex items-center">
-					<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">我的网站</text>
+					<text class="label w-16 shrink-0 text-sm text-gray-500">我的网站</text>
 					<input v-model="form.authorUrl"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
-						placeholder="请输入您的网址...">
+						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
+						placeholder="[ 可选 ] 请输入您的网址...">
 				</view>
 
 				<!-- 匿名评论验证码 -->
 				<view v-if="config?.security?.captcha?.anonymousCommentCaptcha"
 					class="form-item mb-4 flex items-center">
-					<text class="w-[140rpx] shrink-0 text-sm text-[#666]">验证码</text>
-					<view class="flex flex-1 items-center gap-4">
+					<text class="w-16 shrink-0 text-sm text-gray-500">验证码</text>
+					<view class="flex flex-1 items-center gap-3">
 						<input v-model="form.captchaCode"
-							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-5 text-sm"
-							placeholder="请输入验证码结果">
+							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
+							placeholder="请输入验证码">
 						<view class="h-10 w-29 flex shrink-0 items-center justify-center">
 							<uh-button v-if="captchaData.status === 'loading'"
 								class="w-full uh-global-card-glass shadow-none border py-2.5 !rounded-xl text-xs text-gray-900">获取中...</uh-button>
@@ -330,7 +330,8 @@
 				</view>
 
 				<view class="submit-btn my-6">
-					<uh-button custom-class="py-2 !rounded-xl uh-global-card-glass border" @click="handleHandle">
+					<uh-button custom-class="py-2.5 !rounded-xl text-xs uh-global-card-glass border"
+						@click="handleHandle">
 						提交
 					</uh-button>
 				</view>

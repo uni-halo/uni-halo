@@ -101,8 +101,8 @@
 
 <template>
 	<view v-if="bannerList.length > 0" class="relative w-full mb-6 box-border ">
-		<view class="box-border relative w-full h-52 overflow-hidden">
-			<swiper class="w-full h-52" :circular="true" :indicator-dots="false" :autoplay="true" :interval="3000"
+		<view class="box-border relative w-full h-56 overflow-hidden">
+			<swiper class="w-full h-56" :circular="true" :indicator-dots="false" :autoplay="true" :interval="3000"
 				:duration="1000" @change="handleBannerChange">
 				<swiper-item v-for="(item, index) in bannerList" :key="index" class="relative">
 					<image :src="item.image || item.src" class="h-full w-full" mode="aspectFill"
@@ -111,9 +111,11 @@
 			</swiper>
 			<view v-if="currentBanner"
 				class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5 backdrop-blur-[2rpx]">
-				<text class="text-2xs text-gray-900 font-bold bg-secondary px-3 py-1 rounded-xl">
-					{{ currentBanner.title }}
-				</text>
+				<view class="box-border mt-3 flex items-center justify-center bg-secondary px-3 py-1 rounded-xl">
+					<text class="text-2xs text-gray-900 font-semibold">
+						{{ currentBanner.title }}
+					</text>
+				</view>
 				<text
 					class="text-xs text-white text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]">{{ currentBanner.date }}</text>
 			</view>
@@ -122,10 +124,10 @@
 		<view class="absolute bottom-0 left-0 right-0 h-12 w-full bg-gradient-to-b from-white/0 to-page" />
 		<view class="absolute left-0 right-0 z-10 flex items-center justify-center uh-translate-y-n6">
 			<view
-				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2.5 text-2xs text-gray-600 flex items-center justify-center gap-x-2"
+				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2.5 text-gray-600 flex items-center justify-center gap-x-2"
 				@click="handleToSearch()">
 				<wd-icon name="search-line" size="32rpx"></wd-icon>
-				<text>哈喽，想看些什么 <text class="bg-secondary rounded-xl px-1">{ 内容 }</text> 呢~</text>
+				<text class="text-2xs">哈喽，想看些什么 <text class="bg-secondary rounded-xl px-1">{ 内容 }</text> 呢~</text>
 			</view>
 		</view>
 	</view>

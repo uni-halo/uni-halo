@@ -81,7 +81,7 @@
 			<template #right>
 				<view class="uh-global-card-glass uh-shadow-xs border flex items-center justify-center rounded-md p-1 text-gray-400"
 					@click="handleToCategoryPage">
-					<wd-icon name="arrow-right" size="28rpx" />
+					<wd-icon name="arrow-right" size="14px" />
 				</view>
 			</template>
 		</uh-section-title>

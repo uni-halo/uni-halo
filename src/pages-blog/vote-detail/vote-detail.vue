@@ -275,7 +275,7 @@ onShareTimeline(() => ({
       <!-- 投票信息 -->
       <view class="uh-global-card-glass box-border flex flex-col gap-y-3 rounded-2xl p-3">
         <uh-section-title> 投票信息 </uh-section-title>
-        <view class="flex flex-col gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-900">
+        <view class="flex flex-col gap-2 rounded-xl bg-gray-100 px-4 py-3 text-xs text-gray-900">
           <view class="info-row">
             <text>投票类型：</text>
             <text class="tag">{{ vote.spec?._uh_type }}</text>
@@ -328,7 +328,7 @@ onShareTimeline(() => ({
             </text>
           </view>
           <view class="options flex flex-col gap-3 w-full">
-            <!-- PK 对抗条(样式需顶层定义,勿嵌套在 .vote-card 下) -->
+            <!-- PK 对抗条 -->
             <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border w-full flex">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
@@ -336,7 +336,7 @@ onShareTimeline(() => ({
                 :style="{ width: `${option._uh_percent}%` }"
               >
                 <view
-                  class="option-item box-border w-full rounded-xl px-3 py-3"
+                  class="option-item box-border w-full rounded-xl px-3 py-2"
                   :class="optionIndex === 0 ? 'option-item-left' : 'option-item-right'"
                 >
                   {{ option._uh_percent }}%
@@ -390,34 +390,34 @@ onShareTimeline(() => ({
         <view
           class="uh-global-card-glass mb-2 w-full flex items-center justify-center gap-x-2 border rounded-xl"
         >
-          <uh-button v-if="isVoted" custom-class="flex-1 py-2 !rounded-xl">
+          <uh-button v-if="isVoted" class="flex-1" custom-class="flex-1 py-2 !rounded-xl">
             您已参与投票
           </uh-button>
           <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '未开始'" custom-class="flex-1 py-2 !rounded-xl"
+            v-else-if="vote.spec?._uh_state?.state === '未开始'" class="flex-1" custom-class="flex-1 py-2 !rounded-xl"
             @click="handleSubmitTip('投票未开始')"
           >
             投票未开始
           </uh-button>
           <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '已结束'" custom-class="flex-1 py-2 !rounded-xl"
+            v-else-if="vote.spec?._uh_state?.state === '已结束'" class="flex-1" custom-class="flex-1 py-2 !rounded-xl"
             @click="handleSubmitTip('投票已结束')"
           >
             投票已结束
           </uh-button>
           <uh-button
-            v-else-if="!vote.spec?.canAnonymously" custom-class="flex-1 py-2 !rounded-xl"
+            v-else-if="!vote.spec?.canAnonymously" class="flex-1" custom-class="flex-1 py-2 !rounded-xl"
             @click="handleSubmit()"
           >
             不支持匿名投票
           </uh-button>
           <uh-button
-            v-else-if="submitForm.voteData.length === 0" custom-class="flex-1 py-2 !rounded-xl"
+            v-else-if="submitForm.voteData.length === 0" class="flex-1" custom-class="flex-1 py-2 !rounded-xl"
             @click="handleSubmitTip('请选择选项')"
           >
             提交投票（请选择选项）
           </uh-button>
-          <uh-button v-else custom-class="flex-1 py-2 !rounded-xl" @click="handleSubmit()">
+          <uh-button v-else class="flex-1" custom-class="flex-1 py-2 !rounded-xl" @click="handleSubmit()">
             提交投票
           </uh-button>
         </view>

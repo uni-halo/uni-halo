@@ -66,7 +66,7 @@
 			photos.value = []
 			handleLoadPhotos()
 		}
-	})
+	}, { immediate: true })
 
 	function handleClose() {
 		isShow.value = false
@@ -91,7 +91,6 @@
 	<uh-glass-popup v-model="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
 		safe-area-inset-bottom @close="handleClose">
 		<view class="box-border h-full w-full flex flex-col gap-y-3 p-4">
-			<!-- 头部 -->
 			<view class="w-full flex shrink-0 items-center justify-between">
 				<view class="flex items-center gap-x-1 font-bold">
 					{{ albumName }}
@@ -99,12 +98,12 @@
 				<view
 					class="uh-global-card-glass uh-shadow-xs h-6 w-6 flex items-center justify-center border rounded-lg"
 					@click="handleClose">
-					<wd-icon name="close" size="32rpx" />
+					<wd-icon name="close" size="28rpx" />
 				</view>
 			</view>
 
 			<!-- 照片列表 -->
-			<scroll-view class="box-border max-h-[50vh] flex-1" scroll-y :show-scrollbar="false">
+			<scroll-view class="w-full box-border max-h-[50vh] flex-1" scroll-y :show-scrollbar="false">
 				<!-- 加载/错误/空占位(状态机) -->
 				<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :use-refresh-button="false"
 					:loading-status="loadingStatus" error-text="照片加载失败，请点击刷新重试" empty-text="这个相册暂时还没有照片~"
@@ -122,8 +121,7 @@
 							<view v-if="photo.description" class="mb-1 text-xs text-white leading-5">
 								{{ photo.description }}
 							</view>
-							<view v-if="photo.takenDate || photo.location"
-								class="flex flex-col gap-y-1">
+							<view v-if="photo.takenDate || photo.location" class="flex flex-col gap-y-1">
 								<text v-if="photo.takenDate" class="text-xs text-white">
 									<wd-icon name="time-line"></wd-icon> {{ photo.takenDate }}
 								</text>
@@ -139,11 +137,11 @@
 
 			<!-- 底部关闭 -->
 			<view class="w-full shrink-0 flex items-center justify-center gap-x-2">
-				<uh-button custom-class="py-2 flex-1 uh-global-card-glass border rounded-xl bg-white/90"
+				<uh-button class="flex-1" custom-class="py-2 flex-1 uh-global-card-glass text-xs border rounded-xl bg-white/90"
 					@click="handleClose">
 					关闭
 				</uh-button>
-				<uh-button custom-class="flex-1 py-2 uh-global-card-glass rounded-xl !bg-love/90 text-white border"
+				<uh-button class="flex-1" custom-class="flex-1 py-2 uh-global-card-glass text-xs rounded-xl !bg-love/90 text-white border"
 					@click="handleLoadPhotos">
 					刷新
 				</uh-button>
