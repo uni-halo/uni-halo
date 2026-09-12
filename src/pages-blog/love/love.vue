@@ -77,6 +77,8 @@
 		if (loveConfigs) {
 			loveConfig.value = {
 				...loveConfig.value,
+				// 恋爱信息（纪念日 + 恋人信息）需透传，否则模板 loveInfo 恒为空
+				loveInfo: loveConfigs.loveInfo || loveConfig.value.loveInfo,
 				loveDiary: loveConfigs.loveDiary || loveConfig.value.loveDiary,
 				ourStory: loveConfigs.ourStory || loveConfig.value.ourStory,
 				lovePhoto: loveConfigs.lovePhoto || loveConfig.value.lovePhoto,
