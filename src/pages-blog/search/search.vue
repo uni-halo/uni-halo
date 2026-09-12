@@ -220,10 +220,10 @@
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
-			<!-- 顶部搜索框-->
+			<!-- 顶部搜索框(玻璃胶囊,与 gallery 吸顶胶囊同视觉) -->
 			<wd-sticky :offset-top="offsetTop">
 				<view class="w-screen box-border px-3 py-2">
-					<view class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full pl-1 pr-3">
+					<view class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full border pl-3 pr-3">
 						<wd-icon name="search" size="16px" />
 						<input v-model="queryParams.keyword" class="flex-1 text-sm text-gray-900"
 							placeholder="哈喽，想看些什么呢~" placeholder-class="text-gray-400" confirm-type="search"

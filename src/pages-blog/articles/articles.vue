@@ -214,17 +214,17 @@
 			<view class="w-screen overflow-hidden">
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pb-1.5">
 					<view v-for="cate in categoryOptions" :key="cate.value"
-						class="uh-global-card-glass uh-shadow-xs ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+						class="uh-global-card-glass shadow-none ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
 						:class="{ 'bg-primary text-gray-900 font-semibold': filterValues.category === cate.value }"
 						@click="handleSelectFilter('category', cate.value)">
 						{{ cate.label }}
 					</view>
 				</scroll-view>
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-					<view class="box-border flex gap-2 px-3 py-1.5">
+					<view class="box-border flex gap-2 px-3 pb-1.5">
 						<view v-for="opt in sortOptions" :key="opt.value"
-							class="uh-global-card-glass uh-shadow-xs inline-flex border rounded-full px-3 py-1 text-xs"
-							:class="{ 'bg-secondary text-gray-900': filterValues.sort === opt.value }"
+							class="uh-global-card-glass shadow-none inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+							:class="{ 'bg-primary text-gray-900 font-semibold': filterValues.sort === opt.value, 'text-gray-500': filterValues.sort !== opt.value }"
 							@click="handleSelectFilter('sort', opt.value)">
 							{{ opt.label }}
 						</view>

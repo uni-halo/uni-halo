@@ -191,29 +191,33 @@
 		<uh-navbar :scroll-y="scrollY" default-title="公告中心" title-color="text-gray-900" />
 
 		<wd-sticky :offset-top="offsetTop">
-			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-				<view class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
-					:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'" @click="activeType = ''">
-					全部
-				</view>
-				<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
-					class="mb-2 ml-3 box-border uh-global-card-glass uh-shadow-xs inline-flex items-center gap-1 border rounded-2xl px-4 py-2 text-xs"
-					:class="activeType === type.typeName ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
-					@click="activeType = activeType === type.typeName ? '' : type.typeName">
-					<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
-						:style="{ backgroundColor: type.typeColor }" />
-					<view class="shrink-0">{{ type.typeDisplayName }}</view>
-				</view>
-			</scroll-view>
-		</wd-sticky>
-
-		<view class="flex items-center gap-2 px-3 py-2">
-			<view v-for="opt in SORT_OPTIONS" :key="opt.id"
-				class="uh-global-card-glass uh-shadow-xs inline-block border rounded-2xl px-4 py-1 text-xs"
-				:class="sortKey === opt.id ? 'bg-primary font-bold' : 'text-gray-500'" @click="sortKey = opt.id">
-				{{ opt.label }}
+			<view class="w-screen overflow-hidden">
+				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+					<view class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+						:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'" @click="activeType = ''">
+						全部
+					</view>
+					<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
+						class="mb-2 ml-3 box-border uh-global-card-glass shadow-none inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
+						:class="activeType === type.typeName ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+						@click="activeType = activeType === type.typeName ? '' : type.typeName">
+						<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
+							:style="{ backgroundColor: type.typeColor }" />
+						<view class="shrink-0">{{ type.typeDisplayName }}</view>
+					</view>
+				</scroll-view>
+				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+					<view class="box-border flex gap-2 px-3 pb-1.5">
+						<view v-for="opt in SORT_OPTIONS" :key="opt.id"
+							class="uh-global-card-glass shadow-none inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+							:class="{ 'bg-primary text-gray-900 font-semibold': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
+							@click="sortKey = opt.id">
+							{{ opt.label }}
+						</view>
+					</view>
+				</scroll-view>
 			</view>
-		</view>
+		</wd-sticky>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 			empty-text="暂无公告" empty-sub-text="" @refresh="loadNotices(true)" />

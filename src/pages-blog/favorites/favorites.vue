@@ -87,8 +87,8 @@ onPageScroll((option: Page.PageScrollOption) => {
       <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
         <view
           v-for="tab in tabList" :key="tab.key"
-          class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
-          :class="tab.key === activeKind ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+          class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+          :class="{ 'bg-primary text-gray-900 font-semibold': tab.key === activeKind }"
           @click="handleSwitchTab(tab.key)"
         >
           {{ tab.label }}

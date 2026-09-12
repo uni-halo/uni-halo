@@ -334,21 +334,19 @@
 		<uh-navbar :scroll-y="scrollY" default-title="恋爱清单" title-color="text-love" back-class="text-love"/>
 
 		<wd-sticky :offset-top="offsetTop">
-			<view class="box-border px-3 pb-1 pt-2">
-				<view class="box-border flex items-center justify-between gap-x-2">
-					<view v-for="f in filterConfig" :key="f.key"
-						class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-1 border rounded-full px-4 py-2 text-gray-500"
-						:class="[filterValues[f.key] !== f.options[0].value ? 'bg-love/90 text-white font-bold' : 'bg-white/80 text-gray-600']"
-						@click="handleOpenFilter(f)">
-						<text class="truncate text-xs">{{ filterLabels[f.key] }}</text>
-						<template v-if="f.key!=='status'">
-							<wd-icon v-if="f.key === 'sort' && filterValues.sort !== 'default'"
-								:name="filterValues.sortDir === 'desc' ? 'arrow-down' : 'arrow-up'" size="26rpx" />
-							<wd-icon v-else name="arrow-down" size="26rpx" />
-						</template>
-					</view>
+			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+				<view v-for="f in filterConfig" :key="f.key"
+					class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
+					:class="[filterValues[f.key] !== f.options[0].value ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500']"
+					@click="handleOpenFilter(f)">
+					<text class="truncate text-xs">{{ filterLabels[f.key] }}</text>
+					<template v-if="f.key!=='status'">
+						<wd-icon v-if="f.key === 'sort' && filterValues.sort !== 'default'"
+							:name="filterValues.sortDir === 'desc' ? 'arrow-down' : 'arrow-up'" size="26rpx" />
+						<wd-icon v-else name="arrow-down" size="26rpx" />
+					</template>
 				</view>
-			</view>
+			</scroll-view>
 		</wd-sticky>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
