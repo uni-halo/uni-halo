@@ -119,10 +119,14 @@ function getDayColor(day: { count: number, isEmpty: boolean }): string {
   return intensityColors[4]
 }
 
-function getDayTip(day: { date: string, count: number, isEmpty: boolean }): string {
+/** 点击格子:toast 展示该日日期与发布篇数 */
+function handleDayClick(day: IHeatmapCell) {
   if (day.isEmpty)
-    return ''
-  return `${day.date}：${day.count} 篇`
+    return
+  uni.showToast({
+    title: `${dayjs(day.date).format('YYYY年MM月DD日')} 发布 ${day.count} 篇`,
+    icon: 'none',
+  })
 }
 
 /** 累计总数 */
@@ -172,7 +176,7 @@ function changeYear(value: number) {
                 {{ columnMonths[ci] }}
               </view>
               <view v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
-                :style="{ backgroundColor: getDayColor(day) }" @click="getDayTip(day)" />
+                :style="{ backgroundColor: getDayColor(day) }" @click="handleDayClick(day)" />
             </view>
           </view>
         </view>

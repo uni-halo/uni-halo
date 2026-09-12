@@ -108,7 +108,7 @@
 					<view v-for="(item, index) in noRightTabbarList" :key="index" class="text-gray-900 flex-1"
 						:style="{ color: getColorByIndex(index) }" @click="handleClick(index)">
 						<TabbarItem :item="item" :index="index"
-							:custom-class="isActive(index)?'relative uh-global-card-glass border':''" />
+							:custom-class="isActive(index)?'relative uh-global-card-glass border px-6':''" />
 					</view>
 				</view>
 				<view v-if="rightButton.item"

@@ -23,7 +23,7 @@ function isActive(index: number) {
 </script>
 
 <template>
-  <view class="overflow-hidden box-border py-0.5 flex flex-col items-center justify-center rounded-full" :class="customClass">
+  <view class="overflow-hidden box-border py-0.5 px-2 flex flex-col items-center justify-center rounded-full" :class="customClass">
     <template v-if="item.iconType === 'uiLib'">
       <!-- TODO: 以下内容请根据选择的UI库自行替换 -->
       <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
