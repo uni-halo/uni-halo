@@ -11,8 +11,8 @@
 		},
 	})
 
-const { scrollY, updatePageScrollValue } = usePageScroll()
-const appConfigStore = useAppConfigStore()
+	const { scrollY, updatePageScrollValue } = usePageScroll()
+	const appConfigStore = useAppConfigStore()
 
 	const appInfo = computed(() => {
 		return {
@@ -53,8 +53,8 @@ const appConfigStore = useAppConfigStore()
 		<!-- 自定义导航 -->
 		<uh-navbar :scroll-y="scrollY" default-title="关于项目" title-color="text-gray-900" />
 
-		<view class="fixed -right-8 top-8 h-28 w-28 rounded-full bg-[rgba(185,228,36,0.32)] blur-xl" />
-		<view class="fixed -left-10 top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)]  blur-xl" />
+		<view class="fixed -right-8 top-8 h-28 w-28 rounded-full bg-[rgba(185,228,36,0.32)] uh-blur-xl" />
+		<view class="fixed -left-10 top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)]  uh-blur-xl" />
 
 		<view class="relative">
 			<view class="uh-global-card-glass relative flex flex-col items-center rounded-2xl px-6 pb-7 pt-10">
@@ -79,12 +79,12 @@ const appConfigStore = useAppConfigStore()
 			<view v-for="(link) in links" :key="link.title" class="flex items-center gap-3 px-4"
 				@click="copyText(link.copy, link.tip)">
 				<view
-					class="uh-global-card-glass uh-shadow-xs border h-10 w-10 flex shrink-0 items-center justify-center rounded-xl"
+					class="uh-global-card-glass uh-shadow-xs border h-9 w-9 flex shrink-0 items-center justify-center rounded-xl"
 					:style="{ backgroundColor: `${link.tileColor}1A` }">
 					<text class="text-sm font-bold" :style="{ color: link.tileColor }">{{ link.tileLetter }}</text>
 				</view>
 				<view class="min-w-0 flex flex-1 flex-col">
-					<text class="text-sm text-gray-900 font-bold">{{ link.title }}</text>
+					<text class="text-2xs text-gray-900 font-bold">{{ link.title }}</text>
 					<view class="truncate text-xs text-gray-400">
 						{{ link.value }}
 					</view>
@@ -96,3 +96,10 @@ const appConfigStore = useAppConfigStore()
 		<uh-page-copyright />
 	</view>
 </template>
+
+
+<style scoped lang="scss">
+	.uh-blur-xl {
+		filter: blur(20rpx);
+	}
+</style>

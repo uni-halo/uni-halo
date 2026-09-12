@@ -127,9 +127,9 @@
 		<!-- 内容区域 -->
 		<view class="box-border flex flex-col gap-y-6 p-3">
 			<!-- 顶部分段器:布局 / 功能 -->
-			<view class="uh-global-card-glass flex rounded-full p-1">
-				<view v-for="tab in SETTING_TABS" :key="tab.key" class="flex-1 rounded-full py-1.5 text-center text-sm"
-					:class="activeTab === tab.key ? 'bg-primary font-bold' : 'text-gray-500'"
+			<view class="uh-global-card-glass uh-shadow-xs flex rounded-xl p-1">
+				<view v-for="tab in SETTING_TABS" :key="tab.key" class="flex-1 rounded-lg py-2 text-center text-2xs"
+					:class="activeTab === tab.key ? 'bg-primary font-medium' : 'text-gray-500'"
 					@click="activeTab = tab.key">
 					{{ tab.label }}
 				</view>
@@ -139,24 +139,24 @@
 			<template v-if="activeTab === 'layout'">
 				<view v-for="group in layoutGroups" :key="group.key" class="flex flex-col gap-y-3">
 					<uh-section-title>{{ group.label }}</uh-section-title>
-					<view class="uh-global-card-glass overflow-hidden rounded-2xl">
+					<view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
 						<view v-for="(row, index) in group.rows" :key="row.key"
 							class="pick-row flex items-center justify-between px-4 py-4"
 							:class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''"
 							@click="handleOpenEnum(row)">
 							<view class="row-left flex flex-col gap-1">
-								<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+								<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
 								<view class="flex items-center gap-2">
-									<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
+									<text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
 									<view v-else
-										class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
+										class="rounded-full bg-secondary px-2 py-0.5 text-xs text-[#4d7c0f] leading-none">
 										已自定义
 									</view>
 								</view>
 							</view>
-							<view class="row-value flex items-center gap-2">
-								<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
-								<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+							<view class="flex items-center gap-2 text-gray-400">
+								<text class="text-xs">{{ row.displayValue }}</text>
+								<wd-icon name="arrow-right" size="24rpx" />
 							</view>
 						</view>
 					</view>
@@ -172,15 +172,15 @@
 							<text class="text-2xs text-gray-400">一些常用的功能性设置</text>
 						</template>
 					</uh-section-title>
-					<view class="setting-sheet uh-global-card-glass overflow-hidden rounded-2xl">
+					<view class="setting-sheet uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
 						<template v-for="(row, index) in featureRows" :key="row.key">
 							<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
 							<view v-if="row.kind === 'bool'" class="box-border p-3"
 								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 								<view class="flex items-center justify-between">
-									<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
+									<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
 									<view class="flex items-center gap-2">
-										<text v-if="row.following" class="row-sub text-2xs text-gray-400">默认</text>
+										<text v-if="row.following" class="row-sub text-xs text-gray-400">默认</text>
 										<view v-else
 											class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
 											已自定义
@@ -225,9 +225,9 @@
 										</template>
 									</view>
 								</view>
-								<view class="row-value flex items-center gap-2">
-									<text class="value-text text-[26rpx] text-gray-400">{{ row.displayValue }}</text>
-									<wd-icon name="arrow-right" size="12px" color="#c8c2b4" />
+								<view class="flex items-center gap-2 text-gray-400">
+									<text class="text-xs">{{ row.displayValue }}</text>
+									<wd-icon name="arrow-right" size="24rpx" />
 								</view>
 							</view>
 						</template>
@@ -236,7 +236,7 @@
 			</template>
 			<!-- 底部操作栏-->
 			<view class="box-border w-full">
-				<uh-button custom-class="uh-global-card-glass py-2 !rounded-xl" @click="handleResetAll">
+				<uh-button custom-class="uh-global-card-glass py-2.5 text-xs !rounded-xl" @click="handleResetAll">
 					恢复默认
 				</uh-button>
 			</view>
@@ -275,7 +275,8 @@
 		.wd-picker-view__mask {
 			background: transparent !important;
 		}
-		.wd-picker-view__roller{
+
+		.wd-picker-view__roller {
 			border-radius: 16rpx !important;
 		}
 	}

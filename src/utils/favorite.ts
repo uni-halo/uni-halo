@@ -38,9 +38,11 @@ const POST_EXCERPT_MAX = 120
 /** 瞬间正文截断字数 */
 const MOMENT_EXCERPT_MAX = 200
 
-/** 取文章摘要文本(excerpt 优先,兜底从正文抽取) */
+/** 取文章摘要文本(excerpt 优先,兜底从正文抽取;候选字段可能被接口返回非字符串,逐个过滤) */
 function getPostExcerptText(post: IPost): string {
-  return extractPlainExcerpt(post.spec.excerpt || post.content?.content || post.content?.raw, POST_EXCERPT_MAX)
+  const candidates = [post.spec.excerpt, post.content?.content, post.content?.raw]
+  const source = candidates.find((item): item is string => typeof item === 'string' && item.trim() !== '')
+  return extractPlainExcerpt(source, POST_EXCERPT_MAX)
 }
 
 /** 文章 → 收藏快照 */

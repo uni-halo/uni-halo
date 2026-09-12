@@ -75,7 +75,7 @@
 </script>
 
 <template>
-	<view v-if="isEnableCategoryModule" class="overflow-hidden box-border mb-6 px-3">
+	<view v-if="isEnableCategoryModule" class="box-border mb-6 px-3">
 		<uh-section-title>
 			精选分类
 			<template #right>

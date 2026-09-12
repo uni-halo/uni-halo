@@ -21,7 +21,7 @@ const MD_PREFIX_REG = /^\s{0,3}(#{1,6}[ \t]|>|[+*-][ \t]|\d+[.、)][ \t]|```|~~~
  * @param source 原文(可为空)
  */
 export function htmlToPlainText(source?: string): string {
-  if (!source)
+  if (typeof source !== 'string' || !source)
     return ''
   let text = source
   // 剥离脚本/样式块

@@ -357,7 +357,7 @@
 				</view>
 				<view class="flex flex-col gap-2">
 					<view v-for="opt in filterPopup.item.options" :key="opt.label"
-						class="uh-global-card-glass shadow-none border box-border rounded-xl px-5 py-2 text-center text-sm"
+						class="uh-global-card-glass shadow-none border box-border rounded-xl px-5 py-2 text-center text-xs"
 						:class="filterValues[filterPopup.item.key] === opt.value ? 'bg-primary text-gray-900 font-bold' : 'text-gray-700'"
 						@click="handleSelectFilter(opt)">
 						{{ opt.label }}

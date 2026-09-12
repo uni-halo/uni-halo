@@ -8,8 +8,8 @@
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
-	import { isWechat } from '@/utils/platform'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
 	definePage({
@@ -20,6 +20,7 @@
 		},
 	})
 
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -221,11 +222,11 @@
 			:checking="checking" @on-refresh="checkPluginAvailable" />
 
 		<template v-else>
-			<wd-sticky v-if="category.list.length!==0" class="w-full" :offset-top="isWechat?56:0">
-				<scroll-view :scroll-x="true" class="w-full whitespace-nowrap pt-2">
+			<wd-sticky v-if="category.list.length!==0" class="w-full" :offset-top="offsetTop">
+				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
-						class="uh-global-card-glass uh-shadow-xs mb-1 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-2xs"
-						:class="{ 'bg-primary text-gray-900 font-bold': index === category.activeIndex }"
+						class="uh-global-card-glass uh-shadow-xs mb-2 ml-3 inline-flex border rounded-2xl px-4 py-2 text-xs"
+						:class="{ 'bg-primary text-gray-900 font-semibold': index === category.activeIndex }"
 						@click="handleGetDataByCategory(index, cate)">
 						{{ cate.spec.displayName }}
 						<text v-if="cate.spec.displayName!=='全部'">
