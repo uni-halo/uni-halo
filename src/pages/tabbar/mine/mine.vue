@@ -4,6 +4,7 @@
 	import { getBlogStatistics } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useFavoritesStore } from '@/store/favorites'
+	import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { t } from '@/locale'
 	import type { IBlogStats } from '@/api/types/halo'
@@ -158,9 +159,21 @@
 	}
 
 	/* ---------------- 交互 ---------------- */
+	/* 恋爱模块解锁拦截(目前仅恋爱日记设密码,命中锁定则先解锁再跳转;样式不变) */
+	const {
+		unlockModalVisible,
+		unlockTip,
+		handleUnlockRequest,
+		handleUnlockSuccess,
+		interceptNavigateByPath,
+	} = useLoveModuleUnlock()
+
 	function handleNavGoTo(data : { path : string }) {
 		const { path } = data
 		if (!path) { return }
+
+		// 命中恋爱模块且锁定 → 弹解锁弹窗,解锁成功后由 hook 自动跳转
+		if (interceptNavigateByPath(path)) { return }
 
 		uni.navigateTo({ url: path })
 	}
@@ -294,5 +307,10 @@
 		</template>
 
 		<uh-page-copyright />
+
+		<!-- 恋爱模块解锁弹窗(解锁成功自动跳转) -->
+		<uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
+			:tip="unlockTip" placeholder="请输入密码" confirm-text="进入" :request="handleUnlockRequest"
+			@success="handleUnlockSuccess" />
 	</view>
 </template>

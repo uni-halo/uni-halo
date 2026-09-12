@@ -6,7 +6,8 @@ import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { getCache, setCache } from '@/utils/storage'
-import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
+import { getLoveModuleToken, handleLoveModuleLocked } from '@/utils/loveModuleToken'
+import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -64,6 +65,37 @@ const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus
 const queryParams = ref({ page: 1, size: 10 })
 const dataList = ref<ILoveAlbumCard[]>([])
 const unlockedAlbums = ref<Record<string, string>>({})
+
+/* ---------------- 恋爱模块解锁（防分享直达：锁定未解锁时不加载数据） ---------------- */
+const {
+  unlockModalVisible,
+  unlockTip,
+  isModuleLocked,
+  openUnlock,
+  handleUnlockRequest,
+  handleUnlockSuccess,
+} = useLoveModuleUnlock()
+
+/** 是否放行数据加载（锁定未解锁时为 false，解锁成功置 true） */
+const canLoad = ref(false)
+
+/** 锁定则弹不可关闭解锁弹窗，返回是否放行 */
+function ensureUnlocked(): boolean {
+  if (isModuleLocked('lovePhoto')) {
+    openUnlock('lovePhoto')
+    return false
+  }
+  return true
+}
+
+/** 解锁成功：存 token 后恢复数据加载 */
+function handlePageUnlockSuccess(data: { token?: string }) {
+  handleUnlockSuccess(data)
+  if (getLoveModuleToken('lovePhoto')) {
+    canLoad.value = true
+    handleGetData()
+  }
+}
 
 /** 密码解锁弹窗 */
 const showUnlockModal = ref(false)
@@ -128,8 +160,10 @@ async function handleGetData() {
   }
   catch (e) {
     console.error('获取相册失败', e)
-    // 模块锁 401：清除 token 并提示
-    handleLoveModuleLocked('lovePhoto', e)
+    // 模块锁 401：清除 token 并弹不可关闭解锁弹窗（解锁后恢复加载）
+    if (handleLoveModuleLocked('lovePhoto', e)) {
+      openUnlock('lovePhoto')
+    }
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({
         active: false,
@@ -216,9 +250,17 @@ onPageScroll((option: Page.PageScrollOption) => {
 })
 
 onLoad(() => {
-  handleRestoreUnlockedAlbums()
-  handleGetData()
+  handlePageInit()
 })
+
+/** 页面初始化：先判定模块锁定（防分享直达），解锁或未设密码才加载数据 */
+async function handlePageInit() {
+  handleRestoreUnlockedAlbums()
+  await appConfigStore.bootstrap()
+  if (!ensureUnlocked()) { return }
+  canLoad.value = true
+  handleGetData()
+}
 
 onPullDownRefresh(() => {
   resetLoadMoreStatus()
@@ -299,6 +341,11 @@ onReachBottom(() => {
       :album-name="viewerAlbumName" :album-key="viewerAlbumKey" :token="viewerAlbumToken"
       @update:show="showPhotoViewer = $event"
     />
+
+    <!-- 模块级密码解锁弹窗(强制不可关闭,防分享直达) -->
+    <uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
+      :tip="unlockTip" placeholder="请输入密码" confirm-text="进入" :closeable="false"
+      :request="handleUnlockRequest" @success="handlePageUnlockSuccess" />
   </view>
 </template>
 

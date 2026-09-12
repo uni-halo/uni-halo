@@ -2,7 +2,9 @@
 	import { computed, ref } from 'vue'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getLoveDailyItems } from '@/api/uni-halo'
-	import { handleLoveModuleLocked } from '@/utils/loveModuleToken'
+	import { getLoveModuleToken, handleLoveModuleLocked } from '@/utils/loveModuleToken'
+	import { useAppConfigStore } from '@/store/appConfig'
+	import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -56,6 +58,38 @@
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ page: 1, size: 10 })
 	const list = ref<ILoveItemCard[]>([])
+
+	/* ---------------- 恋爱模块解锁（防分享直达：锁定未解锁时不加载数据） ---------------- */
+	const appConfigStore = useAppConfigStore()
+	const {
+		unlockModalVisible,
+		unlockTip,
+		isModuleLocked,
+		openUnlock,
+		handleUnlockRequest,
+		handleUnlockSuccess,
+	} = useLoveModuleUnlock()
+
+	/** 是否放行数据加载（锁定未解锁时为 false，解锁成功置 true） */
+	const canLoad = ref(false)
+
+	/** 锁定则弹不可关闭解锁弹窗，返回是否放行 */
+	function ensureUnlocked() : boolean {
+		if (isModuleLocked('loveDaily')) {
+			openUnlock('loveDaily')
+			return false
+		}
+		return true
+	}
+
+	/** 解锁成功：存 token 后恢复数据加载 */
+	function handlePageUnlockSuccess(data : { token ?: string }) {
+		handleUnlockSuccess(data)
+		if (getLoveModuleToken('loveDaily')) {
+			canLoad.value = true
+			handleGetList()
+		}
+	}
 
 	/* ---------------- 筛选与排序 ---------------- */
 	interface IFilterOption {
@@ -186,8 +220,10 @@
 		}
 		catch (e) {
 			console.error('获取清单失败', e)
-			// 模块锁 401：清除 token 并提示
-			handleLoveModuleLocked('loveDaily', e)
+			// 模块锁 401：清除 token 并弹不可关闭解锁弹窗（解锁后恢复加载）
+			if (handleLoveModuleLocked('loveDaily', e)) {
+				openUnlock('loveDaily')
+			}
 			if (loadMoreStatus.value.active) {
 				updateLoadMoreStatus({
 					active: false,
@@ -257,8 +293,16 @@
 	})
 
 	onLoad(() => {
-		handleGetList()
+		handlePageInit()
 	})
+
+	/** 页面初始化：先判定模块锁定（防分享直达），解锁或未设密码才加载数据 */
+	async function handlePageInit() {
+		await appConfigStore.bootstrap()
+		if (!ensureUnlocked()) { return }
+		canLoad.value = true
+		handleGetList()
+	}
 
 	onPullDownRefresh(() => {
 		resetLoadMoreStatus()
@@ -417,5 +461,10 @@
 				</template>
 			</view>
 		</uh-glass-popup>
+
+		<!-- 模块级密码解锁弹窗(强制不可关闭,防分享直达) -->
+		<uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
+		 :tip="unlockTip" placeholder="请输入密码" confirm-text="进入" :closeable="false"
+		 :request="handleUnlockRequest" @success="handlePageUnlockSuccess" />
 	</view>
 </template>

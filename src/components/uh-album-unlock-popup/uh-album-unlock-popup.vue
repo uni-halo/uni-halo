@@ -73,6 +73,8 @@
 		if (val) {
 			password.value = ''
 			resetCaptcha()
+			// 插件端开启验证码时打开即拉取显示,避免首次提交 403 后才出现
+			handleRefreshCaptcha()
 		}
 	})
 

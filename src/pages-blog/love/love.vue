@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-	import { computed, onBeforeUnmount, ref } from 'vue'
+	import { onBeforeUnmount, ref } from 'vue'
 	import { onLoad, onPageScroll, onShow } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-	import { getPluginCaptcha, unlockLoveModule, type ICaptchaQuery, type IPluginCaptcha } from '@/api/uni-halo'
-	import { getLoveModuleToken, setLoveModuleToken, type LoveModuleKey } from '@/utils/loveModuleToken'
+	import { getLoveModuleToken, type LoveModuleKey } from '@/utils/loveModuleToken'
+	import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import type { ILoveConfigGroup, ILoveModuleConfig } from '@/api/types/uni-halo'
 
@@ -148,29 +148,29 @@
 	}
 
 	/* ---------------- 跳转（模块密码拦截） ---------------- */
-	/** 模块密码弹窗状态 */
-	const unlockModalVisible = ref(false)
-	/** 待跳转路径（模块下发的完整 path，解锁成功后 navigateTo） */
-	const pendingPath = ref('')
-	const pendingModule = ref<LoveModuleKey>('ourStory')
-
-	/** 恋爱日记入口（love 页本身）是否锁定：设了密码且本地无有效 token */
-	const loveDiaryLocked = computed(() =>
-		!!loveConfig.value.loveDiary?.passwordEnabled && !getLoveModuleToken('loveDiary'))
-
-	const unlockTip = computed(() => {
-		const moduleCfg = loveConfig.value[pendingModule.value] as ILoveModuleConfig | undefined
-		const tip = moduleCfg?.title || ''
-		return `${tip}已设置访问密码，输入后进入`
+	/** 恋爱模块解锁流程（弹窗状态/请求/成功回调统一由 hook 管理） */
+	const {
+		unlockModalVisible,
+		pendingModule,
+		unlockTip,
+		isModuleLocked,
+		openUnlock,
+		handleUnlockRequest,
+		handleUnlockSuccess,
+	} = useLoveModuleUnlock({
+		onUnlocked: (moduleKey) => {
+			// 恋爱日记入口解锁：恋爱配置已并入 getConfigs loveConfig 组，刷新后重读
+			if (moduleKey === 'loveDiary') {
+				appConfigStore.refreshStatic().then(() => syncLoveConfigFromStore())
+			}
+		},
 	})
 
 	function handleToPage(moduleKey : LoveModuleKey) {
 		const moduleCfg = loveConfig.value[moduleKey] as ILoveModuleConfig | undefined
 		// 模块设了密码且本地无有效 token → 先弹密码框验证
-		if (moduleCfg?.passwordEnabled && !getLoveModuleToken(moduleKey)) {
-			pendingPath.value = moduleCfg.path || ''
-			pendingModule.value = moduleKey
-			unlockModalVisible.value = true
+		if (isModuleLocked(moduleKey)) {
+			openUnlock(moduleKey, moduleCfg?.path || '')
 			return
 		}
 		// 跳转直接使用插件下发的 path
@@ -178,29 +178,6 @@
 			uni.navigateTo({
 				url: moduleCfg.path,
 			})
-		}
-	}
-
-	/** 通用解锁弹窗请求：unlock 签发 token（插件端要求验证码，403 附新码由弹窗展示重试） */
-	async function handleUnlockRequest(password : string, captcha ?: ICaptchaQuery | null) {
-		const res = await unlockLoveModule(pendingModule.value, password, captcha)
-		return res.data as { token ?: string, [key : string] : unknown } | null | undefined
-	}
-
-	/** 解锁成功：存 token；恋爱日记入口（loveDiary）重新拉取配置，其余进入模块 */
-	function handleUnlockSuccess(data : { token ?: string }) {
-		if (data.token) {
-			setLoveModuleToken(pendingModule.value, data.token)
-			if (pendingModule.value === 'loveDiary') {
-				// 恋爱日记入口解锁：恋爱配置已并入 getConfigs loveConfig 组，刷新后重读
-				appConfigStore.refreshStatic().then(() => syncLoveConfigFromStore())
-			}
-			else if (pendingPath.value) {
-				uni.navigateTo({ url: pendingPath.value })
-			}
-		}
-		else {
-			uni.showToast({ icon: 'none', title: '解锁失败，请重试' })
 		}
 	}
 
@@ -216,11 +193,9 @@
 	onShow(async () => {
 		await appConfigStore.bootstrap()
 		syncLoveConfigFromStore()
-		// 恋爱日记入口（love 页本身）设了密码且本地无 token → 先弹密码框验证
-		if (loveDiaryLocked.value) {
-			pendingPath.value = ''
-			pendingModule.value = 'loveDiary'
-			unlockModalVisible.value = true
+		// 恋爱日记入口（love 页本身）设了密码且本地无 token → 弹不可关闭密码框，解锁后才能查看
+		if (isModuleLocked('loveDiary')) {
+			openUnlock('loveDiary')
 		}
 	})
 
@@ -261,7 +236,6 @@
 			<view
 				class="absolute z-2 left-0 bottom-0 w-full h-36 bg-gradient-to-b from-white/0 via-pink-50/50 to-pink-50" />
 		</view>
-
 		<!-- 恋爱记时 -->
 		<view class="love-time-wrap mt-8 w-screen flex flex-col items-center justify-center">
 			<view class="title text-xl text-love font-bold">
@@ -315,9 +289,9 @@
 		</view>
 	</view>
 
-	<!-- 模块密码验证弹窗-->
-	<uh-unlock-popup v-model:show="unlockModalVisible" title="请输入访问密码" captcha-enabled
-		:tip="unlockTip"
+	<!-- 模块密码验证弹窗（恋爱日记入口强制解锁不可关闭；模块入口点击可取消） -->
+	<uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
+		:tip="unlockTip" :closeable="pendingModule !== 'loveDiary'"
 		placeholder="请输入密码" confirm-text="进入" :request="handleUnlockRequest" @success="handleUnlockSuccess" />
 </template>
 
