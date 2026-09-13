@@ -69,7 +69,7 @@ src/
 | API 文件 | 类型文件 | 内容 |
 |---------|---------|------|
 | `src/api/halo.ts` | `src/api/types/halo.ts` | Halo 官方接口（文章/分类/标签/评论/瞬间/图库/友链） |
-| `src/api/uni-halo.ts` | `src/api/types/uni-halo.ts` | plugin-uni-halo 插件与三方插件接口 |
+| `src/api/uni-halo.ts` | `src/api/types/uni-halo.ts` | uni-halo-plugin 插件与三方插件接口 |
 | `src/api/login.ts` | `src/api/types/login.ts` | 登录相关 |
 
 **命名规则**：

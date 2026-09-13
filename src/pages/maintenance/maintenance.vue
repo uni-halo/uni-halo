@@ -23,7 +23,7 @@
 	const store = useAppConfigStore()
 	/** 插件可用性(拦截恢复检测用,参考 gallery 对象传参模式) */
 	const { check: checkPluginAvailable } = usePluginAvailable({
-		pluginId: 'plugin-uni-halo',
+		pluginId: 'uni-halo-plugin',
 	})
 
 	const viewState = ref<ViewState>('loading')

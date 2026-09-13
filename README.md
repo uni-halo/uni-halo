@@ -13,7 +13,7 @@
 	<a href="https://www.xiaoxiaomo.cn">作者主页</a>
 	<a href="https://uni-halo.925i.cn">官方文档</a> 
 	<a href="https://github.com/ialley-workshop-open/uni-halo">仓库地址</a>
-	<a href="https://github.com/ialley-workshop-open/plugin-uni-halo">插件仓库</a>
+	<a href="https://github.com/uni-halo/uni-halo-plugin">插件仓库</a>
 </p>
 
 ---
@@ -61,8 +61,8 @@
 ## 二、配套插件
 
 ### 下载地址
-- 代码仓库：[https://github.com/ialley-workshop-open/plugin-uni-halo](https://github.com/ialley-workshop-open/plugin-uni-halo)
-- 仓库版本：[https://github.com/ialley-workshop-open/plugin-uni-halo/releases](https://github.com/ialley-workshop-open/plugin-uni-halo/releases)
+- 代码仓库：[https://github.com/uni-halo/uni-halo-plugin](https://github.com/uni-halo/uni-halo-plugin)
+- 仓库版本：[https://github.com/uni-halo/uni-halo-plugin/releases](https://github.com/uni-halo/uni-halo-plugin/releases)
 - 应用市场：[https://www.halo.run/store/apps/app-ryemX](https://www.halo.run/store/apps/app-ryemX)
 
 ### 使用方式
@@ -76,7 +76,7 @@
 - 作者博客：[https://blog.xiaoxiaomo.cn/](https://blog.xiaoxiaomo.cn/)
 - 官方文档：[https://uni-halo.925i.cn/](https://uni-halo.925i.cn/)
 - 代码仓库：[https://github.com/ialley-workshop-open/uni-halo](https://github.com/ialley-workshop-open/uni-halo)
-- 插件地址：[https://github.com/ialley-workshop-open/plugin-uni-halo](https://github.com/ialley-workshop-open/uni-halo)
+- 插件地址：[https://github.com/uni-halo/uni-halo-plugin](https://github.com/ialley-workshop-open/uni-halo)
 - 应用市场：[https://www.halo.run/store/apps/app-ryemX](https://www.halo.run/store/apps/app-ryemX)
 
 

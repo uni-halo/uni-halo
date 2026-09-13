@@ -45,7 +45,7 @@ const { pluginId: sitePluginId, checking: siteChecking, tips: siteTips, availabl
     handleGetLinkGroupData()
   },
 })
-/** 小程序 tab:plugin-uni-halo */
+/** 小程序 tab:uni-halo-plugin */
 const { pluginId: miniPluginId, checking: miniChecking, tips: miniTips, available: miniPluginAvailable, check: checkMiniPluginAvailable } = usePluginAvailable({
   pluginId: NeedPluginIds.PluginUniHalo,
   tips: '啊偶，功能正在维护中...',
@@ -246,7 +246,7 @@ function handleToTopPage(duration = 500) {
   })
 }
 
-/* ==================== 小程序 tab(plugin-uni-halo) ==================== */
+/* ==================== 小程序 tab(uni-halo-plugin) ==================== */
 /* ---------------- 状态 ---------------- */
 const { loadingStatus: miniLoadingStatus, updateLoadingStatus: updateMiniLoadingStatus } = useDataLoadingStatus()
 const miniGroups = ref<IMiniProgramLinkGroupVo[]>([])

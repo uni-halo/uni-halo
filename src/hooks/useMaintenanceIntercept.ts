@@ -13,7 +13,7 @@ export interface IMaintenanceInterceptResult {
 /** 维护页路径 */
 export const MAINTENANCE_PAGE_PATH = '/pages/maintenance/maintenance';
 /** 主插件 ID(与 utils/plugin NeedPluginIds.PluginUniHalo 一致) */
-export const MAINTENANCE_PLUGIN_ID = 'plugin-uni-halo';
+export const MAINTENANCE_PLUGIN_ID = 'uni-halo-plugin';
 
 /**
  * 维护拦截能力:检查 + 跳转封装
