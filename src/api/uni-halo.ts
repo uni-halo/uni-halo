@@ -25,6 +25,7 @@ import type {
   ILoveStory,
   ILoveStoryListReq,
   ILoveStoryListRes,
+  ILoginResult,
   IMiniProgramLink,
   IMiniProgramLinkGroupedRes,
   IMiniProgramLinkGroupOption,
@@ -506,6 +507,38 @@ export function getUptimeKumaStatus() {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
+}
+
+/* ==================== 移动端登录(uni-halo 插件 AuthEndpoint) ==================== */
+
+/**
+ * 账号密码登录(公开接口;插件端 AuthEndpoint POST /auth/login)
+ * 成功返回 Halo 原生 PAT(token),失败 401 返回 { code, message }
+ */
+export function loginByPassword(username: string, password: string) {
+  return http.Post<IResponse<ILoginResult>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/auth/login',
+    { username, password },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 微信登录(公开接口;插件端 AuthEndpoint POST /auth/login/wechat)
+ * code 为 uni.login({ provider: 'weixin' }) 获取的 wx.login 一次性凭证
+ */
+export function loginByWechat(code: string) {
+  return http.Post<IResponse<ILoginResult>>(
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/auth/login/wechat',
+    { code },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
 }
 
 /* ==================== 内部辅助 ==================== */

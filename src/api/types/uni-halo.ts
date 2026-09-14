@@ -776,3 +776,35 @@ export interface ILoveStoryListRes {
   hasNext?: boolean
   items: ILoveStory[]
 }
+
+/* ---------- 移动端登录(uni-halo 插件 AuthEndpoint) ---------- */
+
+/** 登录用户摘要(插件端 LoginUser,不含敏感字段) */
+export interface ILoginUser {
+  name?: string
+  displayName?: string
+  avatar?: string
+  email?: string
+}
+
+/** 由角色模板递归展开的 RBAC 规则(插件端 PermissionRule) */
+export interface ILoginPermissionRule {
+  apiGroups?: string[]
+  resources?: string[]
+  verbs?: string[]
+}
+
+/**
+ * 登录结果(插件端 LoginResult)
+ * token 为 pat_ 前缀的 Halo 原生个人访问令牌,携带方式 Authorization: Bearer <token>
+ */
+export interface ILoginResult {
+  token?: string
+  tokenType?: string
+  /** ISO 时间字符串 */
+  expiresAt?: string
+  patName?: string
+  user?: ILoginUser
+  roles?: string[]
+  permissions?: ILoginPermissionRule[]
+}
