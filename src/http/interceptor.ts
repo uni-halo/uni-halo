@@ -16,8 +16,7 @@ const httpInterceptor = {
 		// return options
 		
 		// 非 alova 请求，正常执行
-		// 接口请求支持通过 query 参数配置 queryString
-		console.log('==========options',options)
+		// 接口请求支持通过 query 参数配置 queryString 
 		
 		if (options?.meta?.query) {
 			// const queryStr = qs.stringify(options?.meta?.query, {
@@ -52,18 +51,24 @@ const httpInterceptor = {
 			// #endif
 			// TIPS: 如果需要对接多个后端服务，也可以在这里处理，拼接成所需要的地址
 		}
-		// 1. 请求超时
+		
+		// 请求超时
 		options.timeout = 60000; // 60s
-		// 2. （可选）添加小程序端请求头标识
+		
+		// 这里也可以添加一些公共请求头
 		options.header = {
 			...options.header
 		};
-		// 3. 添加 token 请求头标识
-		const tokenStore = useTokenStore();
-		const token = tokenStore.updateNowTime().validToken;
-
-		if (token) {
-			options.header.Authorization = `Bearer ${token}`;
+		
+		// 需要登录token的请求，添加token到请求头
+		// 为什么这么设计？因为有些接口不需要token，加上了token反而会报错
+		// 那如果是一些第三方接口，需要token，怎么办？可以直接在请求的时候在请求头自己添加header即可
+		if (options?.meta?.needLoginToken) {
+			const tokenStore = useTokenStore();
+			const token = tokenStore.updateNowTime().validToken;
+			if(token){
+				options.header.Authorization = `Bearer ${token}`;
+			}
 		}
 		return options;
 	}
