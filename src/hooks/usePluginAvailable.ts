@@ -20,7 +20,7 @@ import { checkUrl } from '@/utils/url';
 
 /** 依赖插件 ID 常量 */
 export const NeedPluginIds = Object.freeze({
-	PluginUniHalo: 'uni-halo-plugin',
+	PluginUniHalo: 'uni-halo',
 	PluginPhotos: 'PluginPhotos',
 	PluginLinks: 'PluginLinks',
 	PluginMoments: 'PluginMoments',
@@ -55,10 +55,10 @@ export const NeedPlugins = new Map<string, IPluginInfo>([
 	[
 		NeedPluginIds.PluginUniHalo,
 		{
-			id: 'uni-halo-plugin',
+			id: 'uni-halo',
 			name: 'UniHalo配置',
 			desc: 'uni-halo 核心插件，未安装和启用的情况下，将无法使用 uni-halo，请检查是否已安装和启用',
-			logo: checkUrl('/plugins/uni-halo-plugin/assets/logo.png'),
+			logo: checkUrl('/plugins/uni-halo/assets/logo.png'),
 			url: 'https://www.halo.run/store/apps/app-ryemX'
 		}
 	],

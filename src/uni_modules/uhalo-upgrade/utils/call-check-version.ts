@@ -30,10 +30,10 @@ export type UniUpgradeCenterResult = {
 }
 
 /**
- * Halo 插件（uni-halo-plugin）公开的 checkVersion 接口路径，
+ * Halo 插件（uni-halo）公开的 checkVersion 接口路径，
  * 由调用方传入的 baseUrl（Halo 站点地址）拼接而成
  */
-const CHECK_VERSION_API = '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/upgrade/checkVersion'
+const CHECK_VERSION_API = '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/upgrade/checkVersion'
 
 /**
  * 拼接完整的 checkVersion 请求地址，自动去除 baseUrl 末尾多余的斜杠

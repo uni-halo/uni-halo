@@ -2,7 +2,7 @@
 
 基于 DCloud 官方 `uni-upgrade-center-app`（v0.9.12）复制改造的 App 升级检测模块，适配 uni-halo 项目：
 
-- **不再依赖 uniCloud**：原插件通过 `uniCloud.callFunction('uni-upgrade-center')` 检测升级，本插件改为 HTTP GET 请求 Halo 插件 [uni-halo-plugin](https://github.com/uhalo/uni-halo-plugin) 的公开接口 `checkVersion`；
+- **不再依赖 uniCloud**：原插件通过 `uniCloud.callFunction('uni-upgrade-center')` 检测升级，本插件改为 HTTP GET 请求 Halo 插件 [uni-halo-plugin](https://github.com/uhalo/uni-halo-plugin)（插件 ID：`uni-halo`）的公开接口 `checkVersion`；
 - **baseUrl 由调用方传入**：uni_modules 插件无法直接读取项目配置文件（`config/uhalo.config.js`），因此调用时需显式传入 Halo 站点地址；
 - 弹窗页面、下载安装、静默/强制更新、iOS 跳 AppStore 等逻辑与原插件保持一致。
 - **不支持 uni-app x**：已移除 UNI-APP-X 适配（条件编译分支、uni-app-x 弹窗页面、uts-openSchema 依赖），仅支持 uni-app（vue）App 端。
@@ -12,7 +12,7 @@
 检测升级请求地址（后端见 `.docs/app-upgrade-design.md` 第 3.2 节）：
 
 ```
-GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/upgrade/checkVersion
+GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/upgrade/checkVersion
     ?appid=xxx&appVersion=1.0.0&wgtVersion=1.0.0&platform=Android&isUniappX=false
 ```
 

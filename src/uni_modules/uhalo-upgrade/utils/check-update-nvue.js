@@ -5,7 +5,7 @@ function callCheckVersion(baseUrl) {
 			reject('【uhalo-upgrade】未传入 baseUrl，无法检测升级。请调用 checkUpdate(baseUrl) 时传入 Halo 站点地址')
 			return
 		}
-		const checkUrl = baseUrl.replace(/\/+$/, '') + '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/upgrade/checkVersion'
+		const checkUrl = baseUrl.replace(/\/+$/, '') + '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/upgrade/checkVersion'
 		plus.runtime.getProperty(plus.runtime.appid, function(widgetInfo) {
 			uni.request({
 				url: checkUrl,

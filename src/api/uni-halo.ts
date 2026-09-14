@@ -47,7 +47,7 @@ import type {
 /** 评论验证码 cookie key */
 const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
 
-/* ==================== uni-halo-plugin 配置 ==================== */
+/* ==================== uni-halo 配置 ==================== */
 
 /**
  * 获取应用配置
@@ -55,7 +55,7 @@ const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
  * (维护页刷新、入口/首页拦截均依赖本接口的最新状态)
  */
 export function getAppConfigs() {
-  return http.Get<IResponse<IAppConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/getConfigs', {
+  return http.Get<IResponse<IAppConfig>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/getConfigs', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -65,7 +65,7 @@ export function getAppConfigs() {
  * 获取审核模式数据(公开接口;auditModeEnabled=true 时返回选中引用列表,否则 {enabled:false})
  */
 export function getAuditData() {
-  return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/audit-data', {
+  return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/audit-data', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -75,7 +75,7 @@ export function getAuditData() {
  * 获取首页轮播图列表(公开;按 priority 有序,脱敏不含 content)
  */
 export function getBanners() {
-  return http.Get<IResponse<IBannerPublicItem[]>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/banners', {
+  return http.Get<IResponse<IBannerPublicItem[]>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/banners', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -85,7 +85,7 @@ export function getBanners() {
  * 获取轮播图详情(公开;含 content 富文本 HTML)
  */
 export function getBannerDetail(name: string) {
-  return http.Get<IResponse<IBannerPublicDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/banners/${name}`, {
+  return http.Get<IResponse<IBannerPublicDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/banners/${name}`, {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -115,7 +115,7 @@ export function getCommentWidgetConfig() {
  * 检查更新(uhalo-upgrade 插件对接,插件本体引入后业务侧入口)
  */
 export function checkVersion(baseUrl: string) {
-  return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/upgrade/checkVersion', {
+  return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/upgrade/checkVersion', {
     params: { baseUrl },
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
@@ -126,13 +126,13 @@ export function checkVersion(baseUrl: string) {
  * 获取二维码信息
  */
 export function getQRCodeInfo(key: string) {
-  return http.Get<IResponse<IQRCodeInfo>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/getQRCodeInfo/${key}`, {
+  return http.Get<IResponse<IQRCodeInfo>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/getQRCodeInfo/${key}`, {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
 
-/* ==================== 防刷验证码(uni-halo-plugin) ==================== */
+/* ==================== 防刷验证码(uni-halo) ==================== */
 
 /** 防刷验证码(服务端 captcha/generate 返回;受保护写接口 403 时响应体亦附带新验证码) */
 export interface IPluginCaptcha {
@@ -151,7 +151,7 @@ export interface ICaptchaQuery {
  * /love-albums/{name}/unlock;站点关闭验证码或该功能不在生效范围时无需携带)
  */
 export function getPluginCaptcha() {
-  return http.Get<IResponse<IPluginCaptcha>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/captcha/generate', {
+  return http.Get<IResponse<IPluginCaptcha>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/captcha/generate', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -164,14 +164,14 @@ export function buildCaptchaQuery(captcha?: ICaptchaQuery | null): ICaptchaQuery
   return { captchaId: captcha.captchaId, captchaCode: captcha.captchaCode }
 }
 
-/* ==================== 通知公告(uni-halo-plugin) ==================== */
+/* ==================== 通知公告(uni-halo) ==================== */
 
 /**
  * 公告分页列表(公开,仅已发布;脱敏不含 content,内嵌类型信息)。
  * 注意:公开接口当前仅支持分页,类型筛选/排序由页面本地聚合处理(公告量小)。
  */
 export function getNotices(params: { page?: number, size?: number }) {
-  return http.Get<IResponse<INoticeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/notices', {
+  return http.Get<IResponse<INoticeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notices', {
     params,
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
@@ -182,7 +182,7 @@ export function getNotices(params: { page?: number, size?: number }) {
  * 最新一条已发布公告(公开;无数据返回 null,供首页/我的弹窗)
  */
 export function getNoticeLatest() {
-  return http.Get<IResponse<INoticeListVo | null>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/notices/latest', {
+  return http.Get<IResponse<INoticeListVo | null>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notices/latest', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -192,7 +192,7 @@ export function getNoticeLatest() {
  * 公告详情(公开;含 content 富文本 HTML 与内嵌类型信息;不存在/删除中返回 404)
  */
 export function getNoticeDetail(name: string) {
-  return http.Get<IResponse<INoticeDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/notices/${name}`, {
+  return http.Get<IResponse<INoticeDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notices/${name}`, {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -205,7 +205,7 @@ export function getNoticeDetail(name: string) {
  */
 export function getLoveAlbums(params: ILoveAlbumListReq) {
   const token = getLoveModuleToken('lovePhoto')
-  return http.Get<IResponse<ILoveAlbumListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-albums', {
+  return http.Get<IResponse<ILoveAlbumListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-albums', {
     params: { ...params, ...(token ? { token } : {}) },
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
@@ -217,7 +217,7 @@ export function getLoveAlbums(params: ILoveAlbumListReq) {
  */
 export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
   const token = getLoveModuleToken('lovePhoto')
-  return http.Get<IResponse<ILoveAlbum>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-albums/${name}`, {
+  return http.Get<IResponse<ILoveAlbum>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-albums/${name}`, {
     params: { ...params, ...(token ? { token } : {}) },
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
@@ -230,7 +230,7 @@ export function getLoveAlbumByName(name: string, params: ILoveAlbumListReq) {
 export function unlockAlbum(name: string, password: string, captcha?: ICaptchaQuery | null) {
   const token = getLoveModuleToken('lovePhoto')
   return http.Post<IResponse<{ token: string, photos?: unknown[] }>>(
-    `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-albums/${name}/unlock`,
+    `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-albums/${name}/unlock`,
     {
       password,
     },
@@ -248,7 +248,7 @@ export function unlockAlbum(name: string, password: string, captcha?: ICaptchaQu
  */
 export function unlockLoveModule(module: string, password: string, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<{ token: string }>>(
-    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-modules/unlock',
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-modules/unlock',
     {
       module,
       password,
@@ -267,7 +267,7 @@ export function unlockLoveModule(module: string, password: string, captcha?: ICa
 export function getLoveDailyItems(params: ILoveDailyItemListReq) {
   const token = getLoveModuleToken('loveDaily')
   return http.Get<IResponse<ILoveDailyItemListRes>>(
-    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-daily-items',
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-daily-items',
     {
       params: { ...params, ...(token ? { token } : {}) },
 
@@ -282,21 +282,21 @@ export function getLoveDailyItems(params: ILoveDailyItemListReq) {
  */
 export function getLoveStories(params: ILoveStoryListReq) {
   const token = getLoveModuleToken('ourStory')
-  return http.Get<IResponse<ILoveStoryListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/love-stories', {
+  return http.Get<IResponse<ILoveStoryListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-stories', {
     params: { ...params, ...(token ? { token } : {}) },
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
 }
 
-/* ==================== 小程序链接(uni-halo-plugin) ==================== */
+/* ==================== 小程序链接(uni-halo) ==================== */
 
 /**
  * 获取小程序链接分组列表(grouped=true,仅可见,按分组聚合返回)
  */
 export function getMiniProgramLinkGroupedList() {
   return http.Get<IResponse<IMiniProgramLinkGroupedRes>>(
-    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/mini-program-links',
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/mini-program-links',
     {
       params: { grouped: true },
       cacheFor: 0,
@@ -310,7 +310,7 @@ export function getMiniProgramLinkGroupedList() {
  */
 export function getMiniProgramLinkTypes() {
   return http.Get<IResponse<IMiniProgramLinkGroupOption[]>>(
-    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/mini-program-links/types',
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/mini-program-links/types',
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
@@ -323,7 +323,7 @@ export function getMiniProgramLinkTypes() {
  */
 export function getMiniProgramLinkDetail(name: string) {
   return http.Get<IResponse<IMiniProgramLink>>(
-    `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/mini-program-links/${name}`,
+    `/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/mini-program-links/${name}`,
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
@@ -337,7 +337,7 @@ export function getMiniProgramLinkDetail(name: string) {
  */
 export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissionForm, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<unknown>>(
-    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo-plugin/mini-program-links/submissions',
+    '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/mini-program-links/submissions',
     {
       spec: data,
     },

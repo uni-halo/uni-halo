@@ -1,9 +1,9 @@
 /**
- * uni-halo-plugin 自定义接口 / 三方插件 API 类型定义
- * 对应 src/api/uni-halo.ts(uni-halo-plugin 自身接口 + 三方插件)
+ * uni-halo 自定义接口 / 三方插件 API 类型定义
+ * 对应 src/api/uni-halo.ts(uni-halo 自身接口 + 三方插件)
  */
 
-/* ---------- uni-halo-plugin 应用配置 ---------- */
+/* ---------- uni-halo 应用配置 ---------- */
 
 /** 图片相关配置 */
 export interface IImagesConfig {
@@ -54,7 +54,7 @@ export interface IBannerConfig {
   dotPosition?: string
 }
 
-/** 轮播图公开条目(uni-halo-plugin Banner 归一化模型公开接口,列表脱敏不含 content) */
+/** 轮播图公开条目(uni-halo Banner 归一化模型公开接口,列表脱敏不含 content) */
 export interface IBannerPublicItem {
   /** Banner 条目 metadata.name */
   name: string
@@ -261,7 +261,7 @@ export interface IHaloGlobalConfig {
   [key: string]: unknown
 }
 
-/* ---------- uni-halo-plugin 二维码 / 检查更新 ---------- */
+/* ---------- uni-halo 二维码 / 检查更新 ---------- */
 
 export interface IQRCodeInfo {
   [key: string]: unknown
@@ -432,7 +432,7 @@ export interface ICommentCaptcha {
   [key: string]: unknown
 }
 
-/* ---------- 通知公告(uni-halo-plugin notice) ---------- */
+/* ---------- 通知公告(uni-halo notice) ---------- */
 
 /** 公告公开列表项(脱敏,不含 content;内嵌类型信息 typeDisplayName/typeColor) */
 export interface INoticeListVo {
@@ -480,7 +480,7 @@ export interface INoticeDetail {
   [key: string]: unknown
 }
 
-/* ---------- 恋爱模块(uni-halo-plugin love) ---------- */
+/* ---------- 恋爱模块(uni-halo love) ---------- */
 
 /** 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段） */
 export interface ILoveModuleConfig {
@@ -676,7 +676,7 @@ export interface ILoveStoryListReq {
   [key: string]: unknown
 }
 
-/* ---------- 小程序链接(uni-halo-plugin mini-program-links) ---------- */
+/* ---------- 小程序链接(uni-halo mini-program-links) ---------- */
 
 /** 小程序链接 spec(对齐插件 MiniProgramLinkSpec) */
 export interface IMiniProgramLinkSpec {

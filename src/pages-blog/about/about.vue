@@ -17,7 +17,7 @@
 	const appInfo = computed(() => {
 		return {
 			name: 'UniHalo',
-			logo: checkUrl('/plugins/uni-halo-plugin/assets/static/logo.png')
+			logo: checkUrl('/plugins/uni-halo/assets/static/logo.png')
 		}
 	})
 
