@@ -327,10 +327,9 @@ onPullDownRefresh(() => {
     </template>
 
     <!-- 登录入口 -->
-    <view class="flex justify-center px-4 pt-6" @click="handleGoLogin">
-      <uh-button class="w-full flex-1" custom-class="uh-global-card-glass uh-shadow-xs flex items-center gap-2 !rounded-xl px-6 py-2">
+    <view class="box-border flex justify-center px-4 pt-6" @click="handleGoLogin">
+      <uh-button class="w-full flex-1" custom-class="uh-global-card-glass uh-shadow-xs !rounded-xl py-2">
         登录
-        <wd-icon name="arrow-right" size="24rpx" />
       </uh-button>
     </view>
 
