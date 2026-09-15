@@ -4,11 +4,12 @@ import AdapterUniapp from '@alova/adapter-uniapp'
 import { createAlova } from 'alova'
 import { createServerTokenAuthentication } from 'alova/client'
 import VueHook from 'alova/vue'
+import { useTokenStore } from '@/store/token'
 import { toLoginPage } from '@/utils/toLoginPage'
 import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum'
 import { saveCommentCookies } from './tools/commentCookies'
 import { handleCategoryPasswordError } from './tools/categoryPassword'
- import { UniHaloError } from './tools/exception'
+import { UniHaloError } from './tools/exception'
 
 // 配置动态Tag
 export const API_DOMAINS = {
@@ -71,6 +72,15 @@ const alovaInstance = createAlova({
       config.headers.Authorization = `Bearer ${config.meta.personalToken}`
     }
 
+    // 认证接口的登录 token(如 auth/profile、auth/logout),由 tokenStore 提供
+    if (config.meta?.needAuthToken) {
+      const tokenStore = useTokenStore()
+      const token = tokenStore.updateNowTime().validToken
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+    }
+
     // 处理动态域名
     if (config.meta?.domain) {
       method.baseURL = config.meta.domain
@@ -102,10 +112,10 @@ const alovaInstance = createAlova({
       if (statusCode !== ResultEnum.Success200) {
         const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
         throw new UniHaloError({
-			message: errorMessage,
-			data: rawData,
-			code: statusCode,
-		})
+          message: errorMessage,
+          data: rawData,
+          code: statusCode,
+        })
       }
 
       // 归一化响应结构:Halo 来源的原始数据统一封装为 { code, data, message },

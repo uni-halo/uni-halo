@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
 import { getBlogStatistics } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
 import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
@@ -17,7 +19,11 @@ definePage({
 })
 
 const appConfigStore = useAppConfigStore()
+const tokenStore = useTokenStore()
+const userStore = useUserStore()
 const haloConfigs = computed(() => appConfigStore.configs)
+/** 登录态(进入页面时刷新过期判断) */
+const hasLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
 /* ---------------- 计算属性 ---------------- */
 const bloggerInfo = computed(() => {
@@ -175,9 +181,26 @@ function handleNavGoTo(data: { path: string }) {
   uni.navigateTo({ url: path })
 }
 
-/** 前往登录页(验证用,正式登录界面重做后再调整) */
+/** 前往登录页 */
 function handleGoLogin() {
   uni.navigateTo({ url: '/pages/auth/login' })
+}
+
+/** 登录入口点击:未登录去登录页,已登录则询问退出 */
+function handleLoginEntry() {
+  if (!hasLogin.value) {
+    handleGoLogin()
+    return
+  }
+  uni.showModal({
+    title: '提示',
+    content: '确定退出登录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        tokenStore.logout()
+      }
+    },
+  })
 }
 
 /* ---------------- 生命周期 ---------------- */
@@ -187,6 +210,11 @@ watch(haloConfigs, () => {
 
 handleGetData()
 
+// 从登录页返回时刷新登录态展示
+onShow(() => {
+  tokenStore.updateNowTime()
+})
+
 onPullDownRefresh(() => {
   handleGetData()
 })
@@ -194,6 +222,8 @@ onPullDownRefresh(() => {
 
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-2">
+	<uh-mine-navbar />
+	  
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
     <view class="relative h-96 w-full bg-cover bg-no-repeat" :style="[calcProfileStyle]">
       <view class="relative z-6 h-full flex flex-col items-center justify-center">
@@ -326,10 +356,10 @@ onPullDownRefresh(() => {
       </template>
     </template>
 
-    <!-- 登录入口 -->
-    <view class="box-border flex justify-center px-4 pt-6" @click="handleGoLogin">
+    <!-- 登录入口(未登录→去登录;已登录→点击退出) -->
+    <view class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
       <uh-button class="w-full flex-1" custom-class="uh-global-card-glass uh-shadow-xs !rounded-xl py-2">
-        登录
+        {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>
     </view>
 

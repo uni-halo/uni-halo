@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { login as _login, logout as _logout, refreshToken as _refreshToken, wxLogin as _wxLogin, getWxCode } from '@/api/login';
+import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, getWxCode } from '@/api/auth';
+import { refreshToken as _refreshToken } from '@/api/login';
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login';
 import { useUserStore } from './user';
 import { getCache } from '@/utils/storage';
 import type { ILoginForm } from '@/api/login';
-import type { IAuthLoginRes } from '@/api/types/login';
+import type { IAuthLoginRes, ISingleTokenRes } from '@/api/types/login';
+import type { ILoginResult } from '@/api/types/uni-halo';
 
 /** 个人令牌存储 key */
 const APP_TOKENS_KEY = 'UH_APP_TOKENS';
@@ -112,30 +114,50 @@ export const useTokenStore = defineStore(
 		/**
 		 * 登录成功后处理逻辑
 		 * @param tokenInfo 登录返回的token信息
+		 * @param result 登录接口完整结果(已携带用户信息与权限时直接写入,不再调 profile)
 		 */
-		async function _postLogin(tokenInfo: IAuthLoginRes) {
+		async function _postLogin(tokenInfo: IAuthLoginRes, result?: ILoginResult) {
 			setTokenInfo(tokenInfo);
 			const userStore = useUserStore();
-			await userStore.fetchUserInfo();
+			if (result?.user) {
+				// 微信登录/密码登录接口均一并返回用户信息,无需再请求 profile
+				userStore.setUserInfoFromLoginResult(result);
+			}
+			else {
+				// 兜底:登录结果未携带用户信息时走独立接口
+				await userStore.fetchUserInfo();
+			}
 		}
 
 		/**
-		 * 用户登录
-		 * 有的时候后端会用一个接口返回token和用户信息，有的时候会分开2个接口，一个获取token，一个获取用户信息
-		 * （各有利弊，看业务场景和系统复杂度），这里使用2个接口返回的来模拟
+		 * 插件端 LoginResult → 单token结构
+		 * expiresAt 为 ISO 时间,换算为剩余有效期(秒);缺失/非法按 0(立即过期)处理
+		 */
+		function toSingleToken(result: ILoginResult): ISingleTokenRes {
+			const expiresAtMs = result.expiresAt ? Date.parse(result.expiresAt) : NaN;
+			const expiresIn = Number.isFinite(expiresAtMs)
+				? Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000))
+				: 0;
+			return { token: result.token || '', expiresIn };
+		}
+
+		/**
+		 * 用户登录(账号密码,对接插件端 POST /auth/login)
+		 * 登录接口直接返回 token + 用户信息 + 权限,无需独立获取用户信息接口
 		 * @param loginForm 登录参数
-		 * @returns 登录结果
+		 * @returns 登录结果(插件端 LoginResult)
 		 */
 		const login = async (loginForm: ILoginForm) => {
 			try {
-				const res = await _login(loginForm);
-				console.log('普通登录-res: ', res);
-				await _postLogin(res);
+				const res = await _loginByPassword(loginForm.username, loginForm.password);
+				const result = res.data as ILoginResult;
+				console.log('普通登录-res: ', result);
+				await _postLogin(toSingleToken(result), result);
 				uni.showToast({
 					title: '登录成功',
 					icon: 'success'
 				});
-				return res;
+				return result;
 			} catch (error) {
 				console.error('登录失败:', error);
 				uni.showToast({
@@ -149,24 +171,25 @@ export const useTokenStore = defineStore(
 		};
 
 		/**
-		 * 微信登录
-		 * 有的时候后端会用一个接口返回token和用户信息，有的时候会分开2个接口，一个获取token，一个获取用户信息
-		 * （各有利弊，看业务场景和系统复杂度），这里使用2个接口返回的来模拟
-		 * @returns 登录结果
+		 * 微信登录(对接插件端 POST /auth/login/wechat,仅微信小程序可用)
+		 * 已绑定则登录,未绑定则自动注册并登录;返回结构与账号密码登录一致
+		 * @returns 登录结果(插件端 LoginResult)
 		 */
 		const wxLogin = async () => {
 			try {
 				// 获取微信小程序登录的code
-				const code = await getWxCode();
+				const loginRes = await getWxCode();
+				const code = loginRes.code;
 				console.log('微信登录-code: ', code);
-				const res = await _wxLogin(code);
-				console.log('微信登录-res: ', res);
-				await _postLogin(res);
+				const res = await _loginByWechat(code);
+				const result = res.data as ILoginResult;
+				console.log('微信登录-res: ', result);
+				await _postLogin(toSingleToken(result), result);
 				uni.showToast({
 					title: '登录成功',
 					icon: 'success'
 				});
-				return res;
+				return result;
 			} catch (error) {
 				console.error('微信登录失败:', error);
 				uni.showToast({
@@ -181,11 +204,11 @@ export const useTokenStore = defineStore(
 
 		/**
 		 * 退出登录 并 删除用户信息
+		 * 服务端吊销当前 PAT(auth/logout),无论成功失败都清除本地登录状态
 		 */
 		const logout = async () => {
 			try {
-				// TODO 实现自己的退出登录逻辑
-				await _logout();
+				await _logoutApi();
 			} catch (error) {
 				console.error('退出登录失败:', error);
 			} finally {

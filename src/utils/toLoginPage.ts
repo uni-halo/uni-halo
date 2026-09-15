@@ -14,8 +14,8 @@ interface ToLoginPageOptions {
   queryString?: string
 }
 
-// TODO: 自己增加登录页
-const LOGIN_PAGE = '/pages/login/index'
+// 登录页(pages/auth/login,definePage 约定式路由)
+const LOGIN_PAGE = '/pages/auth/login'
 
 /**
  * 跳转到登录页, 带防抖处理

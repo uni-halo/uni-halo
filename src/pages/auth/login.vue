@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { loginByPassword, loginByWechat } from '@/api/uni-halo'
-import { ref } from 'vue'
+import { useAppConfigStore } from '@/store/appConfig'
+import { useTokenStore } from '@/store/token'
+import { computed, ref } from 'vue'
 
 definePage({
   style: {
@@ -9,30 +10,43 @@ definePage({
   },
 })
 
-/* ---------- 验证登录对接：接口结果仅在页面内展示，不做存储 ---------- */
+const appConfigStore = useAppConfigStore()
+const tokenStore = useTokenStore()
+
+/* ---------- 登录配置(getConfigs loginConfig 组,两开关全关即整体不可用) ---------- */
+const loginConfig = computed(() => appConfigStore.configs.loginConfig)
+const passwordLoginEnabled = computed(() => loginConfig.value?.passwordLoginEnabled !== false)
+const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled === true)
 
 const activeTab = ref<'password' | 'wechat'>('password')
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
-/** 登录结果/错误信息（验证用，仅页面展示） */
-const resultText = ref('')
 
-/** 账号密码登录 */
+/** 可用登录方式(按插件端配置过滤;配置未就绪时默认展示账号密码登录) */
+const availableTabs = computed(() => {
+  const tabs: ('password' | 'wechat')[] = []
+  if (passwordLoginEnabled.value) {
+    tabs.push('password')
+  }
+  if (wechatLoginEnabled.value) {
+    tabs.push('wechat')
+  }
+  return tabs
+})
+
+/** 账号密码登录(tokenStore.login 内部完成 token 存储与用户信息写入) */
 async function doPasswordLogin() {
   if (!username.value || !password.value) {
     uni.showToast({ icon: 'none', title: '请输入账号和密码' })
     return
   }
   loading.value = true
-  resultText.value = '登录中...'
   try {
-    const res = await loginByPassword(username.value, password.value)
-    resultText.value = JSON.stringify(res.data, null, 2)
-    console.log('账号密码登录成功:', res.data)
+    await tokenStore.login({ username: username.value, password: password.value })
+    handleLoginSuccess()
   }
-  catch (error: any) {
-    resultText.value = `登录失败: ${error?.message ?? JSON.stringify(error)}`
+  catch (error) {
     console.error('账号密码登录失败:', error)
   }
   finally {
@@ -40,32 +54,28 @@ async function doPasswordLogin() {
   }
 }
 
-/** 微信登录（仅微信小程序可用） */
+/** 微信登录(仅微信小程序可用) */
 async function doWechatLogin() {
   // #ifdef MP-WEIXIN
   loading.value = true
-  resultText.value = '登录中...'
   try {
-    const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
-      uni.login({
-        provider: 'weixin',
-        success: res => resolve(res),
-        fail: err => reject(new Error(err.errMsg || 'uni.login 失败')),
-      })
-    })
-    console.log('wx.login code:', loginRes.code)
-    const res = await loginByWechat(loginRes.code)
-    resultText.value = JSON.stringify(res.data, null, 2)
-    console.log('微信登录成功:', res.data)
+    await tokenStore.wxLogin()
+    handleLoginSuccess()
   }
-  catch (error: any) {
-    resultText.value = `微信登录失败: ${error?.message ?? JSON.stringify(error)}`
+  catch (error) {
     console.error('微信登录失败:', error)
   }
   finally {
     loading.value = false
   }
   // #endif
+}
+
+/** 登录成功统一处理:返回来源页 */
+function handleLoginSuccess() {
+  setTimeout(() => {
+    uni.navigateBack()
+  }, 600)
 }
 </script>
 
@@ -74,30 +84,30 @@ async function doWechatLogin() {
     <uh-navbar default-title="登录" />
 
     <view class="box-border flex flex-col items-center px-6 pt-10">
+      <!-- 登录能力整体关闭提示 -->
+      <view v-if="availableTabs.length === 0" class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-8 text-center">
+        <view class="text-sm text-gray-500">
+          登录功能暂未开启
+        </view>
+      </view>
+
       <!-- 登录卡片（玻璃拟态） -->
-      <view class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
-        <!-- 平台切换 -->
-        <view class="mb-6 flex rounded-full bg-white/60 p-1">
+      <view v-else class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
+        <!-- 平台切换(仅一种登录方式时不显示切换条) -->
+        <view v-if="availableTabs.length > 1" class="mb-6 flex rounded-full bg-white/60 p-1">
           <view
+            v-for="tab in availableTabs"
+            :key="tab"
             class="flex-1 rounded-full py-2 text-center text-sm"
-            :class="activeTab === 'password' ? 'bg-primary font-bold text-white' : 'text-gray-500'"
-            @click="activeTab = 'password'"
+            :class="activeTab === tab ? 'bg-primary font-bold text-white' : 'text-gray-500'"
+            @click="activeTab = tab"
           >
-            账号密码
+            {{ tab === 'password' ? '账号密码' : '微信登录' }}
           </view>
-          <!-- #ifdef MP-WEIXIN -->
-          <view
-            class="flex-1 rounded-full py-2 text-center text-sm"
-            :class="activeTab === 'wechat' ? 'bg-primary font-bold text-white' : 'text-gray-500'"
-            @click="activeTab = 'wechat'"
-          >
-            微信登录
-          </view>
-          <!-- #endif -->
         </view>
 
         <!-- 账号密码登录表单 -->
-        <template v-if="activeTab === 'password'">
+        <template v-if="activeTab === 'password' && passwordLoginEnabled">
           <wd-input
             v-model="username"
             custom-class="uh-login-input"
@@ -128,7 +138,7 @@ async function doWechatLogin() {
         </template>
 
         <!-- 微信登录 -->
-        <template v-else>
+        <template v-else-if="wechatLoginEnabled">
           <!-- #ifdef MP-WEIXIN -->
           <view class="flex flex-col items-center py-4">
             <view class="mb-4 h-16 w-16 flex items-center justify-center rounded-full bg-green-500/10">
@@ -146,14 +156,6 @@ async function doWechatLogin() {
           </view>
           <!-- #endif -->
         </template>
-      </view>
-
-      <!-- 登录结果输出（验证用） -->
-      <view v-if="resultText" class="uh-global-card-glass uh-shadow-xs mt-6 box-border w-full rounded-2xl p-4">
-        <view class="mb-2 text-sm font-bold text-gray-700">
-          登录结果
-        </view>
-        <text class="break-all whitespace-pre-wrap text-xs text-gray-500">{{ resultText }}</text>
       </view>
     </view>
 

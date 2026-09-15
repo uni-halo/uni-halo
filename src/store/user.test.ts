@@ -1,9 +1,9 @@
-import { getUserInfo } from '@/api/login'
+import { getAuthProfile } from '@/api/auth'
 import { describe, expect, it, vi } from 'vitest'
 import { useUserStore } from './user'
 
-vi.mock('@/api/login', () => ({
-  getUserInfo: vi.fn(),
+vi.mock('@/api/auth', () => ({
+  getAuthProfile: vi.fn(),
 }))
 
 describe('useUserStore', () => {
@@ -56,16 +56,42 @@ describe('useUserStore', () => {
     expect(uni.removeStorageSync).toHaveBeenCalledWith('user')
   })
 
-  it('fetchUserInfo：调用 API 并将结果写入 store', async () => {
+  it('fetchUserInfo：调用 auth/profile 并映射 user/roles/permissions 写入 store', async () => {
     const store = useUserStore()
-    const mockUser = { userId: 42, username: 'api_user', nickname: 'API User', avatar: 'https://x.com/a.png' }
-    vi.mocked(getUserInfo).mockResolvedValue(mockUser)
+    vi.mocked(getAuthProfile).mockResolvedValue({
+      code: 200,
+      message: 'ok',
+      data: {
+        user: { name: 'api_user', displayName: 'API User', avatar: 'https://x.com/a.png' },
+        roles: ['author'],
+        permissions: [],
+      },
+    } as any)
 
-    await store.fetchUserInfo()
+    const info = await store.fetchUserInfo()
 
-    expect(store.userInfo.userId).toBe(42)
+    expect(info.username).toBe('api_user')
+    expect(info.nickname).toBe('API User')
+    expect(info.avatar).toBe('https://x.com/a.png')
+    expect(info.roles).toEqual(['author'])
     expect(store.userInfo.username).toBe('api_user')
-    expect(store.userInfo.nickname).toBe('API User')
-    expect(store.userInfo.avatar).toBe('https://x.com/a.png')
+    expect(store.userInfo.roles).toEqual(['author'])
+  })
+
+  it('setUserInfoFromLoginResult：登录结果直接映射用户信息与权限', () => {
+    const store = useUserStore()
+    const info = store.setUserInfoFromLoginResult({
+      token: 'pat_xxx',
+      user: { name: 'wx_user', displayName: '微信用户', avatar: '' },
+      roles: ['reader'],
+      permissions: [],
+    })
+
+    expect(info.username).toBe('wx_user')
+    expect(info.nickname).toBe('微信用户')
+    // avatar 为空时回退默认头像
+    expect(info.avatar).toBe('/static/images/default-avatar.png')
+    expect(info.roles).toEqual(['reader'])
+    expect(store.userInfo.roles).toEqual(['reader'])
   })
 })

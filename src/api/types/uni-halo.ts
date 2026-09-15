@@ -186,12 +186,13 @@ export interface IAppConfig {
       personalToken?: string
     }
   }
-  /**
-   * 恋爱配置（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据：
+  /** 恋爱配置（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据：
    * title/subTitle/颜色（hex8）/iconBgColor/path/priority，按 priority 降序下发；
    * app 端按模块 key 直接渲染入口列表，locked=passwordEnabled 且本地无有效 token）
    */
   loveConfig?: ILoveConfigGroup
+  /** 登录配置(仅下发两个登录方式开关,决定登录页展示哪些入口) */
+  loginConfig?: ILoginPublicConfig
   imagesConfig?: IImagesConfig
   /**
    * 博主与社交（blogger 含
@@ -779,6 +780,18 @@ export interface ILoveStoryListRes {
 
 /* ---------- 移动端登录(uni-halo 插件 AuthEndpoint) ---------- */
 
+/**
+ * 登录公开配置(getConfigs 下发,插件端 PublicConfigAssembler.sanitizeLogin 脱敏)
+ * 仅含两个登录方式开关,供客户端决定登录页展示哪些入口;
+ * Secret 名称、令牌有效期与注册策略属服务端决策,不下发
+ */
+export interface ILoginPublicConfig {
+  /** 账号密码登录开关 */
+  passwordLoginEnabled?: boolean
+  /** 微信一键登录开关 */
+  wechatLoginEnabled?: boolean
+}
+
 /** 登录用户摘要(插件端 LoginUser,不含敏感字段) */
 export interface ILoginUser {
   name?: string
@@ -795,9 +808,16 @@ export interface ILoginPermissionRule {
 }
 
 /**
- * 登录结果(插件端 LoginResult)
- * token 为 pat_ 前缀的 Halo 原生个人访问令牌,携带方式 Authorization: Bearer <token>
+ * 由 LoginResult 裁剪 token 后得到的用户资料(getAuthProfile / auth/profile 响应)
+ * 会话恢复只需用户与权限,令牌由登录接口一次性下发,客户端自行缓存到过期
  */
+export interface IProfileResult {
+  user?: ILoginUser
+  roles?: string[]
+  permissions?: ILoginPermissionRule[]
+}
+
+/** 登录结果(插件端 LoginResult) */
 export interface ILoginResult {
   token?: string
   tokenType?: string
