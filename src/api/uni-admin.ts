@@ -9,7 +9,7 @@
 import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
-import type { IAttachment, IMomentSpec } from './types/uni-admin'
+import type { IAttachment, IMomentResource, IMomentSpec } from './types/uni-admin'
 import type { ILoveAlbum, ILoveDailyItem, ILoveDailyItemSpec, ILovePhoto, ILoveStory, ILoveStorySpec } from './types/uni-halo'
 
 /** UC 附件上传端点（存储策略由站点后台「个人中心附件配置」决定） */
@@ -61,9 +61,18 @@ export interface IMomentUCListReq {
   [key: string]: unknown
 }
 
+/** UC 瞬间条目：实际数据包在 moment 字段（外层另有 owner/stats） */
+export interface IMomentUCItem {
+  moment?: { metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }
+  /** 兼容直接返回 Moment 本体的形态 */
+  metadata?: { name: string }
+  spec?: IMomentSpec
+  [key: string]: unknown
+}
+
 /** 获取当前用户的瞬间列表（UC API，分页） */
 export function listMyMoments(params: IMomentUCListReq) {
-  return http.Get<IResponse<{ items: { metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }[], hasNext: boolean, [key: string]: unknown }>>(
+  return http.Get<IResponse<{ items: IMomentUCItem[], hasNext: boolean, [key: string]: unknown }>>(
     '/apis/uc.api.moment.halo.run/v1alpha1/moments',
     {
       params,
@@ -73,11 +82,19 @@ export function listMyMoments(params: IMomentUCListReq) {
   )
 }
 
-/** 发布瞬间（UC API；无审核权限时进入待审） */
+const MOMENT_API_VERSION = 'moment.halo.run/v1alpha1'
+
+/** 发布瞬间（UC API；无审核权限时进入待审）。请求体须为完整 Moment 资源，裸 spec 会 500 */
 export function createMoment(spec: IMomentSpec) {
-  return http.Post<IResponse<IMomentSpec>>(
-    '/apis/uc.api.moment.halo.run/v1alpha1/moments',
+  const body: IMomentResource = {
+    apiVersion: MOMENT_API_VERSION,
+    kind: 'Moment',
+    metadata: { generateName: 'moment-' },
     spec,
+  }
+  return http.Post<IResponse<{ metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }>>(
+    '/apis/uc.api.moment.halo.run/v1alpha1/moments',
+    body,
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
@@ -85,11 +102,17 @@ export function createMoment(spec: IMomentSpec) {
   )
 }
 
-/** 更新自己的瞬间（UC API） */
+/** 更新自己的瞬间（UC API，请求体为完整 Moment 资源；服务端保留 owner/releaseTime 并重置审核） */
 export function updateMoment(name: string, spec: IMomentSpec) {
-  return http.Put<IResponse<IMomentSpec>>(
-    `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
+  const body: IMomentResource = {
+    apiVersion: MOMENT_API_VERSION,
+    kind: 'Moment',
+    metadata: { name },
     spec,
+  }
+  return http.Put<IResponse<{ metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }>>(
+    `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
+    body,
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
@@ -100,6 +123,17 @@ export function updateMoment(name: string, spec: IMomentSpec) {
 /** 删除自己的瞬间（UC API） */
 export function deleteMoment(name: string) {
   return http.Delete<IResponse<null>>(
+    `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
+/** 获取自己的单个瞬间详情（UC API，带鉴权，可读私密瞬间） */
+export function getMyMoment(name: string) {
+  return http.Get<IResponse<{ metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }>>(
     `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
     {
       cacheFor: 0,

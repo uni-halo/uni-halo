@@ -272,15 +272,24 @@
 		}
 	}
 
-	/* ---------------- 发布入口(有瞬间发布权限,APP 端) ---------------- */
+	/* ---------------- 发布入口(有瞬间发布权限,APP 端，页面内弹窗) ---------------- */
 	const { can } = usePermission()
 	const canPublish = computed(() => can('MOMENT_MANAGE'))
 
+	const publishPopupVisible = ref(false)
+
 	function handleToPublish() {
-		uni.navigateTo({
-			url: '/pages-admin/moment-publish/moment-publish',
-			animationType: 'slide-in-right',
-		})
+		publishPopupVisible.value = true
+	}
+
+	function handlePublishPopupClose(data : { refresh : boolean, isSubmit : boolean }) {
+		publishPopupVisible.value = false
+		if (data.refresh) {
+			// 发布成功后刷新列表
+			resetLoadMoreStatus()
+			queryParams.value.page = 1
+			handleGetData()
+		}
 	}
 
 	function handleToTopPage(duration = 500) {
@@ -458,20 +467,32 @@
 			</view>
 		</template>
 
-		<!-- 发布瞬间悬浮按钮（仅 author/admin，APP 端） -->
-		<!-- #ifdef APP-PLUS -->
+		<!-- 发布瞬间悬浮按钮（仅 author/admin，参考瞬间管理页胶囊设计，悬浮于自定义 tabbar 上方） -->
 		<view
 			v-if="canPublish && uniHaloPluginAvailable"
-			class="fixed bottom-30 right-4 z-50 h-14 w-14 flex items-center justify-center rounded-full bg-primary text-2xl text-white shadow-lg"
-			@click="handleToPublish"
+			class="uh-translate-x-center fixed bottom-14 left-1/2 z-50 flex items-center justify-center pb-safe"
 		>
-			✏️
+			<view
+				class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
+				@click="handleToPublish"
+			>
+				<wd-icon name="add-circle" size="36rpx" />
+				<text class="shrink-0 text-xs font-semibold">发布瞬间</text>
+			</view>
 		</view>
-		<!-- #endif -->
 	</view>
 
 	<!-- 评论弹窗(瞬间评论,subjectKind=Moment) -->
 	<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
 		:title="commentModal.title" :post-name="commentModal.postName" subject-kind="Moment"
 		@on-close="handleOnCommentModalClose" />
+
+	<!-- 发布瞬间弹窗(全局组件,编辑模式由管理页使用) -->
+	<uh-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
 </template>
+
+<style scoped lang="scss">
+.uh-translate-x-center {
+	transform: translateX(-50%);
+}
+</style>

@@ -1,12 +1,16 @@
 <script lang="ts" setup>
 /**
- * 瞬间编辑弹窗：mp-html editable 富文本 + 图片上传 + 发布/保存逻辑内聚
- * 供任意页面复用：<MomentEditPopup ref="ref" :show="visible" @on-close="..." />
- * 编辑模式通过 ref.openEdit(moment) 打开并回填
+ * 瞬间编辑弹窗（全局组件，uh- 前缀 easycom 自动注册）
+ * mp-html editable 富文本 + 图片上传 + 发布/保存逻辑内聚
+ *
+ * 用法：
+ * - 发布模式：<uh-moment-edit-popup :show="visible" @on-close="..." />
+ * - 编辑模式：通过 ref.openEdit(name) 仅传 metadata.name，组件内部查询详情回填
  */
 import { ref, watch } from 'vue'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
-import { createMoment, getAttachmentPermalink, updateMoment, uploadAttachment } from '@/api/uni-admin'
+import { createMoment, getAttachmentPermalink, getMyMoment, updateMoment, uploadAttachment } from '@/api/uni-admin'
+import { extractMomentContent } from '@/utils/moment'
 import type { IMomentContent } from '@/api/types/uni-admin'
 
 defineOptions({
@@ -29,6 +33,7 @@ const isShow = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editName = ref('')
 const saving = ref(false)
+const loading = ref(false)
 
 const { list: images, uploading, choose, retry, remove, urls, reset } = useHaloUpload({
   maxCount: 9,
@@ -87,21 +92,45 @@ function handleResetForm() {
   reset()
 }
 
-/** 外部打开编辑模式时回填（传入瞬间对象，spec.content 结构同官方接口） */
-function openEdit(moment: { metadata?: { name?: string }, spec?: any }) {
-  formMode.value = 'edit'
-  editName.value = moment.metadata?.name || ''
-  editorContent.value = moment.spec?.content?.raw?.content || moment.spec?.content?.content || ''
-  const imageUrls = (moment.spec?.content?.medium || [])
-    .filter((m: any) => m.type === 'PHOTO')
-    .map((m: any) => m.url)
-  images.value = imageUrls.map((url: string) => ({
-    tempPath: url,
-    url,
-    status: 'success' as const,
-    progress: 100,
-  }))
-  isShow.value = true
+/**
+ * 编辑模式：仅传瞬间 metadata.name，内部查询详情并回填
+ * @returns 是否成功打开（查询失败/无权限时返回 false，由调用方决定后续）
+ */
+async function openEdit(name: string): Promise<boolean> {
+  if (!name || loading.value)
+    return false
+  loading.value = true
+  uni.showLoading({ title: '加载中', mask: true })
+  try {
+    const res = await getMyMoment(name)
+    // UC 接口返回可能是 { moment, owner, stats } 包装，也可能是 Moment 本体，两者兼容
+    const moment: any = (res.data as any)?.moment || res.data
+    if (!moment?.spec) {
+      uni.showToast({ title: '瞬间不存在或无权编辑', icon: 'none' })
+      return false
+    }
+    formMode.value = 'edit'
+    editName.value = moment.metadata?.name || name
+    // 兼容对象格式 { raw, html, medium } 与数组格式 [{ content, medium }]
+    const content = extractMomentContent(moment.spec.content)
+    editorContent.value = content.raw || content.html || ''
+    images.value = content.photos.map(url => ({
+      tempPath: url,
+      url,
+      status: 'success' as const,
+      progress: 100,
+    }))
+    isShow.value = true
+    return true
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '加载瞬间失败', icon: 'none' })
+    return false
+  }
+  finally {
+    uni.hideLoading()
+    loading.value = false
+  }
 }
 
 /* ---------------- 提交 ---------------- */
@@ -123,9 +152,10 @@ async function handleSubmit() {
   }
 
   const hasImages = imageUrls.length > 0
+  // 瞬间插件 Moment.MomentContent 为单对象 { raw, html, medium }，raw/html 均为字符串
   const momentContent: IMomentContent = {
-    type: hasImages ? 'PHOTO' : 'TEXT',
-    content: html.trim(),
+    raw: html.trim(),
+    html: html.trim(),
     ...(hasImages
       ? {
           medium: imageUrls.map(url => ({ type: 'PHOTO' as const, url })),
@@ -137,14 +167,14 @@ async function handleSubmit() {
   try {
     if (formMode.value === 'edit') {
       await updateMoment(editName.value, {
-        content: [momentContent] as IMomentContent[] as any,
+        content: momentContent,
         visible: 'PUBLIC',
       })
       uni.showToast({ title: '已保存', icon: 'success' })
     }
     else {
       await createMoment({
-        content: [momentContent] as IMomentContent[] as any,
+        content: momentContent,
         visible: 'PUBLIC',
       })
       uni.showToast({ title: '发布成功', icon: 'success' })

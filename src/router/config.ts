@@ -18,7 +18,6 @@ export const excludeLoginPathList = getAllPages('excludeLoginPath').map(page => 
 
 /** 管理后台页面（pages-admin 分包，需登录后访问） */
 export const ADMIN_PATH_LIST = [
-  '/pages-admin/moment-publish/moment-publish',
   '/pages-admin/moment-manage/moment-manage',
   '/pages-admin/love/daily-manage',
   '/pages-admin/love/story-manage',

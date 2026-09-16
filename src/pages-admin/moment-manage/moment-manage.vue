@@ -10,7 +10,7 @@ import { deleteMoment, listMyMoments } from '@/api/uni-admin'
 import { usePermission } from '@/hooks/usePermission'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import MomentEditPopup from '../moment-publish/components/moment-edit-popup.vue'
+import { extractMomentContent, stripHtmlTags } from '@/utils/moment'
 
 definePage({
   style: {
@@ -29,7 +29,6 @@ const queryParams = ref({ size: 10, page: 1 })
 
 interface MomentItem {
   name: string
-  spec: Record<string, any>
   content: string
   images: string[]
   releaseTime: string
@@ -44,15 +43,20 @@ async function handleGetData() {
   }
   try {
     const res = await listMyMoments({ ...queryParams.value })
-    const items: MomentItem[] = (res.data?.items || []).map((x: any) => ({
-      name: x.metadata?.name || '',
-      spec: x.spec || {},
-      content: x.spec?.content?.raw?.content || x.spec?.content?.content || '',
-      images: (x.spec?.content?.medium || []).filter((m: any) => m.type === 'PHOTO').map((m: any) => m.url),
-      releaseTime: x.spec?.releaseTime || '',
-      visible: x.spec?.visible || 'PUBLIC',
-      approved: x.spec?.approved,
-    }))
+    const items: MomentItem[] = (res.data?.items || []).map((x: any) => {
+      // UC 列表接口的条目为 { moment, owner, stats }，实际数据在 moment 字段
+      const m = x.moment || x
+      // 兼容对象格式 { raw, html, medium } 与数组格式 [{ content, medium }]
+      const c = extractMomentContent(m.spec?.content)
+      return {
+        name: m.metadata?.name || '',
+        content: stripHtmlTags(c.raw || c.html),
+        images: c.photos,
+        releaseTime: m.spec?.releaseTime || '',
+        visible: m.spec?.visible || 'PUBLIC',
+        approved: m.spec?.approved,
+      }
+    })
 
     dataList.value = loadMoreStatus.value.active
       ? dataList.value.concat(items)
@@ -112,14 +116,15 @@ function handlePreview(index: number, urls: string[]) {
 
 /* ---------------- 发布/编辑弹窗（抽离组件） ---------------- */
 const popupVisible = ref(false)
-const popupRef = ref<InstanceType<typeof MomentEditPopup> | null>(null)
+const popupRef = ref<{ openEdit: (name: string) => Promise<boolean> } | null>(null)
 
 function handleOpenPublish() {
   popupVisible.value = true
 }
 
 function handleEdit(item: MomentItem) {
-  popupRef.value?.openEdit({ metadata: { name: item.name }, spec: item.spec })
+  // 编辑模式仅传 metadata.name，弹窗内部查询详情回填
+  popupRef.value?.openEdit(item.name)
 }
 
 function handlePopupClose(data: { isSubmit: boolean, refresh: boolean }) {
@@ -221,8 +226,8 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
         </view>
       </view>
 
-      <!-- 发布/编辑弹窗（抽离组件，可复用） -->
-      <MomentEditPopup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
+      <!-- 发布/编辑弹窗（全局组件，easycom 自动注册） -->
+      <uh-moment-edit-popup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
     </template>
   </view>
 </template>
