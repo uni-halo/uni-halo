@@ -111,6 +111,10 @@ function handleToPublish() {
   uni.navigateTo({ url: '/pages-admin/moment-publish/moment-publish', animationType: 'slide-in-right' })
 }
 
+function handleEdit(item: MomentItem) {
+  uni.navigateTo({ url: `/pages-admin/moment-publish/moment-publish?name=${item.name}`, animationType: 'slide-in-right' })
+}
+
 function handleDelete(item: MomentItem) {
   uni.showModal({
     title: '删除瞬间',
@@ -180,6 +184,8 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
             />
           </view>
           <view class="mt-2 flex items-center justify-end gap-3 border-t border-black/5 px-4 py-2.5 text-xs">
+            <text class="text-gray-500" @click="handleToPublish()">✏️ 发布</text>
+            <text class="text-gray-500" @click="handleEdit(moment)">📝 编辑</text>
             <text class="text-red-500" @click="handleDelete(moment)">🗑 删除</text>
           </view>
         </view>

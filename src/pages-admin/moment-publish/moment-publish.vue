@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
-import { createMoment } from '@/api/uni-admin'
+import { createMoment, listMyMoments, updateMoment } from '@/api/uni-admin'
 import type { IMomentContent } from '@/api/types/uni-admin'
 
 definePage({
@@ -15,6 +16,8 @@ const content = ref('')
 const tags = ref<string[]>([])
 const tagInput = ref('')
 const submitting = ref(false)
+/** 编辑模式：待编辑的瞬间 name */
+const editName = ref('')
 
 const MAX_CONTENT_LENGTH = 5000
 
@@ -25,6 +28,35 @@ const { list: images, uploading, choose, retry, remove, allSuccess, urls, reset 
 
 const canSubmit = computed(() => {
   return (content.value.trim().length > 0 || images.value.some(i => i.status === 'success')) && !submitting.value && !uploading.value
+})
+
+/** 编辑模式回填：拉取瞬间详情并填充表单 */
+onLoad(async (query) => {
+  const name = query?.name
+  if (!name)
+    return
+  editName.value = name
+  uni.setNavigationBarTitle({ title: '编辑瞬间' })
+  try {
+    const res = await listMyMoments({ page: 1, size: 1 })
+    const target = (res.data?.items || []).find((x: any) => x.metadata?.name === name) as any
+    if (!target) {
+      uni.showToast({ title: '瞬间不存在或无权编辑', icon: 'none' })
+      return
+    }
+    content.value = target.spec?.content?.raw?.content || target.spec?.content?.content || ''
+    tags.value = target.spec?.tags || []
+    const imageUrls = (target.spec?.content?.medium || []).filter((m: any) => m.type === 'PHOTO').map((m: any) => m.url)
+    images.value = imageUrls.map((url: string) => ({
+      tempPath: url,
+      url,
+      status: 'success' as const,
+      progress: 100,
+    }))
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '加载瞬间失败', icon: 'none' })
+  }
 })
 
 function addTag() {
@@ -74,12 +106,22 @@ async function submit() {
 
   submitting.value = true
   try {
-    await createMoment({
-      content: [momentContent] as IMomentContent[] as any,
-      visible: 'PUBLIC',
-      ...(tags.value.length > 0 ? { tags: tags.value } : {}),
-    })
-    uni.showToast({ title: '发布成功', icon: 'success' })
+    if (editName.value) {
+      await updateMoment(editName.value, {
+        content: [momentContent] as IMomentContent[] as any,
+        visible: 'PUBLIC',
+        ...(tags.value.length > 0 ? { tags: tags.value } : {}),
+      })
+      uni.showToast({ title: '已保存', icon: 'success' })
+    }
+    else {
+      await createMoment({
+        content: [momentContent] as IMomentContent[] as any,
+        visible: 'PUBLIC',
+        ...(tags.value.length > 0 ? { tags: tags.value } : {}),
+      })
+      uni.showToast({ title: '发布成功', icon: 'success' })
+    }
     reset()
     content.value = ''
     tags.value = []

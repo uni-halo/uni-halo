@@ -85,6 +85,18 @@ export function createMoment(spec: IMomentSpec) {
   )
 }
 
+/** 更新自己的瞬间（UC API） */
+export function updateMoment(name: string, spec: IMomentSpec) {
+  return http.Put<IResponse<IMomentSpec>>(
+    `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
+    spec,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
 /** 删除自己的瞬间（UC API） */
 export function deleteMoment(name: string) {
   return http.Delete<IResponse<null>>(
