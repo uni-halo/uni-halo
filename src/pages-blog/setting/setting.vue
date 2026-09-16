@@ -4,9 +4,13 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useDialog } from '@wot-ui/ui'
+	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { collectSiteDefaults } from '@/utils/preference'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
 	import type { PrefDef } from '@/hooks/usePreferenceRows'
+
+	const dialog = useDialog()
 
 	definePage({
 		style: {
@@ -100,26 +104,27 @@
 	}
 
 	/* ---------------- 重置全部 ---------------- */
-	function handleResetAll() {
-		uni.showModal({
-			title: '提示',
-			content: '确定将所有偏好恢复为站点默认吗？',
-			showCancel: true,
-			cancelText: '取消',
-			confirmText: '确定',
-			confirmColor: '#B9E424',
-			success: (res) => {
-				if (res.confirm) {
-					settingStore.resetPreferences()
-					enumSheet.value.show = false
-					uni.showToast({ icon: 'none', title: '已恢复为站点默认' })
-				}
-			},
-		})
+	async function handleResetAll() {
+		try {
+			await dialog.confirm({
+				title: '提示',
+				msg: '确定将所有偏好恢复为站点默认吗？',
+				zIndex: 9999,
+				confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+				cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+			})
+		}
+		catch {
+			return
+		}
+		settingStore.resetPreferences()
+		enumSheet.value.show = false
+		uni.showToast({ icon: 'none', title: '已恢复为站点默认' })
 	}
 </script>
 
 <template>
+	<wd-dialog />
 	<view class="box-border min-h-screen bg-page">
 		<!-- 自定义标题 -->
 		<uh-navbar :scroll-y="scrollY" default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true" />

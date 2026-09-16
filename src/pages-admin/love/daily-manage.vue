@@ -9,9 +9,13 @@
 	import { getLoveDailyItems } from '@/api/uni-halo'
 	import { deleteLoveDailyItem, updateLoveDailyItem } from '@/api/uni-admin'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { useDialog } from '@wot-ui/ui'
+	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { checkThumbnailUrl } from '@/utils/url'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
+
+	const dialog = useDialog()
 
 	definePage({
 		style: {
@@ -131,25 +135,24 @@
 	}
 
 	function handleDelete(item : ILoveDailyItem) {
-		uni.showModal({
+		dialog.confirm({
 			title: '删除清单项',
-			content: `确定删除「${item.spec?.title || '未命名'}」吗？`,
-			confirmColor: '#ef4444',
-			success: async (res) => {
-				if (!res.confirm)
-					return
-				try {
-					await deleteLoveDailyItem(item.metadata?.name || '')
-					dataList.value = dataList.value.filter(x => (x.metadata?.name || '') !== (item.metadata?.name || ''))
-					if (dataList.value.length === 0)
-						updateLoadingStatus(DataLoadingStatusEnum.Empty)
-					uni.showToast({ title: '已删除', icon: 'success' })
-				}
-				catch (err : any) {
-					uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
-				}
-			},
-		})
+			msg: `确定删除「${item.spec?.title || '未命名'}」吗？`,
+			zIndex: 9999,
+			confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+			cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+		}).then(async () => {
+			try {
+				await deleteLoveDailyItem(item.metadata?.name || '')
+				dataList.value = dataList.value.filter(x => (x.metadata?.name || '') !== (item.metadata?.name || ''))
+				if (dataList.value.length === 0)
+					updateLoadingStatus(DataLoadingStatusEnum.Empty)
+				uni.showToast({ title: '已删除', icon: 'success' })
+			}
+			catch (err : any) {
+				uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+			}
+		}).catch(() => {})
 	}
 
 	onPageScroll((option : Page.PageScrollOption) => {
@@ -158,6 +161,7 @@
 </script>
 
 <template>
+	<wd-dialog />
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :use-back="true" default-title="恋爱清单管理" title-color="text-gray-900" />
 

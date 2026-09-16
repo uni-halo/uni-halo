@@ -8,9 +8,13 @@ import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudi
 import { getLoveAlbums } from '@/api/uni-halo'
 import { deleteLoveAlbum } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { ILoveAlbum } from '@/api/types/uni-halo'
+
+const dialog = useDialog()
 
 definePage({
   style: {
@@ -104,25 +108,24 @@ function handleEditClose(data: { isSubmit: boolean, refresh: boolean }) {
 }
 
 function handleDeleteAlbum(album: ILoveAlbum) {
-  uni.showModal({
+  dialog.confirm({
     title: '删除相册',
-    content: `确定删除「${album.title || album.displayName || '未命名'}」吗？相册内照片将一并删除。`,
-    confirmColor: '#ef4444',
-    success: async (res) => {
-      if (!res.confirm)
-        return
-      try {
-        await deleteLoveAlbum(album.metadata?.name || album.name || '')
-        albumList.value = albumList.value.filter(x => (x.metadata?.name || x.name) !== (album.metadata?.name || album.name))
-        if (albumList.value.length === 0)
-          updateLoadingStatus(DataLoadingStatusEnum.Empty)
-        uni.showToast({ title: '已删除', icon: 'success' })
-      }
-      catch (err: any) {
-        uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
-      }
-    },
-  })
+    msg: `确定删除「${album.title || album.displayName || '未命名'}」吗？相册内照片将一并删除。`,
+    zIndex: 9999,
+    confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+    cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+  }).then(async () => {
+    try {
+      await deleteLoveAlbum(album.metadata?.name || album.name || '')
+      albumList.value = albumList.value.filter(x => (x.metadata?.name || x.name) !== (album.metadata?.name || album.name))
+      if (albumList.value.length === 0)
+        updateLoadingStatus(DataLoadingStatusEnum.Empty)
+      uni.showToast({ title: '已删除', icon: 'success' })
+    }
+    catch (err: any) {
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+    }
+  }).catch(() => {})
 }
 
 /* ---------------- 相册照片管理弹窗（全局组件） ---------------- */
@@ -143,6 +146,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 </script>
 
 <template>
+  <wd-dialog />
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="恋爱相册管理" title-color="text-gray-900" />
 

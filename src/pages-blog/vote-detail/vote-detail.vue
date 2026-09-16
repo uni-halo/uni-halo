@@ -4,9 +4,13 @@ import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTime
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
+
+const dialog = useDialog()
 
 definePage({
   style: {
@@ -188,24 +192,21 @@ function handleSubmitTip(text: string) {
 
 async function handleSubmit() {
   if (!vote.value?.spec?.canAnonymously) {
-    uni.showModal({
+    dialog.confirm({
       title: '提示',
-      content: '该投票不支持匿名，请到博主的 网站端 进行投票！',
-      cancelColor: '#666666',
-      cancelText: '关闭',
-      confirmText: '复制地址',
-      success: (res) => {
-        if (res.confirm) {
-          uni.setClipboardData({
-            data: import.meta.env.VITE_SERVER_BASEURL || '',
-            showToast: false,
-            success: () => {
-              showToast('复制成功')
-            },
-          })
-        }
-      },
-    })
+      msg: '该投票不支持匿名，请到博主的 网站端 进行投票！',
+      zIndex: 9999,
+      confirmButtonProps: { ...DIALOG_CONFIRM_BUTTON_PROPS, text: '复制地址' },
+      cancelButtonProps: { ...DIALOG_CANCEL_BUTTON_PROPS, text: '关闭' },
+    }).then(() => {
+      uni.setClipboardData({
+        data: import.meta.env.VITE_SERVER_BASEURL || '',
+        showToast: false,
+        success: () => {
+          showToast('复制成功')
+        },
+      })
+    }).catch(() => {})
     return
   }
 
@@ -261,6 +262,7 @@ onShareTimeline(() => ({
 </script>
 
 <template>
+  <wd-dialog />
   <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
     <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />

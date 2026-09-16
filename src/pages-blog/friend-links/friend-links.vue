@@ -8,11 +8,15 @@ import { useSettingStore } from '@/store/setting'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { ILink, ILinkGroup } from '@/api/types/halo'
 import type { IMiniProgramLink, IMiniProgramLinkGroupVo } from '@/api/types/uni-halo'
+
+const dialog = useDialog()
 
 definePage({
   style: {
@@ -332,10 +336,12 @@ function handleSaveMiniProgramCode(link: IMiniProgramLink) {
           uni.showToast({ icon: 'none', title: '已保存到相册' })
         },
         fail: () => {
-          uni.showModal({
+          dialog.alert({
             title: '保存失败',
-            content: '请检查相册权限后重试',
-            showCancel: false,
+            msg: '请检查相册权限后重试',
+            zIndex: 9999,
+            confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+            cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
           })
         },
         complete: () => {
@@ -413,6 +419,7 @@ onReachBottom(() => {
 </script>
 
 <template>
+  <wd-dialog />
   <view class="app-page min-h-screen w-screen flex flex-col bg-page">
     <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" default-title="友情链接" title-color="text-gray-900" />

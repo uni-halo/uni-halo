@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 	import { storeToRefs } from 'pinia'
+	import { useDialog } from '@wot-ui/ui'
+	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { isWechat } from '@/utils/platform'
+	import { checkAvatarUrl } from '@/utils/url'
 	import { useSettingStore } from '@/store/setting'
 	import { useTokenStore } from '@/store/token'
 	import { useUserStore } from '@/store/user'
@@ -20,6 +23,8 @@
 
 	const settingStore = useSettingStore()
 	const { can } = usePermission()
+
+	const dialog = useDialog()
 
 	interface IProps {
 		modelValue : boolean
@@ -69,22 +74,28 @@
 		})
 	}
 
+	/** 个人入口（我的信息 / 个人主页） */
+	const PROFILE_ENTRIES = [
+		{ key: 'my-profile', icon: 'edit', label: '我的信息', url: '/pages-blog/my-profile/my-profile' },
+		{ key: 'user-profile', icon: 'home', label: '个人主页', url: '/pages-blog/user-profile/user-profile' },
+	]
+
 	function handleLogout() {
-		uni.showModal({
+		dialog.confirm({
 			title: '提示',
-			content: '确定退出登录吗？',
-			success: (res) => {
-				if (res.confirm) {
-					useTokenStore().logout().then(() => {
-						uni.showToast({
-							icon: 'none',
-							title: '已退出登录',
-						})
-						handleClose()
-					})
-				}
-			},
-		})
+			msg: '确定退出登录吗？',
+			zIndex: 9999,
+			confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+			cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+		}).then(() => {
+			useTokenStore().logout().then(() => {
+				uni.showToast({
+					icon: 'none',
+					title: '已退出登录',
+				})
+				handleClose()
+			})
+		}).catch(() => {})
 	}
 </script>
 
@@ -105,7 +116,7 @@
 			<view v-if="hasLogin" class="w-full">
 				<view
 					class="uh-global-card-glass flex items-center gap-x-2 border rounded-xl p-3 shadow-none !bg-white/5">
-					<image :src="userInfo.avatar"
+					<image :src="checkAvatarUrl(userInfo.avatar)"
 						class="uh-global-card-glass uh-shadow-xs h-12 w-12 rounded-full" />
 					<view class="flex flex-col justify-center gap-y-1">
 						<text class="text-2xs text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
@@ -119,17 +130,13 @@
 			<view class="w-full flex shrink-0 flex-col">
 				<uh-section-title>功能入口</uh-section-title>
 				<view class="mt-3 box-border grid grid-cols-3 gap-3">
-					<view class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-0.5 rounded-xl p-2 shadow-none">
+					<view v-for="entry in PROFILE_ENTRIES" :key="entry.key"
+						class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-0.5 rounded-xl p-2 shadow-none"
+						@click="handleToAdmin(entry.url)">
 						<view class="rounded-lg bg-gray-50 text-gray-900 w-12 py-1 flex items-center justify-center">
-							<wd-icon name="edit" size="52rpx"  />
+							<wd-icon :name="entry.icon" size="52rpx" />
 						</view>
-						<text class="flex-1 text-xs text-gray-900">我的信息</text>
-					</view>
-					<view class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-0.5 rounded-xl p-2 shadow-none">
-						<view class="rounded-lg bg-gray-50 text-gray-900 w-12 py-1 flex items-center justify-center">
-							<wd-icon name="home" size="52rpx"  />
-						</view>
-						<text class="flex-1 text-xs text-gray-900">个人主页</text>
+						<text class="flex-1 text-xs text-gray-900">{{ entry.label }}</text>
 					</view>
 				</view>
 			</view>
@@ -165,4 +172,5 @@
 			</view>
 		</view>
 	</uh-glass-popup>
+	<wd-dialog />
 </template>

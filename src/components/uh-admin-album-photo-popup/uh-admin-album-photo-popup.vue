@@ -7,6 +7,8 @@
 import { computed, ref } from 'vue'
 import { addLoveAlbumPhoto, getLoveAlbumAdmin, removeLoveAlbumPhoto } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
 
@@ -27,6 +29,8 @@ const detailLoading = ref(false)
 
 /** 批量选图并上传，成功后逐张提交到相册（POST /photos，name 由服务端生成） */
 const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
+
+const dialog = useDialog()
 
 /** 未上传完成的待传照片数 */
 const pendingCount = computed(() => pendingPhotos.value.filter(i => i.status !== 'success').length)
@@ -85,24 +89,26 @@ async function handleDeletePhoto(photo: ILovePhoto) {
     uni.showToast({ title: '照片缺少标识，请刷新后重试', icon: 'none' })
     return
   }
-  uni.showModal({
-    title: '删除照片',
-    content: '确定删除这张照片吗？',
-    confirmColor: '#ef4444',
-    success: async (res) => {
-      if (!res.confirm)
-        return
-      try {
-        await removeLoveAlbumPhoto(name, photo.name || '')
-        currentPhotos.value = currentPhotos.value.filter(p => p.name !== photo.name)
-        uni.showToast({ title: '已删除', icon: 'success' })
-        emit('on-close', { isSubmit: true, refresh: true })
-      }
-      catch (err: any) {
-        uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
-      }
-    },
-  })
+  try {
+    await dialog.confirm({
+      title: '删除照片',
+      msg: '确定删除这张照片吗？',
+      zIndex: 9999,
+      confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+    })
+  }
+  catch {
+    return
+  }
+  try {
+    await removeLoveAlbumPhoto(name, photo.name || '')
+    currentPhotos.value = currentPhotos.value.filter(p => p.name !== photo.name)
+    uni.showToast({ title: '已删除', icon: 'success' })
+    emit('on-close', { isSubmit: true, refresh: true })
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+  }
 }
 
 function handlePreviewPhoto(index: number) {
@@ -174,4 +180,5 @@ defineExpose({ openDetail })
       </uh-button>
     </view>
   </uh-glass-popup>
+  <wd-dialog />
 </template>

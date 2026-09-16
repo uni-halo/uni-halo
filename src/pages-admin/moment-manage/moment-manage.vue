@@ -8,10 +8,14 @@ import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudi
 import dayjs from 'dayjs'
 import { deleteMoment, listMyMoments } from '@/api/uni-admin'
 import { usePermission } from '@/hooks/usePermission'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { extractMomentContent, stripHtmlTags } from '@/utils/moment'
 import { checkThumbnailUrl } from '@/utils/url'
+
+const dialog = useDialog()
 
 definePage({
   style: {
@@ -136,25 +140,24 @@ function handlePopupClose(data: { isSubmit: boolean, refresh: boolean }) {
 }
 
 function handleDelete(item: MomentItem) {
-  uni.showModal({
+  dialog.confirm({
     title: '删除瞬间',
-    content: '确定删除这条瞬间吗？删除后不可恢复。',
-    confirmColor: '#ef4444',
-    success: async (res) => {
-      if (!res.confirm)
-        return
-      try {
-        await deleteMoment(item.name)
-        dataList.value = dataList.value.filter(x => x.name !== item.name)
-        if (dataList.value.length === 0)
-          updateLoadingStatus(DataLoadingStatusEnum.Empty)
-        uni.showToast({ title: '已删除', icon: 'success' })
-      }
-      catch (err: any) {
-        uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
-      }
-    },
-  })
+    msg: '确定删除这条瞬间吗？删除后不可恢复。',
+    zIndex: 9999,
+    confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+    cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+  }).then(async () => {
+    try {
+      await deleteMoment(item.name)
+      dataList.value = dataList.value.filter(x => x.name !== item.name)
+      if (dataList.value.length === 0)
+        updateLoadingStatus(DataLoadingStatusEnum.Empty)
+      uni.showToast({ title: '已删除', icon: 'success' })
+    }
+    catch (err: any) {
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+    }
+  }).catch(() => {})
 }
 
 function handleRetry() {
@@ -170,6 +173,7 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
 </script>
 
 <template>
+  <wd-dialog />
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="瞬间管理" title-color="text-gray-900" />
 

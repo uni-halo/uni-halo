@@ -9,8 +9,12 @@ import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import type { IBlogStats } from '@/api/types/halo'
 import { storeToRefs } from 'pinia'
+
+const dialog = useDialog()
 
 definePage({
   style: {
@@ -200,15 +204,15 @@ function handleLoginEntry() {
     handleGoLogin()
     return
   }
-  uni.showModal({
+  dialog.confirm({
     title: '提示',
-    content: '确定退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        tokenStore.logout()
-      }
-    },
-  })
+    msg: '确定退出登录吗？',
+    zIndex: 9999,
+    confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+    cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+  }).then(() => {
+    tokenStore.logout()
+  }).catch(() => {})
 }
 
 /* ---------------- 生命周期 ---------------- */
@@ -233,6 +237,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 </script>
 
 <template>
+  <wd-dialog />
   <view class="box-border min-h-screen w-screen bg-page pb-2">
     <uh-mine-navbar :scroll-y="scrollY" />
 
