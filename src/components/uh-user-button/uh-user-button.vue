@@ -20,11 +20,11 @@
 	const { hasLogin } = storeToRefs(useTokenStore())
 	
 	// 白名单模式
-	const whiteList = ['pages/tabbar/home/home', 'pages-blog/articles/articles', 'pages-blog/archives/archives']
+	const blackList = []
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const visible = computed(() => {
-		return hasLogin.value && whiteList.includes(currentPage.route)
+		return hasLogin.value && !blackList.includes(currentPage.route)
 	})
 
 	function handleClick() {

@@ -1,9 +1,15 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+/**
+ * 发布瞬间宿主页：弹窗抽离为 moment-edit-popup 组件（内聚编辑器/图片/提交逻辑）
+ * 支持编辑模式：?name=xxx 时打开弹窗并回填
+ */
+import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { useHaloUpload } from '@/hooks/useHaloUpload'
-import { createMoment, listMyMoments, updateMoment } from '@/api/uni-admin'
-import type { IMomentContent } from '@/api/types/uni-admin'
+import { usePageScroll } from '@/hooks/usePageScroll'
+import { getMomentByName } from '@/api/halo'
+import MomentEditPopup from './components/moment-edit-popup.vue'
+
+const { scrollY, updatePageScrollValue } = usePageScroll()
 
 definePage({
   style: {
@@ -12,221 +18,43 @@ definePage({
   },
 })
 
-const content = ref('')
-const tags = ref<string[]>([])
-const tagInput = ref('')
-const submitting = ref(false)
-/** 编辑模式：待编辑的瞬间 name */
-const editName = ref('')
+const popupVisible = ref(false)
+const popupRef = ref<InstanceType<typeof MomentEditPopup> | null>(null)
 
-const MAX_CONTENT_LENGTH = 5000
-
-const { list: images, uploading, choose, retry, remove, allSuccess, urls, reset } = useHaloUpload({
-  maxCount: 9,
-  maxSize: 10 * 1024 * 1024,
-})
-
-const canSubmit = computed(() => {
-  return (content.value.trim().length > 0 || images.value.some(i => i.status === 'success')) && !submitting.value && !uploading.value
-})
-
-/** 编辑模式回填：拉取瞬间详情并填充表单 */
 onLoad(async (query) => {
   const name = query?.name
-  if (!name)
+  if (!name) {
+    popupVisible.value = true
     return
-  editName.value = name
+  }
+  // 编辑模式：拉详情回填
   uni.setNavigationBarTitle({ title: '编辑瞬间' })
   try {
-    const res = await listMyMoments({ page: 1, size: 1 })
-    const target = (res.data?.items || []).find((x: any) => x.metadata?.name === name) as any
-    if (!target) {
+    const res = await getMomentByName(name)
+    const target = res.data as any
+    if (!target?.spec) {
       uni.showToast({ title: '瞬间不存在或无权编辑', icon: 'none' })
       return
     }
-    content.value = target.spec?.content?.raw?.content || target.spec?.content?.content || ''
-    tags.value = target.spec?.tags || []
-    const imageUrls = (target.spec?.content?.medium || []).filter((m: any) => m.type === 'PHOTO').map((m: any) => m.url)
-    images.value = imageUrls.map((url: string) => ({
-      tempPath: url,
-      url,
-      status: 'success' as const,
-      progress: 100,
-    }))
+    popupRef.value?.openEdit(target)
   }
   catch (err: any) {
     uni.showToast({ title: err?.message || '加载瞬间失败', icon: 'none' })
   }
 })
 
-function addTag() {
-  const t = tagInput.value.trim()
-  if (!t)
-    return
-  if (tags.value.includes(t)) {
-    tagInput.value = ''
-    return
-  }
-  if (tags.value.length >= 5) {
-    uni.showToast({ title: '最多 5 个标签', icon: 'none' })
-    return
-  }
-  tags.value.push(t)
-  tagInput.value = ''
-}
-
-function removeTag(tag: string) {
-  tags.value = tags.value.filter(t => t !== tag)
-}
-
-async function submit() {
-  if (!canSubmit.value)
-    return
-  if (content.value.trim().length > MAX_CONTENT_LENGTH) {
-    uni.showToast({ title: `内容不能超过 ${MAX_CONTENT_LENGTH} 字`, icon: 'none' })
-    return
-  }
-  // 图片还有未上传完成的，先触发上传
-  if (images.value.some(i => i.status === 'pending' || i.status === 'error')) {
-    uni.showToast({ title: '图片尚未上传完成', icon: 'none' })
-    return
-  }
-
-  const imageUrls = urls()
-  const hasImages = imageUrls.length > 0
-  const momentContent: IMomentContent = {
-    type: hasImages ? 'PHOTO' : 'TEXT',
-    content: content.value.trim(),
-    ...(hasImages
-      ? {
-          medium: imageUrls.map(url => ({ type: 'PHOTO' as const, url })),
-        }
-      : {}),
-  }
-
-  submitting.value = true
-  try {
-    if (editName.value) {
-      await updateMoment(editName.value, {
-        content: [momentContent] as IMomentContent[] as any,
-        visible: 'PUBLIC',
-        ...(tags.value.length > 0 ? { tags: tags.value } : {}),
-      })
-      uni.showToast({ title: '已保存', icon: 'success' })
-    }
-    else {
-      await createMoment({
-        content: [momentContent] as IMomentContent[] as any,
-        visible: 'PUBLIC',
-        ...(tags.value.length > 0 ? { tags: tags.value } : {}),
-      })
-      uni.showToast({ title: '发布成功', icon: 'success' })
-    }
-    reset()
-    content.value = ''
-    tags.value = []
-    setTimeout(() => uni.navigateBack(), 800)
-  }
-  catch (err: any) {
-    uni.showToast({ title: err?.message || '发布失败', icon: 'none' })
-  }
-  finally {
-    submitting.value = false
-  }
+function handleEditClose(data: { isSubmit: boolean, refresh: boolean }) {
+  popupVisible.value = false
+  if (data.refresh)
+    setTimeout(() => uni.navigateBack(), 600)
 }
 </script>
 
 <template>
-  <view class="pb-safe-bottom min-h-screen bg-light-100 dark:bg-dark-800">
-    <!-- 正文输入 -->
-    <view class="mx-3 mt-3 rounded-2xl bg-white/80 p-4 shadow-sm dark:bg-dark-900/80">
-      <textarea
-        v-model="content"
-        class="min-h-40 w-full text-base leading-relaxed"
-        placeholder="说点什么吧…"
-        :maxlength="MAX_CONTENT_LENGTH"
-        auto-height
-      />
-      <view class="mt-2 text-right text-xs text-gray-400">
-        {{ content.length }}/{{ MAX_CONTENT_LENGTH }}
-      </view>
-    </view>
+  <view class="min-h-screen bg-light-100 dark:bg-dark-800">
+    <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="发布瞬间" title-color="text-gray-900" />
 
-    <!-- 图片九宫格 -->
-    <view class="mx-3 mt-3">
-      <view class="mb-2 text-sm text-gray-500">
-        已选图片 ({{ images.length }}/9)
-      </view>
-      <view class="grid grid-cols-4 gap-2">
-        <view v-for="img in images" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-xl">
-          <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
-          <!-- 删除 -->
-          <view
-            v-if="img.status !== 'uploading'"
-            class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-xs text-white"
-            @click="remove(img.tempPath)"
-          >
-            <wd-icon name="close" size="24rpx" />
-          </view>
-          <!-- 状态角标 -->
-          <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
-            {{ img.progress }}%
-          </view>
-          <view
-            v-else-if="img.status === 'error'"
-            class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white"
-            @click="retry(img.tempPath)"
-          >
-            <text>失败</text>
-            <text>点击重试</text>
-          </view>
-          <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-xs text-white">
-            <wd-icon name="check" size="24rpx" />
-          </view>
-        </view>
-        <!-- 添加按钮 -->
-        <view
-          v-if="images.length < 9"
-          class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-xl border-dashed text-3xl text-gray-400"
-          @click="choose"
-        >
-          <wd-icon name="camera" size="40rpx" />
-        </view>
-      </view>
-    </view>
-
-    <!-- 标签 -->
-    <view class="mx-3 mt-3 rounded-2xl bg-white/80 p-4 shadow-sm dark:bg-dark-900/80">
-      <view class="flex items-center gap-2">
-        <input
-          v-model="tagInput"
-          class="flex-1 text-base"
-          placeholder="# 添加标签（回车确认，最多 5 个）"
-          confirm-type="done"
-          @confirm="addTag"
-        >
-        <view class="text-xl text-gray-400" @click="addTag">
-          <wd-icon name="add-circle" size="36rpx" />
-        </view>
-      </view>
-      <view v-if="tags.length" class="mt-3 flex flex-wrap gap-2">
-        <view v-for="tag in tags" :key="tag" class="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-          {{ tag }}
-          <text class="ml-1 text-gray-400" @click="removeTag(tag)"><wd-icon name="close" size="24rpx" /></text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 底部固定发布按钮 -->
-    <view class="fixed inset-x-0 bottom-0 border-t border-gray-100 bg-white/90 p-3 pb-safe dark:border-dark-600 dark:bg-dark-900/90">
-      <button
-        class="w-full rounded-full text-white"
-        :class="canSubmit ? 'bg-primary' : 'bg-gray-300'"
-        :disabled="!canSubmit"
-        @click="submit"
-      >
-        {{ submitting ? '发布中…' : uploading ? `图片上传中 ${images.filter(i => i.status === 'success').length}/${images.length}` : '发布' }}
-      </button>
-    </view>
+    <!-- 发布/编辑弹窗（抽离组件，可复用） -->
+    <MomentEditPopup ref="popupRef" :show="popupVisible" @on-close="handleEditClose" />
   </view>
 </template>

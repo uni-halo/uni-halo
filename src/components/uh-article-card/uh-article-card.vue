@@ -60,7 +60,7 @@
 			footer: 'order-first flex items-center mb-1',
 			authorGroup: 'items-center gap-x-2',
 			avatar: '!h-9 !w-9 !rounded-xl',
-			nickname: '!text-2xs',
+			nickname: '!text-xs mb-0.5',
 			infoCol: 'leading-tight',
 			time: '',
 			tagCategory: '',

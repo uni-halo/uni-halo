@@ -166,16 +166,16 @@ export function deleteLoveAlbum(name: string) {
   return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-albums/${name}`, loveAdminMeta())
 }
 
-/** 相册新增照片（覆盖式提交 photos，调用方先取现有 photos 合并） */
+/** 相册新增照片（走相册整体更新，photos 放 spec；插件端无独立 photos 子端点） */
 export function addLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
-  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos`, { photos }, loveAdminMeta())
+  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}`, { spec: { photos } }, loveAdminMeta())
 }
 
-/** 相册删除单张照片（按 url 定位，覆盖式提交剩余 photos） */
+/** 相册删除单张照片（按 url 过滤后整体更新相册） */
 export function removeLoveAlbumPhoto(name: string, url: string, remainPhotos: ILovePhoto[]) {
   return http.Put<IResponse<ILoveAlbum>>(
-    `${LOVE_API_BASE}/love-albums/${name}/photos`,
-    { photos: remainPhotos.filter(p => p.url !== url) },
+    `${LOVE_API_BASE}/love-albums/${name}`,
+    { spec: { photos: remainPhotos.filter(p => p.url !== url) } },
     loveAdminMeta(),
   )
 }

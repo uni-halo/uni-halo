@@ -10,6 +10,7 @@ import { deleteMoment, listMyMoments } from '@/api/uni-admin'
 import { usePermission } from '@/hooks/usePermission'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import MomentEditPopup from '../moment-publish/components/moment-edit-popup.vue'
 
 definePage({
   style: {
@@ -28,6 +29,7 @@ const queryParams = ref({ size: 10, page: 1 })
 
 interface MomentItem {
   name: string
+  spec: Record<string, any>
   content: string
   images: string[]
   releaseTime: string
@@ -44,6 +46,7 @@ async function handleGetData() {
     const res = await listMyMoments({ ...queryParams.value })
     const items: MomentItem[] = (res.data?.items || []).map((x: any) => ({
       name: x.metadata?.name || '',
+      spec: x.spec || {},
       content: x.spec?.content?.raw?.content || x.spec?.content?.content || '',
       images: (x.spec?.content?.medium || []).filter((m: any) => m.type === 'PHOTO').map((m: any) => m.url),
       releaseTime: x.spec?.releaseTime || '',
@@ -107,12 +110,22 @@ function handlePreview(index: number, urls: string[]) {
   uni.previewImage({ current: index, urls })
 }
 
-function handleToPublish() {
-  uni.navigateTo({ url: '/pages-admin/moment-publish/moment-publish', animationType: 'slide-in-right' })
+/* ---------------- 发布/编辑弹窗（抽离组件） ---------------- */
+const popupVisible = ref(false)
+const popupRef = ref<InstanceType<typeof MomentEditPopup> | null>(null)
+
+function handleOpenPublish() {
+  popupVisible.value = true
 }
 
 function handleEdit(item: MomentItem) {
-  uni.navigateTo({ url: `/pages-admin/moment-publish/moment-publish?name=${item.name}`, animationType: 'slide-in-right' })
+  popupRef.value?.openEdit({ metadata: { name: item.name }, spec: item.spec })
+}
+
+function handlePopupClose(data: { isSubmit: boolean, refresh: boolean }) {
+  popupVisible.value = false
+  if (data.refresh)
+    handleRetry()
 }
 
 function handleDelete(item: MomentItem) {
@@ -201,18 +214,21 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
       <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
         <view
           class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
-          @click="handleToPublish"
+          @click="handleOpenPublish"
         >
           <wd-icon name="add-circle" size="36rpx" />
           <text class="shrink-0 text-xs font-semibold">发布瞬间</text>
         </view>
       </view>
+
+      <!-- 发布/编辑弹窗（抽离组件，可复用） -->
+      <MomentEditPopup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
     </template>
   </view>
 </template>
 
 <style scoped lang="scss">
-	.uh-translate-x-center {
+.uh-translate-x-center {
   transform: translateX(-50%);
 }
 </style>
