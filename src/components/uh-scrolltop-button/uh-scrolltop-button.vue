@@ -19,6 +19,7 @@ const balckList = [
   'pages-blog/setting/setting',
   'pages-blog/love/love',
   'pages/tabbar/mine/mine',
+  'pages/auth/login',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

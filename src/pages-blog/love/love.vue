@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
           </view>
         </view>
         <!-- 心动呼吸动画 -->
-        <text class="heart-beat absolute left-1/2 top-1/2 z-10">
+        <text class="heart-beat absolute z-10">
           <wd-icon
             class-prefix="uhlove-icon" name="aixin"
             size="72rpx"

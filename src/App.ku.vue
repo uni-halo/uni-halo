@@ -2,13 +2,13 @@
 	import { ref } from 'vue'
 	import { isPageTabbar } from './tabbar/store'
 	import { currRoute } from './utils'
-	import { useSettingsPopup } from '@/hooks/useSettingsPopup'
+	import { useOpenPopup } from '@/hooks/useOpenPopup'
 	import CustomTabbar from '@/tabbar/index.vue'
 
 	const isCurrentPageTabbar = ref(true)
-	const globalSettingsVisible = ref(false)
 
-	const { settingsPopupVisible, openSettingsPopup } = useSettingsPopup()
+	const { popupVisible:settingsPopupVisible, openPopup:openSettingsPopup } = useOpenPopup()
+	const { popupVisible:userPopupVisible, openPopup:openUserPopup } = useOpenPopup()
 	onShow(() => {
 		const { path } = currRoute()
 		if (path === '/') {
@@ -25,9 +25,11 @@
 		<uh-global-actions>
 			<uh-scrolltop-button :fixed="false" />
 			<uh-settings-button :fixed="false" @action-click="openSettingsPopup()" />
+			<uh-user-button :fixed="false" @action-click="openUserPopup()" />
 		</uh-global-actions>
 
 		<uh-settings-popup v-model="settingsPopupVisible" />
+		<uh-user-popup v-model="userPopupVisible" />
 
 		<KuRootView />
 

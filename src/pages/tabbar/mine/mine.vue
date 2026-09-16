@@ -363,9 +363,9 @@ onPageScroll((option: Page.PageScrollOption) => {
       </template>
     </template>
 
-    <!-- 登录入口(未登录→去登录;已登录→点击退出) -->
+    <!-- 登录入口-->
     <view class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
-      <uh-button class="w-full flex-1" custom-class="uh-global-card-glass uh-shadow-xs !rounded-xl py-2">
+      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full py-2 ${hasLogin?'bg-red-400 text-white':''}`">
         {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>
     </view>

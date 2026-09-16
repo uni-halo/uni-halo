@@ -16,11 +16,21 @@ export const LOGIN_PAGE_LIST = [LOGIN_PAGE, REGISTER_PAGE]
 // 在 definePage 里面配置了 excludeLoginPath 的页面，功能与 EXCLUDE_LOGIN_PATH_LIST 相同
 export const excludeLoginPathList = getAllPages('excludeLoginPath').map(page => page.path)
 
+/** 管理后台页面（pages-admin 分包，需登录后访问） */
+export const ADMIN_PATH_LIST = [
+  '/pages-admin/moment-publish/moment-publish',
+  '/pages-admin/moment-manage/moment-manage',
+  '/pages-admin/love/daily-manage',
+  '/pages-admin/love/story-manage',
+  '/pages-admin/love/album-manage',
+]
+
 // 排除在外的列表，白名单策略指白名单列表，黑名单策略指黑名单列表
 // TODO: 2/3 在 definePage 配置 excludeLoginPath，或者在下面配置 EXCLUDE_LOGIN_PATH_LIST
 export const EXCLUDE_LOGIN_PATH_LIST = [
   '/pages/xxx/index', // 示例值
   '/pages-sub/xxx/index', // 示例值
+  ...ADMIN_PATH_LIST, // 管理页：黑名单策略下 = 需登录（APP/H5 生效；微信小程序端拦截器跳过，由页面内 usePermission 守卫兜底）
   ...excludeLoginPathList, // 都是以 / 开头的 path
 ]
 

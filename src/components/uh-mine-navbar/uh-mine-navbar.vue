@@ -8,8 +8,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<IProps>(), {
-  defaultTitle: '我的',
-  scrollTitle: '我的',
+  defaultTitle: '关于',
+  scrollTitle: '关于',
   scrollY: 0,
 })
 
@@ -89,7 +89,7 @@ function handleScan() {
         </view>
       </view>
       <!-- 中间 -->
-      <view class="flex-1 truncate text-center font-bold transition-colors duration-300" :class="titleColorClass">
+      <view class="flex-1 truncate text-center font-bold transition-colors duration-300">
         <slot> {{ visibleTitle }} </slot>
       </view>
       <!-- 右边 -->

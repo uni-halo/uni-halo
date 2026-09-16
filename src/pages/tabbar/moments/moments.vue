@@ -4,6 +4,7 @@
 	import dayjs from 'dayjs'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { usePermission } from '@/hooks/usePermission'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { useFavoritesStore } from '@/store/favorites'
@@ -271,6 +272,17 @@
 		}
 	}
 
+	/* ---------------- 发布入口(有瞬间发布权限,APP 端) ---------------- */
+	const { can } = usePermission()
+	const canPublish = computed(() => can('MOMENT_MANAGE'))
+
+	function handleToPublish() {
+		uni.navigateTo({
+			url: '/pages-admin/moment-publish/moment-publish',
+			animationType: 'slide-in-right',
+		})
+	}
+
 	function handleToTopPage(duration = 500) {
 		uni.pageScrollTo({
 			scrollTop: 0,
@@ -445,6 +457,17 @@
 				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
+
+		<!-- 发布瞬间悬浮按钮（仅 author/admin，APP 端） -->
+		<!-- #ifdef APP-PLUS -->
+		<view
+			v-if="canPublish && uniHaloPluginAvailable"
+			class="fixed bottom-30 right-4 z-50 h-14 w-14 flex items-center justify-center rounded-full bg-primary text-2xl text-white shadow-lg"
+			@click="handleToPublish"
+		>
+			✏️
+		</view>
+		<!-- #endif -->
 	</view>
 
 	<!-- 评论弹窗(瞬间评论,subjectKind=Moment) -->

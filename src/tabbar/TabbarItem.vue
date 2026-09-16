@@ -46,7 +46,7 @@ const _customClass = computed(() => {
       <image
         :src="getImageByIndex(index, item)" mode="scaleToFill"
         class="shrink-0"
-        :class="[useTitle ? 'w-6 h-6' : 'w-8 h-8']"
+        :class="[useTitle ? 'w-6 h-6' : 'w-7 h-7']"
       />
     </template>
     <view v-if="useTitle" class="mt-1px shrink-0 text-10px">
