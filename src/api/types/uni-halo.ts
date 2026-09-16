@@ -572,7 +572,13 @@ export interface ILoveAlbum {
 	description?: string;
 	locked?: boolean;
 	cover?: string;
+	/** 排序，越大越前 */
+	priority?: number;
+	/** 是否启用查看密码(服务端按 passwordHash 维护) */
+	passwordEnabled?: boolean;
 	photos?: ILovePhoto[];
+	/** 服务端计算的照片数量 */
+	status?: { photoCount?: number, [key: string]: unknown };
 	/** Halo 资源元数据(接口返回 metadata) */
 	metadata?: {
 		name?: string;
@@ -582,9 +588,18 @@ export interface ILoveAlbum {
 	[key: string]: unknown;
 }
 
+/** 相册照片(插件端 LoveAlbum.AlbumPhoto，name 为服务端生成标识) */
 export interface ILovePhoto {
+	/** 服务端生成的照片标识(删除照片接口按此定位) */
+	name?: string;
 	url?: string;
+	title?: string;
 	description?: string;
+	/** 拍摄日期(yyyy-MM-dd) */
+	takenDate?: string;
+	location?: string;
+	/** 相册内排序，越大越前 */
+	priority?: number;
 	[key: string]: unknown;
 }
 

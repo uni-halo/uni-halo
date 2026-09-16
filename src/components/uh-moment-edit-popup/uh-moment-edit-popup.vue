@@ -1,16 +1,17 @@
 <script lang="ts" setup>
 /**
  * 瞬间编辑弹窗（全局组件，uh- 前缀 easycom 自动注册）
- * mp-html editable 富文本 + 图片上传 + 发布/保存逻辑内聚
+ * 官方 editor 富文本（经 uh-rich-editor 封装，试点）+ 图片上传 + 发布/保存逻辑内聚
  *
  * 用法：
  * - 发布模式：<uh-moment-edit-popup :show="visible" @on-close="..." />
  * - 编辑模式：通过 ref.openEdit(name) 仅传 metadata.name，组件内部查询详情回填
  */
-import { ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
-import { createMoment, getAttachmentPermalink, getMyMoment, updateMoment, uploadAttachment } from '@/api/uni-admin'
+import { createMoment, getMyMoment, updateMoment } from '@/api/uni-admin'
 import { extractMomentContent } from '@/utils/moment'
+import { checkThumbnailUrl } from '@/utils/url'
 import type { IMomentContent } from '@/api/types/uni-admin'
 
 defineOptions({
@@ -40,9 +41,9 @@ const { list: images, uploading, choose, retry, remove, urls, reset } = useHaloU
   maxSize: 10 * 1024 * 1024,
 })
 
-/* ---------------- 富文本编辑器（mp-html editable 模式） ---------------- */
-const editorRef = ref()
-/** 传给编辑器的初始内容（editable 开启时不允许中途 setContent） */
+/* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装） ---------------- */
+const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, insertImage(src: string): void, clear(): void } | null>(null)
+/** 内容快照（编辑器 @input 同步；回填时手动写入，供 canSubmit 判断） */
 const editorContent = ref('')
 
 const canSubmit = ref(false)
@@ -52,36 +53,14 @@ watch([editorContent, images, uploading, saving], () => {
     && !saving.value && !uploading.value
 }, { deep: true })
 
-/** editable 插件插入图片/链接时回调：返回线上地址（文档要求返回 Promise） */
-function getEditorSrc(type: string, value: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (type === 'img') {
-      // 选本地图片 → 上传 Halo 附件 → resolve 线上地址
-      uni.chooseImage({
-        count: 1,
-        success: (res) => {
-          uploadAttachment(res.tempFilePaths[0])
-            .then(att => resolve(getAttachmentPermalink(att)))
-            .catch(() => {
-              uni.showToast({ title: '图片上传失败', icon: 'none' })
-              reject(new Error('上传失败'))
-            })
-        },
-        fail: () => reject(new Error('取消选图')),
-      })
-      return
-    }
-    resolve(value || '')
-  })
+function handleEditorInput(html: string) {
+  editorContent.value = html
 }
 
-/** 获取编辑后的 html（延时规避 tap 早于 blur 的时序问题，见 mp-html editable 文档） */
-function getEditorHtml(): Promise<string> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(editorRef.value?.getContent?.() || editorContent.value || '')
-    }, 100)
-  })
+/** 获取编辑器 HTML（editor 的 getContent 即为最新内容，无需 mp-html 的延时 hack） */
+async function getEditorHtml(): Promise<string> {
+  const html = await editorRef.value?.getHtml()
+  return html || editorContent.value || ''
 }
 
 /* ---------------- 打开 / 回填 ---------------- */
@@ -89,6 +68,8 @@ function handleResetForm() {
   formMode.value = 'create'
   editName.value = ''
   editorContent.value = ''
+  // 清空编辑器（编辑器未挂载时为 no-op，首开本就是空内容）
+  editorRef.value?.setHtml('')
   reset()
 }
 
@@ -115,12 +96,17 @@ async function openEdit(name: string): Promise<boolean> {
     const content = extractMomentContent(moment.spec.content)
     editorContent.value = content.raw || content.html || ''
     images.value = content.photos.map(url => ({
-      tempPath: url,
+      // tempPath 用于显示（相对路径需拼站点域名）；url 保留原始相对路径用于提交
+      tempPath: checkThumbnailUrl(url),
       url,
       status: 'success' as const,
       progress: 100,
     }))
     isShow.value = true
+    // 弹窗渲染后回填编辑器；编辑器未 ready 时 uh-rich-editor 内部会挂起待 ready 后自动回填
+    nextTick(() => {
+      editorRef.value?.setHtml(editorContent.value)
+    })
     return true
   }
   catch (err: any) {
@@ -143,7 +129,7 @@ async function handleSubmit() {
     return
   }
 
-  // 取编辑器内容（延时规避 tap 早于 blur 的时序问题）
+  // 取编辑器内容
   const html = await getEditorHtml()
   const imageUrls = urls()
   if (!html.trim() && imageUrls.length === 0) {
@@ -216,15 +202,12 @@ defineExpose({ openEdit })
       </view>
     </view>
     <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-      <!-- 正文编辑（mp-html editable 富文本） -->
-      <view class="uh-global-card-glass mb-4 rounded-xl shadow-none">
-        <mp-html
+      <!-- 正文编辑（官方 editor，经 uh-rich-editor 封装） -->
+      <view class="uh-global-card-glass mb-4 overflow-hidden rounded-xl shadow-none">
+        <uh-rich-editor
           ref="editorRef"
-          class="min-h-40"
-          :content="editorContent"
-          :editable="true"
           placeholder="说点什么吧…"
-          :get-src="getEditorSrc"
+          @input="handleEditorInput"
         />
       </view>
 

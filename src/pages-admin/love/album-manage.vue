@@ -4,8 +4,8 @@
  */
 import { computed, ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
-import { addLoveAlbumPhotos, createLoveAlbum, deleteLoveAlbum, removeLoveAlbumPhoto, updateLoveAlbum } from '@/api/uni-admin'
+import { getLoveAlbums } from '@/api/uni-halo'
+import { addLoveAlbumPhoto, createLoveAlbum, deleteLoveAlbum, getLoveAlbumAdmin, removeLoveAlbumPhoto, updateLoveAlbum } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
@@ -89,35 +89,89 @@ onReachBottom(() => {
 const formVisible = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editName = ref('')
-const form = ref({ title: '', description: '' })
+/** 表单（对齐插件端 LoveAlbumSpec + 密码操作语义） */
+const form = ref({
+  displayName: '',
+  description: '',
+  priority: 0,
+  cover: '',
+  /** 明文密码：创建=设置；编辑=留空保持原密码 */
+  password: '',
+  /** 编辑模式：true=清除密码（提交后复位） */
+  passwordRemoved: false,
+  /** 当前是否已启用密码（服务端回显） */
+  passwordEnabled: false,
+})
 const saving = ref(false)
+
+/** 封面单图上传 */
+const { list: coverList, choose: chooseCover, remove: removeCover, uploading: coverUploading, urls: coverUrls } = useHaloUpload({ maxCount: 1 })
+
+function handleCoverChange() {
+  form.value.cover = coverUrls()[0] || form.value.cover
+}
 
 function openCreate() {
   formMode.value = 'create'
   editName.value = ''
-  form.value = { title: '', description: '' }
+  form.value = { displayName: '', description: '', priority: 0, cover: '', password: '', passwordRemoved: false, passwordEnabled: false }
+  coverList.value = []
   formVisible.value = true
 }
 
-function openEdit(album: ILoveAlbum) {
+async function openEdit(album: ILoveAlbum) {
   formMode.value = 'edit'
   editName.value = album.metadata?.name || album.name || ''
-  form.value = { title: album.title || album.displayName || '', description: album.description || '' }
   formVisible.value = true
+  // 用 console 详情回填（含 passwordEnabled/priority 及原始 spec 字段）
+  try {
+    const res = await getLoveAlbumAdmin(editName.value)
+    const spec = (res.data?.spec || {}) as Record<string, any>
+    form.value.displayName = spec.displayName || album.displayName || ''
+    form.value.description = spec.description || ''
+    form.value.priority = Number(spec.priority ?? 0)
+    form.value.cover = spec.cover || ''
+    form.value.password = ''
+    form.value.passwordRemoved = false
+    form.value.passwordEnabled = spec.passwordEnabled === true
+    coverList.value = form.value.cover
+      ? [{ tempPath: checkThumbnailUrl(form.value.cover), url: form.value.cover, status: 'success' as const, progress: 100 }]
+      : []
+  }
+  catch {
+    // 详情拉取失败时退回列表项数据
+    form.value.displayName = album.displayName || album.title || ''
+    uni.showToast({ title: '相册详情加载失败，仅回填基础信息', icon: 'none' })
+  }
 }
 
 async function handleSave() {
-  if (!form.value.title.trim()) {
+  if (!form.value.displayName.trim()) {
     uni.showToast({ title: '请填写相册名称', icon: 'none' })
     return
+  }
+  if (coverList.value.some(i => i.status === 'pending' || i.status === 'uploading' || i.status === 'error')) {
+    uni.showToast({ title: '封面上传中，请稍候', icon: 'none' })
+    return
+  }
+  handleCoverChange()
+  const spec = {
+    displayName: form.value.displayName.trim(),
+    description: form.value.description,
+    cover: form.value.cover,
+    priority: Number(form.value.priority) || 0,
   }
   saving.value = true
   try {
     if (formMode.value === 'create') {
-      await createLoveAlbum(form.value)
+      await createLoveAlbum({ album: { spec }, password: form.value.password || undefined })
     }
     else {
-      await updateLoveAlbum(editName.value, form.value)
+      await updateLoveAlbum(editName.value, {
+        album: { spec },
+        password: form.value.password || undefined,
+        passwordRemoved: form.value.passwordRemoved || undefined,
+      })
     }
     formVisible.value = false
     uni.showToast({ title: formMode.value === 'create' ? '已创建' : '已保存', icon: 'success' })
@@ -165,7 +219,8 @@ async function openDetail(album: ILoveAlbum) {
   detailLoading.value = true
   currentAlbum.value = album
   try {
-    const res = await getLoveAlbumByName(name, { page: 1, size: 100 })
+    // 用 console 详情拉取（照片带服务端生成的 name，删除照片接口依赖）
+    const res = await getLoveAlbumAdmin(name)
     currentAlbum.value = res.data
     currentPhotos.value = res.data?.photos || []
   }
@@ -178,7 +233,7 @@ async function openDetail(album: ILoveAlbum) {
   }
 }
 
-/** 批量选图并上传，成功后合并提交到相册 */
+/** 批量选图并上传，成功后逐张提交到相册（POST /photos，name 由服务端生成） */
 const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
 
 async function commitPhotos() {
@@ -188,13 +243,11 @@ async function commitPhotos() {
   const newUrls = photoUrls()
   if (newUrls.length === 0)
     return
-  const merged: ILovePhoto[] = [
-    ...currentPhotos.value,
-    ...newUrls.map(url => ({ url })),
-  ]
   try {
-    await addLoveAlbumPhotos(name, merged)
-    currentPhotos.value = merged
+    const created = await Promise.all(newUrls.map(url => addLoveAlbumPhoto(name, { url })))
+    // 服务端返回整本相册（照片带生成的 name），直接以最新列表为准
+    const latestPhotos = created[0]?.data?.photos
+    currentPhotos.value = latestPhotos?.length ? latestPhotos : [...currentPhotos.value, ...newUrls.map(url => ({ url }) as ILovePhoto)]
     pendingPhotos.value = []
     uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'success' })
     handleRetry()
@@ -209,6 +262,10 @@ const pendingCount = computed(() => pendingPhotos.value.filter(i => i.status !==
 
 function handleDeletePhoto(photo: ILovePhoto) {
   const name = currentAlbum.value?.metadata?.name || currentAlbum.value?.name || ''
+  if (!photo.name) {
+    uni.showToast({ title: '照片缺少标识，请刷新后重试', icon: 'none' })
+    return
+  }
   uni.showModal({
     title: '删除照片',
     content: '确定删除这张照片吗？',
@@ -217,8 +274,8 @@ function handleDeletePhoto(photo: ILovePhoto) {
       if (!res.confirm)
         return
       try {
-        await removeLoveAlbumPhoto(name, photo.url || '', currentPhotos.value)
-        currentPhotos.value = currentPhotos.value.filter(p => p.url !== photo.url)
+        await removeLoveAlbumPhoto(name, photo.name || '')
+        currentPhotos.value = currentPhotos.value.filter(p => p.name !== photo.name)
         uni.showToast({ title: '已删除', icon: 'success' })
         handleRetry()
       }
@@ -232,7 +289,7 @@ function handleDeletePhoto(photo: ILovePhoto) {
 function handlePreviewPhoto(index: number) {
   uni.previewImage({
     current: index,
-    urls: currentPhotos.value.map(p => p.url || ''),
+    urls: currentPhotos.value.map(p => checkThumbnailUrl(p.url || '')),
   })
 }
 
@@ -309,11 +366,50 @@ onPageScroll((option: Page.PageScrollOption) => {
       <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
         <view class="mb-5 flex items-center">
           <text class="w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
-          <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入相册名称">
+          <input v-model="form.displayName" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入相册名称">
         </view>
         <view class="mb-5">
           <text class="mb-2 block text-sm text-[#666]">描述</text>
           <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 w-full border rounded-xl p-3 text-sm shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
+        </view>
+        <view class="mb-5 flex items-center">
+          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">排序</text>
+          <input v-model="form.priority" type="number" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="数字越大越靠前，默认 0">
+        </view>
+        <view class="mb-5">
+          <text class="mb-2 block text-sm text-[#666]">封面</text>
+          <view class="grid grid-cols-4 gap-2">
+            <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
+              <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
+              <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeCover(img.tempPath); handleCoverChange()">
+                <wd-icon name="close" size="22rpx" />
+              </view>
+            </view>
+            <view v-if="!coverList.length" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseCover">
+              <wd-icon name="camera" size="36rpx" />
+            </view>
+          </view>
+          <text v-if="coverUploading" class="mt-1 block text-3xs text-gray-400">封面上传中…</text>
+        </view>
+        <view class="mb-5">
+          <view class="mb-2 flex items-center justify-between">
+            <text class="text-sm text-[#666]">查看密码</text>
+            <text v-if="formMode === 'edit'" class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
+              {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
+            </text>
+          </view>
+          <input
+            v-model="form.password"
+            class="uh-global-card-glass h-9 w-full border rounded-xl px-4 text-sm shadow-none"
+            :placeholder="formMode === 'create' ? '设置查看密码(选填)' : '输入新密码重设，留空保持不变'"
+            password
+          >
+          <view v-if="formMode === 'edit' && form.passwordEnabled" class="mt-2 flex items-center gap-2" @click="form.passwordRemoved = !form.passwordRemoved">
+            <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
+              <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
+            </view>
+            <text class="text-3xs text-gray-500">清除查看密码（访客将可直接查看）</text>
+          </view>
         </view>
         <view class="my-6">
           <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">

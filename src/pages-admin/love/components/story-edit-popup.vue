@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 /**
- * 恋爱故事编辑弹窗：标题/日期/地点/内容/图片 上传与保存逻辑内聚
- * 内容编辑为 textarea + mp-html 实时预览
+ * 恋爱故事编辑弹窗：标题/日期(wd-datetime-picker)/地点/内容(官方 editor)/图片
+ * 内容编辑使用全局 uh-rich-editor（带基础格式工具条）
  */
 import { ref, watch } from 'vue'
-import { createLoveStory, getAttachmentPermalink, updateLoveStory, uploadAttachment } from '@/api/uni-admin'
+import dayjs from 'dayjs'
+import { createLoveStory, updateLoveStory } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
 import type { ILoveStory, ILoveStorySpec } from '@/api/types/uni-halo'
 
@@ -31,47 +32,35 @@ const form = ref<ILoveStorySpec>({})
 const saving = ref(false)
 const { list: imageList, choose: chooseImages, remove: removeImage, retry: imageRetry } = useHaloUpload({ maxCount: 9 })
 
-/* ---------------- 富文本编辑器（mp-html editable 模式） ---------------- */
-const editorRef = ref()
-/** 传给编辑器的初始内容（editable 开启时不允许中途 setContent） */
-const storyEditorContent = ref('')
+/* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装，带工具条） ---------------- */
+const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, clear(): void } | null>(null)
 
-/** 获取编辑后的 html（延时规避 tap 早于 blur 的时序问题，见 mp-html editable 文档） */
-function getEditorHtml(): Promise<string> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(editorRef.value?.getContent?.() || form.value.content || '')
-    }, 100)
-  })
+/** 获取编辑器 HTML */
+async function getEditorHtml(): Promise<string> {
+  const html = await editorRef.value?.getHtml()
+  return html || form.value.content || ''
 }
 
-/** editable 插件插入图片时回调：选图 → 上传 Halo 附件 → resolve 线上地址（文档要求返回 Promise） */
-function getEditorSrc(type: string, value: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (type === 'img') {
-      uni.chooseImage({
-        count: 1,
-        success: (res) => {
-          uploadAttachment(res.tempFilePaths[0])
-            .then(att => resolve(getAttachmentPermalink(att)))
-            .catch(() => {
-              uni.showToast({ title: '图片上传失败', icon: 'none' })
-              reject(new Error('上传失败'))
-            })
-        },
-        fail: () => reject(new Error('取消选图')),
-      })
-      return
-    }
-    resolve(value || '')
-  })
+/* ---------------- 日期选择（wd-datetime-picker 受控模式） ---------------- */
+const datePickerVisible = ref(false)
+const dateTs = ref(Date.now())
+
+function openDatePicker() {
+  // 已有日期则回显，否则从今天开始
+  dateTs.value = form.value.date ? dayjs(form.value.date).valueOf() : Date.now()
+  datePickerVisible.value = true
+}
+
+function handleDateConfirm({ value }: any) {
+  form.value.date = dayjs(value).format('YYYY-MM-DD')
+  datePickerVisible.value = false
 }
 
 function handleResetForm() {
   formMode.value = 'create'
   editName.value = ''
   form.value = { title: '', content: '', date: '', location: '' }
-  storyEditorContent.value = ''
+  editorRef.value?.setHtml('')
   imageList.value = []
 }
 
@@ -80,7 +69,6 @@ function openEdit(story: ILoveStory) {
   formMode.value = 'edit'
   editName.value = story.metadata?.name || ''
   form.value = { ...(story.spec || {}) }
-  storyEditorContent.value = form.value.content || ''
   imageList.value = (form.value.images || []).map(url => ({
     tempPath: url,
     url,
@@ -88,6 +76,10 @@ function openEdit(story: ILoveStory) {
     progress: 100,
   }))
   isShow.value = true
+  // 编辑器未 ready 时组件内部会挂起，ready 后自动回填
+  setTimeout(() => {
+    editorRef.value?.setHtml(form.value.content || '')
+  }, 0)
 }
 
 async function handleSave() {
@@ -102,7 +94,6 @@ async function handleSave() {
     return
   }
   spec.images = imageList.value.filter(i => i.status === 'success').map(i => i.url)
-  // 取编辑器内容（延时规避 tap 早于 blur 的时序问题）
   spec.content = await getEditorHtml()
   saving.value = true
   try {
@@ -154,9 +145,21 @@ defineExpose({ openEdit })
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">标题 *</text>
         <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入故事标题">
       </view>
-      <view class="mb-5 flex items-center">
+      <view class="mb-5 flex items-center gap-2">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">日期</text>
         <input v-model="form.date" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(选填)">
+        <wd-datetime-picker
+          v-model="dateTs"
+          type="date"
+          :visible="datePickerVisible"
+          title="选择日期"
+          @update:visible="datePickerVisible = $event"
+          @confirm="handleDateConfirm"
+        >
+          <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
+            <wd-icon name="calendar" size="32rpx" />
+          </view>
+        </wd-datetime-picker>
       </view>
       <view class="mb-5 flex items-center">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">地点</text>
@@ -164,14 +167,13 @@ defineExpose({ openEdit })
       </view>
       <view class="mb-5">
         <text class="mb-2 block text-sm text-[#666]">故事内容</text>
-        <mp-html
-          ref="editorRef"
-          class="uh-global-card-glass box-border w-full rounded-xl shadow-none"
-          :content="storyEditorContent"
-          :editable="true"
-          placeholder="记录这段故事…"
-          :get-src="getEditorSrc"
-        />
+        <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">
+          <uh-rich-editor
+            ref="editorRef"
+            toolbar
+            placeholder="记录这段故事…"
+          />
+        </view>
       </view>
       <view class="mb-5">
         <text class="mb-2 block text-sm text-[#666]">图片</text>

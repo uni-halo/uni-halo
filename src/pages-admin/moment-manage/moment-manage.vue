@@ -11,6 +11,7 @@ import { usePermission } from '@/hooks/usePermission'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { extractMomentContent, stripHtmlTags } from '@/utils/moment'
+import { checkThumbnailUrl } from '@/utils/url'
 
 definePage({
   style: {
@@ -51,7 +52,8 @@ async function handleGetData() {
       return {
         name: m.metadata?.name || '',
         content: stripHtmlTags(c.raw || c.html),
-        images: c.photos,
+        // medium 里的 url 是 /upload/... 相对路径，需拼接站点域名才能显示
+        images: c.photos.map(url => checkThumbnailUrl(url)),
         releaseTime: m.spec?.releaseTime || '',
         visible: m.spec?.visible || 'PUBLIC',
         approved: m.spec?.approved,
@@ -181,12 +183,9 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
 
       <view v-else class="box-border flex flex-col gap-3 px-3 pt-3">
         <view v-for="moment in dataList" :key="moment.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
-          <view class="flex items-center justify-between px-4 pt-3">
-            <text class="text-xs text-gray-400">{{ formatMomentTime(moment.releaseTime) }}</text>
-            <view class="flex items-center gap-2">
-              <text v-if="moment.approved === false" class="rounded-full bg-orange-100 px-2 py-0.5 text-3xs text-orange-500">待审核</text>
-              <text v-else-if="moment.visible === 'PRIVATE'" class="rounded-full bg-gray-100 px-2 py-0.5 text-3xs text-gray-500">私密</text>
-            </view>
+          <view v-if="moment.approved === false || moment.visible === 'PRIVATE'" class="flex items-center justify-end gap-2 px-4 pt-3">
+            <text v-if="moment.approved === false" class="rounded-full bg-orange-100 px-2 py-0.5 text-3xs text-orange-500">待审核</text>
+            <text v-if="moment.visible === 'PRIVATE'" class="rounded-full bg-gray-100 px-2 py-0.5 text-3xs text-gray-500">私密</text>
           </view>
           <view class="px-4 pt-2 text-3xs text-gray-900 leading-relaxed">
             <text class="line-clamp-3">{{ moment.content || '（无文字内容）' }}</text>
@@ -201,14 +200,17 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
               @click="handlePreview(imgIndex, moment.images)"
             />
           </view>
-          <view class="mt-2 flex items-center justify-end gap-4 border-t border-black/5 px-4 py-2.5 text-xs">
-            <view class="flex items-center gap-1 text-gray-500" @click="handleEdit(moment)">
-              <wd-icon name="edit" size="26rpx" />
-              <text>编辑</text>
-            </view>
-            <view class="flex items-center gap-1 text-red-500" @click="handleDelete(moment)">
-              <wd-icon name="delete" size="26rpx" />
-              <text>删除</text>
+          <view class="mt-2 flex items-center justify-between border-t border-black/5 px-4 py-2.5 text-xs">
+            <text class="text-3xs text-gray-400">{{ formatMomentTime(moment.releaseTime) }}</text>
+            <view class="flex items-center gap-4">
+              <view class="flex items-center gap-1 text-gray-500" @click="handleEdit(moment)">
+                <wd-icon name="edit" size="26rpx" />
+                <text>编辑</text>
+              </view>
+              <view class="flex items-center gap-1 text-red-500" @click="handleDelete(moment)">
+                <wd-icon name="delete" size="26rpx" />
+                <text>删除</text>
+              </view>
             </view>
           </view>
         </view>

@@ -147,9 +147,12 @@ export function getAttachmentPermalink(attachment: IAttachment): string {
   return attachment.status?.permalink || ''
 }
 
-/* ==================== 恋爱模块管理（插件端 CRUD，路径待插件端最终确认） ==================== */
+/* ==================== 恋爱模块管理（插件端 CRUD） ====================
+ * 注意：恋爱模块的管理端 CRUD 挂在 console.api.unihalo.ialley.cn 分组（需登录），
+ * 公开读接口才是 api.unihalo.ialley.cn 分组（见 api/uni-halo.ts）。
+ */
 
-const LOVE_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo'
+const LOVE_API_BASE = '/apis/console.api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo'
 
 function loveAdminMeta() {
   return {
@@ -188,28 +191,43 @@ export function deleteLoveStory(name: string) {
 
 /* ---------- 恋爱相册 ---------- */
 
-export function createLoveAlbum(spec: { title?: string, description?: string, cover?: string }) {
-  return http.Post<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums`, { spec }, loveAdminMeta())
+/** 相册写请求体（插件端 LoveAlbumEndpoint.LoveAlbumRequest） */
+export interface ILoveAlbumRequest {
+  album: { spec: Record<string, unknown> }
+  /** 明文密码：非空=重设并启用；空=保持原密码（编辑场景） */
+  password?: string
+  /** true=清除密码 */
+  passwordRemoved?: boolean
 }
 
-export function updateLoveAlbum(name: string, spec: { title?: string, description?: string, cover?: string }) {
-  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}`, { spec }, loveAdminMeta())
+export function createLoveAlbum(album: ILoveAlbumRequest) {
+  return http.Post<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums`, album, loveAdminMeta())
+}
+
+export function updateLoveAlbum(name: string, album: ILoveAlbumRequest) {
+  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}`, album, loveAdminMeta())
+}
+
+/** 获取相册详情（console API，返回 passwordEnabled/priority 及带 name 的照片列表） */
+export function getLoveAlbumAdmin(name: string) {
+  return http.Get<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}`, loveAdminMeta())
 }
 
 export function deleteLoveAlbum(name: string) {
   return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-albums/${name}`, loveAdminMeta())
 }
 
-/** 相册新增照片（走相册整体更新，photos 放 spec；插件端无独立 photos 子端点） */
-export function addLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
-  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}`, { spec: { photos } }, loveAdminMeta())
+/** 相册添加单张照片（插件端 POST /love-albums/{name}/photos，name 由服务端生成） */
+export function addLoveAlbumPhoto(name: string, photo: ILovePhoto) {
+  return http.Post<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos`, photo, loveAdminMeta())
 }
 
-/** 相册删除单张照片（按 url 过滤后整体更新相册） */
-export function removeLoveAlbumPhoto(name: string, url: string, remainPhotos: ILovePhoto[]) {
-  return http.Put<IResponse<ILoveAlbum>>(
-    `${LOVE_API_BASE}/love-albums/${name}`,
-    { spec: { photos: remainPhotos.filter(p => p.url !== url) } },
-    loveAdminMeta(),
-  )
+/** 整体替换相册照片列表（插件端 PUT /love-albums/{name}/photos） */
+export function updateLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
+  return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos`, { photos }, loveAdminMeta())
+}
+
+/** 删除单张照片（按服务端生成的照片 name 定位） */
+export function removeLoveAlbumPhoto(name: string, photoName: string) {
+  return http.Delete<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos/${photoName}`, loveAdminMeta())
 }
