@@ -1,7 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { getAuthProfile } from '@/api/auth';
-import { checkAvatarUrl } from '@/utils/url';
 import type { IUserInfoRes } from '@/api/types/login';
 import type { ILoginResult, ILoginUser } from '@/api/types/uni-halo';
 
@@ -18,13 +17,16 @@ const DefaultUserInfo: IUserInfoRes = {
 /**
  * 插件端 LoginUser 摘要 → IUserInfoRes 映射
  * (登录接口与 auth/profile 均返回 {user, roles, permissions},user 不含数字 id)
+ *
+ * 注意:avatar 保存服务端原始地址(允许相对路径),不在此处补全——
+ * 渲染时经 checkAvatarUrl() 补全,保证博客迁移(域名变更)后仍可访问
  */
 function mapLoginUser(user?: ILoginUser): IUserInfoRes {
 	return {
 		userId: user?.name,
 		username: user?.name || '',
 		nickname: user?.displayName || user?.name || '',
-		avatar: checkAvatarUrl(user?.avatar),
+		avatar: user?.avatar || '',
 		email: user?.email
 	};
 }

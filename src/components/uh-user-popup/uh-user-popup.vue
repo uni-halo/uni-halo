@@ -76,7 +76,7 @@
 
 	/** 个人入口（我的信息 / 个人主页） */
 	const PROFILE_ENTRIES = [
-		{ key: 'my-profile', icon: 'edit', label: '我的信息', url: '/pages-blog/my-profile/my-profile' },
+		{ key: 'my-profile', icon: 'edit', label: '我的资料', url: '/pages-blog/my-profile/my-profile' },
 		{ key: 'user-profile', icon: 'home', label: '个人主页', url: '/pages-blog/user-profile/user-profile' },
 	]
 

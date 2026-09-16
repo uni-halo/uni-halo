@@ -84,6 +84,60 @@ export function getWxCode() {
   })
 }
 
+/* ---------- 我的微信绑定(「我的信息」页) ---------- */
+
+/** 我的微信绑定状态(插件端 WechatBindingVo) */
+export interface IMyWechatBinding {
+  username: string
+  bound: boolean
+  /** 绑定的微信标识(openid/unionid),未绑定为 null */
+  providerUserId?: string | null
+  /** 绑定关系最近一次更新时间(ISO 字符串),未绑定为 null */
+  boundAt?: string | null
+}
+
+/**
+ * 查询当前登录用户的微信绑定状态(需登录 token)
+ */
+export function getMyWechatBinding() {
+  return http.Get<IResponse<IMyWechatBinding>>(
+    `${AUTH_API_BASE}/my/wechat-binding`,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
+/**
+ * 当前登录用户绑定微信(需登录 token,仅微信小程序可用)
+ * 身份由 Authorization 头携带,微信身份由 wx.login() 的 code 换取
+ * @param code wx.login 一次性凭证
+ */
+export function bindMyWechat(code: string) {
+  return http.Post<IResponse<{ success: boolean }>>(
+    `${AUTH_API_BASE}/bind/wechat`,
+    { code },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
+/**
+ * 当前登录用户解除微信绑定(需登录 token,幂等:未绑定时同样返回成功)
+ */
+export function unbindMyWechat() {
+  return http.Delete<IResponse<{ success: boolean }>>(
+    `${AUTH_API_BASE}/my/wechat-binding`,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
 /* ---------- 微信扫码绑定(BindTicket) ---------- */
 
 /** 扫码绑定票据状态(插件端 BindTicketService.Status) */
