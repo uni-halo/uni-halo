@@ -12,11 +12,8 @@
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
 	import { generateUUID } from '@/utils/uuid'
 	import { sleep } from '@/utils/common'
-	import { formatTime } from '@/utils/formatTime'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-	import { useUpvote } from '@/hooks/useUpvote'
-	import { markdownConfig } from '@/config/markdown'
 	import type { IMoment } from '@/api/types/halo'
 
 	definePage({
@@ -200,13 +197,6 @@
 	}
 
 	/* ---------------- 交互 ---------------- */
-	function handlePreview(index : number, list : { url : string }[]) {
-		uni.previewImage({
-			current: index,
-			urls: list.map(item => item.url),
-		})
-	}
-
 	function handleToMomentDetail(moment : IMoment) {
 		if (calcAuditModeEnabled.value)
 			return
@@ -216,10 +206,6 @@
 		})
 	}
 
-	function isMomentFavorite(moment : IMoment) : boolean {
-		return favoritesStore.isFavorite('moment', moment.metadata.name)
-	}
-
 	function handleToggleMomentFavorite(moment : MomentCard) {
 		if (!moment) { return }
 		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(moment))
@@ -227,7 +213,7 @@
 	}
 
 	/* ---------------- 点赞(useUpvote 持久化防重复) ---------------- */
-	const { hasUpvoted, likeByName } = useUpvote('moments', () => '')
+	const { likeByName } = useUpvote('moments', () => '')
 
 	function handleMomentLike(moment : MomentCard) {
 		if (!moment) { return }
@@ -303,10 +289,6 @@
 	}
 
 	/** 格式化瞬间时间 */
-	function formatMomentTime(time ?: string) : string {
-		return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
-	}
-
 	/* ---------------- 生命周期 ---------------- */
 	onPageScroll((option : Page.PageScrollOption) => {
 		updatePageScrollValue(option.scrollTop)
@@ -370,100 +352,25 @@
 				min-height="75vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-3 px-3">
-				<!-- 瞬间卡片 -->
-				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
-					<view class="shrink-0 flex flex-col gap-y-2 w-13">
-						<view class="shrink-0 flex flex-col items-center font-bold">
-							<text
-								class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
-							<text class="date-year-month mt-2 text-sm text-gray-600">{{ moment.year }}</text>
-							<text class="date-weekend mt-1 text-xs text-gray-600">{{ moment.weekend }}</text>
-						</view>
-						<view class="flex-1 w-full flex flex-col items-center">
-							<view class="shrink-0 w-4 h-4 bg-primary rounded-full uh-global-card-glass"></view>
-							<view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
-						</view>
-					</view>
-					<view class="uh-global-card-glass uh-shadow-xs flex-1 overflow-hidden rounded-xl">
-						<view class="box-border flex items-center px-4 pt-4">
-							<view class="flex flex-1 items-center">
-								<image class="avatar h-9 w-9 shrink-0 rounded-full"
-									:src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
-									mode="aspectFill" />
-								<view class="ml-2 flex flex-col gap-y-1">
-									<view class="text-3xs text-gray-900 font-bold">
-										{{ moment.owner?.displayName || bloggerInfo.nickname }}
-									</view>
-									<view class="text-xs text-gray-400">
-										{{ formatMomentTime(moment.spec.releaseTime) }}
-									</view>
-								</view>
-							</view>
-							<view class="shrink-0">
-								<uh-button custom-class="!py-1.5 bg-secondary text-xs"
-									@click="handleToMomentDetail(moment)">
-									详情
-								</uh-button>
-							</view>
-						</view>
-
-						<!-- 正文 -->
-						<view class="box-border px-4 pt-3">
-							<view class="relative box-border rounded-lg bg-page p-3 text-gray-900 text-3xs">
-								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-									:loading-img="markdownConfig.loadingGif" scroll-table selectable
-									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-									:content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
-									:show-language-name="true" copy-by-long-press />
-							</view>
-						</view>
-
-						<!-- 图片 -->
-						<view v-if="moment.images && moment.images.length !== 0"
-							class="box-border flex flex-wrap items-start px-3 pt-2">
-							<view v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
-								class="image-item box-border p-1"
-								:class="moment.images && moment.images.length === 1 ? 'h-32 w-full' : (moment.images && moment.images.length === 2 ? 'h-[250rpx] w-1/2' : 'h-20 w-1/3')">
-								<image mode="aspectFill" class="h-full w-full rounded-lg" :src="image.url"
-									@click="handlePreview(mediumIndex, moment.images || [])" />
-							</view>
-						</view>
-
-						<view v-if="moment.spec.tags && moment.spec.tags.length !== 0"
-							class="mt-3 box-border flex flex-wrap gap-2 px-4">
-							<text v-for="(tag, tagIndex) in moment.spec.tags" :key="tagIndex"
-								class="rounded-xl bg-secondary px-2 py-1 text-xs">
-								# {{ tag }}
-							</text>
-						</view>
-
-						<!--  (点赞/评论) -->
-						<view
-							class="mb-1 mt-2 box-border w-full flex items-center  border-t border-black/5 px-4 py-3 text-xs text-gray-400"
-							:class="[moment.spec.allowComment?'justify-between':'gap-x-6']">
-							<view class="flex items-center gap-x-1" @click.stop="handleMomentLike(moment)">
-								<wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
-								<text class="text-3xs"
-									:class="hasUpvoted(moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
-									点赞 {{ moment.stats.upvote || 0 }}
-								</text>
-							</view>
-							<view v-if="moment.spec.allowComment" class="flex items-center gap-x-1"
-								@click.stop="handleMomentComment(moment)">
-								<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
-								<text class="text-3xs text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
-							</view>
-							<view class="flex items-center gap-x-1" @click.stop="handleToggleMomentFavorite(moment)">
-								<wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
-								<text class="text-3xs"
-									:class="isMomentFavorite(moment) ? 'text-primary' : 'text-gray-600'">
-									{{ isMomentFavorite(moment) ? '已收藏' : '收藏' }}
-								</text>
-							</view>
-						</view>
-					</view>
-				</view>
-				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
+			 <!-- 瞬间卡片 -->
+			 <view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
+			  <view class="shrink-0 flex flex-col gap-y-2 w-13">
+			   <view class="shrink-0 flex flex-col items-center font-bold">
+			    <text
+			     class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
+			    <text class="date-year-month mt-2 text-sm text-gray-600">{{ moment.year }}</text>
+			    <text class="date-weekend mt-1 text-xs text-gray-600">{{ moment.weekend }}</text>
+			   </view>
+			   <view class="flex-1 w-full flex flex-col items-center">
+			    <view class="shrink-0 w-4 h-4 bg-primary rounded-full uh-global-card-glass"></view>
+			    <view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
+			   </view>
+			  </view>
+			  <uh-moment-card :moment="moment" :blogger="bloggerInfo"
+			   @detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
+			   @comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
+			 </view>
+			 <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 
