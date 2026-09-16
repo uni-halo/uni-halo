@@ -42,19 +42,17 @@ async function getEditorHtml(): Promise<string> {
   return html || form.value.content || ''
 }
 
-/* ---------------- 日期选择（wd-datetime-picker 受控模式） ---------------- */
-const datePickerVisible = ref(false)
+/* ---------------- 日期选择（wd-datetime-picker 是纯弹层，需自建触发区 + 受控 visible） ---------------- */
+const dateShow = ref(false)
 const dateTs = ref(Date.now())
 
 function openDatePicker() {
-  // 已有日期则回显，否则从今天开始
   dateTs.value = form.value.date ? dayjs(form.value.date).valueOf() : Date.now()
-  datePickerVisible.value = true
+  dateShow.value = true
 }
 
 function handleDateConfirm({ value }: any) {
   form.value.date = dayjs(value).format('YYYY-MM-DD')
-  datePickerVisible.value = false
 }
 
 function handleResetForm() {
@@ -70,6 +68,8 @@ function openEdit(story: ILoveStory) {
   formMode.value = 'edit'
   editName.value = story.metadata?.name || ''
   form.value = { ...(story.spec || {}) }
+  // 日期选择器回显已有日期
+  dateTs.value = form.value.date ? dayjs(form.value.date).valueOf() : Date.now()
   imageList.value = (form.value.images || []).map(url => ({
     // tempPath 用于显示（相对路径补域名），url 保留原始相对路径用于提交
     tempPath: checkThumbnailUrl(url),
@@ -150,19 +150,11 @@ defineExpose({ openEdit })
       <view class="mb-5 flex items-center gap-2">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">日期</text>
         <input v-model="form.date" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(选填)">
-        <wd-datetime-picker
-          v-model="dateTs"
-          type="date"
-          :visible="datePickerVisible"
-          title="选择日期"
-          @update:visible="datePickerVisible = $event"
-          @confirm="handleDateConfirm"
-        >
-          <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
-            <wd-icon name="calendar" size="32rpx" />
-          </view>
-        </wd-datetime-picker>
+        <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
+          <wd-icon name="calendar" size="32rpx" />
+        </view>
       </view>
+      <wd-datetime-picker v-model="dateTs" type="date" title="选择日期" v-model:visible="dateShow" @confirm="handleDateConfirm" />
       <view class="mb-5 flex items-center">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">地点</text>
         <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入地点(选填)">

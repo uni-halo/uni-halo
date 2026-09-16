@@ -325,7 +325,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             {{ album.title || album.displayName || '未命名相册' }}
           </view>
           <view class="mt-0.5 text-3xs text-gray-400">
-            {{ album.photos?.length || 0 }} 张
+            {{ album.photoCount ?? album.photos?.length ?? 0 }} 张
           </view>
           <view class="mt-2 flex items-center justify-between gap-2 text-xs">
             <view class="flex items-center gap-0.5 text-gray-500" @click="openDetail(album)">
@@ -417,7 +417,7 @@ onPageScroll((option: Page.PageScrollOption) => {
               <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
                 <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
               </view>
-              <text class="text-3xs text-gray-500">清除查看密码（访客将可直接查看）</text>
+              <text class="text-3xs text-gray-500">清除查看密码</text>
             </view>
           </view>
         </view>

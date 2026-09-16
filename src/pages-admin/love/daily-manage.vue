@@ -107,24 +107,38 @@ const { list: imageList, choose: chooseImages, remove: removeImage, retry: image
 /* ---------------- 完成感想富文本（官方 editor，经 uh-rich-editor 封装） ---------------- */
 const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, clear(): void } | null>(null)
 
-/** 完成日期选择（wd-datetime-picker 受控模式） */
-const datePickerVisible = ref(false)
+/** 完成日期选择（wd-datetime-picker 是纯弹层，需自建触发区 + 受控 visible） */
+const dateShow = ref(false)
 const dateTs = ref(Date.now())
 
 function openDatePicker() {
   dateTs.value = form.value.completeDate ? dayjs(form.value.completeDate).valueOf() : Date.now()
-  datePickerVisible.value = true
+  dateShow.value = true
 }
 
 function handleDateConfirm({ value }: any) {
   form.value.completeDate = dayjs(value).format('YYYY-MM-DD')
-  datePickerVisible.value = false
+}
+
+/** 计划日期选择 */
+const planDateShow = ref(false)
+const planDateTs = ref(Date.now())
+
+function openPlanDatePicker() {
+  planDateTs.value = form.value.planDate ? dayjs(form.value.planDate).valueOf() : Date.now()
+  planDateShow.value = true
+}
+
+function handlePlanDateConfirm({ value }: any) {
+  form.value.planDate = dayjs(value).format('YYYY-MM-DD')
 }
 
 function openCreate() {
   formMode.value = 'create'
   editName.value = ''
   form.value = { title: '', content: '', status: 'wait', planDate: '' }
+  dateTs.value = Date.now()
+  planDateTs.value = Date.now()
   imageList.value = []
   editorRef.value?.clear()
   formVisible.value = true
@@ -134,6 +148,9 @@ function openEdit(item: ILoveDailyItem) {
   formMode.value = 'edit'
   editName.value = item.metadata?.name || ''
   form.value = { ...(item.spec || {}) }
+  // 日期选择器回显
+  planDateTs.value = form.value.planDate ? dayjs(form.value.planDate).valueOf() : Date.now()
+  dateTs.value = form.value.completeDate ? dayjs(form.value.completeDate).valueOf() : Date.now()
   // tempPath 用于显示（相对路径补域名），url 保留原始相对路径用于提交
   imageList.value = (form.value.images || []).map(url => ({
     tempPath: checkThumbnailUrl(url),
@@ -149,6 +166,15 @@ function openEdit(item: ILoveDailyItem) {
 }
 
 const saving = ref(false)
+
+/** 切换状态：切到已完成时预填今天为完成日期（与选择器显示一致） */
+function handleStatusChange(v: ILoveDailyItemSpec['status']) {
+  form.value.status = v
+  if (v === 'complete' && !form.value.completeDate) {
+    form.value.completeDate = dayjs().format('YYYY-MM-DD')
+    dateTs.value = Date.now()
+  }
+}
 
 async function handleSave() {
   const spec = { ...form.value }
@@ -338,22 +364,22 @@ onPageScroll((option: Page.PageScrollOption) => {
             placeholder="请输入描述(选填)" :maxlength="500"
           />
         </view>
-        <view class="mb-5 flex items-center">
+        <view class="mb-5 flex items-center gap-2">
           <text class="w-[140rpx] shrink-0 text-sm text-[#666]">计划时间</text>
-          <input
-            v-model="form.planDate"
-            class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
-            placeholder="如 2024-06-01(选填)"
-          >
+          <input v-model="form.planDate" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(选填)">
+          <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openPlanDatePicker">
+            <wd-icon name="calendar" size="32rpx" />
+          </view>
         </view>
+        <wd-datetime-picker v-model="planDateTs" type="datetime" title="选择计划日期" v-model:visible="planDateShow" @confirm="handlePlanDateConfirm" />
         <view class="mb-5 flex items-center">
-          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">状态</text>
+          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">完成状态</text>
           <view class="flex flex-1 gap-2">
             <text
               v-for="s in [{ v: 'wait', t: '未开始' }, { v: 'doing', t: '进行中' }, { v: 'complete', t: '已完成' }]"
               :key="s.v" class="rounded-full px-3 py-1 text-xs"
               :class="form.status === s.v ? 'bg-love text-white' : 'bg-page text-gray-500'"
-              @click="form.status = s.v as ILoveDailyItemSpec['status']"
+              @click="handleStatusChange(s.v as ILoveDailyItemSpec['status'])"
             >
               {{ s.t }}
             </text>
@@ -364,19 +390,11 @@ onPageScroll((option: Page.PageScrollOption) => {
           <view class="mb-5 flex items-center gap-2">
             <text class="w-[140rpx] shrink-0 text-sm text-[#666]">完成日期 *</text>
             <input v-model="form.completeDate" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(必填)">
-            <wd-datetime-picker
-              v-model="dateTs"
-              type="date"
-              :visible="datePickerVisible"
-              title="选择完成日期"
-              @update:visible="datePickerVisible = $event"
-              @confirm="handleDateConfirm"
-            >
-              <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
-                <wd-icon name="calendar" size="32rpx" />
-              </view>
-            </wd-datetime-picker>
+            <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
+              <wd-icon name="calendar" size="32rpx" />
+            </view>
           </view>
+          <wd-datetime-picker v-model="dateTs" type="datetime" title="选择完成日期" v-model:visible="dateShow" @confirm="handleDateConfirm" />
           <view class="mb-5">
             <text class="mb-2 block text-sm text-[#666]">完成感想</text>
             <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">

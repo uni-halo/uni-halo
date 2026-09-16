@@ -576,6 +576,8 @@ export interface ILoveAlbum {
 	priority?: number;
 	/** 是否启用查看密码(服务端按 passwordHash 维护) */
 	passwordEnabled?: boolean;
+	/** 照片数量(公开列表 VO 服务端计算；加密相册 photos 为空，计数以此为准) */
+	photoCount?: number;
 	photos?: ILovePhoto[];
 	/** 服务端计算的照片数量 */
 	status?: { photoCount?: number, [key: string]: unknown };
