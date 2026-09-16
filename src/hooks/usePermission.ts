@@ -10,6 +10,7 @@
  * 业务权限常量见 @/config/permissions
  */
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { PERMISSIONS } from '@/config/permissions'
 import type { IBizPermission, IPermissionRule, PermissionKey } from '@/config/permissions'
 import { useUserStore } from '@/store/user'
@@ -37,11 +38,13 @@ function matchRule(rule: IPermissionRule, apiGroup: string, resource: string, ve
 
 export function usePermission() {
   const userStore = useUserStore()
+  // storeToRefs 保持响应式引用（项目规范：setup store 取值统一走 storeToRefs）
+  const { userInfo } = storeToRefs(userStore)
 
   /** 当前用户角色列表（响应式） */
-  const roles = computed<string[]>(() => userStore.userInfo.value?.roles || [])
+  const roles = computed<string[]>(() => userInfo.value?.roles || [])
   /** 当前用户权限规则列表（响应式） */
-  const rules = computed<IPermissionRule[]>(() => userStore.userInfo.value?.permissions || [])
+  const rules = computed<IPermissionRule[]>(() => userInfo.value?.permissions || [])
 
   /** 是否已登录（有角色信息视为已登录） */
   const isLoggedIn = computed(() => roles.value.length > 0)

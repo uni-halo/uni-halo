@@ -102,7 +102,7 @@
 
 			<!-- 用户信息卡片 -->
 			<view v-if="hasLogin" class="w-full">
-				<view class="uh-global-card-glass !bg-white/5 uh-shadow-xs border p-3 rounded-xl flex items-center gap-x-2">
+				<view class="uh-global-card-glass !bg-white/5 shadow-none border p-3 rounded-xl flex items-center gap-x-2">
 					<image :src="userInfo.avatar" class="w-10 h-10 uh-global-card-glass uh-shadow-xs border rounded-full"></image>
 					<view class="flex justify-center flex-col gap-y-1">
 						<text class="text-2xs font-semibold text-gray-900">{{ userInfo.nickname}}</text>
@@ -114,15 +114,14 @@
 			<!-- 功能入口区域 -->
 			<view class="flex-1 w-full flex flex-col">
 				<uh-section-title>功能入口</uh-section-title>
-				<scroll-view scroll-y :show-scrollbar="false" class="flex-1">
-					<view class="box-border flex flex-col gap-y-4 pt-2">
-						<!-- 管理入口（按权限显隐） -->
+				<scroll-view scroll-y :show-scrollbar="false" class="mt-3 flex-1">
+					<view class="box-border flex flex-col gap-y-3 ">
 						<uh-permission v-for="entry in visibleAdminEntries" :key="entry.key" :permission="entry.permission">
-							<view class="uh-global-card-glass flex items-center gap-x-3 rounded-xl px-3 py-2.5"
+							<view class="uh-global-card-glass shadow-none flex items-center gap-x-3 rounded-xl px-3 py-2.5"
 								@click="handleToAdmin(entry.url)">
-								<text class="text-lg">{{ entry.icon }}</text>
-								<text class="flex-1 text-sm text-gray-900 dark:text-gray-100">{{ entry.label }}</text>
-								<wd-icon name="arrow-right" size="14px" custom-class="text-gray-400" />
+								<text class="text-sm">{{ entry.icon }}</text>
+								<text class="flex-1 text-2xs text-gray-900 dark:text-gray-100">{{ entry.label }}</text>
+								<wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
 							</view>
 						</uh-permission>
 					</view>
