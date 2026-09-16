@@ -222,9 +222,8 @@
 						<view class="line-clamp-2 mt-1 text-xs text-gray-500 leading-relaxed">
 							{{ item.spec?.content || '' }}
 						</view>
-						<view v-if="item.spec?.planDate" class="mt-1 flex items-center gap-1 text-xs text-gray-400">
-							<wd-icon name="calendar-line" />
-							<text>计划：{{ item.spec.planDate }}</text>
+						<view v-if="item.spec?.planDate" class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+							<text>计划日期：{{ item.spec.planDate }}</text>
 						</view>
 					</view>
 					<image v-if="item.spec?.images?.[0]" :src="checkThumbnailUrl(item.spec.images[0], true)"
@@ -232,7 +231,7 @@
 				</view>
 				<view
 					class="flex items-center justify-end gap-6 border-t border-t-solid border-gray-100 px-4 py-2.5 text-xs">
-					<view class="flex-1" :class="[item.spec._statusClass]">
+					<view class="flex-1 font-bold" :class="[item.spec._statusClass]">
 						{{item.spec._status}}
 					</view>
 					<view class="shrink-0 flex items-center justify-end gap-x-6">
