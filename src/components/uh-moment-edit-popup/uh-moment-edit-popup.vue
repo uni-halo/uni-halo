@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 /**
- * 瞬间编辑弹窗（全局组件，uh- 前缀 easycom 自动注册）
- * 官方 editor 富文本（经 uh-rich-editor 封装，试点）+ 图片上传 + 发布/保存逻辑内聚
+ * 瞬间编辑弹窗
  *
  * 用法：
  * - 发布模式：<uh-moment-edit-popup :show="visible" @on-close="..." />
@@ -191,7 +190,7 @@ defineExpose({ openEdit })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
       <view class="w-full flex flex-col gap-y-1">
         <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>

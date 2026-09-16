@@ -188,7 +188,7 @@ defineExpose({ setHtml, getHtml, insertImage, clear })
     </view>
     <editor
       :id="editorId"
-      class="uh-rich-editor text-xs text-gray-900 p-3"
+      class="uh-rich-editor text-xs text-gray-900 p-2"
       :placeholder="props.placeholder"
       :read-only="props.readOnly"
       @ready="handleReady"

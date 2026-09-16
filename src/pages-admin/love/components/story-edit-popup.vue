@@ -132,7 +132,7 @@ defineExpose({ openEdit })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
       <view class="w-full flex flex-col gap-y-1">
         <text class="text-md font-bold">{{ formMode === 'create' ? '新增故事' : '编辑故事' }}</text>
@@ -147,11 +147,14 @@ defineExpose({ openEdit })
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">标题 *</text>
         <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入故事标题">
       </view>
-      <view class="mb-5 flex items-center gap-2">
+      <view class="mb-5 flex items-center">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">日期</text>
-        <input v-model="form.date" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(选填)">
-        <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
-          <wd-icon name="calendar" size="32rpx" />
+        <view
+          class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-sm shadow-none"
+          @click="openDatePicker"
+        >
+          <text :class="form.date ? 'text-gray-900' : 'text-gray-400'">{{ form.date || '如 2024-06-01(选填)' }}</text>
+          <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
         </view>
       </view>
       <wd-datetime-picker v-model="dateTs" type="date" title="选择日期" v-model:visible="dateShow" @confirm="handleDateConfirm" />

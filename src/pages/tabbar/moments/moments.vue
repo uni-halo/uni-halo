@@ -231,7 +231,7 @@
 
 	function handleMomentLike(moment : MomentCard) {
 		if (!moment) { return }
-		likeByName(moment.metadata.name, (name) => {
+		likeByName(moment.metadata.name, () => {
 			if (moment.stats) {
 				moment.stats.upvote = (moment.stats.upvote || 0) + 1
 			}
@@ -470,14 +470,14 @@
 		<!-- 发布瞬间悬浮按钮（仅 author/admin，参考瞬间管理页胶囊设计，悬浮于自定义 tabbar 上方） -->
 		<view
 			v-if="canPublish && uniHaloPluginAvailable"
-			class="uh-translate-x-center fixed bottom-14 left-1/2 z-50 flex items-center justify-center pb-safe"
+			class="uh-translate-x-center fixed bottom-78px left-1/2 z-50 flex items-center justify-center pb-safe"
 		>
 			<view
-				class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
+				class="uh-global-card-glass uh-shadow-xs box-border py-2.5 flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary"
 				@click="handleToPublish"
 			>
-				<wd-icon name="add-circle" size="36rpx" />
-				<text class="shrink-0 text-xs font-semibold">发布瞬间</text>
+				<wd-icon name="plus" size="32rpx" />
+				<text class="shrink-0 text-2xs font-semibold">发布瞬间</text>
 			</view>
 		</view>
 	</view>

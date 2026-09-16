@@ -149,7 +149,7 @@
 
 	onReachBottom(() => {
 		// 如果正在请求，需要阻止继续发起请求
-		if (loadMoreStatus.value.active && loadMoreStatus.value.loading) {
+		if (loadMoreStatus.value.active && loadMoreStatus.value.status === 'loading') {
 			return;
 		}
 		// 有更多数据时，继续加载数据

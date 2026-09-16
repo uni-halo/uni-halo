@@ -38,7 +38,7 @@ async function handleGetData() {
     const items = (res.data?.items || []).map((item) => {
       item.spec!.date = formatTime({
         d: item.spec?.date,
-        f: 'yyyy/MM/dd HH:mm 星期w',
+        f: 'yyyy/MM/dd',
       })
       return item
     })
