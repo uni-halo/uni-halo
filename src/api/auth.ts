@@ -51,7 +51,7 @@ export function getAuthProfile() {
     `${AUTH_API_BASE}/profile`,
     {
       cacheFor: 0,
-      meta: { requestFrom: RequestFrom.Halo, needAuthToken: 123 },
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
     },
   )
 }
@@ -127,10 +127,13 @@ export function bindMyWechat(code: string) {
 
 /**
  * 当前登录用户解除微信绑定(需登录 token,幂等:未绑定时同样返回成功)
+ * 注意:alova 的 Delete 签名是 (url, data, config)——config 必须作第三参,
+ * 误作第二参会变成请求体导致 meta 丢失、token 不携带(401)
  */
 export function unbindMyWechat() {
   return http.Delete<IResponse<{ success: boolean }>>(
     `${AUTH_API_BASE}/my/wechat-binding`,
+    undefined,
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },

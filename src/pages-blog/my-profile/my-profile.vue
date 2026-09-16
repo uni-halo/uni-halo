@@ -266,17 +266,25 @@
 			zIndex: 9999,
 			confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
 			cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
-		}).then(async () => {
-			try {
-				await unbindMyWechat()
-				uni.showToast({ icon: 'none', title: '已解除绑定' })
-				await fetchBinding()
+	}).then(async () => {
+		try {
+			await unbindMyWechat()
+			// 直接本地置为未绑定,不立即重查:服务端 UserConnection 删除是两阶段异步,
+			// 删除指令返回后残留的 deleting 记录仍可能让重查返回 bound=true;
+			// 下次进入页面 fetchBinding 自然拿到最终状态
+			binding.value = {
+				username: userInfo.value.username,
+				bound: false,
+				providerUserId: null,
+				boundAt: null,
 			}
-			catch (error : any) {
-				console.error('解绑失败:', error)
-				uni.showToast({ icon: 'none', title: errText(error, '解绑失败') })
-			}
-		}).catch(() => {})
+			uni.showToast({ icon: 'none', title: '已解除绑定' })
+		}
+		catch (error : any) {
+			console.error('解绑失败:', error)
+			uni.showToast({ icon: 'none', title: errText(error, '解绑失败') })
+		}
+	}).catch(() => {})
 	}
 
 	/* ---------------- 退出登录（复用「我的」弹窗既有流程） ---------------- */

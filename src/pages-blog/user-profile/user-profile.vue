@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref, shallowRef } from 'vue'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-	import dayjs from 'dayjs'
 	import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
@@ -9,7 +8,10 @@
 	import { useTokenStore } from '@/store/token'
 	import { useUserStore } from '@/store/user'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-	import { checkAvatarUrl, checkImageUrl, checkUrl } from '@/utils/url'
+	import { useFavoritesStore } from '@/store/favorites'
+	import { buildMomentFavoriteItem } from '@/utils/favorite'
+	import { useUpvote } from '@/hooks/useUpvote'
+	import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
 
@@ -25,10 +27,13 @@
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	// wd-sticky 吸顶偏移(导航栏高度,同 tabbar/gallery.vue 用法)
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height } = useCustomNavbarPlaceholder()
 	const appConfigStore = useAppConfigStore()
 	const tokenStore = useTokenStore()
 	const userStore = useUserStore()
+	const offsetTop = computed(()=>{
+		return height.value - 12
+	})
 
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -203,15 +208,41 @@
 		auditFilter: items => auditFilterBy(appConfigStore.auditData.spec?.posts || [])(items),
 	})
 
-	/* ---------- 瞬间 Tab(公开接口原生支持 ownerName 过滤) ---------- */
-	type MomentCard = IMoment
+	/* ---------- 瞬间 Tab(公开接口原生支持 ownerName 过滤,卡片复用全局 uh-moment-card) ---------- */
+	type MomentCard = IMoment & {
+		images ?: { type ?: string, url : string }[]
+		spec : IMoment['spec'] & { newHtml ?: string }
+	}
+
+	/** 移除正文里的标签链接(同 moments.vue,避免卡片内可点进标签页) */
+	function removeTagLinksCompletely(htmlString : string) : string {
+		const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
+		return htmlString.replace(regex, '')
+	}
+
+	/** 映射成 uh-moment-card 需要的扩展结构(newHtml + images,渲染时 check 补全) */
+	function mapMomentItem(item : IMoment) : MomentCard {
+		const medium = item.spec?.content?.medium || []
+		return {
+			...item,
+			stats: { ...(item.stats || {}) },
+			spec: {
+				...item.spec,
+				newHtml: removeTagLinksCompletely(item.spec?.content?.html || ''),
+			},
+			images: medium
+				.filter(x => x.type === 'PHOTO')
+				.map(x => ({ ...x, url: checkThumbnailUrl(x.url || '', true) })),
+		}
+	}
+
 	const momentState = usePagedList<MomentCard>({
 		fetcher: (page, size) => getMomentList({
 			page,
 			size,
 			ownerName: pageUsername.value,
 		}).then((res) => {
-			const items = res.data.items || []
+			const items = (res.data.items || []).map(mapMomentItem)
 			backfillOwner(items)
 			return { items, hasNext: res.data.hasNext }
 		}),
@@ -237,20 +268,9 @@
 		}
 	}
 
-	/* ---------------- 瞬间展示辅助 ---------------- */
-	function momentMedias(moment : IMoment) {
-		return (moment.spec?.content?.medium || []).map(m => ({
-			type: m.type || 'PHOTO',
-			url: m.url || '',
-		}))
-	}
+	/* ---------------- 瞬间交互(卡片内媒体/时间由 uh-moment-card 自渲染) ---------------- */
 
-	function formatMomentTime(moment : IMoment) {
-		const time = moment.spec?.releaseTime || moment.metadata?.creationTimestamp
-		return time ? dayjs(time).format('YYYY-MM-DD HH:mm') : ''
-	}
-
-	/* ---------------- 跳转 ---------------- */
+	/* ---------------- 跳转(详情页内可评论) ---------------- */
 	function handleToMoment(moment : IMoment) {
 		uni.navigateTo({
 			url: `/pages-blog/moment-detail/moment-detail?name=${moment.metadata.name}`,
@@ -258,11 +278,21 @@
 		})
 	}
 
-	function handlePreviewMedias(moment : IMoment, index : number) {
-		uni.previewImage({
-			current: index,
-			urls: momentMedias(moment).map(m => checkImageUrl(m.url)),
+	/* ---------------- 点赞/收藏(useUpvote 防重复,收藏走全局 favoritesStore) ---------------- */
+	const favoritesStore = useFavoritesStore()
+	const { likeByName } = useUpvote('moments', () => '')
+
+	function handleMomentLike(moment : MomentCard) {
+		likeByName(moment.metadata.name, () => {
+			if (moment.stats) {
+				moment.stats.upvote = (moment.stats.upvote || 0) + 1
+			}
 		})
+	}
+
+	function handleToggleMomentFavorite(moment : MomentCard) {
+		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(moment))
+		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 	}
 
 	/* ---------------- 生命周期 ---------------- */
@@ -305,7 +335,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
 		<!-- 顶部导航不占位,封面图直接顶到状态栏下,做沉浸式头部 -->
-		<uh-navbar :scroll-y="scrollY" default-title="个人主页" title-color="text-white" :need-placeholder="false" />
+		<uh-navbar :scroll-y="scrollY" default-title="个人主页" :need-placeholder="false" />
 
 		<!-- 头部封面图 + 黑色模糊遮罩 + 用户信息居中 + 底部渐变过渡(参考 mine.vue) -->
 		<view class="box-border relative h-76 w-full overflow-hidden pt-10">
@@ -331,7 +361,7 @@
 		<!-- 分段 Tab(文章 / 瞬间):wd-sticky 吸顶,offset-top 对齐导航栏高度(同 gallery.vue 用法) -->
 		<wd-sticky :offset-top="offsetTop">
 			<view class="w-screen box-border px-16">
-				<view class="flex items-center w-full uh-global-card-glass mt-4 shadow-none flex rounded-xl p-1">
+				<view class="flex items-center w-full uh-global-card-glass border mt-4 shadow-none flex rounded-xl p-1">
 					<view class="flex-1 rounded-lg py-2 text-center text-2xs"
 						:class="activeTab === 'post' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
 						@click="switchTab('post')">
@@ -359,39 +389,20 @@
 			</view>
 		</template>
 
-		<!-- 瞬间 Tab(全局卡片样式,后续再封装独立组件) -->
-		<template v-else>
-			<uh-data-loading v-if="momentState.loadingStatus.value !== DataLoadingStatusEnum.Success"
-				:loading-status="momentState.loadingStatus.value" empty-text="啊偶，还没有发布过瞬间哦~" min-height="50vh"
-				@refresh="momentState.refresh()" />
-			<view v-else class="box-border flex flex-col gap-3 p-3">
-				<view v-for="moment in momentState.list.value" :key="moment.metadata.name"
-					class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl p-4"
-					@click="handleToMoment(moment)">
-					<!-- 正文 HTML(瞬间内容为服务端渲染 HTML) -->
-					<rich-text :nodes="moment.spec?.content?.html || ''" />
-					<!-- 媒体(渲染时 check 补全,存原始地址) -->
-					<view v-if="momentMedias(moment).length" class="mt-3 grid grid-cols-3 gap-1.5">
-						<template v-for="(media, index) in momentMedias(moment)" :key="index">
-							<video v-if="media.type === 'VIDEO'" :src="checkUrl(media.url)"
-								class="aspect-square w-full rounded-xl object-cover" :controls="false" />
-							<image v-else :src="checkImageUrl(media.url)"
-								class="aspect-square w-full rounded-xl object-cover" mode="aspectFill"
-								@click.stop="handlePreviewMedias(moment, index)" />
-						</template>
-					</view>
-					<view class="mt-3 flex items-center justify-between">
-						<text class="text-2xs text-gray-400">{{ formatMomentTime(moment) }}</text>
-						<view class="flex items-center gap-x-3 text-2xs text-gray-400">
-							<text v-if="moment.stats?.upvote">❤️ {{ moment.stats?.upvote }}</text>
-							<text v-if="moment.stats?.totalComment">💬 {{ moment.stats?.totalComment }}</text>
-						</view>
-					</view>
-				</view>
-				<uh-data-loadmore :status="momentState.loadMoreStatus.value.status"
-					:text="momentState.loadMoreStatus.value.text" />
-			</view>
-		</template>
+	<!-- 瞬间 Tab(复用全局 uh-moment-card) -->
+	<template v-else>
+		<uh-data-loading v-if="momentState.loadingStatus.value !== DataLoadingStatusEnum.Success"
+			:loading-status="momentState.loadingStatus.value" empty-text="啊偶，还没有发布过瞬间哦~" min-height="50vh"
+			@refresh="momentState.refresh()" />
+		<view v-else class="box-border flex flex-col gap-3 p-3">
+			<uh-moment-card v-for="moment in momentState.list.value" :key="moment.metadata.name"
+				:moment="moment" :blogger="{ nickname: headerUser.nickname, avatar: checkAvatarUrl(headerUser.avatar) }"
+				@detail="handleToMoment(moment)" @like="handleMomentLike(moment)"
+				@comment="handleToMoment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
+			<uh-data-loadmore :status="momentState.loadMoreStatus.value.status"
+				:text="momentState.loadMoreStatus.value.text" />
+		</view>
+	</template>
 	</view>
 </template>
 

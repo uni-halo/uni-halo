@@ -120,10 +120,11 @@ export function updateMoment(name: string, spec: IMomentSpec) {
   )
 }
 
-/** 删除自己的瞬间（UC API） */
+/** 删除自己的瞬间（UC API；alova Delete 第三参才是 config） */
 export function deleteMoment(name: string) {
   return http.Delete<IResponse<null>>(
     `/apis/uc.api.moment.halo.run/v1alpha1/moments/${name}`,
+    undefined,
     {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
@@ -172,7 +173,7 @@ export function updateLoveDailyItem(name: string, spec: Partial<ILoveDailyItemSp
 }
 
 export function deleteLoveDailyItem(name: string) {
-  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-daily-items/${name}`, loveAdminMeta())
+  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-daily-items/${name}`, undefined, loveAdminMeta())
 }
 
 /* ---------- 恋爱故事 ---------- */
@@ -186,7 +187,7 @@ export function updateLoveStory(name: string, spec: Partial<ILoveStorySpec>) {
 }
 
 export function deleteLoveStory(name: string) {
-  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-stories/${name}`, loveAdminMeta())
+  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-stories/${name}`, undefined, loveAdminMeta())
 }
 
 /* ---------- 恋爱相册 ---------- */
@@ -214,7 +215,7 @@ export function getLoveAlbumAdmin(name: string) {
 }
 
 export function deleteLoveAlbum(name: string) {
-  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-albums/${name}`, loveAdminMeta())
+  return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-albums/${name}`, undefined, loveAdminMeta())
 }
 
 /** 相册添加单张照片（插件端 POST /love-albums/{name}/photos，name 由服务端生成） */
@@ -229,5 +230,5 @@ export function updateLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
 
 /** 删除单张照片（按服务端生成的照片 name 定位） */
 export function removeLoveAlbumPhoto(name: string, photoName: string) {
-  return http.Delete<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos/${photoName}`, loveAdminMeta())
+  return http.Delete<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos/${photoName}`, undefined, loveAdminMeta())
 }

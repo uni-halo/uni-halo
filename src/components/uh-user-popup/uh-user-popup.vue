@@ -102,7 +102,7 @@
 <template>
 	<uh-glass-popup v-model="popupVisible" position="left" custom-class="rounded-rt-xl rounded-rb-xl !border"
 		safe-area-inset-bottom :z-index="110" hide-when-close>
-		<view class="box-border h-full w-[70vw] flex flex-col gap-y-6 px-3 pt-safe">
+		<view class="box-border h-full w-[70vw] flex flex-col gap-y-6 px-4 pt-safe">
 			<view class="flex shrink-0 items-center justify-between pt-4">
 				<text class="text-md font-bold">我的</text>
 				<view
@@ -163,7 +163,7 @@
 
 			<!-- 底部操作栏 -->
 			<view v-if="hasLogin" class="box-border w-full flex shrink-0 items-center"
-				:class="[isWechat ? '' : 'pb-3']">
+				:class="[isWechat ? '' : 'pb-4']">
 				<uh-button class="flex-1"
 					custom-class="flex-1 uh-global-card-glass bg-red-400 border py-2 text-xs text-white !rounded-full"
 					@action-click="handleLogout()">
