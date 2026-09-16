@@ -307,12 +307,12 @@ onPageScroll((option: Page.PageScrollOption) => {
 
 <template>
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
-    <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="相册管理" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="恋爱相册管理" title-color="text-gray-900" />
 
     <!-- 相册列表 -->
     <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success && !detailVisible" :loading-status="loadingStatus" min-height="70vh" @refresh="handleRetry" />
 
-    <view v-if="!detailVisible" class="grid grid-cols-2 gap-3 px-3 pb-24 pt-3">
+    <view v-else class="grid grid-cols-2 gap-3 px-3 pb-24 pt-3">
       <view v-for="album in albumList" :key="album.metadata?.name || album.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
         <view class="relative h-32 w-full">
           <image v-if="album.cover || album.photos?.[0]?.url" :src="checkThumbnailUrl(album.cover || album.photos?.[0]?.url || '', true)" class="h-full w-full" mode="aspectFill" />

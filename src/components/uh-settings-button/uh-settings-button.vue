@@ -22,6 +22,11 @@
 		return whiteList.includes(currentPage.route)
 	})
 
+	const _customClass = computed(() => {
+	  const colorClass = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
+	  return `${props.customClass} ${colorClass}`
+	})
+	
 	function handleClick() {
 		emits('action-click')
 	}
@@ -30,8 +35,8 @@
 <template>
 	<view v-if="visible" :class="[props.fixed?'fixed bottom-22 right-3 z-50 pb-safe':'',props.containerClass]"
 		@click="handleClick">
-		<view class="uh-global-card-glass border h-11 w-11 flex items-center justify-center rounded-full text-primary"
-			:class="props.customClass">
+		<view class="uh-global-card-glass border h-11 w-11 flex items-center justify-center rounded-full"
+			:class="_customClass">
 			<wd-icon name="settings" size="42rpx" />
 		</view>
 	</view>

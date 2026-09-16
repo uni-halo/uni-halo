@@ -157,7 +157,7 @@ defineExpose({ openEdit })
           <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
         </view>
       </view>
-      <wd-datetime-picker v-model="dateTs" type="date" title="选择日期" v-model:visible="dateShow" @confirm="handleDateConfirm" />
+      <wd-datetime-picker v-model="dateTs" :z-index="999" type="date" title="选择日期" root-portal v-model:visible="dateShow" @confirm="handleDateConfirm" />
       <view class="mb-5 flex items-center">
         <text class="w-[140rpx] shrink-0 text-sm text-[#666]">地点</text>
         <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入地点(选填)">
@@ -200,7 +200,7 @@ defineExpose({ openEdit })
 
     <!-- 底部固定操作栏（滚动区外） -->
     <view class="border-t border-black/5 px-4 pb-safe pt-3">
-      <uh-button custom-class="py-2 !rounded-xl" :loading="saving" @click="handleSave">
+      <uh-button custom-class="py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
         保存
       </uh-button>
     </view>
