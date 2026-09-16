@@ -1,0 +1,177 @@
+<script lang="ts" setup>
+/**
+ * 恋爱相册照片管理弹窗：查看/预览/批量添加/删除（走 console 详情，照片带服务端生成的 name）
+ *
+ * 用法：通过 ref.openDetail(album) 打开；增删成功后 emit on-close({ refresh: true }) 由父级刷新列表
+ */
+import { computed, ref } from 'vue'
+import { addLoveAlbumPhoto, getLoveAlbumAdmin, removeLoveAlbumPhoto } from '@/api/uni-admin'
+import { useHaloUpload } from '@/hooks/useHaloUpload'
+import { checkThumbnailUrl } from '@/utils/url'
+import type { ILoveAlbum, ILovePhoto } from '@/api/types/uni-halo'
+
+defineOptions({
+  options: {
+    styleIsolation: 'apply-shared',
+  },
+})
+
+const emit = defineEmits<{
+  (e: 'on-close', data: { isSubmit: boolean, refresh: boolean }): void
+}>()
+
+const isShow = ref(false)
+const currentAlbum = ref<ILoveAlbum | null>(null)
+const currentPhotos = ref<ILovePhoto[]>([])
+const detailLoading = ref(false)
+
+/** 批量选图并上传，成功后逐张提交到相册（POST /photos，name 由服务端生成） */
+const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
+
+/** 未上传完成的待传照片数 */
+const pendingCount = computed(() => pendingPhotos.value.filter(i => i.status !== 'success').length)
+
+/** 外部打开：拉取相册 console 详情（照片带 name，删除照片接口依赖） */
+async function openDetail(album: ILoveAlbum) {
+  const name = album.metadata?.name || album.name || ''
+  isShow.value = true
+  detailLoading.value = true
+  currentAlbum.value = album
+  try {
+    // console API 返回完整资源结构 { metadata, spec: { displayName, photos, ... }, status }
+    const res = await getLoveAlbumAdmin(name)
+    const data: any = res.data || {}
+    currentAlbum.value = {
+      ...album,
+      ...(data.spec || {}),
+      metadata: data.metadata || album.metadata,
+      photos: data.spec?.photos || [],
+    }
+    currentPhotos.value = data.spec?.photos || []
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '加载相册失败', icon: 'none' })
+    isShow.value = false
+  }
+  finally {
+    detailLoading.value = false
+  }
+}
+
+async function commitPhotos() {
+  if (!currentAlbum.value)
+    return
+  const name = currentAlbum.value.metadata?.name || currentAlbum.value.name || ''
+  const newUrls = photoUrls()
+  if (newUrls.length === 0)
+    return
+  try {
+    const created = await Promise.all(newUrls.map(url => addLoveAlbumPhoto(name, { url })))
+    // 服务端返回整本相册（照片带生成的 name），直接以最新列表为准
+    const latestPhotos = (created[0]?.data as any)?.spec?.photos as ILovePhoto[] | undefined
+    currentPhotos.value = latestPhotos?.length ? latestPhotos : [...currentPhotos.value, ...newUrls.map(url => ({ url }) as ILovePhoto)]
+    pendingPhotos.value = []
+    uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'success' })
+    emit('on-close', { isSubmit: true, refresh: true })
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '照片保存失败', icon: 'none' })
+  }
+}
+
+async function handleDeletePhoto(photo: ILovePhoto) {
+  const name = currentAlbum.value?.metadata?.name || currentAlbum.value?.name || ''
+  if (!photo.name) {
+    uni.showToast({ title: '照片缺少标识，请刷新后重试', icon: 'none' })
+    return
+  }
+  uni.showModal({
+    title: '删除照片',
+    content: '确定删除这张照片吗？',
+    confirmColor: '#ef4444',
+    success: async (res) => {
+      if (!res.confirm)
+        return
+      try {
+        await removeLoveAlbumPhoto(name, photo.name || '')
+        currentPhotos.value = currentPhotos.value.filter(p => p.name !== photo.name)
+        uni.showToast({ title: '已删除', icon: 'success' })
+        emit('on-close', { isSubmit: true, refresh: true })
+      }
+      catch (err: any) {
+        uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+      }
+    },
+  })
+}
+
+function handlePreviewPhoto(index: number) {
+  uni.previewImage({
+    current: index,
+    urls: currentPhotos.value.map(p => checkThumbnailUrl(p.url || '')),
+  })
+}
+
+function handleClose(refresh = false) {
+  isShow.value = false
+  emit('on-close', { isSubmit: !!refresh, refresh })
+}
+
+defineExpose({ openDetail })
+</script>
+
+<template>
+  <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+    <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
+      <view class="w-full flex flex-col gap-y-1">
+        <text class="text-md font-bold">{{ currentAlbum?.title || currentAlbum?.displayName || '相册' }}</text>
+        <text class="text-xs text-gray-500">管理相册照片，点击图片可预览</text>
+      </view>
+      <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+        <wd-icon name="close" size="32rpx" class="text-gray-500" />
+      </view>
+    </view>
+
+    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
+      <view v-if="detailLoading" class="mt-10 text-center text-sm text-gray-400">
+        加载中…
+      </view>
+      <view v-else class="grid grid-cols-3 gap-2">
+        <view v-for="(photo, index) in currentPhotos" :key="photo.url" class="relative aspect-square overflow-hidden rounded-lg">
+          <image :src="checkThumbnailUrl(photo.url || '', true)" class="h-full w-full" mode="aspectFill" @click="handlePreviewPhoto(index)" />
+          <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click.stop="handleDeletePhoto(photo)">
+            <wd-icon name="close" size="22rpx" />
+          </view>
+        </view>
+        <!-- 待上传预览 -->
+        <view v-for="img in pendingPhotos" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
+          <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
+          <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removePending(img.tempPath)">
+            <wd-icon name="close" size="22rpx" />
+          </view>
+          <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
+            {{ img.progress }}%
+          </view>
+          <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white">
+            <text>失败</text>
+            <text>点击重试</text>
+          </view>
+          <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+            <wd-icon name="check" size="22rpx" />
+          </view>
+        </view>
+        <!-- 选图入口 -->
+        <view class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="choosePhotos">
+          <wd-icon name="camera" size="36rpx" />
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 提交待传照片：底部固定操作栏（滚动区外） -->
+    <view v-if="pendingPhotos.length" class="border-t border-black/5 px-4 pb-safe pt-3">
+      <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
+        {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
+      </uh-button>
+    </view>
+  </uh-glass-popup>
+</template>

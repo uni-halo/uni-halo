@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的信息 · 高保真原型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #eef2ff 0%, #e8f7d4 50%, #e6fbef 100%);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    padding: 24px; color: #111827;
+  }
+  /* ---------- 手机壳 ---------- */
+  .phone {
+    width: 390px; height: 812px;
+    background: linear-gradient(160deg, #f4f9e8 0%, #eef3fb 45%, #eafaf1 100%);
+    border-radius: 44px;
+    border: 10px solid #1c1c1e;
+    box-shadow: 0 24px 60px rgba(90,105,200,.28), inset 0 0 0 2px rgba(255,255,255,.6);
+    overflow: hidden; position: relative; flex-shrink: 0;
+  }
+  .statusbar {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; font-size: 13px; font-weight: 600; color: #374151;
+  }
+  .statusbar .right { display: flex; gap: 5px; align-items: center; }
+  .sig, .batt { width: 16px; height: 10px; border-radius: 2px; background: #374151; display: inline-block; }
+  .batt { width: 22px; }
+
+  /* ---------- 玻璃卡片（对应 uh-global-card-glass） ---------- */
+  .glass {
+    background: rgba(255,255,255,.55);
+    border: 2px solid rgba(255,255,255,.65);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 4px 16px rgba(90,105,200,.14);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+  }
+  .page { height: calc(100% - 44px); overflow-y: auto; padding: 0 16px 32px; scrollbar-width: none; }
+  .page::-webkit-scrollbar { display: none; }
+
+  /* ---------- 导航 ---------- */
+  .navbar { display: flex; align-items: center; gap: 12px; padding: 12px 4px 16px; }
+  .back-btn {
+    width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform .15s;
+  }
+  .back-btn:active { transform: scale(.92); }
+  .navbar .title { font-size: 17px; font-weight: 700; }
+
+  /* ---------- 头像卡片 ---------- */
+  .avatar-card {
+    border-radius: 20px; padding: 22px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .avatar-wrap { position: relative; cursor: pointer; }
+  .avatar {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(135deg, #B9E424, #7ec850);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 800; color: #fff;
+    border: 3px solid rgba(255,255,255,.9);
+    box-shadow: 0 8px 24px rgba(150,200,50,.35);
+  }
+  .camera-badge {
+    position: absolute; right: 0; bottom: 2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #fff; border: 2px solid rgba(255,255,255,.9);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12); font-size: 13px;
+  }
+  .avatar-card .name { font-size: 18px; font-weight: 700; }
+  .avatar-card .hint { font-size: 11px; color: #9ca3af; }
+
+  /* ---------- 分组标题 ---------- */
+  .section-title {
+    font-size: 12px; font-weight: 700; color: #6b7280;
+    margin: 18px 4px 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::before { content: ""; width: 3px; height: 12px; border-radius: 2px; background: #B9E424; }
+
+  /* ---------- 资料行 ---------- */
+  .form-card { border-radius: 18px; overflow: hidden; }
+  .row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid rgba(17,24,39,.05); cursor: default;
+  }
+  .row:last-child { border-bottom: none; }
+  .row .icon-box {
+    width: 32px; height: 32px; border-radius: 10px; background: rgba(185,228,36,.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+  }
+  .row .label { font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .row .value { flex: 1; font-size: 13px; color: #6b7280; text-align: right; min-width: 0; }
+  .row input.value {
+    border: none; outline: none; background: transparent; text-align: right;
+    font-size: 13px; color: #111827; font-family: inherit;
+    border-bottom: 1.5px dashed rgba(185,228,36,.7); padding: 2px 0; width: 150px;
+  }
+  .badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600;
+    background: rgba(185,228,36,.25); color: #4d7c0f; border: 1px solid rgba(185,228,36,.5);
+  }
+  .badge.gray { background: rgba(0,0,0,.04); color: #6b7280; border-color: rgba(0,0,0,.08); }
+  .chev { color: #c7cbd4; font-size: 14px; }
+
+  /* 保存按钮 */
+  .save-row { display: flex; justify-content: flex-end; padding: 10px 14px; }
+  .btn-save {
+    border: none; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, #B9E424, #a5d61c);
+    color: #3f5b00; font-size: 13px; font-weight: 700;
+    padding: 8px 22px; border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(185,228,36,.4); transition: transform .15s;
+  }
+  .btn-save:active { transform: scale(.95); }
+
+  /* ---------- 微信绑定卡片 ---------- */
+  .wx-card { border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 12px; }
+  .wx-logo {
+    width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg, #34d399, #10b981);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wx-info { flex: 1; min-width: 0; }
+  .wx-info .t { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .wx-info .d { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+  .state-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+
+  .btn-bind {
+    border: none; cursor: pointer; font-family: inherit; flex-shrink: 0;
+    background: #10b981; color: #fff; font-size: 12px; font-weight: 700;
+    padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 12px rgba(16,185,129,.35);
+    transition: transform .15s;
+  }
+  .btn-bind:active { transform: scale(.95); }
+  .btn-unbind {
+    border: 1px solid rgba(239,68,68,.35); cursor: pointer; font-family: inherit; flex-shrink: 0;
+    background: rgba(239,68,68,.08); color: #ef4444; font-size: 12px; font-weight: 700;
+    padding: 7px 14px; border-radius: 999px; transition: transform .15s;
+  }
+  .btn-unbind:active { transform: scale(.95); }
+
+  /* ---------- 危险区 ---------- */
+  .btn-logout {
+    width: 100%; margin-top: 24px; padding: 13px 0;
+    border: 1px solid rgba(239,68,68,.3); border-radius: 999px; cursor: pointer;
+    background: rgba(248,113,113,.75); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit;
+    box-shadow: 0 6px 16px rgba(239,68,68,.25); transition: transform .15s;
+  }
+  .btn-logout:active { transform: scale(.98); }
+
+  .version-tip { text-align: center; font-size: 11px; color: #b0b6c0; margin-top: 16px; }
+
+  /* ---------- toast 演示 ---------- */
+  .toast {
+    position: absolute; left: 50%; top: 120px; transform: translateX(-50%) translateY(-8px);
+    background: rgba(17,24,39,.85); color: #fff; font-size: 13px;
+    padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none;
+    transition: all .25s; z-index: 50; backdrop-filter: blur(6px);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .home-indicator {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 5px; border-radius: 3px; background: rgba(0,0,0,.25);
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="right"><span class="sig"></span><span class="sig"></span><span class="batt"></span></div>
+  </div>
+
+  <div class="page">
+    <!-- 导航 -->
+    <div class="navbar">
+      <div class="back-btn glass" onclick="toast('返回上一页')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <span class="title">我的信息</span>
+    </div>
+
+    <!-- 头像卡片 -->
+    <div class="avatar-card glass" onclick="toast('选择头像图片（uni.chooseImage → 上传）')">
+      <div class="avatar-wrap">
+        <div class="avatar">唐</div>
+        <div class="camera-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+      </div>
+      <div class="name">小莫唐尼</div>
+      <div class="hint">点击头像更换 · 支持上传至站点附件</div>
+    </div>
+
+    <!-- 资料表单 -->
+    <div class="section-title">账号资料</div>
+    <div class="form-card glass">
+      <div class="row">
+        <div class="icon-box">✏️</div>
+        <span class="label">昵称</span>
+        <input class="value" value="小莫唐尼" maxlength="20" />
+      </div>
+      <div class="row">
+        <div class="icon-box">👤</div>
+        <span class="label">用户名</span>
+        <span class="value">tzxia</span>
+        <span class="badge gray">不可修改</span>
+      </div>
+      <div class="row">
+        <div class="icon-box">🛡️</div>
+        <span class="label">角色</span>
+        <span class="value"></span>
+        <span class="badge">超级管理员</span>
+      </div>
+      <div class="row">
+        <div class="icon-box">📮</div>
+        <span class="label">邮箱</span>
+        <span class="value">tzxia@example.com</span>
+      </div>
+      <div class="save-row">
+        <button class="btn-save" onclick="saveNickname()">保存昵称</button>
+      </div>
+    </div>
+
+    <!-- 微信绑定 -->
+    <div class="section-title">账号绑定</div>
+    <div class="wx-card glass">
+      <div class="wx-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8.5 3C4.9 3 2 5.6 2 8.8c0 1.8 1 3.4 2.4 4.5l-.6 2 2.2-1.1c.6.2 1.3.3 2 .3h.4c-.1-.4-.2-.9-.2-1.3 0-3 2.9-5.4 6.4-5.4h.3C14.3 5 11.6 3 8.5 3zM6.2 6.5c.5 0 .8.4.8.8s-.4.8-.8.8-.8-.4-.8-.8.3-.8.8-.8zm4.6 0c.5 0 .8.4.8.8s-.4.8-.8.8-.8-.4-.8-.8.3-.8.8-.8zM22 12.9c0-2.7-2.7-4.9-5.9-4.9s-5.9 2.2-5.9 4.9 2.7 4.9 5.9 4.9c.6 0 1.2-.1 1.8-.3l1.9 1-.5-1.7c1.6-.9 2.7-2.3 2.7-3.9zm-7.9-1.4c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7zm4 0c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7z"/></svg>
+      </div>
+      <div class="wx-info">
+        <div class="t"><span class="state-dot"></span>已绑定微信</div>
+        <div class="d">绑定于 2026-08-12 · 可使用微信一键登录</div>
+      </div>
+      <button class="btn-unbind" onclick="unbind()">解除绑定</button>
+    </div>
+
+    <!-- 修改密码（P1） -->
+    <div class="section-title">安全</div>
+    <div class="form-card glass">
+      <div class="row" style="cursor:pointer" onclick="toast('修改密码（P1，PUT users/-/password）')">
+        <div class="icon-box">🔒</div>
+        <span class="label">修改密码</span>
+        <span class="value"></span>
+        <span class="chev">›</span>
+      </div>
+    </div>
+
+    <button class="btn-logout" onclick="toast('退出登录（复用现有 logout 流程）')">退出登录</button>
+    <div class="version-tip">uni-halo v3.0.0</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+  const toastEl = document.getElementById('toast');
+  let timer;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  }
+  function saveNickname() {
+    const v = document.querySelector('input.value').value.trim();
+    if (!v) return toast('昵称不能为空');
+    toast('已保存：PUT /apis/api.halo.run/v1alpha1/users/-');
+  }
+  function unbind() {
+    toast('确认解绑？→ DELETE /auth/my/wechat-binding');
+  }
+</script>
+</body>
+</html>

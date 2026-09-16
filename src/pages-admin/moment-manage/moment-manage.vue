@@ -229,7 +229,7 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
       </view>
 
       <!-- 发布/编辑弹窗（全局组件，easycom 自动注册） -->
-      <uh-moment-edit-popup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
+      <uh-admin-moment-edit-popup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
     </template>
   </view>
 </template>

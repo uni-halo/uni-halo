@@ -3,7 +3,7 @@
  * 瞬间编辑弹窗
  *
  * 用法：
- * - 发布模式：<uh-moment-edit-popup :show="visible" @on-close="..." />
+ * - 发布模式：<uh-admin-moment-edit-popup :show="visible" @on-close="..." />
  * - 编辑模式：通过 ref.openEdit(name) 仅传 metadata.name，组件内部查询详情回填
  */
 import { nextTick, ref, watch } from 'vue'
@@ -40,7 +40,7 @@ const { list: images, uploading, choose, retry, remove, urls, reset } = useHaloU
   maxSize: 10 * 1024 * 1024,
 })
 
-/* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装） ---------------- */
+/* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装，带工具条） ---------------- */
 const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, insertImage(src: string): void, clear(): void } | null>(null)
 /** 内容快照（编辑器 @input 同步；回填时手动写入，供 canSubmit 判断） */
 const editorContent = ref('')
@@ -201,10 +201,11 @@ defineExpose({ openEdit })
       </view>
     </view>
     <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-      <!-- 正文编辑（官方 editor，经 uh-rich-editor 封装） -->
+      <!-- 正文编辑（官方 editor，经 uh-rich-editor 封装，带基础格式工具条） -->
       <view class="uh-global-card-glass mb-4 overflow-hidden rounded-xl shadow-none">
         <uh-rich-editor
           ref="editorRef"
+          toolbar
           placeholder="说点什么吧…"
           @input="handleEditorInput"
         />

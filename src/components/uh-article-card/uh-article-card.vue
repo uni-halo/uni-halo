@@ -156,7 +156,7 @@
 			:class="cardLayout.pinned">
 			置顶
 		</text>
-		<view class="relative overflow-hidden" :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
+		<view v-if="article.spec.cover" class="relative overflow-hidden" :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
 			<image class="w-full h-full block" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
 		</view>
 		

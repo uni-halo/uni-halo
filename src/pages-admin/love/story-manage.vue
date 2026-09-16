@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 恋爱故事管理页：列表（分页加载）+ 新增 + 编辑 + 删除
- * 新增/编辑弹窗抽离为 story-edit-popup 组件（内聚表单与上传逻辑）
+ * 新增/编辑弹窗为全局组件 uh-admin-story-edit-popup（内聚表单与上传逻辑）
  */
 import { ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
@@ -11,7 +11,6 @@ import { usePageScroll } from '@/hooks/usePageScroll'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
-import StoryEditPopup from './components/story-edit-popup.vue'
 import type { ILoveStory } from '@/api/types/uni-halo'
 
 definePage({
@@ -95,7 +94,7 @@ onReachBottom(() => {
 
 /* ---------------- 新增/编辑弹窗 ---------------- */
 const storyEditVisible = ref(false)
-const storyEditRef = ref<InstanceType<typeof StoryEditPopup> | null>(null)
+const storyEditRef = ref<{ openEdit(story: ILoveStory): void } | null>(null)
 
 function openCreate() {
   storyEditVisible.value = true
@@ -214,8 +213,8 @@ onPageScroll((option: Page.PageScrollOption) => {
       </view>
     </uh-permission>
 
-    <!-- 新增/编辑弹窗（抽离组件，内聚表单与上传逻辑） -->
-    <StoryEditPopup ref="storyEditRef" :show="storyEditVisible" @on-close="handleEditClose" />
+    <!-- 新增/编辑弹窗（全局组件，内聚表单与上传逻辑） -->
+    <uh-admin-story-edit-popup ref="storyEditRef" :show="storyEditVisible" @on-close="handleEditClose" />
   </view>
 </template>
 

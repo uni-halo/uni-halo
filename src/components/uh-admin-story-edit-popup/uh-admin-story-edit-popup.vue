@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 /**
- * 恋爱故事编辑弹窗：标题/日期(wd-datetime-picker)/地点/内容(官方 editor)/图片
+ * 恋爱故事新增/编辑弹窗：标题/日期(wd-datetime-picker)/地点/内容(官方 editor)/图片
  * 内容编辑使用全局 uh-rich-editor（带基础格式工具条）
+ *
+ * 用法：
+ * - 新增模式：<uh-admin-story-edit-popup :show="visible" @on-close="..." />
+ * - 编辑模式：通过 ref.openEdit(story) 传入完整故事资源回填
  */
 import { ref, watch } from 'vue'
 import dayjs from 'dayjs'

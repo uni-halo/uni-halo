@@ -488,7 +488,7 @@
 		@on-close="handleOnCommentModalClose" />
 
 	<!-- 发布瞬间弹窗(全局组件,编辑模式由管理页使用) -->
-	<uh-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
+	<uh-admin-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
 </template>
 
 <style scoped lang="scss">
