@@ -56,8 +56,8 @@ export function clearLocalPrefs(): void {
 
 /**
  * 把 L0 站点默认(getConfigs 下发值)中与偏好相关的字段收集为本地差异形状的站点默认。
- * 2026-09-08 起去映射:偏好字段与 getConfigs.preferences 字段名完全一致,只做值校验后透传,
- * 不再改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套/isAvatarRadius。
+ * 偏好字段与 getConfigs.preferences 字段名完全一致,只做值校验后透传,
+ * 不改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套/isAvatarRadius。
  * 字段对照(与插件端一致):
  * - preferences.homeListLayout/homeCardType/articlesListLayout/articleCardType/
  *   archivesListLayout/archivesCardType → 同名顶层字段;
@@ -66,8 +66,8 @@ export function clearLocalPrefs(): void {
 export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
   const result: LocalPrefs = {}
 
-  // 站点级展示偏好默认(L0,GeneralConfig.preferences,2026-09-02 插件端新增)
-  const preferences = configs.preferences
+  // 站点级展示偏好默认(L0,插件端 FeatureConfig.preferences 经 getConfigs 直发)
+  const preferences = configs.featureConfig?.preferences
   if (preferences && typeof preferences === 'object') {
     const prefs = preferences as Record<string, unknown>
     /** 列表布局旧值归一化:h_row_col1/2 → single/double */

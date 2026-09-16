@@ -70,7 +70,7 @@
 
 	/* ---------------- 计算属性 ---------------- */
 	const appInfo = computed(() => {
-		const appInfoData = haloConfigs.value.appConfig?.appInfo as { name ?: string, logo ?: string } | undefined
+		const appInfoData = haloConfigs.value.integrationConfig?.appConfig?.appInfo as { name ?: string, logo ?: string } | undefined
 		return {
 			name: appInfoData?.name || 'uni-halo',
 			logo: checkImageUrl(appInfoData?.logo),
@@ -78,7 +78,7 @@
 	})
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),

@@ -514,7 +514,7 @@ export function getUptimeKumaStatus() {
  * 工具类插件授权头(源自应用配置 pluginConfig.toolsPlugin.Authorization)
  */
 function getToolsAuthorization(): string {
-  return getAppConfigFromStore().pluginConfig?.toolsPlugin?.Authorization || ''
+  return getAppConfigFromStore().integrationConfig?.pluginConfig?.toolsPlugin?.Authorization || ''
 }
 
 /**

@@ -3,7 +3,7 @@ import type { CustomTabBarItem } from './types'
 import { getI18nText } from './i18n'
 import { tabbarStore } from './store'
 
-defineProps<{
+const props = defineProps<{
   item: CustomTabBarItem
   index: number
   customClass?: string
@@ -20,10 +20,16 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
 function isActive(index: number) {
   return tabbarStore.curIdx === index
 }
+
+const useTitle = ref(false)
+
+const _customClass = computed(() => {
+  return `${props.customClass} ${useTitle.value ? 'py-0.5' : 'py-2'}`
+})
 </script>
 
 <template>
-  <view class="box-border flex flex-col items-center justify-center overflow-hidden rounded-full px-3 py-0.5" :class="customClass">
+  <view class="box-border flex flex-col items-center justify-center overflow-hidden rounded-full px-3 py-0.5" :class="_customClass">
     <template v-if="item.iconType === 'uiLib'">
       <!-- TODO: 以下内容请根据选择的UI库自行替换 -->
       <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
@@ -37,9 +43,13 @@ function isActive(index: number) {
       <view class="flex-1 text-20px" :class="[item.icon]" />
     </template>
     <template v-if="item.iconType === 'image'">
-      <image :src="getImageByIndex(index, item)" mode="scaleToFill" class="h-6 w-6 shrink-0" />
+      <image
+        :src="getImageByIndex(index, item)" mode="scaleToFill"
+        class="shrink-0"
+        :class="[useTitle ? 'w-6 h-6' : 'w-8 h-8']"
+      />
     </template>
-    <view class="mt-1px shrink-0 text-10px">
+    <view v-if="useTitle" class="mt-1px shrink-0 text-10px">
       {{ getI18nText(item.text) }}
     </view>
     <!-- 角标显示 -->

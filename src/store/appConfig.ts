@@ -74,8 +74,7 @@ export const useAppConfigStore = defineStore(
      * getConfigs + audit-data 并行一次;TTL 内(默认 5 分钟,persist 恢复后
      * 亦生效)直接返回缓存,避免每次冷启动/onShow 重复请求;force=true 强制刷新。
      * 返回 ok = getConfigs 是否成功(失败时走内置默认/旧缓存,由调用方决定后续)。
-     * 恋爱配置已并入 getConfigs 的 loveConfig 组(2026-09-12 起 /love-config 下线),
-     * 由 love.vue 直接读 configs.loveConfig。
+     * 恋爱配置读 getConfigs 的 loveConfig 组,由 love.vue 直接读 configs.featureConfig.love。
      */
     const bootstrap = async (options?: { force?: boolean }): Promise<{ ok: boolean, fromCache: boolean }> => {
       const force = options?.force ?? false

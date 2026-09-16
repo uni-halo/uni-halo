@@ -35,16 +35,22 @@ export function checkUrl(url?: string): string {
   return BASE_API + url
 }
 
+/** 资源与兜底配置（featureConfig.assets） */
+function getAssetsConfig(): Record<string, unknown> {
+  return (getAppConfig().featureConfig?.assets || {}) as Record<string, unknown>
+}
+
 /**
  * 检查封面图:无封面时使用默认封面,并追加版本参数避免缓存
  * @param thumbnail 封面图
  * @param mustRealUrl 是否必须返回真实地址
  */
 export function checkThumbnailUrl(thumbnail?: string, mustRealUrl = false): string {
+  const assets = getAssetsConfig()
   if (!thumbnail && mustRealUrl) {
-    return checkUrl(getAppConfig().imagesConfig?.defaultStaticThumbnailUrl)
+    return checkUrl(assets.defaultStaticThumbnailUrl as string | undefined)
   }
-  let fallback = checkUrl(getAppConfig().imagesConfig?.defaultThumbnailUrl)
+  let fallback = checkUrl(assets.defaultThumbnailUrl as string | undefined)
   fallback = appendNextVersion(fallback)
   if (!thumbnail)
     return fallback
@@ -57,7 +63,7 @@ export function checkThumbnailUrl(thumbnail?: string, mustRealUrl = false): stri
  * 检查图片:无图片时使用默认图,并追加版本参数
  */
 export function checkImageUrl(image?: string): string {
-  let fallback = checkUrl(getAppConfig().imagesConfig?.defaultImageUrl)
+  let fallback = checkUrl(getAssetsConfig().defaultImageUrl as string | undefined)
   fallback = appendNextVersion(fallback)
   if (!image)
     return fallback
@@ -71,7 +77,7 @@ export function checkImageUrl(image?: string): string {
  */
 export function checkAvatarUrl(avatar?: string): string {
   if (!avatar) {
-    return appendNextVersion(checkUrl(getAppConfig().imagesConfig?.defaultAvatarUrl))
+    return appendNextVersion(checkUrl(getAssetsConfig().defaultAvatarUrl as string | undefined))
   }
   if (!checkIsUrl(avatar))
     return BASE_API + avatar

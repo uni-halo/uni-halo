@@ -69,10 +69,10 @@
 	})
 
 	/* ---------------- 计算属性 ---------------- */
-	const postDetailConfig = computed(() => (haloConfigs.value.pageConfig as { postDetailConfig ?: Record<string, unknown> } | undefined)?.postDetailConfig)
+	const postDetailConfig = computed(() => haloConfigs.value.featureConfig?.pages?.postDetailConfig)
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
@@ -82,7 +82,7 @@
 	const globalAppSettings = computed(() => settingStore.settings)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
-	const doubanPluginConfig = computed(() => (haloConfigs.value.pluginConfig?.doubanPlugin as { position ?: string } | undefined) || {})
+	const doubanPluginConfig = computed(() => (haloConfigs.value.integrationConfig?.pluginConfig?.doubanPlugin as { position ?: string } | undefined) || {})
 	const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
 	/** 从 HTML 提取投票块 id */
@@ -229,7 +229,7 @@
 		else if (restrictReadEnable === 'code') {
 			verificationCodeModal.value.show = true
 			verificationCodeModal.value.type = 'scan'
-			verificationCodeModal.value.imgUrl = checkImageUrl((haloConfigs.value.pluginConfig?.toolsPlugin as { scanCodeUrl ?: string } | undefined)?.scanCodeUrl)
+			verificationCodeModal.value.imgUrl = checkImageUrl((haloConfigs.value.integrationConfig?.pluginConfig?.toolsPlugin as { scanCodeUrl ?: string } | undefined)?.scanCodeUrl)
 		}
 		else if (restrictReadEnable === 'comment') {
 			handleToComment()

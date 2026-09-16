@@ -83,3 +83,45 @@ export function getWxCode() {
     })
   })
 }
+
+/* ---------- 微信扫码绑定(BindTicket) ---------- */
+
+/** 扫码绑定票据状态(插件端 BindTicketService.Status) */
+export type IBindTicketStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED'
+
+/** 票据状态查询响应 */
+export interface IBindTicketStatusRes {
+  ticket: string
+  status: IBindTicketStatus
+}
+
+/**
+ * 查询扫码绑定票据状态(匿名轮询接口)
+ * @param ticket 票据号(扫码内容 uh-bindwx-{ticket} 中解析)
+ */
+export function getBindTicketStatus(ticket: string) {
+  return http.Get<IResponse<IBindTicketStatusRes>>(
+    `${AUTH_API_BASE}/bind/wechat/qr/tickets/${ticket}`,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 确认扫码绑定微信(匿名接口,仅微信小程序可用)
+ * 身份由 wx.login() 的 code 换取,绑定目标用户名在票据创建时已锁定
+ * @param ticket 票据号
+ * @param code wx.login 一次性凭证
+ */
+export function confirmBindTicket(ticket: string, code: string) {
+  return http.Post<IResponse<{ success: boolean }>>(
+    `${AUTH_API_BASE}/bind/wechat/qr/tickets/${ticket}/confirm`,
+    { code },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}

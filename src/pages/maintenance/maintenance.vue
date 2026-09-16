@@ -52,7 +52,7 @@
 
 	/** 应用信息 logo(相对插件内置资源路径 → BASE_API 补全) */
 	const appLogo = computed(() => {
-		const appInfo = store.configs.appConfig?.appInfo
+		const appInfo = store.configs.integrationConfig?.appConfig?.appInfo
 		const logo = appInfo && typeof appInfo === 'object'
 			? (appInfo as { logo ?: string }).logo
 			: ''

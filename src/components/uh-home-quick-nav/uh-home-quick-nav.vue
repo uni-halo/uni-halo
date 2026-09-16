@@ -7,10 +7,10 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-	const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.pageConfig?.homeConfig?.useQuickNavigation)
+	const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.featureConfig?.pages?.homeConfig?.useQuickNavigation)
 
 	const navList = computed(() => {
-		const configured = haloConfigs.value.pageConfig?.homeConfig?.quickNavigation
+		const configured = haloConfigs.value.featureConfig?.pages?.homeConfig?.quickNavigation
 		return configured.filter(item => item.visible !== false)
 	})
 

@@ -112,12 +112,6 @@ export interface IPageConfig {
   categoryConfig?: { type?: string }
   momentConfig?: { useTagRandomColor?: boolean }
   galleryConfig?: { pageTitle?: string }
-  /** 恋爱日记页（插件端「通用配置 → 页面设置 → 恋爱日记」配置） */
-  loveDiaryConfig?: {
-    pageTitle?: string
-    /** 恋爱页背景图（留空客户端内置回退） */
-    bgImageUrl?: string
-  }
   aboutConfig?: {
     bgImageUrl?: string
     waveImageUrl?: string
@@ -140,11 +134,6 @@ export interface IPageConfig {
     copyrightViolation?: string
   }
   [key: string]: unknown
-}
-
-/** 审计模式配置 */
-export interface IAuditConfig {
-  auditModeEnabled?: boolean
 }
 
 /** 审核模式数据(公开接口 GET /audit-data 返回) */
@@ -179,53 +168,71 @@ export interface IAuditDataResult {
   }>
 }
 
-/** 应用基础配置(对应旧 DefaultAppConfigs) */
+/**
+ * getConfigs 响应（app 端直读不做归一化）：
+ * - featureConfig：功能设置单例 spec 直发（脱敏后）——profile/pages/assets/
+ *   preferences/love(脱敏)/linkInfo/auditMode/maintenance...
+ * - safetyConfig：setting.yaml 组原样（captchaConfig 等）
+ * - integrationConfig：原样（appConfig/pluginConfig）
+ * - themeConfig：原样（悬浮窗等主题端配置，app 端暂不消费）
+ * - loginConfig：脱敏（仅两个登录方式开关）
+ * - maintenance：可选，服务端按时间窗计算的 status
+ */
 export interface IAppConfig {
-  basicConfig?: {
-    tokenConfig?: {
-      personalToken?: string
+  /** 功能设置单例 spec 直发（脱敏后） */
+  featureConfig?: {
+    /** 应用资料（应用信息/博主 blogger/社交 items/审核模式 auditMode/页脚版权） */
+    profile?: {
+      appInfo?: { name?: string, logo?: string, [key: string]: unknown }
+      /** 博主资料（nickname/avatar/email/description/website/intro） */
+      blogger?: Record<string, unknown>
+      /** 社交动态列表（name/content/color/bgColor/priority/visible） */
+      items?: Array<Record<string, unknown>>
+      /** 审核模式开关 */
+      auditMode?: { enabled?: boolean, [key: string]: unknown }
+      /** 页脚版权 */
+      copyrightConfig?: { enabled?: boolean, content?: string }
+      [key: string]: unknown
     }
+    /** 页面配置（首页/图库页/分类页/瞬间页/关于页/文章详情页/免责声明页/各功能页标题） */
+    pages?: IPageConfig
+    /** 资源与兜底（loadingGifUrl/loadingErrUrl） */
+    assets?: IImagesConfig
+    /** 站点级展示偏好默认（字段名与客户端偏好设置一致，直接透传消费） */
+    preferences?: {
+      homeListLayout?: string
+      homeCardType?: string
+      articlesListLayout?: string
+      articleCardType?: string
+      archivesListLayout?: string
+      archivesCardType?: string
+      avatarRadius?: boolean
+      [key: string]: unknown
+    }
+    /** 恋爱模块（脱敏 spec 直发：loveDiary 仅 passwordEnabled；三模块入口/恋爱信息/页面设置） */
+    love?: ILoveConfigGroup
+    /** 友链设置（submissionEnabled/siteInfo/miniInfo） */
+    linkInfo?: ILinkInfoConfig
+    [key: string]: unknown
   }
-  /** 恋爱配置（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据：
-   * title/subTitle/颜色（hex8）/iconBgColor/path/priority，按 priority 降序下发；
-   * app 端按模块 key 直接渲染入口列表，locked=passwordEnabled 且本地无有效 token）
-   */
-  loveConfig?: ILoveConfigGroup
+  /** 安全控制（setting.yaml 组原样：captchaConfig 等） */
+  safetyConfig?: {
+    captchaConfig?: Record<string, unknown>
+    [key: string]: unknown
+  }
+  /** 平台接入（setting.yaml 组原样：appConfig/pluginConfig） */
+  integrationConfig?: {
+    appConfig?: Record<string, unknown>
+    pluginConfig?: IPluginConfig
+    [key: string]: unknown
+  }
+  /** 主题展示（setting.yaml 组原样：悬浮窗等主题端配置，app 端暂不消费） */
+  themeConfig?: Record<string, unknown>
   /** 登录配置(仅下发两个登录方式开关,决定登录页展示哪些入口) */
   loginConfig?: ILoginPublicConfig
-  imagesConfig?: IImagesConfig
   /**
-   * 博主与社交（blogger 含
-   * nickname/avatar/email/description/website）
-   */
-  authorConfig?: Record<string, unknown>
-  appConfig?: Record<string, unknown>
-  pluginConfig?: IPluginConfig
-  pageConfig?: IPageConfig
-  auditConfig?: IAuditConfig
-  /**
-   * 站点级展示偏好默认(L0,插件端 GeneralConfig.preferences 经 getConfigs additive 下发;
-   * 字段名与客户端偏好设置一致,客户端直接透传消费、不做映射,本地偏好可覆盖)
-   */
-  preferences?: {
-    /** 首页列表布局(h_row_col1/2 旧值由前端归一化为 single/double) */
-    homeListLayout?: string
-    /** 首页卡片样式(image_top/image_right/image_bottom/image_left) */
-    homeCardType?: string
-    /** 文章列表页列表布局 */
-    articlesListLayout?: string
-    /** 文章列表页卡片样式(沿用旧字段名,兼容既有下发) */
-    articleCardType?: string
-    /** 文章归档页列表布局 */
-    archivesListLayout?: string
-    /** 文章归档页卡片样式 */
-    archivesCardType?: string
-    /** 评论头像是否圆形 */
-    avatarRadius?: boolean
-  }
-  /**
-   * 维护模式(additive,插件端 GeneralConfig.spec.maintenance 经 getConfigs
-   * 下发;仅 scheduled/active 时存在,键缺失=未维护或已到点自动结束)
+   * 维护模式(服务端按时间窗计算;仅 scheduled/active 时存在,
+   * 键缺失=未维护或已到点自动结束)
    */
   maintenance?: IPublicMaintenance
   [key: string]: unknown
@@ -510,7 +517,7 @@ export interface ILoveModuleConfig {
   [key: string]: unknown
 }
 
-/** getConfigs loveConfig 组（恋爱日记仅密码状态；三模块入口即 app 端入口列表数据） */
+/** getConfigs featureConfig.love（脱敏 spec 直发；恋爱日记仅密码状态；三模块入口即 app 端入口列表数据） */
 export interface ILoveConfigGroup {
   /** 恋爱日记入口（恋爱页本身，仅密码状态，无 enabled 开关） */
   loveDiary?: Pick<ILoveModuleConfig, 'passwordEnabled'>
@@ -520,7 +527,7 @@ export interface ILoveConfigGroup {
   lovePhoto?: ILoveModuleConfig
   /** 恋爱清单模块入口 */
   loveDaily?: ILoveModuleConfig
-  /** 恋爱信息（纪念日 + 恋人信息；经 getConfigs loveConfig.loveInfo 下发） */
+  /** 恋爱信息（纪念日 + 恋人信息） */
   loveInfo?: {
     /** 纪念日标题（默认「这是我们一起走过的」） */
     loveDateTitle?: string
@@ -536,6 +543,22 @@ export interface ILoveConfigGroup {
     girlAvatar?: string
     [key: string]: unknown
   }
+  /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，留空客户端内置回退） */
+  diaryPage?: {
+    pageTitle?: string
+    bgImageUrl?: string
+  }
+  [key: string]: unknown
+}
+
+/** 友链设置（featureConfig.linkInfo，脱敏 spec 直发） */
+export interface ILinkInfoConfig {
+  /** 是否开放公开提交申请（关闭后 app 端隐藏提交入口） */
+  submissionEnabled?: boolean
+  /** 本站站点名片（displayName/url/logo/description/backlink/feedUrls） */
+  siteInfo?: Record<string, unknown>
+  /** 小程序信息（displayName/miniProgramCode/link/description/applyRemark） */
+  miniInfo?: Record<string, unknown>
   [key: string]: unknown
 }
 

@@ -27,7 +27,7 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
 const settingStore = useSettingStore()
 
-const haloPluginConfigs = computed(() => appConfigStore.configs.pluginConfig)
+const haloPluginConfigs = computed(() => appConfigStore.configs.integrationConfig?.pluginConfig)
 const globalAppSettings = computed(() => settingStore.settings)
 
 /* ---------------- 依赖插件(参考 gallery 对象传参模式) ---------------- */

@@ -22,7 +22,7 @@ const appConfigStore = useAppConfigStore()
 /* ---------------- 恋爱配置 ---------------- */
 /**
  * 恋爱配置（数据源为 getConfigs.loveConfig 组：恋爱日记仅密码状态；
- * 三模块入口即 app 端入口列表数据，2026-09-12 起 /love-config 已下线）
+ * 三模块入口即 app 端入口列表数据）
  */
 interface ILoveConfigPage extends Partial<ILoveConfigGroup> {
   enabled: boolean
@@ -65,7 +65,7 @@ const navList = ref<ILoveNavRenderItem[]>([])
 
 /* ---------------- 数据加载 ---------------- */
 function syncLoveConfigFromStore() {
-  const loveConfigs = appConfigStore.configs.loveConfig
+  const loveConfigs = appConfigStore.configs.featureConfig?.love
 
   loveConfig.value = {
     ...loveConfig.value,
@@ -73,10 +73,8 @@ function syncLoveConfigFromStore() {
     ...(loveConfigs?.loveInfo?.loveDate ? { loveDate: loveConfigs.loveInfo.loveDate } : {}),
   }
 
-  // 恋爱页背景图：读自 pageConfig.loveDiaryConfig.bgImageUrl
-  const loveDiaryPageConfig = appConfigStore.configs.pageConfig?.loveDiaryConfig as
-			{ bgImageUrl?: string } | undefined
-  loveBgImage.value = loveDiaryPageConfig?.bgImageUrl || ''
+  // 恋爱页背景图：读自 featureConfig.love.diaryPage.bgImageUrl
+  loveBgImage.value = loveConfigs?.diaryPage?.bgImageUrl || ''
   if (loveConfigs) {
     loveConfig.value = {
       ...loveConfig.value,

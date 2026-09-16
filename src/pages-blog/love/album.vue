@@ -24,7 +24,7 @@ definePage({
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
-const loveConfig = computed(() => appConfigStore.configs.loveConfig)
+const loveConfig = computed(() => appConfigStore.configs.featureConfig?.love)
 
 /** 已解锁相册本地缓存 key */
 const UNLOCKED_ALBUMS_CACHE_KEY = 'unlocked_albums'

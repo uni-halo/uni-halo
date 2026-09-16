@@ -8,12 +8,12 @@ import { useAppConfigStore } from '@/store/appConfig'
 let aniWaitIndex = 0
 
 /**
- * 设置页面标题(默认取应用配置 appInfo.name,原 startConfig 已随启动页下线)
+ * 设置页面标题(默认取应用配置 appInfo.name)
  * @param title 标题,为空时回退 uni-halo
  */
 export function handleSetPageTitle(title?: string) {
   const appConfigStore = useAppConfigStore()
-  const fallbackTitle = ((appConfigStore.configs.appConfig as { appInfo?: { name?: string } } | undefined)
+  const fallbackTitle = ((appConfigStore.configs.integrationConfig?.appConfig as { appInfo?: { name?: string } } | undefined)
     ?.appInfo?.name) || 'uni-halo'
   uni.setNavigationBarTitle({
     title: title || fallbackTitle,

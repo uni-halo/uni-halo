@@ -30,7 +30,7 @@
 	const appConfigStore = useAppConfigStore()
 
 	const haloConfigs = computed(() => appConfigStore.configs)
-	const bannerConfig = computed(() => haloConfigs.value.pageConfig?.homeConfig?.bannerConfig)
+	const bannerConfig = computed(() => haloConfigs.value.featureConfig?.pages?.homeConfig?.bannerConfig)
 
 	/* ---------------- 数据(高内聚:内部请求公开接口) ---------------- */
 	const bannerList = ref<IBannerItem[]>([])

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
+import { checkImageUrl } from '@/utils/url'
 import { computed, ref } from 'vue'
 
 definePage({
@@ -12,6 +13,17 @@ definePage({
 
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
+
+/* ---------- 应用信息(顶部 logo 展示,getConfigs 下发于 featureConfig.profile.appInfo) ---------- */
+const appInfo = computed(() => {
+  const info = appConfigStore.configs.featureConfig?.profile?.appInfo as
+    | { name?: string, logo?: string }
+    | undefined
+  return {
+    name: info?.name || 'uni-halo',
+    logo: info?.logo ? checkImageUrl(info.logo) : '',
+  }
+})
 
 /* ---------- 登录配置(getConfigs loginConfig 组,两开关全关即整体不可用) ---------- */
 const loginConfig = computed(() => appConfigStore.configs.loginConfig)
@@ -80,18 +92,65 @@ function handleLoginSuccess() {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen bg-page">
+  <view class="relative box-border min-h-screen w-screen flex flex-col bg-[#f5fae8] overflow-hidden">
+    <!-- 顶部自定义导航 -->
     <uh-navbar default-title="登录" />
 
-    <view class="box-border flex flex-col items-center px-6 pt-10">
+    <view
+      class="pointer-events-none fixed left-0 top-0 z-0 h-[46vh] w-full bg-gradient-to-b from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8]"
+    />
+
+    <view
+      class="breathe pointer-events-none absolute left-[-80rpx] top-[calc(var(--status-bar-height)+40rpx)] z-0 h-[280rpx] w-[280rpx] rounded-full bg-white/40 uh-blur-52"
+    />
+    <view
+      class="pointer-events-none absolute right-[-60rpx] top-[180rpx] z-0 h-[220rpx] w-[220rpx] rounded-full bg-[rgba(184,236,63,0.28)] uh-blur-52"
+    />
+    <view
+      class="pointer-events-none absolute bottom-[120rpx] right-[80rpx] z-0 h-[180rpx] w-[180rpx] rounded-full bg-[#ffd53d] opacity-20 uh-blur-44"
+    />
+    <view
+      class="pointer-events-none absolute bottom-[280rpx] left-[-40rpx] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[#ebfabf] opacity-90 uh-blur-44"
+    />
+
+    <!-- 顶部:应用 logo + 欢迎语 -->
+    <view
+      class="relative z-10 flex flex-col items-center pt-10"
+    >
+      <view class="bob relative h-[160rpx] w-[160rpx]">
+        <view
+          class="flex items-center justify-center absolute inset-0 rounded-[36rpx] from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass border-4 border-white uh-shadow-sm"
+        >
+          <image
+            v-if="appInfo.logo"
+            class="h-full w-full rounded-[32rpx]"
+            :src="appInfo.logo"
+            mode="aspectFill"
+          />
+          <wd-icon v-else class-prefix="uhemoji-icon" name="-smile" size="100rpx" class="text-gray-900" />
+        </view>
+      </view>
+      <view class="mt-6 text-lg text-gray-900 font-black">
+        欢迎回来
+      </view>
+      <view class="mt-2 text-[24rpx] text-black/50 font-medium">
+        登录 {{ appInfo.name }}，开启你的专属之旅
+      </view>
+    </view>
+
+    <!-- 登录内容区 -->
+    <view class="relative z-10 flex flex-1 flex-col items-center px-6 pt-6">
       <!-- 登录能力整体关闭提示 -->
-      <view v-if="availableTabs.length === 0" class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-8 text-center">
+      <view
+        v-if="availableTabs.length === 0"
+        class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-8 text-center"
+      >
         <view class="text-sm text-gray-500">
           登录功能暂未开启
         </view>
       </view>
 
-      <!-- 登录卡片（玻璃拟态） -->
+      <!-- 登录卡片(玻璃拟态) -->
       <view v-else class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
         <!-- 平台切换(仅一种登录方式时不显示切换条) -->
         <view v-if="availableTabs.length > 1" class="mb-6 flex rounded-full bg-white/60 p-1">
@@ -157,9 +216,12 @@ function handleLoginSuccess() {
           <!-- #endif -->
         </template>
       </view>
-    </view>
 
-    <uh-page-copyright />
+      <!-- 页脚 -->
+      <view class="mt-auto pb-[48rpx] pt-10 w-full">
+        <uh-page-copyright />
+      </view>
+    </view>
   </view>
 </template>
 
@@ -170,5 +232,47 @@ function handleLoginSuccess() {
   padding: 0 24rpx;
   background-color: rgb(255 255 255 / 65%);
   border-radius: 24rpx;
+}
+
+.uh-blur-44 {
+  filter: blur(44rpx);
+}
+
+.uh-blur-52 {
+  filter: blur(52rpx);
+}
+
+/* 光斑呼吸 */
+.breathe {
+  animation: breathe 5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.28;
+  }
+
+  50% {
+    transform: scale(1.18);
+    opacity: 0.4;
+  }
+}
+
+/* logo 浮动 */
+.bob {
+  animation: bob 3.2s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-14rpx) rotate(2deg);
+  }
 }
 </style>

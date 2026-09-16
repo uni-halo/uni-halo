@@ -22,7 +22,7 @@
 	const isShow = ref(false)
 	const appConfigStore = useAppConfigStore()
 
-	const blogDetail = computed(() => (appConfigStore.configs.pluginConfig?.linkInfo?.siteInfo as {
+	const blogDetail = computed(() => (appConfigStore.configs.featureConfig?.linkInfo?.siteInfo as {
 		displayName ?: string
 		url ?: string
 		logo ?: string

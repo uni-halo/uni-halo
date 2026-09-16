@@ -26,7 +26,7 @@
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const appConfigStore = useAppConfigStore()
-	const authorConfig = computed(() => appConfigStore.configs.authorConfig)
+	const authorConfig = computed(() => appConfigStore.configs.featureConfig?.profile)
 
 	const bloggerInfo = computed(() => {
 		const blogger = authorConfig.value?.blogger as { nickname ?: string, avatar ?: string, description ?: string, intro ?: string } | undefined
@@ -38,10 +38,8 @@
 		}
 	})
 
-	const socialConfig = computed(() => (authorConfig.value?.social as { items ?: ISoical[] } | undefined) || {})
-
 	const socialList = computed<Array<ISoical>>(() => {
-		const configured = socialConfig.value.items
+		const configured = authorConfig.value?.items as unknown as ISoical[] | undefined
 		if (!configured || !configured.length) {
 			return []
 		}

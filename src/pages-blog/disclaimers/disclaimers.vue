@@ -19,12 +19,12 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 
 	const disclaimersContent = computed(() => {
-		const pageConfig = haloConfigs.value.pageConfig as { disclaimers ?: { content ?: string } } | undefined
-		return pageConfig?.disclaimers?.content || ''
+		const pages = haloConfigs.value.featureConfig?.pages as { disclaimers ?: { content ?: string } } | undefined
+		return pages?.disclaimers?.content || ''
 	})
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, email ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, email ?: string } | undefined
 		return {
 			nickname: blogger?.nickname || '',
 			email: blogger?.email || '',

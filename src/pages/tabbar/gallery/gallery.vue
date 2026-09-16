@@ -26,7 +26,7 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-	const galleryConfig = computed(() => haloConfigs.value.pageConfig?.galleryConfig)
+	const galleryConfig = computed(() => haloConfigs.value.featureConfig?.pages?.galleryConfig)
 
 	/** 依赖插件(PluginPhotos) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({

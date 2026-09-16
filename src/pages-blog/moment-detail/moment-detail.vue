@@ -29,17 +29,17 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.authorConfig?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
 		}
 	})
 
-	const calcUseTagRandomColor = computed(() => !!haloConfigs.value.pageConfig?.momentConfig?.useTagRandomColor)
+	const calcUseTagRandomColor = computed(() => !!haloConfigs.value.featureConfig?.pages?.momentConfig?.useTagRandomColor)
 
 	const siteName = computed(() => {
-		const appInfo = haloConfigs.value.appConfig?.appInfo as { name ?: string } | undefined
+		const appInfo = haloConfigs.value.integrationConfig?.appConfig?.appInfo as { name ?: string } | undefined
 		return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 	})
 

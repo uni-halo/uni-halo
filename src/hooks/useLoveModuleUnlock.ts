@@ -28,7 +28,7 @@ export function useLoveModuleUnlock(options?: {
 	onUnlocked?: (moduleKey: LoveModuleKey) => void
 }) {
 	const appConfigStore = useAppConfigStore()
-	const loveConfig = computed(() => appConfigStore.configs.loveConfig)
+	const loveConfig = computed(() => appConfigStore.configs.featureConfig?.love)
 
 	/* ---------------- 弹窗状态 ---------------- */
 	const unlockModalVisible = ref(false)

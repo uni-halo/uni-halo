@@ -22,11 +22,12 @@
 	const isShow = ref(false)
 	const appConfigStore = useAppConfigStore()
 
-	/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致；小程序信息读 linkInfo.miniInfo；
-	 * 作者信息读应用设置-博主资料 authorConfig.blogger，字段名无映射) */
+	/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致；小程序信息读
+	 * featureConfig.linkInfo.miniInfo；作者信息读应用设置-博主资料
+	 * featureConfig.profile.blogger，字段名无映射) */
 	const miniInfo = computed(() => {
-		const miniCfg = (appConfigStore.configs.pluginConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
-		const blogger = (appConfigStore.configs.authorConfig?.blogger || {}) as Record<string, unknown>
+		const miniCfg = (appConfigStore.configs.featureConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
+		const blogger = (appConfigStore.configs.featureConfig?.profile?.blogger || {}) as Record<string, unknown>
 		const str = (cfg : Record<string, unknown>, key : string, fallback = '') => String(cfg[key] || fallback || '')
 		return {
 			displayName: str(miniCfg, 'displayName'),

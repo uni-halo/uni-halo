@@ -26,7 +26,7 @@
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-	const categoryConfig = computed(() => haloConfigs.value.pageConfig?.categoryConfig)
+	const categoryConfig = computed(() => haloConfigs.value.featureConfig?.pages?.categoryConfig)
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadingStatus, resetLoadMoreStatus } = useDataLoadingStatus()

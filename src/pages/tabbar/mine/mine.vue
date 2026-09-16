@@ -8,6 +8,7 @@ import { useUserStore } from '@/store/user'
 import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
+import { usePageScroll } from '@/hooks/usePageScroll'
 import type { IBlogStats } from '@/api/types/halo'
 
 definePage({
@@ -21,13 +22,15 @@ definePage({
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
+const { scrollY, updatePageScrollValue } = usePageScroll()
+
 const haloConfigs = computed(() => appConfigStore.configs)
 /** 登录态(进入页面时刷新过期判断) */
 const hasLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
 /* ---------------- 计算属性 ---------------- */
 const bloggerInfo = computed(() => {
-  const blogger = haloConfigs.value.authorConfig?.blogger as
+  const blogger = haloConfigs.value.featureConfig?.profile?.blogger as
     | { nickname?: string, avatar?: string, description?: string }
     | undefined
   return {
@@ -37,7 +40,7 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const pageConfig = computed(() => haloConfigs.value.pageConfig?.aboutConfig as
+const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.aboutConfig as
   | { bgImageUrl?: string, waveImageUrl?: string }
   | undefined)
 
@@ -86,7 +89,7 @@ interface IMyPageEntry {
 }
 
 const configuredFeatures = computed(() => {
-  const mp = haloConfigs.value.pageConfig?.myPageConfig as
+  const mp = haloConfigs.value.featureConfig?.pages?.myPageConfig as
     | { commonFeatures?: IMyPageEntry[], otherFeatures?: IMyPageEntry[] }
     | undefined
   if (!mp || (!mp.commonFeatures?.length && !mp.otherFeatures?.length)) {
@@ -218,12 +221,16 @@ onShow(() => {
 onPullDownRefresh(() => {
   handleGetData()
 })
+
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 </script>
 
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-2">
-	<uh-mine-navbar />
-	  
+    <uh-mine-navbar :scroll-y="scrollY" />
+
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
     <view class="relative h-96 w-full bg-cover bg-no-repeat" :style="[calcProfileStyle]">
       <view class="relative z-6 h-full flex flex-col items-center justify-center">

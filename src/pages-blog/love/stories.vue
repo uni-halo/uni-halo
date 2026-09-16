@@ -201,7 +201,7 @@
 	}
 
 	function handleLoadFromLegacy() {
-		const loveModuleConfig = appConfigStore.configs.loveConfig as { ourStory ?: { content ?: string } } | undefined
+		const loveModuleConfig = appConfigStore.configs.featureConfig?.love as { ourStory ?: { content ?: string } } | undefined
 		if (loveModuleConfig?.ourStory?.content) {
 			stories.value = [{
 				key: 'legacy-story',

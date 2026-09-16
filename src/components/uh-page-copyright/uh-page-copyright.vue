@@ -4,7 +4,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	
 	const {configs} = storeToRefs(useAppConfigStore())
-	const copyrightConfig = computed(() => configs.value?.pageConfig?.aboutConfig?.copyrightConfig)
+	const copyrightConfig = computed(() => configs.value?.featureConfig?.pages?.aboutConfig?.copyrightConfig)
 </script>
 
 <template>

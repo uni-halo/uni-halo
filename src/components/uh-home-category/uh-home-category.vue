@@ -16,13 +16,13 @@
 	const categoryList = ref<ICategory[]>([])
 
 	const isEnableCategoryModule = computed(() => {
-		return !!haloConfigs.value.pageConfig?.homeConfig?.useCategory
+		return !!haloConfigs.value.featureConfig?.pages?.homeConfig?.useCategory
 	})
  
 	async function handleGetCategoryList() {
 		try {
 			loading.value = 'loading'
-			const configured = haloConfigs.value.pageConfig?.homeConfig?.categories
+			const configured = haloConfigs.value.featureConfig?.pages?.homeConfig?.categories
 			console.log('configured',configured)
 			let categoryListRaw : ICategory[] = []
 			if (configured && configured.length) {
