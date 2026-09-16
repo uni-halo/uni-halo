@@ -2,15 +2,16 @@
 	import { computed, ref, shallowRef } from 'vue'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
-	import { getMomentList, getPostList } from '@/api/halo'
+	import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { useTokenStore } from '@/store/token'
 	import { useUserStore } from '@/store/user'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { checkAvatarUrl, checkImageUrl, checkUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
-	import type { IMoment, IPost } from '@/api/types/halo'
+	import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
 
 	definePage({
 		style: {
@@ -23,6 +24,8 @@
 	const PAGE_SIZE = 10
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	// wd-sticky 吸顶偏移(导航栏高度,同 tabbar/gallery.vue 用法)
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const appConfigStore = useAppConfigStore()
 	const tokenStore = useTokenStore()
 	const userStore = useUserStore()
@@ -161,18 +164,42 @@
 			items.filter(item => names.includes(item.metadata.name))
 	}
 
-	/* ---------- 文章 Tab(公开接口 + fieldSelector=spec.owner==) ---------- */
+	/** UC ListedPost → 公开列表同构结构(IPost),uh-article-card 直接消费 */
+	function mapUcListedPost(lp : IUcListedPost) : IPost {
+		return {
+			metadata: lp.post.metadata,
+			spec: lp.post.spec,
+			status: lp.post.status,
+			owner: lp.owner || lp.post.owner,
+			stats: lp.stats,
+			categories: lp.categories,
+			tags: lp.tags,
+			contributors: lp.contributors,
+		}
+	}
+
+	/* ---------- 文章 Tab(本人走 UC 端点;他人走公开接口 fieldSelector) ---------- */
 	const postState = usePagedList<IPost>({
-		fetcher: (page, size) => getPostList({
-			page,
-			size,
-			sort: ['spec.publishTime,desc'],
-			fieldSelector: [`spec.owner==${pageUsername.value}`],
-		}).then((res) => {
-			const items = res.data.items || []
-			backfillOwner(items)
-			return { items, hasNext: res.data.hasNext }
-		}),
+		fetcher: (page, size) => {
+			if (isSelf.value) {
+				// UC 端点服务端强制 owner=当前用户,固定只取已发布,与站点可见性一致
+				return getUcMyPostList({ page, size, sort: ['spec.publishTime,desc'] }).then((res) => {
+					const items = (res.data.items || []).map(mapUcListedPost)
+					backfillOwner(items)
+					return { items, hasNext: res.data.hasNext }
+				})
+			}
+			return getPostList({
+				page,
+				size,
+				sort: ['spec.publishTime,desc'],
+				fieldSelector: [`spec.owner==${pageUsername.value}`],
+			}).then((res) => {
+				const items = res.data.items || []
+				backfillOwner(items)
+				return { items, hasNext: res.data.hasNext }
+			})
+		},
 		auditFilter: items => auditFilterBy(appConfigStore.auditData.spec?.posts || [])(items),
 	})
 
@@ -281,7 +308,7 @@
 		<uh-navbar :scroll-y="scrollY" default-title="个人主页" title-color="text-white" :need-placeholder="false" />
 
 		<!-- 头部封面图 + 黑色模糊遮罩 + 用户信息居中 + 底部渐变过渡(参考 mine.vue) -->
-		<view class="relative h-76 w-full overflow-hidden">
+		<view class="box-border relative h-76 w-full overflow-hidden pt-10">
 			<!-- 封面背景图(空时 checkImageUrl 回落默认背景图) -->
 			<view class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :style="profileStyle" />
 			<!-- 黑色半透明遮罩 + backdrop-filter 模糊 -->
@@ -301,20 +328,23 @@
 			<view class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
 		</view>
 
-		<!-- 分段 Tab(文章 / 瞬间) :需要加上wd-sticky 包裹-->
-		
-		<view class="relative z-100 uh-global-card-glass shadow-none mx-12 -mt-6 flex rounded-xl p-1">
-			<view class="flex-1 rounded-lg py-2 text-center text-2xs"
-				:class="activeTab === 'post' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
-				@click="switchTab('post')">
-				文章
+		<!-- 分段 Tab(文章 / 瞬间):wd-sticky 吸顶,offset-top 对齐导航栏高度(同 gallery.vue 用法) -->
+		<wd-sticky :offset-top="offsetTop">
+			<view class="w-screen box-border px-16">
+				<view class="flex items-center w-full uh-global-card-glass mt-4 shadow-none flex rounded-xl p-1">
+					<view class="flex-1 rounded-lg py-2 text-center text-2xs"
+						:class="activeTab === 'post' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
+						@click="switchTab('post')">
+						文章
+					</view>
+					<view class="flex-1 rounded-lg py-2 text-center text-2xs"
+						:class="activeTab === 'moment' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
+						@click="switchTab('moment')">
+						瞬间
+					</view>
+				</view>
 			</view>
-			<view class="flex-1 rounded-lg py-2 text-center text-2xs"
-				:class="activeTab === 'moment' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
-				@click="switchTab('moment')">
-				瞬间
-			</view>
-		</view>
+		</wd-sticky>
 
 		<!-- 文章 Tab(全局卡片 uh-article-card) -->
 		<template v-if="activeTab === 'post'">

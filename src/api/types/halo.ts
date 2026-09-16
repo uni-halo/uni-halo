@@ -120,6 +120,18 @@ export interface IPostListReq {
 
 export type IPostListRes = IListResult<IPost>
 
+/** UC 端点返回的 ListedPost(Halo 结构:Post 包裹在 post 字段,owner/stats 在顶层) */
+export interface IUcListedPost {
+  post: IPost
+  owner?: IPost['owner']
+  stats?: IPost['stats']
+  categories?: ICategory[]
+  tags?: ITag[]
+  contributors?: IContributor[]
+}
+
+export type IUcPostListRes = IListResult<IUcListedPost>
+
 /** 文章搜索请求参数(关键字) */
 export interface ISearchReq {
   keyword?: string
