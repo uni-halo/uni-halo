@@ -236,12 +236,13 @@ defineExpose({ openEdit })
           </view>
         </view>
       </view>
-
-      <view class="my-6">
-        <uh-button custom-class="py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
-          {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
-        </uh-button>
-      </view>
     </scroll-view>
+
+    <!-- 底部固定操作栏（滚动区外） -->
+    <view class="border-t border-black/5 px-4 pb-safe pt-3">
+      <uh-button custom-class="py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
+        {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
+      </uh-button>
+    </view>
   </uh-glass-popup>
 </template>

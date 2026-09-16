@@ -4,6 +4,7 @@
  */
 import { ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import dayjs from 'dayjs'
 import { getLoveDailyItems } from '@/api/uni-halo'
 import { createLoveDailyItem, deleteLoveDailyItem, updateLoveDailyItem } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -100,13 +101,32 @@ const formVisible = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editName = ref('')
 const form = ref<ILoveDailyItemSpec>({})
-const { list: coverList, choose: chooseCover, remove: removeCover } = useHaloUpload({ maxCount: 1 })
+/** 回忆照片（多图，spec.images） */
+const { list: imageList, choose: chooseImages, remove: removeImage, retry: imageRetry } = useHaloUpload({ maxCount: 9 })
+
+/* ---------------- 完成感想富文本（官方 editor，经 uh-rich-editor 封装） ---------------- */
+const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, clear(): void } | null>(null)
+
+/** 完成日期选择（wd-datetime-picker 受控模式） */
+const datePickerVisible = ref(false)
+const dateTs = ref(Date.now())
+
+function openDatePicker() {
+  dateTs.value = form.value.completeDate ? dayjs(form.value.completeDate).valueOf() : Date.now()
+  datePickerVisible.value = true
+}
+
+function handleDateConfirm({ value }: any) {
+  form.value.completeDate = dayjs(value).format('YYYY-MM-DD')
+  datePickerVisible.value = false
+}
 
 function openCreate() {
   formMode.value = 'create'
   editName.value = ''
   form.value = { title: '', content: '', status: 'wait', planDate: '' }
-  coverList.value = []
+  imageList.value = []
+  editorRef.value?.clear()
   formVisible.value = true
 }
 
@@ -114,13 +134,18 @@ function openEdit(item: ILoveDailyItem) {
   formMode.value = 'edit'
   editName.value = item.metadata?.name || ''
   form.value = { ...(item.spec || {}) }
-  coverList.value = (form.value.images || []).map(url => ({
-    tempPath: url,
+  // tempPath 用于显示（相对路径补域名），url 保留原始相对路径用于提交
+  imageList.value = (form.value.images || []).map(url => ({
+    tempPath: checkThumbnailUrl(url),
     url,
     status: 'success' as const,
     progress: 100,
   }))
   formVisible.value = true
+  // 编辑器未 ready 时组件内部会挂起，ready 后自动回填
+  setTimeout(() => {
+    editorRef.value?.setHtml(form.value.completeRemark || '')
+  }, 0)
 }
 
 const saving = ref(false)
@@ -131,8 +156,22 @@ async function handleSave() {
     uni.showToast({ title: '请填写标题', icon: 'none' })
     return
   }
-  // 回填封面上传后的远程地址
-  spec.images = coverList.value.filter(i => i.status === 'success').map(i => i.url)
+  if (imageList.value.some(i => i.status === 'pending' || i.status === 'uploading' || i.status === 'error')) {
+    uni.showToast({ title: '回忆照片尚未上传完成', icon: 'none' })
+    return
+  }
+  if (spec.status === 'complete' && !spec.completeDate) {
+    uni.showToast({ title: '已完成的心愿需填写完成日期', icon: 'none' })
+    return
+  }
+  // 回忆照片（已上传成功的远程地址）
+  spec.images = imageList.value.filter(i => i.status === 'success').map(i => i.url)
+  // 完成感想（富文本）
+  spec.completeRemark = spec.status === 'complete' ? await editorRef.value?.getHtml() || '' : ''
+  // 非完成状态清空完成字段
+  if (spec.status !== 'complete') {
+    spec.completeDate = ''
+  }
   saving.value = true
   try {
     if (formMode.value === 'create') {
@@ -158,10 +197,8 @@ async function handleToggleStatus(item: ILoveDailyItem) {
   const spec = { ...(item.spec || {}) }
   const done = spec.status === 'complete'
   spec.status = done ? 'wait' : 'complete'
-  if (!done)
-    spec.completeDate = new Date().toISOString()
-  else
-    spec.completeDate = ''
+  // 插件端要求 yyyy-MM-dd 格式
+  spec.completeDate = done ? '' : dayjs().format('YYYY-MM-DD')
   try {
     await updateLoveDailyItem(item.metadata?.name || '', spec)
     item.spec = { ...item.spec, ...spec }
@@ -322,37 +359,68 @@ onPageScroll((option: Page.PageScrollOption) => {
             </text>
           </view>
         </view>
-        <view class="mb-5 flex items-center">
-          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">封面图</text>
-          <view class="flex flex-1 items-center gap-3">
-            <view
-              v-for="img in coverList" :key="img.tempPath"
-              class="relative h-16 w-16 overflow-hidden rounded-lg"
+        <!-- 已完成：完成日期 + 完成感想 -->
+        <template v-if="form.status === 'complete'">
+          <view class="mb-5 flex items-center gap-2">
+            <text class="w-[140rpx] shrink-0 text-sm text-[#666]">完成日期 *</text>
+            <input v-model="form.completeDate" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="如 2024-06-01(必填)">
+            <wd-datetime-picker
+              v-model="dateTs"
+              type="date"
+              :visible="datePickerVisible"
+              title="选择完成日期"
+              @update:visible="datePickerVisible = $event"
+              @confirm="handleDateConfirm"
             >
+              <view class="uh-global-card-glass h-9 w-9 shrink-0 flex items-center justify-center border rounded-xl text-gray-500 shadow-none" @click="openDatePicker">
+                <wd-icon name="calendar" size="32rpx" />
+              </view>
+            </wd-datetime-picker>
+          </view>
+          <view class="mb-5">
+            <text class="mb-2 block text-sm text-[#666]">完成感想</text>
+            <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">
+              <uh-rich-editor
+                ref="editorRef"
+                toolbar
+                placeholder="记录完成这一刻的感受…"
+              />
+            </view>
+          </view>
+        </template>
+        <view class="mb-5">
+          <text class="mb-2 block text-sm text-[#666]">回忆照片</text>
+          <view class="grid grid-cols-4 gap-2">
+            <view v-for="img in imageList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
               <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
-              <view
-                class="absolute right-0 top-0 h-5 w-5 flex items-center justify-center rounded-bl-lg bg-black/50 text-white"
-                @click="removeCover(img.tempPath)"
-              >
+              <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeImage(img.tempPath)">
                 <wd-icon name="close" size="22rpx" />
               </view>
+              <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
+                {{ img.progress }}%
+              </view>
+              <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white" @click="imageRetry(img.tempPath)">
+                <text>失败</text>
+                <text>点击重试</text>
+              </view>
+              <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+                <wd-icon name="check" size="22rpx" />
+              </view>
             </view>
-            <view
-              v-if="coverList.length === 0"
-              class="h-16 w-16 flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400"
-              @click="chooseCover"
-            >
+            <view v-if="imageList.length < 9" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseImages">
               <wd-icon name="camera" size="36rpx" />
             </view>
-            <text class="text-xs text-gray-400">选填</text>
           </view>
-        </view>
-        <view class="my-6">
-          <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
-            保存
-          </uh-button>
+          <text class="mt-1 block text-3xs text-gray-400">记录这个心愿的回忆(选填，最多 9 张)</text>
         </view>
       </scroll-view>
+
+      <!-- 底部固定操作栏（滚动区外） -->
+      <view class="border-t border-black/5 px-4 pb-safe pt-3">
+        <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+          保存
+        </uh-button>
+      </view>
     </uh-glass-popup>
   </view>
 </template>

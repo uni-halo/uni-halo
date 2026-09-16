@@ -7,6 +7,7 @@ import { ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { createLoveStory, updateLoveStory } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
+import { checkThumbnailUrl } from '@/utils/url'
 import type { ILoveStory, ILoveStorySpec } from '@/api/types/uni-halo'
 
 defineOptions({
@@ -70,7 +71,8 @@ function openEdit(story: ILoveStory) {
   editName.value = story.metadata?.name || ''
   form.value = { ...(story.spec || {}) }
   imageList.value = (form.value.images || []).map(url => ({
-    tempPath: url,
+    // tempPath 用于显示（相对路径补域名），url 保留原始相对路径用于提交
+    tempPath: checkThumbnailUrl(url),
     url,
     status: 'success' as const,
     progress: 100,
@@ -199,11 +201,13 @@ defineExpose({ openEdit })
           </view>
         </view>
       </view>
-      <view class="my-6">
-        <uh-button custom-class="py-2 !rounded-xl" :loading="saving" @click="handleSave">
-          保存
-        </uh-button>
-      </view>
     </scroll-view>
+
+    <!-- 底部固定操作栏（滚动区外） -->
+    <view class="border-t border-black/5 px-4 pb-safe pt-3">
+      <uh-button custom-class="py-2 !rounded-xl" :loading="saving" @click="handleSave">
+        保存
+      </uh-button>
+    </view>
   </uh-glass-popup>
 </template>

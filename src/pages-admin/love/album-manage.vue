@@ -220,9 +220,16 @@ async function openDetail(album: ILoveAlbum) {
   currentAlbum.value = album
   try {
     // 用 console 详情拉取（照片带服务端生成的 name，删除照片接口依赖）
+    // console API 返回完整资源结构 { metadata, spec: { displayName, photos, ... }, status }
     const res = await getLoveAlbumAdmin(name)
-    currentAlbum.value = res.data
-    currentPhotos.value = res.data?.photos || []
+    const data: any = res.data || {}
+    currentAlbum.value = {
+      ...album,
+      ...(data.spec || {}),
+      metadata: data.metadata || album.metadata,
+      photos: data.spec?.photos || [],
+    }
+    currentPhotos.value = data.spec?.photos || []
   }
   catch (err: any) {
     uni.showToast({ title: err?.message || '加载相册失败', icon: 'none' })
@@ -246,7 +253,7 @@ async function commitPhotos() {
   try {
     const created = await Promise.all(newUrls.map(url => addLoveAlbumPhoto(name, { url })))
     // 服务端返回整本相册（照片带生成的 name），直接以最新列表为准
-    const latestPhotos = created[0]?.data?.photos
+    const latestPhotos = (created[0]?.data as any)?.spec?.photos as ILovePhoto[] | undefined
     currentPhotos.value = latestPhotos?.length ? latestPhotos : [...currentPhotos.value, ...newUrls.map(url => ({ url }) as ILovePhoto)]
     pendingPhotos.value = []
     uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'success' })
@@ -368,17 +375,17 @@ onPageScroll((option: Page.PageScrollOption) => {
           <text class="w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
           <input v-model="form.displayName" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入相册名称">
         </view>
-        <view class="mb-5">
-          <text class="mb-2 block text-sm text-[#666]">描述</text>
-          <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 w-full border rounded-xl p-3 text-sm shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
+        <view class="mb-5 flex items-start">
+          <text class="w-[140rpx] shrink-0 pt-2.5 text-sm text-[#666]">描述</text>
+          <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 flex-1 border rounded-xl p-3 text-sm shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
         </view>
         <view class="mb-5 flex items-center">
           <text class="w-[140rpx] shrink-0 text-sm text-[#666]">排序</text>
           <input v-model="form.priority" type="number" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="数字越大越靠前，默认 0">
         </view>
-        <view class="mb-5">
-          <text class="mb-2 block text-sm text-[#666]">封面</text>
-          <view class="grid grid-cols-4 gap-2">
+        <view class="mb-5 flex items-start">
+          <text class="w-[140rpx] shrink-0 pt-1 text-sm text-[#666]">封面</text>
+          <view class="grid flex-1 grid-cols-4 gap-2">
             <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
               <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
               <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeCover(img.tempPath); handleCoverChange()">
@@ -389,34 +396,39 @@ onPageScroll((option: Page.PageScrollOption) => {
               <wd-icon name="camera" size="36rpx" />
             </view>
           </view>
-          <text v-if="coverUploading" class="mt-1 block text-3xs text-gray-400">封面上传中…</text>
         </view>
+        <text v-if="coverUploading" class="mb-4 block pl-[140rpx] text-3xs text-gray-400">封面上传中…</text>
         <view class="mb-5">
-          <view class="mb-2 flex items-center justify-between">
-            <text class="text-sm text-[#666]">查看密码</text>
-            <text v-if="formMode === 'edit'" class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-sm text-[#666]">查看密码</text>
+            <input
+              v-model="form.password"
+              class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+              :placeholder="formMode === 'create' ? '设置查看密码(选填)' : '输入新密码重设，留空保持不变'"
+              password
+            >
+          </view>
+          <!-- 密码状态与操作：单独一行在输入框下方 -->
+          <view v-if="formMode === 'edit'" class="mt-2 flex items-center gap-4 pl-[140rpx]">
+            <text class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
               {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
             </text>
-          </view>
-          <input
-            v-model="form.password"
-            class="uh-global-card-glass h-9 w-full border rounded-xl px-4 text-sm shadow-none"
-            :placeholder="formMode === 'create' ? '设置查看密码(选填)' : '输入新密码重设，留空保持不变'"
-            password
-          >
-          <view v-if="formMode === 'edit' && form.passwordEnabled" class="mt-2 flex items-center gap-2" @click="form.passwordRemoved = !form.passwordRemoved">
-            <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
-              <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
+            <view v-if="form.passwordEnabled" class="flex items-center gap-1.5" @click="form.passwordRemoved = !form.passwordRemoved">
+              <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
+                <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
+              </view>
+              <text class="text-3xs text-gray-500">清除查看密码（访客将可直接查看）</text>
             </view>
-            <text class="text-3xs text-gray-500">清除查看密码（访客将可直接查看）</text>
           </view>
-        </view>
-        <view class="my-6">
-          <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
-            保存
-          </uh-button>
         </view>
       </scroll-view>
+
+      <!-- 底部固定操作栏（滚动区外） -->
+      <view class="border-t border-black/5 px-4 pb-safe pt-3">
+        <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+          保存
+        </uh-button>
+      </view>
     </uh-glass-popup>
 
     <!-- 相册详情（照片管理弹窗） -->
@@ -464,14 +476,14 @@ onPageScroll((option: Page.PageScrollOption) => {
             <wd-icon name="camera" size="36rpx" />
           </view>
         </view>
-
-        <!-- 提交待传照片 -->
-        <view v-if="pendingPhotos.length" class="my-6">
-          <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
-            {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
-          </uh-button>
-        </view>
       </scroll-view>
+
+      <!-- 提交待传照片：底部固定操作栏（滚动区外） -->
+      <view v-if="pendingPhotos.length" class="border-t border-black/5 px-4 pb-safe pt-3">
+        <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
+          {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
+        </uh-button>
+      </view>
     </uh-glass-popup>
   </view>
 </template>
