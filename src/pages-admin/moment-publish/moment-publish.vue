@@ -166,7 +166,7 @@ async function submit() {
             class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-xs text-white"
             @click="remove(img.tempPath)"
           >
-            ✕
+            <wd-icon name="close" size="24rpx" />
           </view>
           <!-- 状态角标 -->
           <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
@@ -181,7 +181,7 @@ async function submit() {
             <text>点击重试</text>
           </view>
           <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-xs text-white">
-            ✓
+            <wd-icon name="check" size="24rpx" />
           </view>
         </view>
         <!-- 添加按钮 -->
@@ -190,7 +190,7 @@ async function submit() {
           class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-xl border-dashed text-3xl text-gray-400"
           @click="choose"
         >
-          ＋
+          <wd-icon name="camera" size="40rpx" />
         </view>
       </view>
     </view>
@@ -206,13 +206,13 @@ async function submit() {
           @confirm="addTag"
         >
         <view class="text-xl text-gray-400" @click="addTag">
-          ＋
+          <wd-icon name="add-circle" size="36rpx" />
         </view>
       </view>
       <view v-if="tags.length" class="mt-3 flex flex-wrap gap-2">
         <view v-for="tag in tags" :key="tag" class="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
           {{ tag }}
-          <text class="ml-1 text-gray-400" @click="removeTag(tag)">✕</text>
+          <text class="ml-1 text-gray-400" @click="removeTag(tag)"><wd-icon name="close" size="24rpx" /></text>
         </view>
       </view>
     </view>

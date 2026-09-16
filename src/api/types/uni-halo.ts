@@ -115,6 +115,8 @@ export interface IPageConfig {
 	aboutConfig?: {
 		bgImageUrl?: string;
 		waveImageUrl?: string;
+		/** 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页」配置;grid=宫格 / list=列表,缺省网格) */
+		commonFeaturesMode?: 'grid' | 'list';
 		/** 页脚版权（显示于关于页页脚） */
 		copyrightConfig?: {
 			enabled?: boolean;

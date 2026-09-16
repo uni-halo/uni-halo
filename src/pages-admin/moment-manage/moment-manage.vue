@@ -183,22 +183,36 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
               @click="handlePreview(imgIndex, moment.images)"
             />
           </view>
-          <view class="mt-2 flex items-center justify-end gap-3 border-t border-black/5 px-4 py-2.5 text-xs">
-            <text class="text-gray-500" @click="handleToPublish()">✏️ 发布</text>
-            <text class="text-gray-500" @click="handleEdit(moment)">📝 编辑</text>
-            <text class="text-red-500" @click="handleDelete(moment)">🗑 删除</text>
+          <view class="mt-2 flex items-center justify-end gap-4 border-t border-black/5 px-4 py-2.5 text-xs">
+            <view class="flex items-center gap-1 text-gray-500" @click="handleEdit(moment)">
+              <wd-icon name="edit" size="26rpx" />
+              <text>编辑</text>
+            </view>
+            <view class="flex items-center gap-1 text-red-500" @click="handleDelete(moment)">
+              <wd-icon name="delete" size="26rpx" />
+              <text>删除</text>
+            </view>
           </view>
         </view>
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
 
-      <!-- FAB：去发布 -->
-      <view
-        class="fixed bottom-30 right-4 z-50 h-14 w-14 flex items-center justify-center rounded-full bg-primary text-2xl text-white shadow-lg"
-        @click="handleToPublish"
-      >
-        ✏️
+      <!-- 底部悬浮：发布瞬间（参考文章详情悬浮设计） -->
+      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+        <view
+          class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
+          @click="handleToPublish"
+        >
+          <wd-icon name="add-circle" size="36rpx" />
+          <text class="shrink-0 text-xs font-semibold">发布瞬间</text>
+        </view>
       </view>
     </template>
   </view>
 </template>
+
+<style scoped lang="scss">
+	.uh-translate-x-center {
+  transform: translateX(-50%);
+}
+</style>

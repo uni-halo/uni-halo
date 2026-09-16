@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 /**
- * 恋爱相册管理页：相册列表（分页）+ 新建/编辑/删除 + 相册内照片管理（批量上传/删除）
+ * 恋爱相册管理页
  */
 import { computed, ref } from 'vue'
-import { onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getLoveAlbumByName, getLoveAlbums } from '@/api/uni-halo'
 import { addLoveAlbumPhotos, createLoveAlbum, deleteLoveAlbum, removeLoveAlbumPhoto, updateLoveAlbum } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -64,6 +64,10 @@ function handleRetry() {
   queryParams.value.page = 1
   handleGetData()
 }
+
+onLoad(() => {
+  handleGetData()
+})
 
 onPullDownRefresh(() => {
   resetLoadMoreStatus()
@@ -175,11 +179,7 @@ async function openDetail(album: ILoveAlbum) {
 }
 
 /** 批量选图并上传，成功后合并提交到相册 */
-const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, allSuccess: photosAllSuccess, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
-
-async function handleUploadPhotos() {
-  choosePhotos()
-}
+const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
 
 async function commitPhotos() {
   if (!currentAlbum.value)
@@ -248,12 +248,12 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 相册列表 -->
     <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success && !detailVisible" :loading-status="loadingStatus" min-height="70vh" @refresh="handleRetry" />
 
-    <view v-if="!detailVisible" class="grid grid-cols-2 gap-3 px-3 pt-3">
+    <view v-if="!detailVisible" class="grid grid-cols-2 gap-3 px-3 pb-24 pt-3">
       <view v-for="album in albumList" :key="album.metadata?.name || album.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
         <view class="relative h-32 w-full">
           <image v-if="album.cover || album.photos?.[0]?.url" :src="checkThumbnailUrl(album.cover || album.photos?.[0]?.url || '', true)" class="h-full w-full" mode="aspectFill" />
-          <view v-else class="h-full w-full flex items-center justify-center bg-gray-100 text-3xl text-gray-300">
-            📷
+          <view v-else class="h-full w-full flex items-center justify-center bg-gray-100 text-gray-300">
+            <wd-icon name="camera" size="60rpx" />
           </view>
         </view>
         <view class="p-3">
@@ -263,42 +263,72 @@ onPageScroll((option: Page.PageScrollOption) => {
           <view class="mt-0.5 text-3xs text-gray-400">
             {{ album.photos?.length || 0 }} 张
           </view>
-          <view class="mt-2 flex items-center justify-end gap-3 text-xs">
-            <text class="text-gray-500" @click="openDetail(album)">📷 照片</text>
-            <text class="text-gray-500" @click="openEdit(album)">✏️</text>
-            <text class="text-red-500" @click="handleDeleteAlbum(album)">🗑</text>
+          <view class="mt-2 flex items-center justify-between gap-2 text-xs">
+            <view class="flex items-center gap-0.5 text-gray-500" @click="openDetail(album)">
+              <wd-icon name="camera" size="26rpx" />
+              <text>照片</text>
+            </view>
+            <view class="flex items-center gap-0.5 text-gray-500" @click="openEdit(album)">
+              <wd-icon name="edit" size="26rpx" />
+			  <text>编辑</text>
+            </view>
+            <view class="flex items-center gap-0.5 text-red-500" @click="handleDeleteAlbum(album)">
+              <wd-icon name="delete" size="26rpx" />
+			  <text>删除</text>
+            </view>
           </view>
         </view>
       </view>
       <uh-data-loadmore v-if="albumList.length" class="col-span-2" :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
     </view>
 
-    <!-- FAB：新建相册 -->
+    <!-- 底部悬浮：新建相册（参考文章详情悬浮设计） -->
     <uh-permission v-if="!detailVisible" permission="LOVE_ALBUM_MANAGE">
-      <view
-        class="fixed bottom-30 right-4 z-50 h-14 w-14 flex items-center justify-center rounded-full bg-primary text-2xl text-white shadow-lg"
-        @click="openCreate"
-      >
-        ＋
+      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+        <view
+          class="uh-global-card-glass box-border py-2.5 flex items-center justify-center gap-x-1 border rounded-full px-6 text-love shadow-none"
+          @click="openCreate"
+        >
+          <wd-icon name="add-circle" size="32rpx" />
+          <text class="shrink-0 text-xs font-semibold">新建相册</text>
+        </view>
       </view>
     </uh-permission>
 
     <!-- 新建/编辑相册弹层 -->
-    <view v-if="formVisible" class="fixed inset-0 z-50 flex flex-col justify-end bg-black/40" @click.self="formVisible = false">
-      <view class="rounded-t-3xl bg-white p-5 pb-safe dark:bg-dark-900">
-        <view class="mb-4 flex items-center justify-between">
-          <text class="text-base font-bold">{{ formMode === 'create' ? '新建相册' : '编辑相册' }}</text>
-          <text class="text-sm text-primary" @click="handleSave">{{ saving ? '保存中…' : '保存' }}</text>
+    <uh-glass-popup v-model="formVisible" :z-index="100" position="bottom" custom-class="!border rounded-xl">
+      <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
+        <view class="w-full flex flex-col gap-y-1">
+          <text class="text-md font-bold">{{ formMode === 'create' ? '新建相册' : '编辑相册' }}</text>
+          <text class="text-xs text-gray-500">{{ formMode === 'create' ? '创建一个新相册来存放回忆' : '修改相册信息' }}</text>
         </view>
-        <input v-model="form.title" class="mb-3 w-full rounded-xl bg-page px-4 py-3 text-sm" placeholder="相册名称">
-        <textarea v-model="form.description" class="w-full rounded-xl bg-page p-4 text-sm" placeholder="相册描述（可选）" auto-height :maxlength="200" />
+        <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="formVisible = false">
+          <wd-icon name="close" size="32rpx" class="text-gray-500" />
+        </view>
       </view>
-    </view>
+      <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
+        <view class="mb-5 flex items-center">
+          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
+          <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入相册名称">
+        </view>
+        <view class="mb-5">
+          <text class="mb-2 block text-sm text-[#666]">描述</text>
+          <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 w-full border rounded-xl p-3 text-sm shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
+        </view>
+        <view class="my-6">
+          <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+            保存
+          </uh-button>
+        </view>
+      </scroll-view>
+    </uh-glass-popup>
 
-    <!-- 相册详情（照片管理） -->
+    <!-- 相册详情（照片管理，全屏覆盖层） -->
     <view v-if="detailVisible" class="fixed inset-0 z-50 flex flex-col bg-page">
       <view class="safe-area-top flex items-center gap-2 bg-white/90 px-4 py-3 dark:bg-dark-900/90">
-        <text class="text-xl" @click="detailVisible = false">←</text>
+        <view @click="detailVisible = false">
+          <wd-icon name="arrow-left" size="40rpx" />
+        </view>
         <text class="flex-1 text-base font-bold">{{ currentAlbum?.title || currentAlbum?.displayName || '相册' }}</text>
       </view>
 
@@ -306,44 +336,57 @@ onPageScroll((option: Page.PageScrollOption) => {
         <view v-if="detailLoading" class="mt-20 text-center text-sm text-gray-400">
           加载中…
         </view>
-        <view v-else class="grid grid-cols-3 gap-2 p-3">
+        <view v-else class="grid grid-cols-3 gap-2 p-3 pb-24">
           <view v-for="(photo, index) in currentPhotos" :key="photo.url" class="relative aspect-square overflow-hidden rounded-lg">
             <image :src="checkThumbnailUrl(photo.url || '', true)" class="h-full w-full" mode="aspectFill" @click="handlePreviewPhoto(index)" />
-            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-xs text-white" @click.stop="handleDeletePhoto(photo)">
-              ✕
+            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click.stop="handleDeletePhoto(photo)">
+              <wd-icon name="close" size="22rpx" />
             </view>
           </view>
           <!-- 待上传预览 -->
           <view v-for="img in pendingPhotos" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
             <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
-            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-xs text-white" @click="removePending(img.tempPath)">
-              ✕
+            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removePending(img.tempPath)">
+              <wd-icon name="close" size="22rpx" />
             </view>
             <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
               {{ img.progress }}%
             </view>
-            <view v-else-if="img.status === 'error'" class="absolute inset-0 flex items-center justify-center bg-red-500/60 text-xs text-white" @click="img.status = 'pending'">
-              失败
+            <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white">
+              <text>失败</text>
+              <text>点击重试</text>
+            </view>
+            <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+              <wd-icon name="check" size="22rpx" />
             </view>
           </view>
           <!-- 选图入口 -->
-          <view class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-2xl text-gray-400" @click="handleUploadPhotos">
-            ＋
+          <view class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="choosePhotos">
+            <wd-icon name="camera" size="36rpx" />
           </view>
         </view>
       </scroll-view>
 
-      <!-- 底部提交条（有待传照片时显示） -->
-      <view v-if="pendingPhotos.length" class="border-t border-gray-100 bg-white/90 p-3 pb-safe dark:bg-dark-900/90">
-        <button
-          class="w-full rounded-full text-white"
-          :class="uploading || pendingCount > 0 ? 'bg-gray-300' : 'bg-primary'"
-          :disabled="uploading || pendingCount > 0"
-          @click="commitPhotos"
+      <!-- 底部悬浮：提交待传照片 -->
+      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+        <view
+          v-if="pendingPhotos.length"
+          class="uh-global-card-glass box-border py-2.5 flex items-center justify-center gap-x-1 border rounded-full px-6 shadow-none"
+          :class="uploading || pendingCount > 0 ? 'text-gray-400' : 'text-primary'"
+          @click="!(uploading || pendingCount > 0) && commitPhotos()"
         >
-          {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
-        </button>
+          <wd-icon :name="uploading ? 'loading' : 'add-circle'" size="36rpx" />
+          <text class="shrink-0 text-xs font-semibold">
+            {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
+          </text>
+        </view>
       </view>
     </view>
   </view>
 </template>
+
+<style scoped lang="scss">
+	.uh-translate-x-center {
+  transform: translateX(-50%);
+}
+</style>

@@ -10,6 +10,7 @@ import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import type { IBlogStats } from '@/api/types/halo'
+import { storeToRefs } from 'pinia'
 
 definePage({
   style: {
@@ -19,12 +20,12 @@ definePage({
   },
 })
 
-const appConfigStore = useAppConfigStore()
+const { configs } = storeToRefs(useAppConfigStore())
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 
-const haloConfigs = computed(() => appConfigStore.configs)
+const haloConfigs = computed(() => configs.value)
 /** 登录态(进入页面时刷新过期判断) */
 const hasLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
@@ -41,7 +42,7 @@ const bloggerInfo = computed(() => {
 })
 
 const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.aboutConfig as
-  | { bgImageUrl?: string, waveImageUrl?: string }
+  | { bgImageUrl?: string, waveImageUrl?: string, commonFeaturesMode?: 'grid' | 'list' }
   | undefined)
 
 const calcProfileStyle = computed(() => ({
@@ -99,7 +100,11 @@ const configuredFeatures = computed(() => {
 })
 
 const navList = ref<INavItem[]>([])
-const featureMode = ref<'base' | 'list'>('base')
+/** 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页 → 常用功能显示方式」配置;缺省网格,与旧版行为一致;
+ * 切为列表时常用/其他功能均为分组列表,并恢复站点统计卡片展示) */
+const featureMode = computed<'grid' | 'list'>(() =>
+  pageConfig.value?.commonFeaturesMode === 'list' ? 'list' : 'grid',
+)
 /** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
 const calcNavGroups = computed(() => {
   const visible = navList.value.filter(n => n.show)
@@ -275,7 +280,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     </view>
 
     <!-- 功能导航：非分组模式 -->
-    <template v-if="featureMode === 'base'">
+    <template v-if="featureMode === 'grid'">
       <view v-if="commonFeatures.length !== 0" class="relative z-100 box-border overflow-hidden p-4 -mt-20">
         <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-4 box-border gap-2 border rounded-lb-2xl rounded-lt-3xl rounded-rb-2xl rounded-rt-3xl p-3">
           <view
