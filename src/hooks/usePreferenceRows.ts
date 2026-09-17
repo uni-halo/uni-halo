@@ -4,6 +4,7 @@
  * 行构建、选值交互。两个消费方不再各自重复定义。
  */
 import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { DefaultAppSettings } from '@/config/appSettings';
 import { useSettingStore } from '@/store/setting';
 import { isLocalOverride, readLocalPrefs } from '@/utils/preference';
@@ -74,7 +75,8 @@ export const SETTING_TABS: { key: 'layout' | 'feature'; label: string }[] = [
 ];
 
 export function usePreferenceRows() {
-	const settingStore = useSettingStore();
+	const { settings, siteDefaults } = storeToRefs(useSettingStore());
+	const { savePreference } = useSettingStore();
 
 	/* ---------------- 路径取值工具 ---------------- */
 	function getByPath(obj: unknown, path: string[]): unknown {
@@ -97,12 +99,12 @@ export function usePreferenceRows() {
 
 	/* ---------------- 状态读取 ---------------- */
 	function prefValueOf(path: string[]): unknown {
-		return getByPath(settingStore.settings, path);
+		return getByPath(settings.value, path);
 	}
 
 	/** 站点默认值(未配置时回退内置默认) */
 	function siteDefaultOf(path: string[]): unknown {
-		const site = getByPath(settingStore.siteDefaults, path);
+		const site = getByPath(siteDefaults.value, path);
 		if (site !== undefined && site !== null) return site;
 		return getByPath(DefaultAppSettings, path);
 	}
@@ -159,12 +161,12 @@ export function usePreferenceRows() {
 
 	/** 单项还原为跟随站点默认 */
 	function handleRevert(path: string[]): void {
-		settingStore.savePreference(buildPatch(path, null));
+		savePreference(buildPatch(path, null));
 	}
 
 	/** 开关类:选值等于站点默认则还原为跟随(只存差异) */
 	function handleBoolChange(path: string[], next: boolean): void {
-		settingStore.savePreference(buildPatch(path, next));
+		savePreference(buildPatch(path, next));
 	}
 
 	/** 给定字段路径,判断该页面列表布局是否为双列(path[0] 即插件端顶层字段名；
@@ -187,19 +189,18 @@ export function usePreferenceRows() {
 		if (value === null) {
 			handleRevert(path);
 		} else {
-			settingStore.savePreference(buildPatch(path, value));
+			savePreference(buildPatch(path, value));
 			// 双列约束:列表布局改为双列时,卡片样式强制为 image_top
 			if (path[0].endsWith('ListLayout') && value === 'double') {
 				const cardTypePath = [path[0].replace(/ListLayout$/, 'CardType')];
 				if (prefValueOf(cardTypePath) !== 'image_top') {
-					settingStore.savePreference(buildPatch(cardTypePath, 'image_top'));
+					savePreference(buildPatch(cardTypePath, 'image_top'));
 				}
 			}
 		}
 	}
 
 	return {
-		settingStore,
 		PAGE_GROUPS,
 		SETTING_TABS,
 		getByPath,

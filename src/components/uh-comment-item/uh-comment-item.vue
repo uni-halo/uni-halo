@@ -3,7 +3,6 @@
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
 	import { checkAvatarUrl } from '@/utils/url'
-	import { useSettingStore } from '@/store/setting'
 	import type { ICommentReply } from '@/api/types/halo'
 
 	const props = withDefaults(defineProps<{
@@ -34,9 +33,6 @@
 	}>()
 	dayjs.extend(relativeTime)
 	dayjs.locale('zh-cn')
-
-	const settingStore = useSettingStore()
-	const globalAppSettings = computed(() => settingStore.settings)
 
 	const avatar = computed(() => checkAvatarUrl(props.comment.spec.owner.avatar))
 

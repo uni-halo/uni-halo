@@ -38,7 +38,7 @@ const emit = defineEmits<{
   (e: 'favorite'): void
 }>()
 
-const favoritesStore = useFavoritesStore()
+const { isFavorite } = useFavoritesStore()
 const { hasUpvoted } = useUpvote('moments', () => '')
 
 /** 格式化瞬间时间 */
@@ -122,8 +122,8 @@ function handlePreview(index: number, list: { url: string }[]) {
       <view class="flex items-center gap-x-1" @click.stop="emit('favorite')">
         <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="32rpx" />
         <text class="text-3xs"
-          :class="favoritesStore.isFavorite('moment', moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
-          {{ favoritesStore.isFavorite('moment', moment.metadata.name) ? '已收藏' : '收藏' }}
+          :class="isFavorite('moment', moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
+          {{ isFavorite('moment', moment.metadata.name) ? '已收藏' : '收藏' }}
         </text>
       </view>
     </view>

@@ -3,6 +3,7 @@ import { confirmBindTicket, getBindTicketStatus } from '@/api/auth'
 import type { IBindTicketStatus } from '@/api/auth'
 import { getWxCode } from '@/api/auth'
 import { useTokenStore } from '@/store/token'
+import { storeToRefs } from 'pinia'
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 
@@ -13,7 +14,7 @@ definePage({
   },
 })
 
-const tokenStore = useTokenStore()
+const { wxLogin } = useTokenStore()
 
 const ticket = ref('')
 /** 票据当前状态(null 表示尚未查询) */
@@ -69,8 +70,11 @@ async function doConfirm() {
     bindResult.value = 'success'
     ticketStatus.value = 'CONFIRMED'
     // 绑定成功后未登录时自动用该微信身份登录(绑定即登录,免二次操作)
-    if (!tokenStore.updateNowTime().hasLogin) {
-      await tokenStore.wxLogin()
+    const tokenStore = useTokenStore()
+    tokenStore.updateNowTime()
+    const { hasLogin } = storeToRefs(tokenStore)
+    if (!hasLogin.value) {
+      await wxLogin()
     }
   }
   catch (error: any) {

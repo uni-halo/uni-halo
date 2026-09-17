@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { getLoveAlbumByName, getLoveAlbums, unlockAlbum } from '@/api/uni-halo'
@@ -23,8 +24,8 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
-const appConfigStore = useAppConfigStore()
-const loveConfig = computed(() => appConfigStore.configs.featureConfig?.love)
+const { configs } = storeToRefs(useAppConfigStore())
+const loveConfig = computed(() => configs.value.featureConfig?.love)
 
 /** 已解锁相册本地缓存 key */
 const UNLOCKED_ALBUMS_CACHE_KEY = 'unlocked_albums'
@@ -271,7 +272,8 @@ onLoad(() => {
 /** 页面初始化：先判定模块锁定（防分享直达），解锁或未设密码才加载数据 */
 async function handlePageInit() {
   handleRestoreUnlockedAlbums()
-  await appConfigStore.bootstrap()
+  const { bootstrap } = useAppConfigStore()
+  await bootstrap()
   if (!ensureUnlocked()) {
     return
   }

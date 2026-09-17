@@ -4,6 +4,7 @@ import { isMp } from '@uni-helper/uni-env'
  * 路由拦截，通常也是登录拦截
  * 黑、白名单的配置，请看 config.ts 文件， EXCLUDE_LOGIN_PATH_LIST
  */
+import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
 import { isPageTabbar, tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
@@ -65,10 +66,12 @@ export const navigateToInterceptor = {
     }
 
     const tokenStore = useTokenStore()
-    FG_LOG_ENABLE && console.log('tokenStore.hasLogin:', tokenStore.hasLogin)
+    tokenStore.updateNowTime()
+    const { hasLogin } = storeToRefs(tokenStore)
+    FG_LOG_ENABLE && console.log('hasLogin:', hasLogin.value)
 
     // 不管黑白名单，登录了就直接去吧（但是当前不能是登录页）
-    if (tokenStore.hasLogin) {
+    if (hasLogin.value) {
       if (path !== LOGIN_PAGE) {
         return true // 明确表示允许路由继续执行
       }

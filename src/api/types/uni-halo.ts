@@ -5,57 +5,65 @@
 
 /* ---------- uni-halo 应用配置 ---------- */
 
-/** 图片相关配置 */
-export interface IImagesConfig {
-	defaultThumbnailUrl?: string;
-	defaultStaticThumbnailUrl?: string;
-	defaultImageUrl?: string;
-	defaultAvatarUrl?: string;
-	[key: string]: unknown;
+/** 应用信息（featureConfig.profile.appInfo） */
+export interface IAppInfoConfig {
+	name?: string;
+	logo?: string;
 }
 
-/** 插件配置(toolsPlugin 等带 Authorization) */
-export interface IPluginConfig {
-	toolsPlugin?: { Authorization?: string } & Record<string, unknown>;
-	/**
-	 * 友链信息（插件端 spec.linkInfo 直接下发到本键，结构 = {submissionEnabled, miniInfo, siteInfo}，字段名无映射）
-	 */
-	linkInfo?: {
-		/** 基本配置：是否开放公开提交申请（默认 true；false 时隐藏「提交申请」入口） */
-		submissionEnabled?: boolean;
-		/** 小程序信息（「申请信息」弹窗展示） */
-		miniInfo?: {
-			displayName?: string;
-			miniProgramCode?: string;
-			/** 小程序 AppID（wx 开头） */
-			appId?: string;
-			/** 跳转页面路径 */
-			path?: string;
-			link?: string;
-			description?: string;
-			applyRemark?: string;
-		};
-		/** 站点信息（对齐 Halo 官方友链提交 API：displayName/url/logo/description/backlink/feedUrls） */
-		siteInfo?: {
-			displayName?: string;
-			url?: string;
-			logo?: string;
-			description?: string;
-			backlink?: string;
-			feedUrls?: string[];
-		};
-	};
-	doubanPlugin?: { position?: string } & Record<string, unknown>;
-	[key: string]: unknown;
+/** 博主资料（featureConfig.profile.blogger） */
+export interface IProfileBlogger {
+	nickname?: string;
+	avatar?: string;
+	email?: string;
+	description?: string;
+	website?: string;
+	/** 介绍（富文本 HTML） */
+	intro?: string;
 }
 
-/** 首页配置(banner 等) */
-export interface IBannerConfig {
+/** 社交项（featureConfig.profile.social.items，联系博主页展示/复制） */
+export interface ISocialItem {
+	/** 名称（如「企鹅号」「微信号」） */
+	name?: string;
+	/** 内容（账号/地址/链接，点击复制） */
+	content?: string;
+	/** 图标颜色（16 进制，支持透明） */
+	color?: string;
+	/** 背景色（16 进制，支持透明） */
+	bgColor?: string;
+	/** 排序，越大越靠前 */
+	priority?: number;
+	/** 是否展示 */
+	visible?: boolean;
+}
+
+/** 快捷导航/功能入口项（homeConfig.quickNavigation、myPageConfig 两组共用结构） */
+export interface IQuickNavItem {
+	key?: string;
+	title?: string;
+	/** 副标题（对标 rightText，可空） */
+	subTitle?: string;
+	color?: string;
+	bgColor?: string;
+	iconPrefix?: string;
+	icon?: string;
+	path?: string;
+	visible?: boolean;
+}
+
+/** 插件配置（integrationConfig.pluginConfig） */
+export interface IToolsPluginConfig {
 	enabled?: boolean;
-	showTitle?: boolean;
-	showIndicator?: boolean;
-	height?: string;
-	dotPosition?: string;
+	pluginId?: string;
+	/** 授权 Token（服务端明文下发，客户端请求工具箱插件时携带） */
+	Authorization?: string;
+	/** 验证码获取方式 scan=微信公众号 / advert=小程序广告 */
+	verifyCodeType?: 'scan' | 'advert' | string;
+	/** 扫码链接（二维码图片地址） */
+	scanCodeUrl?: string;
+	/** 视频广告 ID */
+	rewardedVideoAdId?: string;
 }
 
 /** 轮播图公开条目(uni-halo Banner 归一化模型公开接口,列表脱敏不含 content) */
@@ -81,78 +89,76 @@ export interface IBannerPublicDetail extends IBannerPublicItem {
 	content?: string;
 }
 
+/** 全站页面标题（pages.titles，传入各页面 navbar default-title，留空回退内置默认） */
+export interface IPageTitles {
+	// tabbar 页
+	home?: string;
+	gallery?: string;
+	category?: string;
+	moments?: string;
+	blogger?: string;
+	// 博客页
+	articles?: string;
+	archives?: string;
+	/** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
+	postDetail?: string;
+	categoryArticles?: string;
+	tags?: string;
+	tagDetail?: string;
+	search?: string;
+	favorites?: string;
+	friendLinks?: string;
+	notice?: string;
+	noticeDetail?: string;
+	votes?: string;
+	voteDetail?: string;
+	contact?: string;
+	setting?: string;
+	aboutProject?: string;
+	disclaimers?: string;
+	dataVisual?: string;
+	// 认证页
+	login?: string;
+	register?: string;
+}
+
+/** 首页分类栏分类引用快照（固定最多 3 个，数组顺序 = 展示顺序） */
+export interface IHomeCategoryItem {
+	name: string;
+	displayName?: string;
+	cover?: string;
+	/** 分类排序权重（Halo Category.spec.priority，越大越靠前） */
+	priority?: number;
+	/** 分类文章数（Halo Category.status.postCount 冗余快照，缺失默认 0） */
+	postCount?: number;
+}
+
 export interface IPageConfig {
-	/** 全站页面标题（插件端「功能设置 → 页面设置 → 页面标题」配置，传入各页面 uh-navbar default-title，留空回退内置默认） */
-	titles?: {
-		home?: string;
-		gallery?: string;
-		category?: string;
-		moments?: string;
-		blogger?: string;
-		articles?: string;
-		archives?: string;
-		/** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
-		postDetail?: string;
-		categoryArticles?: string;
-		tags?: string;
-		tagDetail?: string;
-		search?: string;
-		favorites?: string;
-		friendLinks?: string;
-		notice?: string;
-		noticeDetail?: string;
-		votes?: string;
-		voteDetail?: string;
-		contact?: string;
-		setting?: string;
-		aboutProject?: string;
-		disclaimers?: string;
-		dataVisual?: string;
-		login?: string;
-		register?: string;
-	};
+	/** 全站页面标题（插件端「功能设置 → 页面设置 → 页面标题」配置） */
+	titles?: IPageTitles;
 	homeConfig?: {
+		/** 是否显示首页分类栏（精品文章分类） */
 		useCategory?: boolean;
 		/** 是否显示快捷导航(首页) */
 		useQuickNavigation?: boolean;
-		bannerConfig?: IBannerConfig;
-		/** 首页快捷导航项（插件端「通用配置 → 页面设置 → 首页」配置，字段命名与插件端一致，
-		 * 数组顺序 = 展示顺序；未配置/为空时客户端回退内置默认项） */
-		quickNavigation?: Array<{
-			key?: string;
-			title?: string;
-			color?: string;
-			bgColor?: string;
-			iconPrefix?: string;
-			icon?: string;
-			path?: string;
-			visible?: boolean;
-		}>;
-		/** 首页精选分类引用（插件端「通用配置 → 页面设置 → 首页」配置，固定最多 3 个，
-		 * 快照含名称/封面/排序权重/文章数，数组顺序 = 展示顺序；配置模式下直接映射渲染不发请求，
-		 * 未配置/为空时回退默认取数） */
-		categories?: Array<{
-			name: string;
-			displayName?: string;
-			cover?: string;
-			/** 分类排序权重（Halo Category.spec.priority，越大越靠前） */
-			priority?: number;
-			/** 分类文章数（Halo Category.status.postCount 冗余快照，缺失默认 0） */
-			postCount?: number;
-		}>;
+		/** 快捷导航项（数组顺序 = 展示顺序；未配置/为空时客户端回退内置默认项） */
+		quickNavigation?: IQuickNavItem[];
+		/** 首页分类栏分类引用（配置模式下直接映射渲染不发请求，未配置/为空时回退默认取数） */
+		categories?: IHomeCategoryItem[];
 	};
-	categoryConfig?: { type?: string };
-	momentConfig?: { useTagRandomColor?: boolean };
+	/** 博主页（资料卡视觉与功能入口布局） */
 	aboutConfig?: {
+		/** 资料卡背景图 */
 		bgImageUrl?: string;
+		/** 资料卡波浪图 */
 		waveImageUrl?: string;
-		/** 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页」配置;grid=宫格 / list=列表,缺省网格) */
-		commonFeaturesMode?: 'grid' | 'list';
-		/** 页脚版权（显示于关于页页脚） */
-		copyrightConfig?: {
-			enabled?: boolean;
-			content?: string;
-		};
+		/** 常用功能显示方式 grid=宫格 / list=列表，缺省网格 */
+		commonFeaturesMode?: 'grid' | 'list' | string;
+	};
+	/** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构） */
+	myPageConfig?: {
+		commonFeatures?: IQuickNavItem[];
+		otherFeatures?: IQuickNavItem[];
 	};
 	/** 免责声明页（按内容非空展示） */
 	disclaimers?: {
@@ -166,7 +172,6 @@ export interface IPageConfig {
 		copyrightDesc?: string;
 		copyrightViolation?: string;
 	};
-	[key: string]: unknown;
 }
 
 /** 审核模式数据(公开接口 GET /audit-data 返回) */
@@ -204,66 +209,88 @@ export interface IAuditDataResult {
 /**
  * getConfigs 响应（app 端直读不做归一化）：
  * - featureConfig：功能设置单例 spec 直发（脱敏后）——profile/pages/assets/
- *   preferences/love(脱敏)/linkInfo/auditMode/maintenance...
- * - safetyConfig：setting.yaml 组原样（captchaConfig 等）
- * - integrationConfig：原样（appConfig/pluginConfig）
- * - themeConfig：原样（悬浮窗等主题端配置，app 端暂不消费）
- * - loginConfig：脱敏（仅两个登录方式开关）
- * - maintenance：可选，服务端按时间窗计算的 status
+ *   preferences/love(脱敏)/linkInfo/auditMode/maintenance
+ * - safetyConfig：setting.yaml 组原样（captchaConfig）
+ * - integrationConfig：setting.yaml 组原样（pluginConfig.toolsPlugin）
+ * - themeConfig：setting.yaml 组原样（悬浮窗等主题端配置，app 端暂不消费）
+ * - loginConfig：脱敏（仅两个登录方式开关，扁平结构）
+ * - maintenance：可选，服务端按时间窗计算的 status（键缺失 = 未维护）
  */
 export interface IAppConfig {
 	/** 功能设置单例 spec 直发（脱敏后） */
 	featureConfig?: {
-		/** 应用资料（应用信息/博主 blogger/社交 items/审核模式 auditMode/页脚版权） */
+		/** 应用资料（应用信息/博主/社交/页脚版权） */
 		profile?: {
-			appInfo?: { name?: string; logo?: string; [key: string]: unknown };
-			/** 博主资料（nickname/avatar/email/description/website/intro） */
-			blogger?: Record<string, unknown>;
-			social:{
-				/** 社交动态列表（name/content/color/bgColor/priority/visible） */
-				items?: Array<Record<string, unknown>>;
-			},
-			/** 审核模式开关 */
-			auditMode?: { enabled?: boolean; [key: string]: unknown };
-			/** 页脚版权 */
+			/** 应用信息（名称/图标） */
+			appInfo?: IAppInfoConfig;
+			/** 博主资料 */
+			blogger?: IProfileBlogger;
+			/** 社交信息（联系博主页展示） */
+			social?: {
+				items?: ISocialItem[];
+			};
+			/** 页脚版权（显示于博主页页脚） */
 			copyrightConfig?: { enabled?: boolean; content?: string };
-			[key: string]: unknown;
 		};
-		/** 页面配置（首页/图库页/分类页/瞬间页/关于页/文章详情页/免责声明页/各功能页标题） */
+		/** 页面配置（页面标题/首页/博主页/我的页面/免责声明页/文章详情页） */
 		pages?: IPageConfig;
-		/** 资源与兜底（loadingGifUrl/loadingErrUrl） */
-		assets?: IImagesConfig;
+		/** 资源与兜底（loadingGifUrl/loadingErrUrl；app 端暂不消费，保留键位） */
+		assets?: Record<string, unknown>;
 		/** 站点级展示偏好默认（字段名与客户端偏好设置一致，直接透传消费） */
 		preferences?: {
-			homeListLayout?: string;
+			/** single 单列 / double 双列 */
+			homeListLayout?: 'single' | 'double' | string;
+			/** image_top/image_right/image_bottom/image_left */
 			homeCardType?: string;
-			articlesListLayout?: string;
+			articlesListLayout?: 'single' | 'double' | string;
 			articleCardType?: string;
-			archivesListLayout?: string;
+			archivesListLayout?: 'single' | 'double' | string;
 			archivesCardType?: string;
 			avatarRadius?: boolean;
 			/** 友情链接页：小程序打开模式 fullscreen 全屏（默认）/ halfScreen 半屏 */
 			linkPage?: {
-				miniProgramOpenMode?: string;
+				miniProgramOpenMode?: 'fullscreen' | 'halfScreen' | string;
 			};
-			[key: string]: unknown;
 		};
 		/** 恋爱模块（脱敏 spec 直发：loveDiary 仅 passwordEnabled；三模块入口/恋爱信息/页面设置） */
 		love?: ILoveConfigGroup;
 		/** 友链设置（submissionEnabled/siteInfo/miniInfo） */
 		linkInfo?: ILinkInfoConfig;
-		[key: string]: unknown;
+		/** 审核模式开关 */
+		auditMode?: { enabled?: boolean };
+		/** 维护模式原始配置（含 enabled 开关与排期窗口；维护状态以顶层 maintenance 为准） */
+		maintenance?: {
+			enabled?: boolean;
+			title?: string;
+			notice?: string;
+			description?: string;
+			startTime?: string;
+			endTime?: string;
+		};
 	};
-	/** 安全控制（setting.yaml 组原样：captchaConfig 等） */
+	/** 安全控制（setting.yaml 组原样） */
 	safetyConfig?: {
-		captchaConfig?: Record<string, unknown>;
-		[key: string]: unknown;
+		/** 图形验证码配置 */
+		captchaConfig?: {
+			enabled?: boolean;
+			/** 各场景开关：友链提交/相册解锁/恋爱模块解锁 */
+			scope?: {
+				linkSubmission?: boolean;
+				loveAlbumUnlock?: boolean;
+				loveModuleUnlock?: boolean;
+			};
+			/** ALPHANUMERIC 字符 / ARITHMETIC 算术 */
+			type?: 'ALPHANUMERIC' | 'ARITHMETIC' | string;
+			captchaLength?: number;
+			arithmeticRange?: number;
+		};
 	};
-	/** 平台接入（setting.yaml 组原样：appConfig/pluginConfig） */
+	/** 平台接入（setting.yaml 组原样：第三方插件） */
 	integrationConfig?: {
-		appConfig?: Record<string, unknown>;
-		pluginConfig?: IPluginConfig;
-		[key: string]: unknown;
+		pluginConfig?: {
+			/** 工具箱插件（文章受限访问等） */
+			toolsPlugin?: IToolsPluginConfig;
+		};
 	};
 	/** 主题展示（setting.yaml 组原样：悬浮窗等主题端配置，app 端暂不消费） */
 	themeConfig?: Record<string, unknown>;
@@ -274,7 +301,6 @@ export interface IAppConfig {
 	 * 键缺失=未维护或已到点自动结束)
 	 */
 	maintenance?: IPublicMaintenance;
-	[key: string]: unknown;
 }
 
 /**
@@ -553,6 +579,8 @@ export interface ILoveModuleConfig {
 	priority?: number;
 	/** 是否已设置密码（app 端据此显示锁定态：passwordEnabled && 本地无有效 token） */
 	passwordEnabled?: boolean;
+	/** 模块富文本内容（ourStory 的故事正文；脱敏直发） */
+	content?: string;
 	[key: string]: unknown;
 }
 
@@ -590,15 +618,40 @@ export interface ILoveConfigGroup {
 	[key: string]: unknown;
 }
 
+/** 小程序信息（友链「申请信息」弹窗展示项） */
+export interface ILinkMiniInfo {
+	displayName?: string;
+	/** 太阳码/小程序码图片 */
+	miniProgramCode?: string;
+	/** 小程序 AppID（wx 开头） */
+	appId?: string;
+	/** 跳转页面路径 */
+	path?: string;
+	/** 跳转地址 */
+	link?: string;
+	description?: string;
+	applyRemark?: string;
+}
+
+/** 站点信息（本站站点名片，字段对齐 Halo 官方友链提交 API） */
+export interface ILinkSiteInfo {
+	displayName?: string;
+	url?: string;
+	logo?: string;
+	description?: string;
+	backlink?: string;
+	/** RSS/Atom 订阅地址 */
+	feedUrls?: string[];
+}
+
 /** 友链设置（featureConfig.linkInfo，脱敏 spec 直发） */
 export interface ILinkInfoConfig {
 	/** 是否开放公开提交申请（关闭后 app 端隐藏提交入口） */
 	submissionEnabled?: boolean;
-	/** 本站站点名片（displayName/url/logo/description/backlink/feedUrls） */
-	siteInfo?: Record<string, unknown>;
-	/** 小程序信息（displayName/miniProgramCode/link/description/applyRemark） */
-	miniInfo?: Record<string, unknown>;
-	[key: string]: unknown;
+	/** 本站站点名片 */
+	siteInfo?: ILinkSiteInfo;
+	/** 小程序信息 */
+	miniInfo?: ILinkMiniInfo;
 }
 
 export interface ILoveAlbum {
@@ -868,16 +921,14 @@ export interface ILoveStoryListRes {
 /* ---------- 移动端登录(uni-halo 插件 AuthEndpoint) ---------- */
 
 /**
- * 登录公开配置
+ * 登录公开配置（getConfigs loginConfig，扁平结构）
  * 仅含两个登录方式开关,供客户端决定登录页展示哪些入口;
  */
 export interface ILoginPublicConfig {
-	loginConfig: {
-		/** 账号密码登录开关 */
-		passwordLoginEnabled?: boolean;
-		/** 微信一键登录开关 */
-		wechatLoginEnabled?: boolean;
-	};
+	/** 账号密码登录开关 */
+	passwordLoginEnabled?: boolean;
+	/** 微信一键登录开关 */
+	wechatLoginEnabled?: boolean;
 }
 
 /** 登录用户摘要(插件端 LoginUser,不含敏感字段) */

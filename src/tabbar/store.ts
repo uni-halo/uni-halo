@@ -1,5 +1,6 @@
 import type { CustomTabBarItem, CustomTabBarItemBadge } from './types'
 import { computed, reactive } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/store/user'
 
 import { tabbarList as _tabbarList, selectedTabbarStrategy, TABBAR_STRATEGY_MAP } from './config'
@@ -10,16 +11,15 @@ const baseTabbarList = reactive<CustomTabBarItem[]>(_tabbarList.map(item => ({
   pagePath: item.pagePath.startsWith('/') ? item.pagePath : `/${item.pagePath}`, // 统一成 '/' 开头的路径
 })))
 
+/** 当前用户角色列表(登录用户 roles 优先,回退单角色 role;均空 = 未登录/无角色) */
 const userRoles = computed(() => {
-  const userStore = useUserStore()
-  const userInfo = userStore.userInfo.value
-  if (Array.isArray(userInfo?.roles) && userInfo.roles.length > 0) {
-    return userInfo.roles
+  const { userInfo } = storeToRefs(useUserStore())
+  const roles = userInfo.value?.roles
+  if (Array.isArray(roles) && roles.length > 0) {
+    return roles
   }
-  if (userInfo?.role) {
-    return [userInfo.role]
-  }
-  return []
+  const role = userInfo.value?.role
+  return role ? [role] : []
 })
 
 const tabbarList = computed(() => {

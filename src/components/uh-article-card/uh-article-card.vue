@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { useSettingStore } from '@/store/setting'
 	import { formatTime } from '@/utils/formatTime'
@@ -34,7 +35,7 @@
 		variant: 'list',
 	})
 
-	const settingStore = useSettingStore()
+	const { settings } = storeToRefs(useSettingStore())
 
 	const isGrid = computed(() => props.variant === 'grid')
 
@@ -106,17 +107,17 @@
 
 	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/文章列表/文章归档)> image_top;窄列场景左右布局回退上图下文 */
 	const effectiveLayout = computed<CardLayout>(() => {
-		const settings = settingStore.settings
+		const globalSettings = settings.value
 		const page = props.from === 'home' || props.from === 'articles' || props.from === 'archives'
 			? props.from
 			: null
 		let raw = props.layout
 		if (!raw) {
 			raw = page
-				? (settings[CARD_TYPE_KEY[page]] as CardLayout)
+				? (globalSettings[CARD_TYPE_KEY[page]] as CardLayout)
 				: 'image_top'
 		}
-		const narrow = isGrid.value || (props.from === 'home' && settings.homeListLayout === 'double')
+		const narrow = isGrid.value || (props.from === 'home' && globalSettings.homeListLayout === 'double')
 		if (narrow && raw !== 'image_top') {
 			return 'image_top'
 		}

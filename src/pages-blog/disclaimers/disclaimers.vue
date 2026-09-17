@@ -3,6 +3,7 @@
  * 免责声明页
  */
 	import { computed } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -19,15 +20,14 @@
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('disclaimers', '免责声明')
 	const appConfigStore = useAppConfigStore()
-	const haloConfigs = computed(() => appConfigStore.configs)
+	const { configs: haloConfigs } = storeToRefs(appConfigStore)
 
 	const disclaimersContent = computed(() => {
-		const pages = haloConfigs.value.featureConfig?.pages as { disclaimers ?: { content ?: string } } | undefined
-		return pages?.disclaimers?.content || ''
+		return haloConfigs.value.featureConfig?.pages?.disclaimers?.content || ''
 	})
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, email ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
 		return {
 			nickname: blogger?.nickname || '',
 			email: blogger?.email || '',

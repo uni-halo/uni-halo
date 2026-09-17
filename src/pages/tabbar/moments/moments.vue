@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getMomentList } from '@/api/halo'
@@ -30,12 +31,12 @@
 	const pageTitle = usePageTitle('moments', '我的日常')
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
-	const haloConfigs = computed(() => appConfigStore.configs)
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-	const calcUseTagRandomColor = computed(() => !!haloConfigs.value.featureConfig?.pages?.momentConfig?.useTagRandomColor)
+	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+	/** 瞬间标签随机色（内置开启，插件端不再下发该配置项） */
+	const calcUseTagRandomColor = computed(() => true)
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
@@ -43,7 +44,7 @@
 	})
 
 	const siteName = computed(() => {
-		const appInfo = haloConfigs.value.integrationConfig?.appConfig?.appInfo as { name ?: string } | undefined
+		const appInfo = haloConfigs.value.featureConfig?.profile?.appInfo
 		return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 	})
 
@@ -127,7 +128,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式:按 audit-data moments 顺序展示,一次拉取不分页
 			resetLoadMoreStatus()
-			const auditMomentNames = appConfigStore.auditData.spec?.moments || []
+			const auditMomentNames = auditData.value.spec?.moments || []
 			try {
 				const res = await getMomentList({ page: 1, size: 0 })
 				const filtered = res.data.items

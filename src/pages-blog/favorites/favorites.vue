@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watchEffect } from 'vue'
+import { storeToRefs } from 'pinia'
 import { onPageScroll } from '@dcloudio/uni-app'
 import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
@@ -21,17 +22,19 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('favorites', '我的收藏')
 const favoritesStore = useFavoritesStore()
+const { counts, postItems, momentItems } = storeToRefs(favoritesStore)
+const { remove } = favoritesStore
 
 /* ---------------- Tab(文章/瞬间) ---------------- */
 const activeKind = ref<FavoriteKind>('post')
 
 const tabList = computed(() => [
-  { key: 'post' as FavoriteKind, label: '文章', count: favoritesStore.counts.post },
-  { key: 'moment' as FavoriteKind, label: '瞬间', count: favoritesStore.counts.moment },
+  { key: 'post' as FavoriteKind, label: '文章', count: counts.value.post },
+  { key: 'moment' as FavoriteKind, label: '瞬间', count: counts.value.moment },
 ])
 
 const currentItems = computed<IFavoriteItem[]>(() =>
-  activeKind.value === 'post' ? favoritesStore.postItems : favoritesStore.momentItems,
+  activeKind.value === 'post' ? postItems.value : momentItems.value,
 )
 
 function handleSwitchTab(kind: FavoriteKind) {
@@ -67,7 +70,7 @@ function handleToDetail(item: IFavoriteItem) {
 
 /** 取消收藏(直接删除 + 轻提示;详情页可随时重新收藏,不弹二次确认) */
 function handleRemove(item: IFavoriteItem) {
-  favoritesStore.remove(item.kind, item.id)
+  remove(item.kind, item.id)
   uni.showToast({ icon: 'none', title: '已取消收藏' })
 }
 

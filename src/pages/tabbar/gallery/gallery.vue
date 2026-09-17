@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -25,11 +26,7 @@
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('gallery', '我的图库')
-	const appConfigStore = useAppConfigStore()
-	const haloConfigs = computed(() => appConfigStore.configs)
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-
-	const galleryConfig = computed(() => haloConfigs.value.featureConfig?.pages?.galleryConfig)
+	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(useAppConfigStore())
 
 	/** 依赖插件(PluginPhotos) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
@@ -60,7 +57,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式
 			resetLoadMoreStatus()
-			const auditGroupNames = appConfigStore.auditData.spec?.galleryGroups || []
+			const auditGroupNames = auditData.value.spec?.galleryGroups || []
 			try {
 				const res = await getPhotoGroupList({ page: 1, size: 0 })
 				const filtered = ((res.data as unknown as IPhotoGroup[] | undefined) || [])

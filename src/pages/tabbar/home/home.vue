@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 	import { getPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -19,14 +20,11 @@
 	})
 
 	const appConfigStore = useAppConfigStore()
-	const settingStore = useSettingStore()
-
-	/** 维护拦截(插件可用性 + 维护模式,任一命中跳维护页;与入口页共用 hooks) */
+	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+	const { settings: globalAppSettings } = storeToRefs(useSettingStore())
 	const { interceptOrContinue } = useMaintenanceIntercept()
 	/** 是否已被拦截(配置已带维护键时同步置位,避免首载闪跳) */
-	const intercepted = ref(!!appConfigStore.configs.maintenance)
-
-	const haloConfigs = computed(() => appConfigStore.configs)
+	const intercepted = ref(!!haloConfigs.value.maintenance)
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
@@ -70,7 +68,7 @@
 
 	/* ---------------- 计算属性 ---------------- */
 	const appInfo = computed(() => {
-		const appInfoData = haloConfigs.value.integrationConfig?.appConfig?.appInfo as { name ?: string, logo ?: string } | undefined
+		const appInfoData = haloConfigs.value.featureConfig?.profile?.appInfo
 		return {
 			name: appInfoData?.name || 'uni-halo',
 			logo: checkImageUrl(appInfoData?.logo),
@@ -78,19 +76,15 @@
 	})
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
 		}
 	})
 
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-
-	const globalAppSettings = computed(() => settingStore.settings)
-
 	/** 首页列表布局(偏好设置驱动:single=单列 / double=双列) */
-	const homeListLayout = computed(() => settingStore.settings.homeListLayout)
+	const homeListLayout = computed(() => globalAppSettings.value.homeListLayout)
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleQuery() {
@@ -102,7 +96,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
 			resetLoadMoreStatus()
-			const auditPostNames = appConfigStore.auditData.spec?.posts.map(p=>p.name) || []
+			const auditPostNames = auditData.value.spec?.posts || []
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))

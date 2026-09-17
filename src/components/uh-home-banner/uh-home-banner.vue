@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 	import { computed, onMounted, ref, watch } from 'vue'
 	import { getBanners } from '@/api/uni-halo'
-	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { formatTime } from '@/utils/formatTime'
 	import type { IBannerPublicItem } from '@/api/types/uni-halo'
@@ -26,11 +25,6 @@
 		authorAvatar ?: string
 		[key : string] : unknown
 	}
-
-	const appConfigStore = useAppConfigStore()
-
-	const haloConfigs = computed(() => appConfigStore.configs)
-	const bannerConfig = computed(() => haloConfigs.value.featureConfig?.pages?.homeConfig?.bannerConfig)
 
 	/* ---------------- 数据(高内聚:内部请求公开接口) ---------------- */
 	const bannerList = ref<IBannerItem[]>([])

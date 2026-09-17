@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 	import { computed, ref, watch } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo'
 	import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 	import { useAppConfigStore } from '@/store/appConfig'
-	import { useSettingStore } from '@/store/setting'
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -32,10 +32,7 @@
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('friendLinks', '友情链接')
 	const appConfigStore = useAppConfigStore()
-	const settingStore = useSettingStore()
-
-	const haloPluginConfigs = computed(() => appConfigStore.configs.integrationConfig?.pluginConfig)
-	const globalAppSettings = computed(() => settingStore.settings)
+	const { configs, auditData, auditModeEnabled } = storeToRefs(appConfigStore)
 
 	/* ---------------- 依赖插件(参考 gallery 对象传参模式) ---------------- */
 	/** 站点 tab:PluginLinks */
@@ -80,7 +77,7 @@
 	}
 
 	/** 是否开放公开提交申请（通用配置-友链信息-基本配置 submissionEnabled；默认 true） */
-	const submissionEnabled = computed(() => (haloPluginConfigs.value?.linkInfo?.submissionEnabled ?? true))
+	const submissionEnabled = computed(() => (configs.value.featureConfig?.linkInfo?.submissionEnabled ?? true))
 
 	/* ---------------- tabs ---------------- */
 	const activeTabIndex = ref(0)
@@ -88,7 +85,7 @@
 	/** 顶部 tab 定义(同收藏页胶囊 chip;审核模式下小程序 tab 隐藏) */
 	const friendLinkTabs = computed(() => [
 		{ key: 'site', label: '站点' },
-		...(appConfigStore.auditModeEnabled ? [] : [{ key: 'mini', label: '小程序' }]),
+		...(auditModeEnabled.value ? [] : [{ key: 'mini', label: '小程序' }]),
 	])
 
 	function handleOnTabChange(e : { index : number }) {
@@ -96,7 +93,7 @@
 	}
 
 	// 审核模式下小程序 tab 隐藏,强制停留在站点 tab
-	watch(() => appConfigStore.auditModeEnabled, (enabled) => {
+	watch(() => auditModeEnabled.value, (enabled) => {
 		if (enabled)
 			activeTabIndex.value = 0
 	})
@@ -138,8 +135,8 @@
 			const res = await getFriendLinkList({ ...queryParams.value })
 			// 审核模式:站点链接仅展示选中 LinkGroup 分组内的
 			let items = res.data.items
-			if (appConfigStore.auditModeEnabled) {
-				const auditGroupNames = appConfigStore.auditData.spec?.linkGroups || []
+			if (auditModeEnabled.value) {
+				const auditGroupNames = auditData.value.spec?.linkGroups || []
 				items = items.filter(item => item.spec.groupName && auditGroupNames.includes(item.spec.groupName))
 			}
 			const list = items.map(item => ({
@@ -350,7 +347,7 @@
 
 	/** 小程序打开模式：fullscreen 全屏（navigateToMiniProgram，默认）/ halfScreen 半屏（openEmbeddedMiniProgram） */
 	const miniProgramOpenMode = computed<'fullscreen' | 'halfScreen'>(() => {
-		const mode = appConfigStore.configs.featureConfig?.preferences?.linkPage?.miniProgramOpenMode
+		const mode = configs.value.featureConfig?.preferences?.linkPage?.miniProgramOpenMode
 		return mode === 'halfScreen' ? 'halfScreen' : 'fullscreen'
 	})
 

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveStories } from '@/api/uni-halo'
@@ -21,7 +22,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
-	const appConfigStore = useAppConfigStore()
+	const { configs } = storeToRefs(useAppConfigStore())
+	const { bootstrap } = useAppConfigStore()
 
 	/* ---------------- 展示层类型 ---------------- */
 	/** 时间轴故事卡片(script 预处理后的干净展示数据) */
@@ -201,7 +203,7 @@
 	}
 
 	function handleLoadFromLegacy() {
-		const loveModuleConfig = appConfigStore.configs.featureConfig?.love as { ourStory ?: { content ?: string } } | undefined
+		const loveModuleConfig = configs.value.featureConfig?.love
 		if (loveModuleConfig?.ourStory?.content) {
 			stories.value = [{
 				key: 'legacy-story',
@@ -271,7 +273,7 @@
 
 	/** 页面初始化：先判定模块锁定（防分享直达），解锁或未设密码才加载数据 */
 	async function handlePageInit() {
-		await appConfigStore.bootstrap()
+		await bootstrap()
 		if (!ensureUnlocked()) { return }
 		canLoad.value = true
 		handleGetStories()

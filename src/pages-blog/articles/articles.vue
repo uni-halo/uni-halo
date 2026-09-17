@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getCategoryList, getCategoryPostList, getPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -25,12 +26,13 @@
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('articles', '文章列表')
 	const appConfigStore = useAppConfigStore()
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+	const { auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 	const settingStore = useSettingStore()
+	const { settings } = storeToRefs(settingStore)
 
 	/** 文章列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
-	const articlesListLayout = computed(() => settingStore.settings.articlesListLayout)
+	const articlesListLayout = computed(() => settings.value.articlesListLayout)
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
@@ -91,7 +93,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式
 			resetLoadMoreStatus()
-			const auditPostNames = appConfigStore.auditData.spec?.posts || []
+			const auditPostNames = auditData.value.spec?.posts || []
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))

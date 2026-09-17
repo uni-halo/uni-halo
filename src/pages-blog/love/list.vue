@@ -62,7 +62,7 @@
 	const list = ref<ILoveItemCard[]>([])
 
 	/* ---------------- 恋爱模块解锁（防分享直达：锁定未解锁时不加载数据） ---------------- */
-	const appConfigStore = useAppConfigStore()
+	const { bootstrap } = useAppConfigStore()
 	const {
 		unlockModalVisible,
 		unlockTip,
@@ -300,7 +300,7 @@
 
 	/** 页面初始化：先判定模块锁定（防分享直达），解锁或未设密码才加载数据 */
 	async function handlePageInit() {
-		await appConfigStore.bootstrap()
+		await bootstrap()
 		if (!ensureUnlocked()) { return }
 		canLoad.value = true
 		handleGetList()

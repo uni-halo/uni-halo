@@ -1,4 +1,5 @@
 import type { CustomRequestOptions } from '@/http/types';
+import { storeToRefs } from 'pinia';
 import { useTokenStore } from '@/store';
 import { getEnvBaseUrl } from '@/utils';
 import { stringifyQuery } from './tools/queryString';
@@ -65,9 +66,10 @@ const httpInterceptor = {
 		// 那如果是一些第三方接口，需要token，怎么办？可以直接在请求的时候在请求头自己添加header即可
 		if (options?.meta?.needLoginToken) {
 			const tokenStore = useTokenStore();
-			const token = tokenStore.updateNowTime().validToken;
-			if(token){
-				options.header.Authorization = `Bearer ${token}`;
+			tokenStore.updateNowTime();
+			const { validToken: token } = storeToRefs(tokenStore);
+			if(token.value){
+				options.header.Authorization = `Bearer ${token.value}`;
 			}
 		}
 		return options;

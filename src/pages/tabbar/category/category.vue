@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getCategoryList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -25,11 +26,8 @@
 	const pageTitle = usePageTitle('category', '分类')
 	
 	const appConfigStore = useAppConfigStore()
-	
-	const haloConfigs = computed(() => appConfigStore.configs)
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-	const categoryConfig = computed(() => haloConfigs.value.featureConfig?.pages?.categoryConfig)
+	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadingStatus, resetLoadMoreStatus } = useDataLoadingStatus()
@@ -59,7 +57,7 @@
 		// 审核模式
 		if (calcAuditModeEnabled.value) {
 			resetLoadMoreStatus()
-			const auditCategoryDetails = appConfigStore.auditData.categoryDetails || []
+			const auditCategoryDetails = auditData.value.categoryDetails || []
 			try {
 				dataList.value = auditCategoryDetails.map(item => ({
 					metadata: { name: item.name },

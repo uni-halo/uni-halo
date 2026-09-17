@@ -24,14 +24,7 @@
 	const { configs } = storeToRefs(useAppConfigStore())
 
 
-	const blogDetail = computed(() => (configs.value.featureConfig?.linkInfo?.siteInfo as {
-		displayName ?: string
-		url ?: string
-		logo ?: string
-		description ?: string
-		backlink ?: string
-		feedUrls ?: string[]
-	} | undefined) || {})
+	const blogDetail = computed(() => configs.value.featureConfig?.linkInfo?.siteInfo || {})
 
 	/** 友链交换信息文案(复制用) */
 	const calcBlogContent = computed(() => {
@@ -41,8 +34,8 @@
 			`博客地址：${blogDetail.value.url || ''}`,
 			`博客logo：${checkAvatarUrl(blogDetail.value.logo)}`,
 			`博客简介：${blogDetail.value.description || ''}`,
-			blogger.avatar ? `作者头像：${checkAvatarUrl(blogger.avatar as string)}` : '',
-			blogger.authorName ? `作者昵称：${blogger.nickname}` : '',
+			blogger.avatar ? `作者头像：${checkAvatarUrl(blogger.avatar)}` : '',
+			blogger.nickname ? `作者昵称：${blogger.nickname}` : '',
 			blogger.website ? `作者网站：${blogger.website}` : '',
 			blogger.email ? `通知邮箱：${blogger.email}` : '',
 		].join('\n')

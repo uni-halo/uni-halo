@@ -13,8 +13,7 @@ let aniWaitIndex = 0
  */
 export function handleSetPageTitle(title?: string) {
   const appConfigStore = useAppConfigStore()
-  const fallbackTitle = ((appConfigStore.configs.integrationConfig?.appConfig as { appInfo?: { name?: string } } | undefined)
-    ?.appInfo?.name) || 'uni-halo'
+  const fallbackTitle = appConfigStore.configs.featureConfig?.profile?.appInfo?.name || 'uni-halo'
   uni.setNavigationBarTitle({
     title: title || fallbackTitle,
   })

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPostListByKeyword } from '@/api/halo'
 	import { sleep } from '@/utils/common'
@@ -24,8 +25,7 @@
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('search', '内容搜索')
-	const appConfigStore = useAppConfigStore()
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+	const { auditModeEnabled: calcAuditModeEnabled } = storeToRefs(useAppConfigStore())
 
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginSearchWidget,

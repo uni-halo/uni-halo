@@ -1,17 +1,17 @@
 <script lang="ts" setup>
+	import { storeToRefs } from 'pinia'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
+	import { DefaultQuickNavigation } from '@/config/appConfig'
 
-	const appConfigStore = useAppConfigStore()
+	const { configs } = storeToRefs(useAppConfigStore())
 
-	const haloConfigs = computed(() => appConfigStore.configs)
+	const calcIsShowQuickNavigationEnabled = computed(() => configs.value.featureConfig?.pages?.homeConfig?.useQuickNavigation)
 
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-	const calcIsShowQuickNavigationEnabled = computed(() => haloConfigs.value.featureConfig?.pages?.homeConfig?.useQuickNavigation)
-
+	/** 快捷导航项(插件端已配置则按配置展示,未配置/为空回退内置默认项;visible=false 隐藏) */
 	const navList = computed(() => {
-		const configured = haloConfigs.value.featureConfig?.pages?.homeConfig?.quickNavigation
-		return configured.filter(item => item.visible !== false)
+		const configured = configs.value.featureConfig?.pages?.homeConfig?.quickNavigation
+		return (configured?.length ? configured : DefaultQuickNavigation).filter(item => item.visible !== false)
 	})
 
 	/* 恋爱模块解锁拦截(目前仅恋爱日记设密码,命中锁定则先解锁再跳转;样式不变) */

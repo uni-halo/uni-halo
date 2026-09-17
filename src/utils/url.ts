@@ -1,20 +1,10 @@
 /**
  * URL 处理工具
- * 依赖 BASE_API(env)与应用图片配置(storage)
+ * 依赖 BASE_API(env),负责相对路径补全为完整地址
  */
-import { getCache } from './storage'
-import type { IAppConfig } from '@/api/types/uni-halo'
-
-/** 应用配置存储 key(与 store/appConfig 保持一致) */
-const APP_GLOBAL_CONFIGS_KEY = 'APP_GLOBAL_CONFIGS'
 
 /** 基础请求地址(env) */
 const BASE_API = import.meta.env.VITE_SERVER_BASEURL || ''
-
-/** 读取应用配置(store 未就绪时兜底从 storage 解析) */
-function getAppConfig(): Partial<IAppConfig> {
-  return getCache<IAppConfig>(APP_GLOBAL_CONFIGS_KEY) || {}
-}
 
 /**
  * 检查是否为 http/https 链接
@@ -35,23 +25,15 @@ export function checkUrl(url?: string): string {
   return BASE_API + url
 }
 
-/** 资源与兜底配置（featureConfig.assets） */
-function getAssetsConfig(): Record<string, unknown> {
-  return (getAppConfig().featureConfig?.assets || {}) as Record<string, unknown>
-}
-
 /**
- * 检查封面图:无封面时使用默认封面,并追加版本参数避免缓存
+ * 检查封面图:相对路径补全,并追加版本参数避免缓存
  * @param thumbnail 封面图
  * @param mustRealUrl 是否必须返回真实地址
  */
 export function checkThumbnailUrl(thumbnail?: string, mustRealUrl = false): string {
-  const assets = getAssetsConfig()
-  if (!thumbnail && mustRealUrl) {
-    return checkUrl(assets.defaultStaticThumbnailUrl as string | undefined)
-  }
-  let fallback = checkUrl(assets.defaultThumbnailUrl as string | undefined)
-  fallback = appendNextVersion(fallback)
+  if (!thumbnail && mustRealUrl)
+    return ''
+  let fallback = ''
   if (!thumbnail)
     return fallback
   if (!checkIsUrl(thumbnail))
@@ -60,36 +42,23 @@ export function checkThumbnailUrl(thumbnail?: string, mustRealUrl = false): stri
 }
 
 /**
- * 检查图片:无图片时使用默认图,并追加版本参数
+ * 检查图片:相对路径补全,并追加版本参数
  */
 export function checkImageUrl(image?: string): string {
-  let fallback = checkUrl(getAssetsConfig().defaultImageUrl as string | undefined)
-  fallback = appendNextVersion(fallback)
   if (!image)
-    return fallback
+    return ''
   if (!checkIsUrl(image))
     return BASE_API + image
   return image
 }
 
 /**
- * 检查头像:无头像时使用默认头像,并追加版本参数
+ * 检查头像:相对路径补全,并追加版本参数
  */
 export function checkAvatarUrl(avatar?: string): string {
-  if (!avatar) {
-    return appendNextVersion(checkUrl(getAssetsConfig().defaultAvatarUrl as string | undefined))
-  }
+  if (!avatar)
+    return ''
   if (!checkIsUrl(avatar))
     return BASE_API + avatar
   return avatar
-}
-
-/** 追加版本参数(?next-v=时间戳),避免图片缓存 */
-function appendNextVersion(url: string): string {
-  if (!url)
-    return ''
-  if (!url.includes('?')) {
-    return `${url}?next-v=${Date.now()}`
-  }
-  return `${url}&next-v=${Date.now()}`
 }

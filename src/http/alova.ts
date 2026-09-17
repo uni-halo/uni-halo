@@ -4,6 +4,7 @@ import AdapterUniapp from '@alova/adapter-uniapp'
 import { createAlova } from 'alova'
 import { createServerTokenAuthentication } from 'alova/client'
 import VueHook from 'alova/vue'
+import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
 import { toLoginPage } from '@/utils/toLoginPage'
 import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum'
@@ -75,9 +76,10 @@ const alovaInstance = createAlova({
     // 认证接口的登录 token(如 auth/profile、auth/logout),由 tokenStore 提供
     if (config.meta?.needAuthToken) {
       const tokenStore = useTokenStore()
-      const token = tokenStore.updateNowTime().validToken
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+      tokenStore.updateNowTime()
+      const { validToken: token } = storeToRefs(tokenStore)
+      if (token.value) {
+        config.headers.Authorization = `Bearer ${token.value}`
       }
     }
 

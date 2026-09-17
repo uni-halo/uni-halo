@@ -4,7 +4,7 @@
 import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
-import { getCache } from '@/utils/storage'
+import { useAppConfigStore } from '@/store/appConfig'
 import { getLoveModuleToken } from '@/utils/loveModuleToken'
 import { getNologinEmail, getOpenid } from '@/utils/auth'
 import { getPersonalToken } from '@/store/token'
@@ -518,13 +518,10 @@ function getToolsAuthorization(): string {
 }
 
 /**
- * 读取应用配置(store 未就绪时兜底为空)
- * 注:待 src/store/appConfig.ts 建立后改为 useAppConfigStore 读取
+ * 读取应用配置(Pinia store 为单一数据源;persist 恢复与 fetchConfigs 均覆盖)
  */
 function getAppConfigFromStore(): IAppConfig {
-  // TODO: 迁移 store 后改为从 Pinia 读取,避免每次从 storage 解析
-  const cached = getCache<IAppConfig>('APP_GLOBAL_CONFIGS')
-  return cached || {}
+  return useAppConfigStore().configs
 }
 
 /** 评论验证码 cookie key(供拦截器/页面使用) */

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { onLoad } from '@dcloudio/uni-app'
+	import { storeToRefs } from 'pinia'
 	import { getQRCodeInfo } from '@/api/uni-halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
@@ -26,7 +27,9 @@
 
 	/* ---------------- 状态 ---------------- */
 	const appConfigStore = useAppConfigStore()
-	const settingStore = useSettingStore()
+	const { configs } = storeToRefs(appConfigStore)
+	const { bootstrap } = appConfigStore
+	const { applySiteDefaults } = useSettingStore()
 	// 维护拦截
 	const { reason, interceptOrContinue, redirectToMaintenance } = useMaintenanceIntercept()
 
@@ -57,7 +60,7 @@
 
 		// 获取配置
 		try {
-			const { ok } = await appConfigStore.bootstrap()
+			const { ok } = await bootstrap()
 			if (!ok) {
 				uni.switchTab({ url: homePagePath })
 				return
@@ -76,7 +79,7 @@
 			}
 
 			// 审核模式数据已随 bootstrap 拉取(auditData/auditModeEnabled 即可用)
-			settingStore.applySiteDefaults(collectSiteDefaults(appConfigStore.configs))
+			applySiteDefaults(collectSiteDefaults(configs.value))
 
 			// 拦截:主插件未激活 或 维护模式开启(任一命中)→ 跳转维护页
 			if (await interceptOrContinue()) { return }

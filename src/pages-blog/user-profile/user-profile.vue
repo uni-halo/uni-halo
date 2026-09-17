@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref, shallowRef } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -31,15 +32,15 @@
 	const appConfigStore = useAppConfigStore()
 	const tokenStore = useTokenStore()
 	const userStore = useUserStore()
+	const { configs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+	const { userInfo } = storeToRefs(userStore)
 	const offsetTop = computed(()=>{
 		return height.value - 12
 	})
 
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
-
 	/* ---------------- 目标用户(onLoad 参数 username=metadata.name;缺省为当前登录用户) ---------------- */
 	const pageUsername = ref('')
-	const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userStore.userInfo.username)
+	const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userInfo.value.username)
 
 	/* ---------------- 头部资料(全部居中展示在封面图区域) ---------------- */
 	/**
@@ -50,18 +51,18 @@
 	const ownerInfo = ref<{ displayName ?: string, avatar ?: string, bio ?: string }>({})
 
 	const headerUser = computed(() => ({
-		nickname: (isSelf.value ? userStore.userInfo.nickname : ownerInfo.value.displayName) || pageUsername.value,
+		nickname: (isSelf.value ? userInfo.value.nickname : ownerInfo.value.displayName) || pageUsername.value,
 		username: pageUsername.value,
-		avatar: (isSelf.value ? userStore.userInfo.avatar : ownerInfo.value.avatar) || '',
+		avatar: (isSelf.value ? userInfo.value.avatar : ownerInfo.value.avatar) || '',
 		role: isSelf.value
-			? (userStore.userInfo.roles?.includes('super-role') ? '超级管理员' : '普通用户')
+			? (userInfo.value.roles?.includes('super-role') ? '超级管理员' : '普通用户')
 			: '',
 		bio: ownerInfo.value.bio || '这个人很懒~什么都没有留下',
 	}))
 
 	/** 封面图:复用 mine.vue(关于页)的 aboutConfig.bgImageUrl;空时 checkImageUrl 自动回落默认背景图 */
 	const profileStyle = computed(() => ({
-		backgroundImage: `url(${checkImageUrl(appConfigStore.configs.featureConfig?.pages?.aboutConfig?.bgImageUrl)})`,
+		backgroundImage: `url(${checkImageUrl(configs.value.featureConfig?.pages?.aboutConfig?.bgImageUrl)})`,
 	}))
 
 	/** 从列表数据回填他人资料(取第一条带 owner 的记录) */
@@ -205,7 +206,7 @@
 				return { items, hasNext: res.data.hasNext }
 			})
 		},
-		auditFilter: items => auditFilterBy(appConfigStore.auditData.spec?.posts || [])(items),
+		auditFilter: items => auditFilterBy(auditData.value.spec?.posts || [])(items),
 	})
 
 	/* ---------- 瞬间 Tab(公开接口原生支持 ownerName 过滤,卡片复用全局 uh-moment-card) ---------- */
@@ -246,7 +247,7 @@
 			backfillOwner(items)
 			return { items, hasNext: res.data.hasNext }
 		}),
-		auditFilter: items => auditFilterBy(appConfigStore.auditData.spec?.moments || [])(items),
+		auditFilter: items => auditFilterBy(auditData.value.spec?.moments || [])(items),
 	})
 
 	/* ---------------- Tab 切换(切换不重置已加载数据,首次进入才拉取) ---------------- */
@@ -302,7 +303,7 @@
 
 	onLoad((query) => {
 		// 路由参数 username = 用户的 metadata.name;未传则回退为当前登录用户
-		pageUsername.value = (query as Record<string, string> | undefined)?.username || userStore.userInfo.username || ''
+		pageUsername.value = (query as Record<string, string> | undefined)?.username || userInfo.value.username || ''
 		if (!tokenStore.updateNowTime().hasLogin || !pageUsername.value) {
 			uni.showToast({ icon: 'none', title: '请先登录' })
 			setTimeout(() => uni.navigateBack(), 600)

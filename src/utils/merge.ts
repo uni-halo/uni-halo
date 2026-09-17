@@ -32,13 +32,15 @@ export function deepClone<T>(obj: T): T {
  * @param target 目标对象
  * @param source 源对象
  */
-export function deepMerge<T extends Record<string, unknown>, S extends Record<string, unknown>>(target: T, source: S): T & S {
-  const output: Record<string, unknown> = { ...target }
+export function deepMerge<T extends object, S extends object>(target: T, source: S): T & S {
+  const output: Record<string, unknown> = { ...(target as Record<string, unknown>) }
 
   if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach((key) => {
-      const targetValue = target[key]
-      const sourceValue = source[key]
+    const targetRecord = target as Record<string, unknown>
+    const sourceRecord = source as Record<string, unknown>
+    Object.keys(sourceRecord).forEach((key) => {
+      const targetValue = targetRecord[key]
+      const sourceValue = sourceRecord[key]
 
       if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
         output[key] = [...targetValue, ...sourceValue]

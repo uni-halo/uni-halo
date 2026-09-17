@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref, watch } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 
@@ -20,25 +21,23 @@
 	}>()
 
 	const isShow = ref(false)
-	const appConfigStore = useAppConfigStore()
+	const { configs } = storeToRefs(useAppConfigStore())
 
 	const miniInfo = computed(() => {
-		const miniCfg = (appConfigStore.configs.featureConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
-		const blogger = (appConfigStore.configs.featureConfig?.profile?.blogger || {}) as Record<string, unknown>
-		const str = (cfg : Record<string, unknown>, key : string, fallback = '') => String(cfg[key] || fallback || '')
+		const miniCfg = configs.value.featureConfig?.linkInfo?.miniInfo
+		const blogger = configs.value.featureConfig?.profile?.blogger
 		return {
-			displayName: str(miniCfg, 'displayName'),
-			miniProgramCode: str(miniCfg, 'miniProgramCode'),
-			appId: str(miniCfg, 'appId'),
-			path: str(miniCfg, 'path'),
-			link: str(miniCfg, 'link'),
+			displayName: miniCfg?.displayName || '',
+			miniProgramCode: miniCfg?.miniProgramCode || '',
+			appId: miniCfg?.appId || '',
+			path: miniCfg?.path || '',
+			link: miniCfg?.link || '',
 			// 作者信息：博主资料 nickname/avatar/website
-			authorName: str(blogger, 'nickname'),
-			avatar: str(blogger, 'avatar'),
-			website: str(blogger, 'website'),
-			description: str(miniCfg, 'description'),
-			applyRemark: str(miniCfg, 'applyRemark'),
-			email: str(miniCfg, 'email'),
+			authorName: blogger?.nickname || '',
+			avatar: blogger?.avatar || '',
+			website: blogger?.website || '',
+			description: miniCfg?.description || '',
+			applyRemark: miniCfg?.applyRemark || '',
 		}
 	})
 
@@ -93,7 +92,6 @@
 			info.authorName ? `作者昵称：${info.authorName}` : '',
 			info.website ? `作者网站：${info.website}` : '',
 			info.applyRemark ? `申请说明：${info.applyRemark}` : '',
-			info.email ? `通知邮箱：${info.email}` : '',
 		].filter(Boolean).join('\n')
 		uni.setClipboardData({
 			data: text,
@@ -198,14 +196,11 @@
 					<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyLink">复制</text>
 				</view>
 
-				<!-- 申请说明 / 邮箱 -->
-				<view v-if="miniInfo.applyRemark || miniInfo.email"
+				<!-- 申请说明 -->
+				<view v-if="miniInfo.applyRemark"
 					class="uh-global-card-glass shadow-none border mt-2 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
 					<view v-if="miniInfo.applyRemark">
 						<text class="text-gray-400">申请说明：</text>{{ miniInfo.applyRemark }}
-					</view>
-					<view v-if="miniInfo.email">
-						<text class="text-gray-400">通知邮箱：</text>{{ miniInfo.email }}
 					</view>
 				</view>
 

@@ -20,9 +20,7 @@
 
 	/* ---------- 应用信息(顶部 logo 展示,getConfigs 下发于 featureConfig.profile.appInfo) ---------- */
 	const appInfo = computed(() => {
-		const info = configs.value.featureConfig?.profile?.appInfo as
-			| { name ?: string, logo ?: string }
-			| undefined
+		const info = configs.value.featureConfig?.profile?.appInfo
 		return {
 			name: info?.name || 'uni-halo',
 			logo: info?.logo ? checkImageUrl(info.logo) : '',
@@ -30,7 +28,7 @@
 	})
 
 	/* ---------- 登录配置(getConfigs loginConfig 组,两开关全关即整体不可用) ---------- */
-	const loginConfig = computed(() => configs.value.loginConfig?.loginConfig)
+	const loginConfig = computed(() => configs.value.loginConfig)
 	const passwordLoginEnabled = computed(() => loginConfig.value?.passwordLoginEnabled !== false)
 	const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled === true)
 

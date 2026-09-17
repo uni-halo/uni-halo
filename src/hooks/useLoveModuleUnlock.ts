@@ -5,6 +5,7 @@
  * - 解锁弹窗状态 + 解锁请求 + 成功回调(存 token,可配置跳转)
  */
 import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { unlockLoveModule, type ICaptchaQuery } from '@/api/uni-halo'
 import { getLoveModuleToken, setLoveModuleToken, type LoveModuleKey } from '@/utils/loveModuleToken'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -28,7 +29,8 @@ export function useLoveModuleUnlock(options?: {
 	onUnlocked?: (moduleKey: LoveModuleKey) => void
 }) {
 	const appConfigStore = useAppConfigStore()
-	const loveConfig = computed(() => appConfigStore.configs.featureConfig?.love)
+	const { configs } = storeToRefs(appConfigStore)
+	const loveConfig = computed(() => configs.value.featureConfig?.love)
 
 	/* ---------------- 弹窗状态 ---------------- */
 	const unlockModalVisible = ref(false)

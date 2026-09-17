@@ -1,3 +1,4 @@
+import { storeToRefs } from 'pinia';
 import { useAppConfigStore } from '@/store/appConfig';
 
 /** 维护拦截原因:plugin 主插件未激活 / maintenance 维护模式开启 */
@@ -24,6 +25,8 @@ export const MAINTENANCE_PLUGIN_ID = 'uni-halo';
  */
 export function useMaintenanceIntercept() {
 	const appConfigStore = useAppConfigStore();
+	const { configs } = storeToRefs(appConfigStore);
+	const { bootstrap } = appConfigStore;
 	const reason = ref<MaintenanceInterceptReason | null>(null);
 	/** 主插件可用性 hook(checkIntercept 内 await check 后读取 available) */
 	const { available: pluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
@@ -41,13 +44,13 @@ export function useMaintenanceIntercept() {
 			return { intercepted: true, reason: 'plugin' };
 		}
 
-		const { ok } = await appConfigStore.bootstrap({ force });
+		const { ok } = await bootstrap({ force });
 		if (!ok) {
 			reason.value = null;
 			return { intercepted: false, reason: null };
 		}
 
-		if (appConfigStore.configs.maintenance) {
+		if (configs.value.maintenance) {
 			reason.value = 'maintenance';
 			return { intercepted: true, reason: 'maintenance' };
 		}

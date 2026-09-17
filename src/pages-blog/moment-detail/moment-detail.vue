@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getMomentByName } from '@/api/halo'
 	import { useUpvote } from '@/hooks/useUpvote'
@@ -24,22 +25,21 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
-	const appConfigStore = useAppConfigStore()
-	const favoritesStore = useFavoritesStore()
-	const haloConfigs = computed(() => appConfigStore.configs)
+	const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
 		}
 	})
 
-	const calcUseTagRandomColor = computed(() => !!haloConfigs.value.featureConfig?.pages?.momentConfig?.useTagRandomColor)
+	/** 瞬间标签随机色（内置开启，插件端不再下发该配置项） */
+	const calcUseTagRandomColor = computed(() => true)
 
 	const siteName = computed(() => {
-		const appInfo = haloConfigs.value.integrationConfig?.appConfig?.appInfo as { name ?: string } | undefined
+		const appInfo = haloConfigs.value.featureConfig?.profile?.appInfo
 		return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 	})
 
@@ -125,17 +125,19 @@
 	})
 
 	/* ---------------- 收藏 ---------------- */
+	const { isFavorite, toggle: toggleFavorite } = useFavoritesStore()
+
 	/** 当前瞬间是否已收藏(悬浮胶囊高亮) */
 	const momentFavorited = computed(() => {
 		const name = moment.value?.metadata.name
-		return !!name && favoritesStore.isFavorite('moment', name)
+		return !!name && isFavorite('moment', name)
 	})
 
 	/** 切换收藏(收藏/取消),收藏时按当前详情内容生成快照入库 */
 	function handleToggleMomentFavorite() {
 		const card = moment.value
 		if (!card) { return }
-		const favorited = favoritesStore.toggle(buildMomentFavoriteItem(card))
+		const favorited = toggleFavorite(buildMomentFavoriteItem(card))
 		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 	}
 

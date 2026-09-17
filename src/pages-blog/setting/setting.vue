@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
@@ -25,6 +26,9 @@
 	const pageTitle = usePageTitle('setting', '偏好设置')
 	const settingStore = useSettingStore()
 	const appConfigStore = useAppConfigStore()
+	const { siteDefaults } = storeToRefs(settingStore)
+	const { configs } = storeToRefs(appConfigStore)
+	const { applySiteDefaults, resetPreferences } = settingStore
 
 	/** 公共:字段定义/三态/行构建/选值(与全局弹窗 uh-settings-popup 共用 usePreferenceRows) */
 	const {
@@ -45,8 +49,8 @@
 	})
 
 	onLoad(() => {
-		if (!settingStore.siteDefaults) {
-			settingStore.applySiteDefaults(collectSiteDefaults(appConfigStore.configs))
+		if (!siteDefaults.value) {
+			applySiteDefaults(collectSiteDefaults(configs.value))
 		}
 		uni.setNavigationBarTitle({ title: '偏好设置' })
 	})
@@ -120,7 +124,7 @@
 		catch {
 			return
 		}
-		settingStore.resetPreferences()
+		resetPreferences()
 		enumSheet.value.show = false
 		uni.showToast({ icon: 'none', title: '已恢复为站点默认' })
 	}

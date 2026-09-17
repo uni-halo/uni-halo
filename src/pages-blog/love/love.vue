@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { onBeforeUnmount, ref } from 'vue'
-import { onLoad, onPageScroll, onShow } from '@dcloudio/uni-app'
+import { onBeforeUnmount, ref, watch } from 'vue'
+import { onPageScroll, onShow } from '@dcloudio/uni-app'
+import { storeToRefs } from 'pinia'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getLoveModuleToken } from '@/utils/loveModuleToken'
@@ -17,11 +18,12 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
-const appConfigStore = useAppConfigStore()
+const { configs } = storeToRefs(useAppConfigStore())
+const { bootstrap, refreshStatic } = useAppConfigStore()
 
 /* ---------------- 恋爱配置 ---------------- */
 /**
- * 恋爱配置（数据源为 getConfigs.loveConfig 组：恋爱日记仅密码状态；
+ * 恋爱配置（数据源为 getConfigs 的 featureConfig.love 组：恋爱日记仅密码状态；
  * 三模块入口即 app 端入口列表数据）
  */
 interface ILoveConfigPage extends Partial<ILoveConfigGroup> {
@@ -65,7 +67,7 @@ const navList = ref<ILoveNavRenderItem[]>([])
 
 /* ---------------- 数据加载 ---------------- */
 function syncLoveConfigFromStore() {
-  const loveConfigs = appConfigStore.configs.featureConfig?.love
+  const loveConfigs = configs.value.featureConfig?.love
 
   loveConfig.value = {
     ...loveConfig.value,
@@ -92,6 +94,9 @@ function syncLoveConfigFromStore() {
     handleInitLoveDayCount()
   }
 }
+
+/** 响应式追踪配置变化（bootstrap/refreshStatic 更新 configs 后自动同步恋爱配置） */
+watch(() => configs.value.featureConfig?.love, () => syncLoveConfigFromStore(), { immediate: true })
 
 /** 入口列表：由三模块配置构建（模块 key 即唯一标识，图标/跳转路径均用插件下发字段） */
 function initList() {
@@ -162,9 +167,9 @@ const {
   handleUnlockSuccess,
 } = useLoveModuleUnlock({
   onUnlocked: (moduleKey) => {
-    // 恋爱日记入口解锁：恋爱配置已并入 getConfigs loveConfig 组，刷新后重读
+    // 恋爱日记入口解锁：刷新配置后由 watch 自动同步恋爱配置
     if (moduleKey === 'loveDiary') {
-      appConfigStore.refreshStatic().then(() => syncLoveConfigFromStore())
+      refreshStatic()
     }
   },
 })
@@ -189,12 +194,8 @@ onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
 
-onLoad(() => {
-  syncLoveConfigFromStore()
-})
-
 onShow(async () => {
-  await appConfigStore.bootstrap()
+  await bootstrap()
   syncLoveConfigFromStore()
   // 恋爱日记入口（love 页本身）设了密码且本地无 token → 弹不可关闭密码框，解锁后才能查看
   if (isModuleLocked('loveDiary')) {

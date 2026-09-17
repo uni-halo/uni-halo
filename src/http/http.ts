@@ -1,6 +1,7 @@
 import type { IDoubleTokenRes } from '@/api/types/login'
 import type { CustomRequestOptions, HttpError, IResponse } from '@/http/types'
 import { nextTick } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
 import { isDoubleTokenMode } from '@/utils'
 import { toLoginPage } from '@/utils/toLoginPage'
@@ -44,7 +45,8 @@ export function http<T>(options: CustomRequestOptions) {
           }
 
           /* -------- 无感刷新 token ----------- */
-          const { refreshToken } = tokenStore.tokenInfo as IDoubleTokenRes || {}
+          const { tokenInfo } = storeToRefs(tokenStore)
+          const { refreshToken } = tokenInfo.value as IDoubleTokenRes || {}
           // token 失效的，且有刷新 token 的，才放到请求队列里
           if (refreshToken) {
             taskQueue.push(() => {

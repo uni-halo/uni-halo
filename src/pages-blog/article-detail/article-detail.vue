@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getPostByName, getPostCommentReplyList, postTrackersCounter } from '@/api/halo'
 	import { useUpvote } from '@/hooks/useUpvote'
@@ -35,7 +36,8 @@
 	const settingStore = useSettingStore()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
-	const haloConfigs = computed(() => appConfigStore.configs)
+	const { configs: haloConfigs, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+	const { settings: globalAppSettings } = storeToRefs(settingStore)
 
 	/* ---------------- 状态 ---------------- */
 	const queryName = ref('')
@@ -75,17 +77,14 @@
 	const postDetailConfig = computed(() => haloConfigs.value.featureConfig?.pages?.postDetailConfig)
 
 	const bloggerInfo = computed(() => {
-		const blogger = haloConfigs.value.featureConfig?.profile?.blogger as { nickname ?: string, avatar ?: string } | undefined
+		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
 		return {
 			nickname: blogger?.nickname || '',
 			avatar: checkAvatarUrl(blogger?.avatar),
 		}
 	})
 
-	const globalAppSettings = computed(() => settingStore.settings)
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 	const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
-	const doubanPluginConfig = computed(() => (haloConfigs.value.integrationConfig?.pluginConfig?.doubanPlugin as { position ?: string } | undefined) || {})
 	const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
 	/** 从 HTML 提取投票块 id */
@@ -232,7 +231,7 @@
 		else if (restrictReadEnable === 'code') {
 			verificationCodeModal.value.show = true
 			verificationCodeModal.value.type = 'scan'
-			verificationCodeModal.value.imgUrl = checkImageUrl((haloConfigs.value.integrationConfig?.pluginConfig?.toolsPlugin as { scanCodeUrl ?: string } | undefined)?.scanCodeUrl)
+			verificationCodeModal.value.imgUrl = checkImageUrl(haloConfigs.value.integrationConfig?.pluginConfig?.toolsPlugin?.scanCodeUrl)
 		}
 		else if (restrictReadEnable === 'comment') {
 			handleToComment()

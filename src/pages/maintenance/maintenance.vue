@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
@@ -20,7 +21,9 @@
 	/** 恢复检测轮询间隔(ms):插件激活/维护结束探测 */
 	const RECOVERY_POLL_INTERVAL = 30 * 1000
 
-	const store = useAppConfigStore()
+	const appConfigStore = useAppConfigStore()
+	const { configs } = storeToRefs(appConfigStore)
+	const { bootstrap } = appConfigStore
 	/** 插件可用性(拦截恢复检测用,参考 gallery 对象传参模式) */
 	const { check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: 'uni-halo',
@@ -52,10 +55,7 @@
 
 	/** 应用信息 logo(相对插件内置资源路径 → BASE_API 补全) */
 	const appLogo = computed(() => {
-		const appInfo = store.configs.integrationConfig?.appConfig?.appInfo
-		const logo = appInfo && typeof appInfo === 'object'
-			? (appInfo as { logo ?: string }).logo
-			: ''
+		const logo = configs.value.featureConfig?.profile?.appInfo?.logo
 		return logo ? checkUrl(logo) : ''
 	})
 
@@ -144,11 +144,11 @@
 		if (refreshing) { return }
 		refreshing = true
 		try {
-			await store.bootstrap({ force: true })
+			await bootstrap({ force: true })
 			if (fromReason.value === 'plugin') {
 				const available = await checkPluginAvailable()
 				if (!available) {
-					const info = store.configs.maintenance
+					const info = configs.value.maintenance
 					if (info) {
 						maintenance.value = info
 						viewState.value = 'maintenance'
@@ -157,7 +157,7 @@
 					return
 				}
 			}
-			const info = store.configs.maintenance
+			const info = configs.value.maintenance
 			if (info) {
 				maintenance.value = info
 				viewState.value = 'maintenance'
@@ -183,8 +183,8 @@
 		stopTimer()
 		stopRecoveryCheck()
 		try {
-			const { ok } = await store.bootstrap({ force })
-			const info = store.configs.maintenance
+			const { ok } = await bootstrap({ force })
+			const info = configs.value.maintenance
 			if (info) {
 				maintenance.value = info
 				viewState.value = 'maintenance'

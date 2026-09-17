@@ -1,28 +1,25 @@
 <script lang="ts" setup>
 	import { computed } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { getCategoryList } from '@/api/halo'
 	import { checkThumbnailUrl } from '@/utils/url'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { sleep } from '@/utils/common'
 	import type { ICategory } from '@/api/types/halo'
 
-	const appConfigStore = useAppConfigStore()
-
-	const haloConfigs = computed(() => appConfigStore.configs)
-
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+	const { configs, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(useAppConfigStore())
 
 	const loading = ref<'loading' | 'success' | 'error'>('loading')
 	const categoryList = ref<ICategory[]>([])
 
 	const isEnableCategoryModule = computed(() => {
-		return !!haloConfigs.value.featureConfig?.pages?.homeConfig?.useCategory
+		return !!configs.value.featureConfig?.pages?.homeConfig?.useCategory
 	})
- 
+
 	async function handleGetCategoryList() {
 		try {
 			loading.value = 'loading'
-			const configured = haloConfigs.value.featureConfig?.pages?.homeConfig?.categories
+			const configured = configs.value.featureConfig?.pages?.homeConfig?.categories
 			console.log('configured',configured)
 			let categoryListRaw : ICategory[] = []
 			if (configured && configured.length) {
