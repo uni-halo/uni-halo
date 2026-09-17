@@ -93,7 +93,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式
 			resetLoadMoreStatus()
-			const auditPostNames = auditData.value.spec?.posts || []
+			const auditPostNames = appConfigStore.auditNamesOf('posts')
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))

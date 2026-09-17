@@ -26,7 +26,8 @@
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('gallery', '我的图库')
-	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(useAppConfigStore())
+	const appConfigStore = useAppConfigStore()
+	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 	/** 依赖插件(PluginPhotos) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
@@ -55,31 +56,28 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetCategory() {
 		if (calcAuditModeEnabled.value) {
-			// 审核模式
+			// 审核模式:直接用下发的引用快照映射分组(含名称/排序,数组顺序即展示顺序),免请求
 			resetLoadMoreStatus()
-			const auditGroupNames = auditData.value.spec?.galleryGroups || []
-			try {
-				const res = await getPhotoGroupList({ page: 1, size: 0 })
-				const filtered = ((res.data as unknown as IPhotoGroup[] | undefined) || [])
-					.filter(item => auditGroupNames.includes(item.metadata.name))
-					.sort((a, b) => a.spec.priority - b.spec.priority)
-				category.value.list = filtered
-				if (category.value.list.length !== 0) {
-					queryParams.value.group = category.value.list[0].metadata.name || ''
-					handleGetData(true)
-				}
-				else {
-					updateLoadMoreStatus({
-						active: false,
-						status: 'noMore',
-						hasNext: false,
-					})
-					uni.stopPullDownRefresh()
-				}
+			const auditGroups = auditData.value.spec?.galleryGroups || []
+			category.value.list = auditGroups.map(ref => ({
+				metadata: { name: ref.name },
+				spec: {
+					displayName: ref.title || '',
+					priority: ref.priority ?? 0,
+				},
+			}))
+			if (category.value.list.length !== 0) {
+				queryParams.value.group = category.value.list[0].metadata.name || ''
+				handleGetData(true)
 			}
-			catch (e) {
-				console.error(e)
-				category.value = { activeIndex: 0, list: [] }
+			else {
+				updateLoadingStatus(DataLoadingStatusEnum.Empty)
+				updateLoadMoreStatus({
+					active: false,
+					status: 'noMore',
+					hasNext: false,
+				})
+				uni.stopPullDownRefresh()
 			}
 			return
 		}

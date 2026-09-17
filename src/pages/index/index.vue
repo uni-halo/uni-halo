@@ -93,7 +93,75 @@
 </script>
 
 <template>
-	<view>
-		<!-- 初始化页面 -->
+	<!-- 初始化页(纯静态):bootstrap/拦截期间占位,避免白屏。视觉骨架取自维护页(背景渐变+呼吸光斑+浮动表情) -->
+	<view class="relative min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-[#f5fae8]">
+		<!-- 顶部渐变背景 -->
+		<view
+			class="fixed left-0 top-0 z-0 h-[46vh] w-full from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b" />
+
+		<!-- 背景光斑(呼吸/静态) -->
+		<view
+			class="breathe pointer-events-none absolute left-[-60rpx] top-[16vh] z-0 h-[260rpx] w-[260rpx] rounded-full bg-white/40 uh-blur-52" />
+		<view
+			class="pointer-events-none absolute right-[-48rpx] top-[8vh] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[rgba(184,236,63,0.28)] uh-blur-52" />
+		<view
+			class="pointer-events-none absolute bottom-[14vh] right-[72rpx] z-0 h-[160rpx] w-[160rpx] rounded-full bg-white/40 uh-blur-52" />
+		<view
+			class="pointer-events-none absolute bottom-[6vh] left-[48rpx] z-0 h-[140rpx] w-[140rpx] rounded-full bg-[#ebfabf] opacity-90 uh-blur-52" />
+
+		<!-- 中央表情(浮动) -->
+		<view class="relative z-10 h-[236rpx] w-[236rpx]">
+			<view
+				class="bob absolute inset-0 flex items-center justify-center rounded-full border-4 border-solid border-white from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass">
+				<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="140rpx" class="text-gray-900" />
+			</view>
+		</view>
+
+		<!-- 初始化文案 -->
+		<view class="relative z-10 mt-8 text-5 font-black leading-8">
+			<uh-text-underline>正在初始化...</uh-text-underline>
+		</view>
 	</view>
 </template>
+
+<style scoped lang="scss">
+	.uh-blur-52 {
+		filter: blur(52rpx);
+	}
+
+	/* 光斑呼吸 */
+	.breathe {
+		animation: breathe 5s ease-in-out infinite;
+	}
+
+	@keyframes breathe {
+
+		0%,
+		100% {
+			transform: scale(1);
+			opacity: 0.28;
+		}
+
+		50% {
+			transform: scale(1.18);
+			opacity: 0.4;
+		}
+	}
+
+	/* 表情圆浮动 */
+	.bob {
+		animation: bob 3.2s ease-in-out infinite;
+	}
+
+	@keyframes bob {
+
+		0%,
+		100% {
+			transform: translateY(0) rotate(-2deg);
+		}
+
+		50% {
+			transform: translateY(-14rpx) rotate(2deg);
+		}
+	}
+</style>

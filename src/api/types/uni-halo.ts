@@ -175,21 +175,35 @@ export interface IPageConfig {
 }
 
 /** 审核模式数据(公开接口 GET /audit-data 返回) */
+/** 选中引用快照(插件端 AuditDataRef:name 为扩展 metadata.name,其余为展示快照) */
+export interface IAuditDataRef {
+	/** 扩展 metadata.name */
+	name: string;
+	title?: string;
+	cover?: string;
+	subTitle?: string;
+	extra?: string;
+	/** 排序权重(分类=spec.priority,其余可空) */
+	priority?: number;
+	/** 文章数(分类=status.postCount,缺失默认 0) */
+	postCount?: number;
+}
+
 export interface IAuditDataResult {
 	/** 审核模式开关(联动设置页 auditModeEnabled) */
 	enabled: boolean;
-	/** 选中的引用 name 列表(数组顺序即展示顺序;开关关闭时为空) */
+	/** 选中的引用快照列表(数组顺序即展示顺序;开关关闭时为空) */
 	spec?: {
-		/** 选中的文章 Post metadata.name 列表 */
-		posts?: string[];
-		/** 选中的分类 Category metadata.name 列表 */
-		categories?: string[];
-		/** 选中的图库分组 PhotoGroup metadata.name 列表 */
-		galleryGroups?: string[];
-		/** 选中的瞬间 Moment metadata.name 列表 */
-		moments?: string[];
-		/** 选中的链接分组 LinkGroup metadata.name 列表 */
-		linkGroups?: string[];
+		/** 选中的文章 Post 引用列表 */
+		posts?: IAuditDataRef[];
+		/** 选中的分类 Category 引用列表 */
+		categories?: IAuditDataRef[];
+		/** 选中的图库分组 PhotoGroup 引用列表 */
+		galleryGroups?: IAuditDataRef[];
+		/** 选中的瞬间 Moment 引用列表 */
+		moments?: IAuditDataRef[];
+		/** 选中的链接分组 LinkGroup 引用列表 */
+		linkGroups?: IAuditDataRef[];
 		/** 备注 */
 		description?: string;
 		[key: string]: unknown;

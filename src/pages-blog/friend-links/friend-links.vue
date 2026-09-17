@@ -136,7 +136,7 @@
 			// 审核模式:站点链接仅展示选中 LinkGroup 分组内的
 			let items = res.data.items
 			if (auditModeEnabled.value) {
-				const auditGroupNames = auditData.value.spec?.linkGroups || []
+				const auditGroupNames = appConfigStore.auditNamesOf('linkGroups')
 				items = items.filter(item => item.spec.groupName && auditGroupNames.includes(item.spec.groupName))
 			}
 			const list = items.map(item => ({

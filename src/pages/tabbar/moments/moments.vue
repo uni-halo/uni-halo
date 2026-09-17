@@ -128,7 +128,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式:按 audit-data moments 顺序展示,一次拉取不分页
 			resetLoadMoreStatus()
-			const auditMomentNames = auditData.value.spec?.moments || []
+			const auditMomentNames = appConfigStore.auditNamesOf('moments')
 			try {
 				const res = await getMomentList({ page: 1, size: 0 })
 				const filtered = res.data.items

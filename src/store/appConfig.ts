@@ -89,10 +89,15 @@ export const useAppConfigStore = defineStore(
     /** 强制刷新静态配置(下拉刷新/设置页手动刷新入口) */
     const refreshStatic = () => bootstrap({ force: true })
 
+    /** 审核模式引用 name 列表(接口下发为引用快照对象数组,取 name 供页面 includes 过滤;数组顺序即展示顺序) */
+    const auditNamesOf = (type: 'posts' | 'categories' | 'galleryGroups' | 'moments' | 'linkGroups'): string[] =>
+      (auditData.value.spec?.[type] || []).map(ref => ref.name)
+
     return {
       configs,
       auditData,
       auditModeEnabled,
+      auditNamesOf,
       maintenance,
       fetchedAt,
       fetchConfigs,

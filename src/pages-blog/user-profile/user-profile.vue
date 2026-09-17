@@ -206,7 +206,7 @@
 				return { items, hasNext: res.data.hasNext }
 			})
 		},
-		auditFilter: items => auditFilterBy(auditData.value.spec?.posts || [])(items),
+		auditFilter: items => auditFilterBy(appConfigStore.auditNamesOf('posts'))(items),
 	})
 
 	/* ---------- 瞬间 Tab(公开接口原生支持 ownerName 过滤,卡片复用全局 uh-moment-card) ---------- */
@@ -247,7 +247,7 @@
 			backfillOwner(items)
 			return { items, hasNext: res.data.hasNext }
 		}),
-		auditFilter: items => auditFilterBy(auditData.value.spec?.moments || [])(items),
+		auditFilter: items => auditFilterBy(appConfigStore.auditNamesOf('moments'))(items),
 	})
 
 	/* ---------------- Tab 切换(切换不重置已加载数据,首次进入才拉取) ---------------- */
