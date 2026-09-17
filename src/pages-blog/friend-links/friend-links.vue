@@ -464,18 +464,18 @@
 						@refresh="handleGetData" />
 				</view>
 
-				<view v-else class="content pt-4">
+				<view v-else class="box-border pt-4">
 					<!-- 友链分组列表(参考小程序 tab 分组展示) -->
 					<view class="box-border px-4 pb-4">
 						<view v-for="group in siteGroups" :key="group.groupName" class="group-item mb-4">
 							<view class="mb-3 flex items-center">
 								<text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />
 								<text class="text-sm text-gray-900 font-bold">{{ group.groupName }}</text>
-								<text class="ml-3 text-xs text-gray-400">（{{ group.links.length }}）</text>
+								<text class="ml-1 text-xs text-gray-400">（{{ group.links.length }}）</text>
 							</view>
 							<view class="group-cards flex flex-col gap-3">
 								<view v-for="link in group.links" :key="link.metadata?.name || link.spec.displayName"
-									class="uh-global-card-glass box-border flex overflow-hidden rounded-xl p-3"
+									class="uh-global-card-glass box-border uh-shadow-xs flex overflow-hidden rounded-xl p-3"
 									@click="handleOnLinkEvent(link)">
 									<image class="h-16 w-16 shrink-0 rounded-lg" :src="link.spec.logo"
 										mode="aspectFill" />
@@ -556,16 +556,16 @@
 			<template v-else>
 				<uh-data-loading v-if="miniLoadingStatus !== 'success'" :loading-status="miniLoadingStatus"
 					empty-text="还没有收录的小程序呢~" @refresh="handleGetMiniProgramLinks" />
-				<view v-else class="content flex flex-1 flex-col">
+				<view v-else class="box-border flex flex-1 flex-col pt-4">
 					<!-- 分组列表 -->
-					<view class="box-border flex-1 p-3">
+					<view class="box-border flex-1 px-4 pb-4">
 						<view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-4">
 							<view class="mb-3 flex items-center">
 								<text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />
 								<text class="text-sm text-gray-900 font-bold">
 									{{ group.displayName || '未分组' }}
 								</text>
-								<text class="ml-3 text-xs text-gray-400">（{{ group.links.length }}）</text>
+								<text class="ml-1 text-xs text-gray-400">（{{ group.links.length }}）</text>
 							</view>
 							<view class="group-cards flex flex-col gap-4">
 								<view v-for="link in group.links" :key="link.metadata?.name"

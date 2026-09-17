@@ -7,10 +7,19 @@
 :root,
 page {
 	// 修改按主题色
+	// 注:该变量由本项目 UnoCSS 消费(uno.config theme.primary),@wot-ui/ui 2.x 不再内置此变量
 	--wot-color-theme: #b9e424;
 
-	// 修改按钮背景色
-	--wot-button-primary-bg-color: #b9e424;
+	// @wot-ui/ui 2.x 主题色阶(1.x 的 --wot-color-theme / --wot-button-primary-bg-color 已更名,原写法不再生效)
+	// 6=主色(按钮默认背景/文字) 7=active 深一档 1/2=plain/soft 浅底
+	--wot-primary-6: #b9e424;
+	--wot-primary-7: #a7cd20;
+	--wot-primary-1: #f4fbe0;
+	--wot-primary-2: #ebfabf;
+
+	// 修改按钮背景色(2.x 变量名,1.x 为 --wot-button-primary-bg-color)
+	--wot-button-primary-bg: #b9e424;
+	--wot-button-primary-bg-active: #a7cd20;
 }
 
 .uh-global-page {

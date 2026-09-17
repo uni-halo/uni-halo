@@ -64,7 +64,25 @@ export default defineConfig({
 		}
 	],
 	// 动态图标需要在这里配置，或者写在vue页面中注释掉
-	safelist: ['i-carbon-code', 'i-carbon-home', 'i-carbon-user', 'i-carbon-ibm-watson-language-translator', 'i-carbon-menu'],
+	// 注意：dialog.ts(.ts 文件)中的工具类不会被 UnoCSS 默认 pipeline 扫描(默认只扫 vue/jsx/tsx/md/html 等)，
+	// 弹窗按钮样式常量(config/dialog.ts)里的类必须登记在此 safelist 才会生成 CSS。
+	safelist: [
+		'i-carbon-code',
+		'i-carbon-home',
+		'i-carbon-user',
+		'i-carbon-ibm-watson-language-translator',
+		'i-carbon-menu',
+		// config/dialog.ts 弹窗按钮样式
+		'!bg-primary',
+		'!text-gray-900',
+		'!text-xs',
+		'!rounded-lg',
+		'!h-9',
+		'!text-2xs',
+		'!border-none',
+		'!after:border-none',
+		'!uh-shadow-xs'
+	],
 	rules: [
 		[
 			'p-safe',
