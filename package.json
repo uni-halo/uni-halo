@@ -29,8 +29,8 @@
     "github": "https://github.com/okay-xiaomo",
     "gitee": "https://gitee.com/okay-xiaomo"
   },
-  "license": "AGPL-3.0",
-  "homepage": "https://uni-halo.925i.cn",
+  "license": "Apache-2.0",
+  "homepage": "https://uni-halo.ialley.cn",
   "repository": "https://github.com/ialley-workshop-open/uni-halo/unibest",
   "bugs": {
     "url": "https://github.com/ialley-workshop-open/uni-halo/unibest/issues"

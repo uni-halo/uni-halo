@@ -64,7 +64,7 @@
 					{{appInfo.name}}
 				</view>
 				<view class="mt-3 flex items-center gap-2">
-					<text class="rounded-full bg-secondary px-3 py-1 text-[20rpx] text-gray-900">AGPL-3.0 开源协议</text>
+					<text class="rounded-full bg-secondary px-3 py-1 text-[20rpx] text-gray-900">Apache License 2.0 开源协议</text>
 					<text class="rounded-full bg-gray-100 px-3 py-1 text-[20rpx] text-gray-900">UniApp × Halo</text>
 				</view>
 				<view class="mt-4 text-center text-xs text-gray-500 leading-relaxed">
