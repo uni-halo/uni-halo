@@ -188,8 +188,10 @@ export interface IAppConfig {
 			appInfo?: { name?: string; logo?: string; [key: string]: unknown };
 			/** 博主资料（nickname/avatar/email/description/website/intro） */
 			blogger?: Record<string, unknown>;
-			/** 社交动态列表（name/content/color/bgColor/priority/visible） */
-			items?: Array<Record<string, unknown>>;
+			social:{
+				/** 社交动态列表（name/content/color/bgColor/priority/visible） */
+				items?: Array<Record<string, unknown>>;
+			},
 			/** 审核模式开关 */
 			auditMode?: { enabled?: boolean; [key: string]: unknown };
 			/** 页脚版权 */

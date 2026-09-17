@@ -22,9 +22,6 @@
 	const isShow = ref(false)
 	const appConfigStore = useAppConfigStore()
 
-	/** 小程序申请信息(字段与 uh-links-mini-apply 表单一致；小程序信息读
-	 * featureConfig.linkInfo.miniInfo；作者信息读应用设置-博主资料
-	 * featureConfig.profile.blogger，字段名无映射) */
 	const miniInfo = computed(() => {
 		const miniCfg = (appConfigStore.configs.featureConfig?.linkInfo?.miniInfo || {}) as Record<string, unknown>
 		const blogger = (appConfigStore.configs.featureConfig?.profile?.blogger || {}) as Record<string, unknown>
@@ -67,11 +64,13 @@
 	function handleCopyInfo() {
 		const info = miniInfo.value
 		const text = [
+			info.miniProgramCode ? `小程序太阳码：${checkImageUrl(info.miniProgramCode)}` : '',
 			info.displayName ? `小程序名称：${info.displayName}` : '',
 			info.link ? `小程序地址：${info.link}` : '',
+			info.description ? `小程序描述：${info.description}` : '',
+			info.avatar ? `作者头像：${checkAvatarUrl(info.avatar)}` : '',
 			info.authorName ? `作者昵称：${info.authorName}` : '',
 			info.website ? `作者网站：${info.website}` : '',
-			info.description ? `小程序描述：${info.description}` : '',
 			info.applyRemark ? `申请说明：${info.applyRemark}` : '',
 			info.email ? `通知邮箱：${info.email}` : '',
 		].filter(Boolean).join('\n')
@@ -128,29 +127,53 @@
 			</view>
 
 			<template v-else>
-				<!-- 太阳码大图(点击预览) -->
-				<view v-if="miniInfo.miniProgramCode" class="code-area flex flex-col items-center">
-					<image class="code-img h-32 w-32 rounded-xl" :src="checkImageUrl(miniInfo.miniProgramCode)"
-						mode="aspectFill" @click="handlePreviewCode" />
-					<view class="code-tip mt-3 flex items-center text-xs text-gray-400">
-						<wd-icon name="picture" size="14px" color="#a8a294" />
-						<text class="ml-1">点击预览太阳码</text>
+				<view class="w-full flex items-center gap-x-3">
+					<!-- 太阳码大图(点击预览) -->
+					<view v-if="miniInfo.miniProgramCode" class="code-area flex flex-col items-center">
+						<image class="code-img h-16 w-16 rounded-full" :src="checkImageUrl(miniInfo.miniProgramCode)"
+							mode="aspectFill" @click="handlePreviewCode" />
+					</view>
+
+					<view class="flex-1 flex flex-col gap-y-1">
+						<!-- 名称 -->
+						<view v-if="miniInfo.displayName" class="flex items-center">
+							<text class="mini-name text-lg text-gray-900 font-bold">{{ miniInfo.displayName }}</text>
+						</view>
+
+						<!-- 描述 -->
+						<view v-if="miniInfo.description" class="text-2xs text-gray-600 leading-[1.6]">
+							{{ miniInfo.description }}
+						</view>
 					</view>
 				</view>
-
-				<!-- 名称 -->
-				<view v-if="miniInfo.displayName" class="mini-head mt-5 flex items-center">
-					<text class="mini-name text-[34rpx] text-gray-900 font-bold">{{ miniInfo.displayName }}</text>
+				<view class="mt-2 flex items-center ">
+					<text class="text-xs text-gray-400">温馨提示：点击图片可以预览太阳码</text>
 				</view>
 
-				<!-- 描述 -->
-				<view v-if="miniInfo.description" class="mini-desc mt-4 text-[28rpx] text-gray-600 leading-[1.6]">
-					{{ miniInfo.description }}
+				<!-- 跳转地址 -->
+				<view v-if="miniInfo.link"
+					class="mini-link mt-2 flex items-center justify-between rounded-xl bg-secondary p-4">
+					<view
+						class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
+						{{ miniInfo.link }}
+					</view>
+					<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyLink">复制</text>
+				</view>
+
+				<!-- 申请说明 / 邮箱 -->
+				<view v-if="miniInfo.applyRemark || miniInfo.email"
+					class="uh-global-card-glass shadow-none border mt-2 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
+					<view v-if="miniInfo.applyRemark">
+						<text class="text-gray-400">申请说明：</text>{{ miniInfo.applyRemark }}
+					</view>
+					<view v-if="miniInfo.email">
+						<text class="text-gray-400">通知邮箱：</text>{{ miniInfo.email }}
+					</view>
 				</view>
 
 				<!-- 作者信息 -->
 				<view v-if="miniInfo.authorName || miniInfo.avatar || miniInfo.website"
-					class="mini-author-info mt-5 flex items-center rounded-xl bg-[#f6f3ee] p-4">
+					class="uh-global-card-glass shadow-none border mt-5 flex items-center rounded-xl p-4">
 					<image v-if="miniInfo.avatar" class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
 						:src="checkAvatarUrl(miniInfo.avatar)" mode="aspectFill" />
 					<view class="author-detail ml-4 flex flex-1 flex-col">
@@ -164,28 +187,7 @@
 					</view>
 				</view>
 
-				<!-- 跳转地址 -->
-				<view v-if="miniInfo.link"
-					class="mini-link mt-5 flex items-center justify-between rounded-xl bg-secondary p-4">
-					<view
-						class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
-						{{ miniInfo.link }}
-					</view>
-					<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyLink">复制</text>
-				</view>
-
-				<!-- 申请说明 / 邮箱 -->
-				<view v-if="miniInfo.applyRemark || miniInfo.email"
-					class="mini-extra mt-5 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
-					<view v-if="miniInfo.applyRemark">
-						<text class="text-gray-400">申请说明：</text>{{ miniInfo.applyRemark }}
-					</view>
-					<view v-if="miniInfo.email">
-						<text class="text-gray-400">通知邮箱：</text>{{ miniInfo.email }}
-					</view>
-				</view>
-
-				<view class="my-6">
+				<view class="mt-6">
 					<uh-button custom-class="py-2 !rounded-xl" @click="handleCopyInfo">
 						复制小程序申请信息
 					</uh-button>

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+	import { storeToRefs } from 'pinia'
 	import { computed, ref, watch } from 'vue'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl } from '@/utils/url'
@@ -20,9 +21,10 @@
 	}>()
 
 	const isShow = ref(false)
-	const appConfigStore = useAppConfigStore()
+	const { configs } = storeToRefs(useAppConfigStore())
 
-	const blogDetail = computed(() => (appConfigStore.configs.featureConfig?.linkInfo?.siteInfo as {
+
+	const blogDetail = computed(() => (configs.value.featureConfig?.linkInfo?.siteInfo as {
 		displayName ?: string
 		url ?: string
 		logo ?: string
@@ -32,18 +34,20 @@
 	} | undefined) || {})
 
 	/** 友链交换信息文案(复制用) */
-	const calcBlogContent = computed(() => `
-		博客名称：${blogDetail.value.displayName || ''}
-		博客地址：${blogDetail.value.url || ''}
-		博客logo：${checkAvatarUrl(blogDetail.value.logo)}
-		博客简介：${blogDetail.value.description || ''}
-	`)
+	const calcBlogContent = computed(() => {
+		const blogger = configs.value.featureConfig?.profile?.blogger || {}
+		return [
+			`博客名称：${blogDetail.value.displayName || ''}`,
+			`博客地址：${blogDetail.value.url || ''}`,
+			`博客logo：${checkAvatarUrl(blogDetail.value.logo)}`,
+			`博客简介：${blogDetail.value.description || ''}`,
+			blogger.avatar ? `作者头像：${checkAvatarUrl(blogger.avatar as string)}` : '',
+			blogger.authorName ? `作者昵称：${blogger.nickname}` : '',
+			blogger.website ? `作者网站：${blogger.website}` : '',
+			blogger.email ? `通知邮箱：${blogger.email}` : '',
+		].join('\n')
 
-	function calcSiteThumbnail(val ?: string) : string {
-		if (!val) { return '' }
-		const _val = val.endsWith('/') ? val : `${val}/`
-		return `https://image.thum.io/get/width/1000/crop/800/${_val}`
-	}
+	})
 
 	function handleCopyLink() {
 		uni.setClipboardData({
@@ -84,7 +88,7 @@
 		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4">
 			<!-- 博客名片 -->
 			<view class="flex items-center">
-				<image class="uh-global-card-glass h-20 w-20 shrink-0 rounded-2xl"
+				<image class="uh-global-card-glass h-14 w-14 shrink-0 rounded-2xl"
 					:src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
 				<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1">
 					<text class="text-md text-gray-900 font-bold">
@@ -101,11 +105,7 @@
 				<text>{{ calcBlogContent }}</text>
 			</view>
 
-			<!-- 站点缩略图 -->
-			<image v-if="blogDetail.url" class="mt-4 h-[320rpx] w-full rounded-xl"
-				:src="calcSiteThumbnail(blogDetail.url)" mode="aspectFill" />
-
-			<view class="my-6">
+			<view class="mt-6">
 				<uh-button custom-class="py-2 !rounded-xl" @click="handleCopyLink">
 					复制友链交换信息
 				</uh-button>

@@ -7,6 +7,7 @@
 	import { checkAvatarUrl } from '@/utils/url'
 	import { formatTime } from '@/utils/formatTime'
 	import { markdownConfig } from '@/config/markdown'
+import { storeToRefs } from 'pinia'
 
 	definePage({
 		style: {
@@ -25,8 +26,8 @@
 	}
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
-	const appConfigStore = useAppConfigStore()
-	const authorConfig = computed(() => appConfigStore.configs.featureConfig?.profile)
+	const {configs} = storeToRefs(useAppConfigStore())
+	const authorConfig = computed(() => configs.value.featureConfig?.profile)
 
 	const bloggerInfo = computed(() => {
 		const blogger = authorConfig.value?.blogger as { nickname ?: string, avatar ?: string, description ?: string, intro ?: string } | undefined
@@ -39,7 +40,7 @@
 	})
 
 	const socialList = computed<Array<ISoical>>(() => {
-		const configured = authorConfig.value?.items as unknown as ISoical[] | undefined
+		const configured = authorConfig.value.social?.items as unknown as ISoical[] | undefined
 		if (!configured || !configured.length) {
 			return []
 		}
@@ -116,29 +117,29 @@
 		</view>
 
 		<view class="uh-global-card-glass uh-shadow-xs mt-4 box-border flex flex-col gap-y-6 rounded-xl px-4 py-3">
-			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
+
+			<view class="w-full flex flex-col gap-y-3">
+				<view class="text-md text-gray-900">
+					展信安：
+				</view>
+				<view v-if="bloggerInfo.intro" class="text-sm text-gray-900">
+					<mp-html lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
+						scroll-table selectable :tag-style="markdownConfig.tagStyle"
+						:container-style="markdownConfig.containStyle" :content="bloggerInfo.intro" :markdown="true"
+						:show-line-number="true" :show-language-name="true" copy-by-long-press />
+				</view>
+				<view v-else class="py-4 text-sm text-gray-600">
+					祝你早安，午安，晚安。每天都有好心情，生活愉快！
+				</view>
+				<view class="mt-2 w-full flex flex-col items-end gap-y-3">
+					<text class="text-md text-gray-900 font-semibold">{{ bloggerInfo.nickname }}</text>
+					<text class="text-xs text-black/60">{{ nowText }}</text>
+				</view>
+			</view>
+
+			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="40vh"
 				empty-text="暂无联系方式" empty-sub-text="" />
 			<template v-else>
-				<view class="w-full flex flex-col gap-y-3">
-					<view class="text-md text-gray-900">
-						展信安：
-					</view>
-					<view v-if="bloggerInfo.intro" class="text-sm text-gray-900">
-						<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-							:loading-img="markdownConfig.loadingGif" scroll-table selectable
-							:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-							:content="bloggerInfo.intro" :markdown="true" :show-line-number="true"
-							:show-language-name="true" copy-by-long-press />
-					</view>
-					<view v-else class="py-4 text-sm text-gray-600">
-						祝你早安，午安，晚安。每天都有好心情，生活愉快！
-					</view>
-					<view class="mt-2 w-full flex flex-col items-end gap-y-3">
-						<text class="text-md text-gray-900 font-semibold">{{ bloggerInfo.nickname }}</text>
-						<text class="text-xs text-black/60">{{ nowText }}</text>
-					</view>
-				</view>
-
 				<view class="box-border w-full flex flex-col gap-y-2 border-t border-gray-200 border-t-dashed pt-4">
 					<view class="text-md mb-2 text-gray-900">
 						若有意，可依此觅：
