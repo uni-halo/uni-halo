@@ -58,7 +58,8 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetCategory() {
 		if (calcAuditModeEnabled.value) {
-			// 审核模式:仅展示所选图库分组(galleryGroups)内的照片,未分组照片不展示
+			// 审核模式
+			resetLoadMoreStatus()
 			const auditGroupNames = appConfigStore.auditData.spec?.galleryGroups || []
 			try {
 				const res = await getPhotoGroupList({ page: 1, size: 0 })

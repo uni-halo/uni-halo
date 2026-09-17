@@ -240,7 +240,7 @@
 							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
 							<text class="mt-2 text-xs text-gray-500">暂无评论</text>
 							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
-								文章已开启禁止评论
+								已关闭评论
 							</view>
 							<view v-else class="mt-2 bg-primary text-black text-xs px-4 py-1.5 rounded-lg"
 								@click="handleToComment()">
@@ -256,7 +256,7 @@
 								:post-name="postName" :disallow-comment="disallowComment" @on-copy="handleCopyContent"
 								@on-comment="(d) => handleToComment(d, comment)" @on-detail="handleShowCommentDetail" />
 
-							<!-- 回复展开区(默认收起,抖音式) -->
+							<!-- 回复展开区(默认收起) -->
 							<view v-if="getReplyCount(comment) > 0">
 								<!-- 未展开:仅显示回复数 -->
 								<view v-if="!expanded.has(comment.metadata.name)"

@@ -102,7 +102,7 @@
 		if (calcAuditModeEnabled.value) {
 			// 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
 			resetLoadMoreStatus()
-			const auditPostNames = appConfigStore.auditData.spec?.posts || []
+			const auditPostNames = appConfigStore.auditData.spec?.posts.map(p=>p.name) || []
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))

@@ -52,12 +52,12 @@ export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 	}
 ]);
 
-/** 功能偏好字段(字段名与插件端一致；avatarRadius 由页面/弹窗模板 v-if="false" 隐藏，不删除定义) */
+/** 功能偏好字段(字段名与插件端一致；avatarRadius 定义保留但不展示，featureRows 过滤) */
 export const FEATURE_PREFS: PrefDef[] = [
 	{ key: 'avatarRadius', label: '是否圆形头像', kind: 'bool', path: ['avatarRadius'] },
 	{
 		key: 'miniProgramOpenMode',
-		label: '友情链接跳转模式',
+		label: '小程序友情链接跳转模式',
 		kind: 'enum',
 		path: ['linkPage', 'miniProgramOpenMode'],
 		options: [
@@ -136,7 +136,10 @@ export function usePreferenceRows() {
 	}
 
 	const layoutRows = computed(() => buildRows(LAYOUT_PREFS));
-	const featureRows = computed(() => buildRows(FEATURE_PREFS));
+	/** 功能偏好展示行（过滤掉已隐藏的 avatarRadius，页面与全局弹窗共用） */
+	const featureRows = computed(() =>
+		buildRows(FEATURE_PREFS).filter((row) => row.key !== 'avatarRadius')
+	);
 
 	/** 布局设置按页面分组的展示行（列表布局 + 卡片样式两行） */
 	const layoutGroups = computed(() =>
