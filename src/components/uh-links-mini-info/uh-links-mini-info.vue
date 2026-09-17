@@ -29,6 +29,8 @@
 		return {
 			displayName: str(miniCfg, 'displayName'),
 			miniProgramCode: str(miniCfg, 'miniProgramCode'),
+			appId: str(miniCfg, 'appId'),
+			path: str(miniCfg, 'path'),
 			link: str(miniCfg, 'link'),
 			// 作者信息：博主资料 nickname/avatar/website
 			authorName: str(blogger, 'nickname'),
@@ -41,6 +43,23 @@
 	})
 
 	const hasInfo = computed(() => !!(miniInfo.value.displayName || miniInfo.value.miniProgramCode))
+
+	/** 复制任意文本 */
+	function handleCopyText(text ?: string) {
+		if (!text) {
+			return
+		}
+		uni.setClipboardData({
+			data: text,
+			showToast: false,
+			success: () => {
+				uni.showToast({ icon: 'none', title: '复制成功！' })
+			},
+			fail: () => {
+				uni.showToast({ icon: 'none', title: '复制失败！' })
+			},
+		})
+	}
 
 	/** 复制跳转地址 */
 	function handleCopyLink() {
@@ -66,6 +85,8 @@
 		const text = [
 			info.miniProgramCode ? `小程序太阳码：${checkImageUrl(info.miniProgramCode)}` : '',
 			info.displayName ? `小程序名称：${info.displayName}` : '',
+			info.appId ? `小程序 AppID：${info.appId}` : '',
+			info.path ? `跳转页面路径：${info.path}` : '',
 			info.link ? `小程序地址：${info.link}` : '',
 			info.description ? `小程序描述：${info.description}` : '',
 			info.avatar ? `作者头像：${checkAvatarUrl(info.avatar)}` : '',
@@ -148,6 +169,23 @@
 				</view>
 				<view class="mt-2 flex items-center ">
 					<text class="text-xs text-gray-400">温馨提示：点击图片可以预览太阳码</text>
+				</view>
+
+				<!-- AppID / 页面路径 -->
+				<view v-if="miniInfo.appId || miniInfo.path"
+					class="uh-global-card-glass shadow-none border mt-2 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
+					<view v-if="miniInfo.appId" class="flex items-center justify-between">
+						<view>
+							<text class="text-gray-400">小程序 AppID：</text>{{ miniInfo.appId }}
+						</view>
+						<text class="shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyText(miniInfo.appId)">复制</text>
+					</view>
+					<view v-if="miniInfo.path" class="flex items-center justify-between">
+						<view class="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap">
+							<text class="text-gray-400">跳转页面路径：</text>{{ miniInfo.path }}
+						</view>
+						<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyText(miniInfo.path)">复制</text>
+					</view>
 				</view>
 
 				<!-- 跳转地址 -->

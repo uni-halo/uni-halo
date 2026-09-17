@@ -24,6 +24,8 @@
 	interface IApplyForm {
 		displayName : string
 		miniProgramCode : string
+		appId : string
+		path : string
 		link : string
 		authorName : string
 		avatar : string
@@ -36,6 +38,8 @@
 	const form = ref<IApplyForm>({
 		displayName: '',
 		miniProgramCode: '',
+		appId: '',
+		path: '',
 		link: '',
 		authorName: '',
 		avatar: '',
@@ -93,6 +97,8 @@
 		form.value = {
 			displayName: '',
 			miniProgramCode: '',
+			appId: '',
+			path: '',
 			link: '',
 			authorName: '',
 			avatar: '',
@@ -120,6 +126,10 @@
 		}
 		if (!form.value.miniProgramCode.trim()) {
 			uni.showToast({ icon: 'none', title: '请填写太阳码图片地址' })
+			return false
+		}
+		if (!form.value.appId.trim()) {
+			uni.showToast({ icon: 'none', title: '请填写小程序 AppID' })
 			return false
 		}
 		if (form.value.miniProgramCode.trim() && !checkIsUrl(form.value.miniProgramCode.trim())) {
@@ -158,6 +168,8 @@
 			await submitMiniProgramLinkApplication({
 				displayName: form.value.displayName.trim(),
 				miniProgramCode: form.value.miniProgramCode.trim(),
+				appId: form.value.appId.trim(),
+				path: form.value.path.trim() || undefined,
 				link: form.value.link.trim() || undefined,
 				authorName: form.value.authorName.trim() || undefined,
 				avatar: form.value.avatar.trim() || undefined,
@@ -231,6 +243,20 @@
 				<input v-model="form.miniProgramCode"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 text-sm"
 					placeholder="小程序码图片链接(必填)">
+			</view>
+
+			<view class="mb-5 flex items-center">
+				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">小程序 AppID *</text>
+				<input v-model="form.appId"
+					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 text-sm"
+					placeholder="小程序 AppID，如 wx1234567890abcdef(必填)">
+			</view>
+
+			<view class="mb-5 flex items-center">
+				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">页面路径</text>
+				<input v-model="form.path"
+					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 text-sm"
+					placeholder="跳转页面路径，如 pages/index/index(选填)">
 			</view>
 
 			<view class="mb-5 flex items-center">

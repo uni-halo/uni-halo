@@ -27,6 +27,10 @@ export interface IPluginConfig {
 		miniInfo?: {
 			displayName?: string;
 			miniProgramCode?: string;
+			/** 小程序 AppID（wx 开头） */
+			appId?: string;
+			/** 跳转页面路径 */
+			path?: string;
 			link?: string;
 			description?: string;
 			applyRemark?: string;
@@ -211,6 +215,10 @@ export interface IAppConfig {
 			archivesListLayout?: string;
 			archivesCardType?: string;
 			avatarRadius?: boolean;
+			/** 友情链接页：小程序打开模式 fullscreen 全屏（默认）/ halfScreen 半屏 */
+			linkPage?: {
+				miniProgramOpenMode?: string;
+			};
 			[key: string]: unknown;
 		};
 		/** 恋爱模块（脱敏 spec 直发：loveDiary 仅 passwordEnabled；三模块入口/恋爱信息/页面设置） */
@@ -729,6 +737,10 @@ export interface IMiniProgramLinkSpec {
 	displayName?: string;
 	/** 太阳码(小程序码图片 URL,必填) */
 	miniProgramCode?: string;
+	/** 小程序 AppID(wx 开头,必填) */
+	appId?: string;
+	/** 跳转页面路径(非必填) */
+	path?: string;
 	/** 小程序地址(跳转链接) */
 	link?: string;
 	/** 作者昵称 */
@@ -793,6 +805,10 @@ export interface IMiniProgramLinkSubmissionForm {
 	displayName: string;
 	/** 太阳码图片 URL(必填) */
 	miniProgramCode: string;
+	/** 小程序 AppID(wx 开头,必填) */
+	appId: string;
+	/** 跳转页面路径(非必填) */
+	path?: string;
 	/** 小程序地址 */
 	link?: string;
 	/** 作者昵称 */

@@ -345,17 +345,36 @@
 		})
 	}
 
+	/** 小程序打开模式：fullscreen 全屏（navigateToMiniProgram，默认）/ halfScreen 半屏（openEmbeddedMiniProgram） */
+	const miniProgramOpenMode = computed<'fullscreen' | 'halfScreen'>(() => {
+		const mode = appConfigStore.configs.featureConfig?.preferences?.linkPage?.miniProgramOpenMode
+		return mode === 'halfScreen' ? 'halfScreen' : 'fullscreen'
+	})
+
 	function handleToMiniProgram(data : IMiniProgramLink) {
-		uni.navigateToMiniProgram({
-			appId: '',
-			path: '',
-			success: (res) => {
+		const appId = data.spec?.appId?.trim() || ''
+		if (!appId) {
+			uni.showToast({ icon: 'none', title: '该链接未配置小程序 AppID' })
+			return
+		}
+		const path = data.spec?.path?.trim() || ''
+		const common = {
+			appId,
+			path,
+			success: (res : unknown) => {
 				console.log('打开小程序成功', res)
 			},
-			fail: (res) => {
+			fail: (res : unknown) => {
 				console.log('打开小程序失败', res)
+				uni.showToast({ icon: 'none', title: '打开小程序失败' })
 			}
-		})
+		}
+		if (miniProgramOpenMode.value === 'halfScreen') {
+			uni.openEmbeddedMiniProgram(common)
+		}
+		else {
+			uni.navigateToMiniProgram(common)
+		}
 	}
 
 	/* ---------------- 生命周期 ---------------- */
