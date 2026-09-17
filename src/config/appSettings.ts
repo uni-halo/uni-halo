@@ -8,6 +8,11 @@ export interface IAppSettings {
   articleCardType: string
   archivesListLayout: string
   archivesCardType: string
+  /** 友情链接页展示偏好（插件端 preferences.linkPage） */
+  linkPage?: {
+    /** 小程序打开模式：fullscreen 全屏 / halfScreen 半屏 */
+    miniProgramOpenMode?: string
+  }
 }
 
 export const DefaultAppSettings: IAppSettings = {
@@ -18,4 +23,7 @@ export const DefaultAppSettings: IAppSettings = {
   articleCardType: 'image_top',
   archivesListLayout: 'single',
   archivesCardType: 'image_top',
+  linkPage: {
+    miniProgramOpenMode: 'fullscreen',
+  },
 }

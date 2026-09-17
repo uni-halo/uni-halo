@@ -6,6 +6,7 @@
 	import { checkImageUrl } from '@/utils/url'
 	import { usePluginAvailable } from '@/hooks/usePluginAvailable'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -22,6 +23,8 @@
 
 	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('gallery', '我的图库')
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -216,7 +219,7 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="我的图库" title-color="text-gray-900"></uh-navbar>
+		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900"></uh-navbar>
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="checkPluginAvailable" />

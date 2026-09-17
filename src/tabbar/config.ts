@@ -50,7 +50,7 @@ export const nativeTabbarList: NativeTabBarItem[] = [
 	{
 		iconPath: 'static/tabbar/select_mine.png',
 		selectedIconPath: 'static/tabbar/select_mine_active.png',
-		pagePath: 'pages/tabbar/mine/mine',
+		pagePath: 'pages/tabbar/blogger/blogger',
 		text: '%tabbar.mine%'
 	}
 ];
@@ -162,7 +162,7 @@ export const customTabbarList: CustomTabBarItem[] = [
 		icon: '/static/tabbar/select_mine.png',
 		iconActive: '/static/tabbar/select_mine_active.png',
 		iconType: 'image',
-		pagePath: 'pages/tabbar/mine/mine',
+		pagePath: 'pages/tabbar/blogger/blogger',
 		text: '%tabbar.mine%'
 	},
 

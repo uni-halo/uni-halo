@@ -9,6 +9,7 @@ import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { t } from '@/locale'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import type { IBlogStats } from '@/api/types/halo'
@@ -18,7 +19,7 @@ const dialog = useDialog()
 
 definePage({
   style: {
-    navigationBarTitleText: '关于',
+    navigationBarTitleText: '博主',
     enablePullDownRefresh: true,
     navigationStyle: 'custom',
   },
@@ -28,6 +29,8 @@ const { configs } = storeToRefs(useAppConfigStore())
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('blogger', '关于博主')
 
 const haloConfigs = computed(() => configs.value)
 /** 登录态(进入页面时刷新过期判断) */
@@ -239,7 +242,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 <template>
   <wd-dialog />
   <view class="box-border min-h-screen w-screen bg-page pb-2">
-    <uh-mine-navbar :scroll-y="scrollY" />
+    <uh-mine-navbar :scroll-y="scrollY" :default-title="pageTitle" />
 
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
     <view class="relative h-96 w-full bg-cover bg-no-repeat" :style="[calcProfileStyle]">

@@ -8,6 +8,7 @@
 	import { sleep } from '@/utils/common'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useDialog } from '@wot-ui/ui'
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
@@ -28,6 +29,8 @@
 
 	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('friendLinks', '友情链接')
 	const appConfigStore = useAppConfigStore()
 	const settingStore = useSettingStore()
 
@@ -440,7 +443,7 @@
 	<wd-dialog />
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="友情链接" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<!-- 顶部 -->
 		<wd-sticky :offset-top="offsetTop">

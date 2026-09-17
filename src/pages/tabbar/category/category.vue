@@ -6,6 +6,7 @@
 	import { checkThumbnailUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { ICategory } from '@/api/types/halo'
@@ -20,6 +21,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('category', '分类')
 	
 	const appConfigStore = useAppConfigStore()
 	
@@ -166,7 +169,7 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="分类" title-color="text-gray-900"></uh-navbar>
+		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900"></uh-navbar>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
 

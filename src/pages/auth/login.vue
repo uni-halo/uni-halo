@@ -4,6 +4,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useTokenStore } from '@/store/token'
 	import { checkImageUrl } from '@/utils/url'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 
 	definePage({
 		style: {
@@ -13,6 +14,8 @@
 	})
 
 	const { configs } = storeToRefs(useAppConfigStore())
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('login', '登录')
 	const tokenStore = useTokenStore()
 
 	/* ---------- 应用信息(顶部 logo 展示,getConfigs 下发于 featureConfig.profile.appInfo) ---------- */
@@ -97,7 +100,7 @@
 <template>
 	<view class="relative box-border min-h-screen w-screen flex flex-col bg-[#f5fae8] overflow-hidden">
 		<!-- 顶部自定义导航 -->
-		<uh-navbar default-title="登录" :need-placeholder="false" />
+		<uh-navbar :default-title="pageTitle" :need-placeholder="false" />
 
 		<view
 			class="pointer-events-none fixed left-0 top-0 z-0 h-[46vh] w-full bg-gradient-to-b from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8]" />

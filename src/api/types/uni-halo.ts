@@ -82,8 +82,36 @@ export interface IBannerPublicDetail extends IBannerPublicItem {
 }
 
 export interface IPageConfig {
+	/** 全站页面标题（插件端「功能设置 → 页面设置 → 页面标题」配置，传入各页面 uh-navbar default-title，留空回退内置默认） */
+	titles?: {
+		home?: string;
+		gallery?: string;
+		category?: string;
+		moments?: string;
+		blogger?: string;
+		articles?: string;
+		archives?: string;
+		/** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
+		postDetail?: string;
+		categoryArticles?: string;
+		tags?: string;
+		tagDetail?: string;
+		search?: string;
+		favorites?: string;
+		friendLinks?: string;
+		notice?: string;
+		noticeDetail?: string;
+		votes?: string;
+		voteDetail?: string;
+		contact?: string;
+		setting?: string;
+		aboutProject?: string;
+		disclaimers?: string;
+		dataVisual?: string;
+		login?: string;
+		register?: string;
+	};
 	homeConfig?: {
-		pageTitle?: string;
 		useCategory?: boolean;
 		/** 是否显示快捷导航(首页) */
 		useQuickNavigation?: boolean;
@@ -115,7 +143,6 @@ export interface IPageConfig {
 	};
 	categoryConfig?: { type?: string };
 	momentConfig?: { useTagRandomColor?: boolean };
-	galleryConfig?: { pageTitle?: string };
 	aboutConfig?: {
 		bgImageUrl?: string;
 		waveImageUrl?: string;

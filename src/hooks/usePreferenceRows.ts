@@ -52,8 +52,20 @@ export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 	}
 ]);
 
-/** 功能偏好字段(字段名与插件端一致) */
-export const FEATURE_PREFS: PrefDef[] = [{ key: 'avatarRadius', label: '是否圆形头像', kind: 'bool', path: ['avatarRadius'] }];
+/** 功能偏好字段(字段名与插件端一致；avatarRadius 由页面/弹窗模板 v-if="false" 隐藏，不删除定义) */
+export const FEATURE_PREFS: PrefDef[] = [
+	{ key: 'avatarRadius', label: '是否圆形头像', kind: 'bool', path: ['avatarRadius'] },
+	{
+		key: 'miniProgramOpenMode',
+		label: '友情链接跳转模式',
+		kind: 'enum',
+		path: ['linkPage', 'miniProgramOpenMode'],
+		options: [
+			{ label: '全屏打开', value: 'fullscreen' },
+			{ label: '半屏打开', value: 'halfScreen' }
+		]
+	}
+];
 
 /** 顶部分段器(布局 / 功能) */
 export const SETTING_TABS: { key: 'layout' | 'feature'; label: string }[] = [

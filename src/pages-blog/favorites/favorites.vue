@@ -5,6 +5,7 @@ import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
 
@@ -17,6 +18,8 @@ definePage({
 
 const { height: offsetTop } = useCustomNavbarPlaceholder()
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('favorites', '我的收藏')
 const favoritesStore = useFavoritesStore()
 
 /* ---------------- Tab(文章/瞬间) ---------------- */
@@ -80,7 +83,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-10">
 	  <!-- 自定义导航 -->
-	<uh-navbar :scroll-y="scrollY" default-title="我的收藏" title-color="text-gray-900"></uh-navbar>
+	<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900"></uh-navbar>
 	  
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
     <wd-sticky :offset-top="offsetTop">

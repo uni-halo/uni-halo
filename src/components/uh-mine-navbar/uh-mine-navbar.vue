@@ -8,8 +8,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<IProps>(), {
-  defaultTitle: '关于',
-  scrollTitle: '关于',
+  defaultTitle: '博主',
+  scrollTitle: '博主',
   scrollY: 0,
 })
 

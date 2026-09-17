@@ -5,6 +5,7 @@ import { getCategoryPostList } from '@/api/halo'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import type { IPost, IPostListReq } from '@/api/types/halo'
 
 definePage({
@@ -16,11 +17,13 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 分类文章列表页默认标题（插件端可配置，动态分类名加载后覆盖） */
+const configTitle = usePageTitle('categoryArticles', '分类详情')
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
 const pageTitle = ref('加载中...')
-const navbarTitle = ref('分类详情')
+const navbarTitle = ref(configTitle.value)
 const dataList = ref<IPost[]>([])
 
 /* ---------------- 排序切换(sort 参数由接口透传,见 IPostListReq.sort) ---------------- */
@@ -102,7 +105,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
 onLoad((options) => {
   name.value = options?.name || ''
-  pageTitle.value = options?.title || '分类详情'
+  pageTitle.value = options?.title || configTitle.value
   navbarTitle.value = pageTitle.value
   handleGetData()
 })

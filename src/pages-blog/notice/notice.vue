@@ -4,6 +4,7 @@
 	import { getNotices } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
@@ -19,6 +20,8 @@
 
 	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('notice', '公告中心')
 	const PAGE_SIZE = 100
 
 	/** 状态机:首屏/下拉刷新 loading、empty、error;触底加载失败仅提示,不切整页错误态 */
@@ -188,7 +191,7 @@
 <template>
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="公告中心" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<wd-sticky :offset-top="offsetTop">
 			<view class="w-screen overflow-hidden">

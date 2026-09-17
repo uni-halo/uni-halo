@@ -3,6 +3,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 
 	definePage({
 		style: {
@@ -12,6 +13,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('aboutProject', '关于项目')
 	const appConfigStore = useAppConfigStore()
 
 	const appInfo = computed(() => {
@@ -51,7 +54,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col overflow-hidden bg-page px-4 pb-8 pt-2">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="关于项目" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<view class="fixed -right-8 top-8 h-28 w-28 rounded-full bg-[rgba(185,228,36,0.32)] uh-blur-xl" />
 		<view class="fixed -left-10 top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)]  uh-blur-xl" />

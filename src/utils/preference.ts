@@ -94,6 +94,15 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
     if (typeof prefs.avatarRadius === 'boolean') {
       result.avatarRadius = prefs.avatarRadius
     }
+
+    // 友情链接页展示偏好（嵌套结构 linkPage.miniProgramOpenMode，值校验后透传）
+    const linkPage = prefs.linkPage
+    const openMode = linkPage && typeof linkPage === 'object'
+      ? (linkPage as Record<string, unknown>).miniProgramOpenMode
+      : undefined
+    if (openMode === 'fullscreen' || openMode === 'halfScreen') {
+      result.linkPage = { miniProgramOpenMode: openMode }
+    }
   }
 
   return result

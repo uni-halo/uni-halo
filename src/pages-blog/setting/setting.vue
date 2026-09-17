@@ -4,6 +4,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useDialog } from '@wot-ui/ui'
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { collectSiteDefaults } from '@/utils/preference'
@@ -20,6 +21,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('setting', '偏好设置')
 	const settingStore = useSettingStore()
 	const appConfigStore = useAppConfigStore()
 
@@ -127,7 +130,7 @@
 	<wd-dialog />
 	<view class="box-border min-h-screen bg-page">
 		<!-- 自定义标题 -->
-		<uh-navbar :scroll-y="scrollY" default-title="偏好设置" title-color="text-gray-900" :need-placeholder="true" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" :need-placeholder="true" />
 
 		<!-- 内容区域 -->
 		<view class="box-border flex flex-col gap-y-6 p-3">
@@ -180,7 +183,7 @@
 					<view class="setting-sheet uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
 						<template v-for="(row, index) in featureRows" :key="row.key">
 							<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
-							<view v-if="row.kind === 'bool'" class="box-border p-3"
+							<view v-if="row.kind === 'bool' && false" class="box-border p-3"
 								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 								<view class="flex items-center justify-between">
 									<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>

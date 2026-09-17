@@ -6,6 +6,7 @@
 import { ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { getPostByTagName } from '@/api/halo'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import type { IPost } from '@/api/types/halo'
 
 definePage({
@@ -16,6 +17,8 @@ definePage({
 })
 
 const loading = ref<'loading' | 'success' | 'error'>('loading')
+/** 标签文章列表页默认标题（插件端可配置，动态标签名加载后覆盖） */
+const configTitle = usePageTitle('tagDetail', '标签详情')
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
 const pageTitle = ref('加载中...')
@@ -73,7 +76,7 @@ function handleToTopPage(duration = 500) {
 
 onLoad((options) => {
   name.value = options?.name || ''
-  pageTitle.value = options?.title || '标签详情'
+  pageTitle.value = options?.title || configTitle.value
   handleGetData()
 })
 

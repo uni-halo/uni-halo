@@ -4,6 +4,7 @@
 	import { getPostByName, getPostCommentReplyList, postTrackersCounter } from '@/api/halo'
 	import { useUpvote } from '@/hooks/useUpvote'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 	import { formatTime } from '@/utils/formatTime'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -27,6 +28,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认；滚动后显示文章题目） */
+	const pageTitle = usePageTitle('postDetail', '内容详情')
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const settingStore = useSettingStore()
@@ -453,7 +456,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
 		<!-- 顶部导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="内容详情" :need-placeholder="false"
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :need-placeholder="false"
 			:scroll-title="result?.spec?.title" />
 
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus"

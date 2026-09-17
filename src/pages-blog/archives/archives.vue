@@ -5,6 +5,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { sleep } from '@/utils/common'
@@ -20,6 +21,8 @@
 
 	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('archives', '内容归档')
 	const appConfigStore = useAppConfigStore()
 
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
@@ -259,7 +262,7 @@
 
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" default-title="内容归档" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<wd-sticky :offset-top="offsetTop">
 			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">

@@ -7,6 +7,7 @@
 	import { usePermission } from '@/hooks/usePermission'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useFavoritesStore } from '@/store/favorites'
 	import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
@@ -25,6 +26,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('moments', '我的日常')
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
@@ -342,7 +345,7 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :use-back="false" default-title="我的日常" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />

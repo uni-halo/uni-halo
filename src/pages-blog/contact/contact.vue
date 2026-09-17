@@ -4,6 +4,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { checkAvatarUrl } from '@/utils/url'
 	import { formatTime } from '@/utils/formatTime'
 	import { markdownConfig } from '@/config/markdown'
@@ -26,6 +27,8 @@ import { storeToRefs } from 'pinia'
 	}
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('contact', '联系博主')
 	const {configs} = storeToRefs(useAppConfigStore())
 	const authorConfig = computed(() => configs.value.featureConfig?.profile)
 
@@ -88,7 +91,7 @@ import { storeToRefs } from 'pinia'
 <template>
 	<view class="box-border min-h-screen w-screen overflow-hidden bg-page px-4 pb-10 pt-2">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="联系博主" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<view class="fixed top-8 h-28 w-28 rounded-full bg-[rgba(185,228,36,0.32)] uh-blur-xl -right-8" />
 		<view class="fixed top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)] uh-blur-xl -left-10" />

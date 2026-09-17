@@ -5,6 +5,7 @@
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import { checkAvatarUrl } from '@/utils/url'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -21,6 +22,8 @@
 
 	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('articles', '文章列表')
 	const appConfigStore = useAppConfigStore()
 	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
@@ -208,7 +211,7 @@
 
 <template>
 	<view class="min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" default-title="文章列表" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<wd-sticky v-if="categoryOptions.length > 1" class="w-screen overflow-hidden" :offset-top="offsetTop">
 			<view class="w-screen overflow-hidden">

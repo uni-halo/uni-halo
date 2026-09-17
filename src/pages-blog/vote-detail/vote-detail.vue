@@ -4,6 +4,7 @@ import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTime
 import { getVoteDetail, submitVote } from '@/api/uni-halo'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
@@ -22,9 +23,11 @@ definePage({
 
 /* ---------------- 状态 ---------------- */
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 投票详情页默认标题（插件端可配置，动态投票类型加载后覆盖） */
+const configTitle = usePageTitle('voteDetail', '投票详情')
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const submitLoading = ref(false)
-const pageTitle = ref('加载中...')
+const pageTitle = ref(configTitle.value)
 const name = ref('')
 const detail = ref<unknown>(null)
 const vote = ref<(IVote & {

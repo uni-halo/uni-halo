@@ -6,6 +6,7 @@
 	import { onPageScroll } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { usePageScroll } from '@/hooks/usePageScroll'
+	import { usePageTitle } from '@/hooks/usePageTitle'
 
 	definePage({
 		style: {
@@ -15,6 +16,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 页面标题（插件端可配置，留空回退内置默认） */
+	const pageTitle = usePageTitle('disclaimers', '免责声明')
 	const appConfigStore = useAppConfigStore()
 	const haloConfigs = computed(() => appConfigStore.configs)
 
@@ -49,7 +52,7 @@
 <template>
 	<view class="box-border min-h-screen bg-page p-3 pt-2">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" default-title="免责声明" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 		
 		<view class="w-full h-full uh-global-card-glass uh-shadow-xs rounded-xl">
 			<!-- 通过配置 -->

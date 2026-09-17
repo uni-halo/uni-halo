@@ -1,5 +1,14 @@
 <script lang="ts" setup>
 import { LOGIN_PAGE } from '@/router/config'
+import { onLoad } from '@dcloudio/uni-app'
+import { usePageTitle } from '@/hooks/usePageTitle'
+
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('register', '注册')
+
+onLoad(() => {
+  uni.setNavigationBarTitle({ title: pageTitle.value })
+})
 
 definePage({
   style: {
