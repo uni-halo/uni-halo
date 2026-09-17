@@ -36,6 +36,13 @@ const haloConfigs = computed(() => configs.value)
 /** 登录态(进入页面时刷新过期判断) */
 const hasLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
+/* ---------- 登录配置(getConfigs loginConfig.client,任一登录方式开启才显示登录入口) ---------- */
+const loginConfig = computed(() => configs.value.loginConfig?.client)
+/** 登录入口显隐(两开关全关即登录能力不可用,隐藏登录/退出按钮) */
+const loginEntryVisible = computed(() =>
+  loginConfig.value?.passwordLoginEnabled !== false
+  || loginConfig.value?.wechatLoginEnabled === true)
+
 /* ---------------- 计算属性 ---------------- */
 const bloggerInfo = computed(() => {
   const blogger = haloConfigs.value.featureConfig?.profile?.blogger as
@@ -376,8 +383,8 @@ onPageScroll((option: Page.PageScrollOption) => {
       </template>
     </template>
 
-    <!-- 登录入口-->
-    <view class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
+    <!-- 登录入口(任一登录方式开启才显示) -->
+    <view v-if="loginEntryVisible" class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
       <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full py-2 ${hasLogin?'bg-red-400 text-white':''}`">
         {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>

@@ -209,7 +209,7 @@ const _tabbar: TabBar = {
 	// 只有微信小程序支持 custom。App 和 H5 不生效
 	custom: selectedTabbarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR,
 	color: '#303133',
-	selectedColor: '#03a9f4',
+	selectedColor: '#b9e424',
 	backgroundColor: '#ffffff',
 	borderStyle: 'white',
 	// height: '50px',

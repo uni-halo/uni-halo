@@ -27,8 +27,8 @@
 		}
 	})
 
-	/* ---------- 登录配置(getConfigs loginConfig 组,两开关全关即整体不可用) ---------- */
-	const loginConfig = computed(() => configs.value.loginConfig)
+	/* ---------- 登录配置(getConfigs loginConfig.client,两开关全关即整体不可用) ---------- */
+	const loginConfig = computed(() => configs.value.loginConfig?.client)
 	const passwordLoginEnabled = computed(() => loginConfig.value?.passwordLoginEnabled !== false)
 	const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled === true)
 

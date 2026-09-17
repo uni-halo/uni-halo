@@ -227,7 +227,7 @@ export interface IAuditDataResult {
  * - safetyConfig：setting.yaml 组原样（captchaConfig）
  * - integrationConfig：setting.yaml 组原样（pluginConfig.toolsPlugin）
  * - themeConfig：setting.yaml 组原样（悬浮窗等主题端配置，app 端暂不消费）
- * - loginConfig：脱敏（仅两个登录方式开关，扁平结构）
+ * - loginConfig：脱敏（仅 client 子对象内的两个登录方式开关）
  * - maintenance：可选，服务端按时间窗计算的 status（键缺失 = 未维护）
  */
 export interface IAppConfig {
@@ -308,7 +308,7 @@ export interface IAppConfig {
 	};
 	/** 主题展示（setting.yaml 组原样：悬浮窗等主题端配置，app 端暂不消费） */
 	themeConfig?: Record<string, unknown>;
-	/** 登录配置(仅下发两个登录方式开关,决定登录页展示哪些入口) */
+	/** 登录配置(仅下发 client 子对象内的两个登录方式开关,决定登录页展示哪些入口) */
 	loginConfig?: ILoginPublicConfig;
 	/**
 	 * 维护模式(服务端按时间窗计算;仅 scheduled/active 时存在,
@@ -935,14 +935,16 @@ export interface ILoveStoryListRes {
 /* ---------- 移动端登录(uni-halo 插件 AuthEndpoint) ---------- */
 
 /**
- * 登录公开配置（getConfigs loginConfig，扁平结构）
+ * 登录公开配置（getConfigs loginConfig.client）
  * 仅含两个登录方式开关,供客户端决定登录页展示哪些入口;
  */
 export interface ILoginPublicConfig {
-	/** 账号密码登录开关 */
-	passwordLoginEnabled?: boolean;
-	/** 微信一键登录开关 */
-	wechatLoginEnabled?: boolean;
+	client:{
+		/** 账号密码登录开关 */
+		passwordLoginEnabled?: boolean;
+		/** 微信一键登录开关 */
+		wechatLoginEnabled?: boolean;
+	}
 }
 
 /** 登录用户摘要(插件端 LoginUser,不含敏感字段) */

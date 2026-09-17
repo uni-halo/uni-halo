@@ -72,16 +72,15 @@ export default defineConfig({
 		'i-carbon-user',
 		'i-carbon-ibm-watson-language-translator',
 		'i-carbon-menu',
-		// config/dialog.ts 弹窗按钮样式
-		'!bg-primary',
-		'!text-gray-900',
-		'!text-xs',
-		'!rounded-lg',
-		'!h-9',
-		'!text-2xs',
-		'!border-none',
-		'!after:border-none',
-		'!uh-shadow-xs'
+		// config/dialog.ts 弹窗按钮样式(UnoCSS 66+ important 修饰符为后缀 class!)
+		'bg-primary!',
+		'text-gray-900!',
+		'rounded-lg!',
+		'h-9!',
+		'text-2xs!',
+		'border-none!',
+		'after:border-none!',
+		'uh-shadow-xs!'
 	],
 	rules: [
 		[

@@ -101,11 +101,11 @@ function handleDone() {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen bg-page">
+  <view class="box-border min-h-screen w-screen bg-page flex flex-col items-center justify-center">
     <uh-navbar default-title="绑定微信" />
 
     <view class="box-border flex flex-col items-center px-6 pt-16">
-      <view class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-8">
+      <view class="uh-global-card-glass border uh-shadow-xs box-border w-full rounded-2xl p-8">
         <!-- 绑定成功 -->
         <view v-if="bindResult === 'success'" class="flex flex-col items-center py-6">
           <view class="mb-4 h-16 w-16 flex items-center justify-center rounded-full bg-green-500/10">

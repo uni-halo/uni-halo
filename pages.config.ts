@@ -21,9 +21,8 @@ export default defineUniPages({
     },
   },
   // tabbar 的配置统一在 “./src/tabbar/config.ts” 文件中
-  // pages-blog 是博客页面，对应旧版项目的 pagesA 子包
   subPackages: [{
-    root: 'pages-demo',
+    root: 'pages-admin',
     pages: [],
   }, {
     root: 'pages-blog',

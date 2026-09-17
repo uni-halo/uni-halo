@@ -19,8 +19,6 @@ export default uniHelper({
     'src/components/qiun-*/',
     // mp-html 富文本组件(第三方,从旧项目带入,保持原样)
     'src/components/mp-html/',
-    // unibest 演示页面与数据
-    'src/pages-demo/',
     // unplugin-auto-import 生成的类型文件，每次提交都改变，所以加入这里吧，与 .gitignore 配合使用
     'auto-import.d.ts',
     // vite-plugin-uni-pages 生成的类型文件，每次切换分支都一堆不同的，所以直接 .gitignore
