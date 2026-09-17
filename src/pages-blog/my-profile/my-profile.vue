@@ -201,7 +201,12 @@
 		try {
 			await changeMyPassword(passwordSet.value ? oldPassword.value : undefined, pwd)
 			passwordSheet.value = false
-			uni.showToast({ icon: 'none', title: '密码修改成功' })
+			uni.showToast({ icon: 'none', title: '密码修改成功，请重新登录' })
+			// 修改密码后登录态已失效：退出登录清空 token 与用户信息，返回上一页
+			setTimeout(async () => {
+				await tokenStore.logout()
+				uni.navigateBack()
+			}, 600)
 		}
 		catch (error : any) {
 			console.error('密码修改失败:', error)
