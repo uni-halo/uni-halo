@@ -345,10 +345,10 @@
 		})
 	}
 
-	function handleToMiniProgram(data:IMiniProgramLink) {
+	function handleToMiniProgram(data : IMiniProgramLink) {
 		uni.navigateToMiniProgram({
-			appId:'',
-			path:'',
+			appId: '',
+			path: '',
 			success: (res) => {
 				console.log('打开小程序成功', res)
 			},
@@ -644,7 +644,7 @@
 						<!-- 作者信息 -->
 						<view
 							v-if="miniDetail.data.spec?.authorName || miniDetail.data.spec?.avatar || miniDetail.data.spec?.website"
-							class="mt-5 uh-global-card-glass border shadow-none flex items-center rounded-xl p-4">
+							class="mt-3 uh-global-card-glass border shadow-none flex items-center rounded-xl p-4">
 							<image v-if="miniDetail.data.spec?.avatar"
 								class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
 								:src="checkAvatarUrl(miniDetail.data.spec.avatar)" mode="aspectFill" />
@@ -660,11 +660,12 @@
 								</text>
 							</view>
 						</view>
-
+						<!-- #ifdef MP-WEIXIN -->
 						<view class="w-full mt-6">
 							<uh-button class="uh-global-card-glass border !py-2 text-xs"
 								@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
 						</view>
+						<!-- #endif -->
 					</scroll-view>
 				</uh-glass-popup>
 
