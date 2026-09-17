@@ -15,6 +15,7 @@ function handleScrollTop() {
 
 // 黑名单模式
 const balckList = [
+  'pages/index/index',
   'pages/maintenance/maintenance',
   'pages-blog/setting/setting',
   'pages-blog/love/love',

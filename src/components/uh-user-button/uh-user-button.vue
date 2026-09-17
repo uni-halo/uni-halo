@@ -19,8 +19,11 @@
 
 	const { hasLogin } = storeToRefs(useTokenStore())
 
-	// 白名单模式
-	const blackList = []
+	// 黑名单模式(入口页/维护页等过渡页不展示)
+	const blackList = [
+		'pages/index/index',
+		'pages/maintenance/maintenance',
+	]
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const visible = computed(() => {

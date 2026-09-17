@@ -100,6 +100,9 @@
 			try {
 				const res = await getPostList({ page: 1, size: 0, sort: ['spec.publishTime,desc'] })
 				const filtered = res.data.items.filter(item => auditPostNames.includes(item.metadata.name))
+				// 按审核配置顺序展示(数组顺序即展示顺序)
+				const orderMap = new Map(auditPostNames.map((name, index) => [name, index]))
+				filtered.sort((a, b) => (orderMap.get(a.metadata.name) ?? 999) - (orderMap.get(b.metadata.name) ?? 999))
 				articleList.value = filtered.map((item) => {
 					item.owner.avatar = checkAvatarUrl(item.owner.avatar)
 					return item
