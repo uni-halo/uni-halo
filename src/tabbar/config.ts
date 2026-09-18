@@ -2,7 +2,7 @@ import type { TabBar } from '@uni-helper/vite-plugin-uni-pages';
 import type { CustomTabBarItem, NativeTabBarItem } from './types';
 
 /**
- * tabbar 选择的策略，更详细的介绍见 tabbar.md 文件
+ * tabbar 选择策略：
  * 0: 'NO_TABBAR' `无 tabbar`
  * 1: 'NATIVE_TABBAR'  `原生 tabbar`
  * 2: 'CUSTOM_TABBAR' `自定义 tabbar`

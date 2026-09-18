@@ -31,10 +31,6 @@ const _customClass = computed(() => {
 <template>
   <view class="box-border flex flex-col items-center justify-center overflow-hidden rounded-full px-3 py-0.5" :class="_customClass">
     <template v-if="item.iconType === 'uiLib'">
-      <!-- TODO: 以下内容请根据选择的UI库自行替换 -->
-      <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
-      <!-- 如：<uv-icon name="home" /> (https://www.uvui.cn/components/icon.html) -->
-      <!-- 如：<sar-icon name="image" /> (https://sard.wzt.zone/sard-uniapp-docs/components/icon)(sar没有home图标^_^) -->
       <view class="text-primary">
         <wd-icon :name="item.icon" size="56rpx" />
       </view>

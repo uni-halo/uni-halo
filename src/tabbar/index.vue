@@ -93,7 +93,7 @@ function handleClickRightButton() {
   }
 }
 
-// 注意，上面处理的是自定义tabbar，下面处理的是原生tabbar，参考：https://unibest.tech/base/10-i18n
+// 注意，上面处理的是自定义tabbar，下面处理的是原生tabbar
 onShow(() => {
   setTabbarItem()
 })

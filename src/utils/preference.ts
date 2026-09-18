@@ -1,5 +1,5 @@
 /**
- * 用户偏好「两层」基建(设计见插件仓库 .docs/config-system-v2-redesign.md §3-4)
+ * 用户偏好「两层」基建（站点默认 + 本地差异）
  *
  * 两层语义:
  * - L0 站点默认:插件 getConfigs 下发(本模块把 getConfigs 中与偏好相关的字段收集为 Partial<IAppSettings>);
