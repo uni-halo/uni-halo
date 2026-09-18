@@ -11,7 +11,7 @@
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
 	definePage({
@@ -22,7 +22,7 @@
 		},
 	})
 
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('gallery', '我的图库')

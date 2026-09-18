@@ -7,7 +7,7 @@
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { sleep } from '@/utils/common'
 	import type { IPost } from '@/api/types/halo'
@@ -20,7 +20,7 @@
 		},
 	})
 
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('archives', '内容归档')

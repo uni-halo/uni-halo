@@ -7,7 +7,7 @@
 	import { useSettingStore } from '@/store/setting'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkAvatarUrl } from '@/utils/url'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { sleep } from '@/utils/common'
@@ -21,7 +21,7 @@
 		},
 	})
 
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('articles', '文章列表')

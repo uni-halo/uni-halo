@@ -6,6 +6,7 @@ import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import type { IPost, IPostListReq } from '@/api/types/halo'
 
 definePage({
@@ -17,6 +18,8 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 吸顶偏移 = 自定义导航栏高度(与 notice/votes 等列表页同用法) */
+const { height: offsetTop } = useNavbarSticky()
 /** 分类文章列表页默认标题（插件端可配置，动态分类名加载后覆盖） */
 const configTitle = usePageTitle('categoryArticles', '分类详情')
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
@@ -148,18 +151,20 @@ onShareTimeline(() => ({
     <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" :default-title="navbarTitle" title-color="text-gray-900" />
 
-    <!-- 排序切换:默认 / 按置顶 / 按最新 / 按最旧 -->
-    <view class="box-border flex items-center gap-2 px-3 py-2">
-      <view
-        v-for="opt in sortOptions"
-        :key="opt.key"
-        class="rounded-full px-3 py-1 text-xs"
-        :class="activeSort === opt.key ? 'bg-secondary font-bold' : 'uh-global-card-glass shadow-none border text-gray-500'"
-        @click="handleSortChange(opt.key)"
-      >
-        {{ opt.label }}
+    <!-- 排序切换吸顶(参考通知公告列表 wd-sticky 用法):默认 / 按置顶 / 按最新 / 按最旧 -->
+    <wd-sticky :offset-top="offsetTop">
+      <view class="box-border flex items-center gap-2 px-3 py-2">
+        <view
+          v-for="opt in sortOptions"
+          :key="opt.key"
+          class="rounded-full px-3 py-1 text-xs"
+          :class="activeSort === opt.key ? 'bg-secondary font-bold' : 'uh-global-card-glass shadow-none border text-gray-500'"
+          @click="handleSortChange(opt.key)"
+        >
+          {{ opt.label }}
+        </view>
       </view>
-    </view>
+    </wd-sticky>
 
     <!-- 加载/错误/空占位(状态机) -->
     <view v-if="loadingStatus !== 'success'">

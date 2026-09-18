@@ -4,7 +4,7 @@
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { useTokenStore } from '@/store/token'
 	import { useUserStore } from '@/store/user'
@@ -28,7 +28,7 @@
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	// wd-sticky 吸顶偏移(导航栏高度,同 tabbar/gallery.vue 用法)
-	const { height } = useCustomNavbarPlaceholder()
+	const { height } = useNavbarSticky()
 	const appConfigStore = useAppConfigStore()
 	const tokenStore = useTokenStore()
 	const userStore = useUserStore()

@@ -5,7 +5,7 @@
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
 	import type { INoticeListVo } from '@/api/types/uni-halo'
@@ -18,7 +18,7 @@
 		},
 	})
 
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('notice', '公告中心')

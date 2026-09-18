@@ -5,6 +5,7 @@
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { debounce } from '@/utils/debounce'
@@ -21,6 +22,8 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	/** 吸顶偏移 = 自定义导航栏高度(与 notice/articles 等列表页同用法) */
+	const { height: offsetTop } = useNavbarSticky()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('votes', '投票中心')
 	const appConfigStore = useAppConfigStore()
@@ -305,30 +308,32 @@
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
-			<view class="box-border w-screen px-3 pt-2">
-				<view class="uh-global-card-glass flex h-9 items-center gap-3 rounded-full px-5">
-					<wd-icon name="search" size="16px" />
-					<input v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
-						placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
-						@input="handleOnInput" @confirm="handleOnSearch">
-					<view v-if="queryParams.keyword" class="flex items-center"
-						@click="queryParams.keyword = ''; handleOnSearch()">
-						<wd-icon name="close" size="14px" />
+			<wd-sticky :offset-top="offsetTop">
+				<view class="box-border w-screen px-3 pt-2 pb-1">
+					<view class="uh-global-card-glass uh-shaxis-xs flex h-9 items-center gap-3 rounded-full px-5">
+						<wd-icon name="search" size="16px" />
+						<input v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
+							placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
+							@input="handleOnInput" @confirm="handleOnSearch">
+						<view v-if="queryParams.keyword" class="flex items-center"
+							@click="queryParams.keyword = ''; handleOnSearch()">
+							<wd-icon name="close" size="14px" />
+						</view>
+					</view>
+					<!-- 筛选栏 -->
+					<view class="box-border flex items-center justify-between mt-1 py-2 gap-x-2">
+						<view v-for="f in filterConfig" :key="f.key"
+							class="uh-global-card-glass uh-shaxis-xs border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
+							:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']"
+							@click="handleOpenFilter(f)">
+							<text class="text-xs truncate">
+								{{ filterLabels[f.key] }}
+							</text>
+							<wd-icon name="arrow-down" size="24rpx" />
+						</view>
 					</view>
 				</view>
-				<!-- 筛选栏 -->
-				<view class="box-border flex items-center justify-between mt-1 py-2 gap-x-2">
-					<view v-for="f in filterConfig" :key="f.key"
-						class="uh-global-card-glass border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
-						:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']"
-						@click="handleOpenFilter(f)">
-						<text class="text-xs truncate">
-							{{ filterLabels[f.key] }}
-						</text>
-						<wd-icon name="arrow-down" size="24rpx" />
-					</view>
-				</view>
-			</view>
+			</wd-sticky>
 
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData" />

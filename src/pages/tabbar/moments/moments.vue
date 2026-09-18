@@ -16,7 +16,7 @@
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import type { IMoment } from '@/api/types/halo'
 
 	definePage({
@@ -28,7 +28,7 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('moments', '我的日常')
 	const appConfigStore = useAppConfigStore()

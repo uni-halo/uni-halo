@@ -11,7 +11,7 @@
 	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useDialog } from '@wot-ui/ui'
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
-	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
+	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import type { ILink, ILinkGroup } from '@/api/types/halo'
@@ -27,7 +27,7 @@
 		},
 	})
 
-	const { height: offsetTop } = useCustomNavbarPlaceholder()
+	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('friendLinks', '友情链接')

@@ -239,8 +239,8 @@
 					</template>
 					<template v-else>
 						<view v-for="(option, optionIndex) in voteData.spec?.options || []" :key="optionIndex"
-							class="vote-select-option box-border rounded-xl bg-[#f6f3ee] px-5 py-4 text-[24rpx]"
-							:class="option.checked ? 'border-2 border-primary bg-primary/15 text-primary font-bold' : ''"
+							class="vote-select-option box-border rounded-lg bg-gray-100 px-4 py-2.5 text-xs"
+							:class="option.checked ? 'bg-primary text-gray-900 font-semibold' : ''"
 							@click="handleSelectSingleOption(option)">
 							{{ option.title }}
 						</view>
@@ -268,8 +268,8 @@
 					</template>
 					<template v-else>
 						<view v-for="(option, optionIndex) in voteData.spec?.options || []" :key="optionIndex"
-							class="vote-select-option box-border rounded-xl bg-[#f6f3ee] px-5 py-4 text-[24rpx]"
-							:class="option.checked ? 'border-2 border-primary bg-primary/15 text-primary font-bold' : ''"
+							class="vote-select-option box-border rounded-lg bg-gray-100 px-4 py-2.5 text-xs"
+							:class="option.checked ? 'bg-primary text-gray-900 font-semibold' : ''"
 							@click="handleSelectCheckboxOption(option)">
 							{{ option.title }}
 						</view>
@@ -309,8 +309,8 @@
 					</template>
 					<template v-else>
 						<view v-for="(option, optionIndex) in voteData.spec?.options || []" :key="optionIndex"
-							class="vote-select-option box-border rounded-xl bg-[#f6f3ee] px-5 py-4 text-[24rpx]"
-							:class="option.checked ? 'border-2 border-primary bg-primary/15 text-primary font-bold' : ''"
+							class="vote-select-option box-border rounded-xl bg-gray-100 px-4 py-2.5 text-xs"
+							:class="option.checked ? 'bg-primary text-gray-900 font-semibold' : ''"
 							@click="handleSelectSingleOption(option)">
 							选项{{ optionIndex + 1 }}：{{ option.title }}
 						</view>

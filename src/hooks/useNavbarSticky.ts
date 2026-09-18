@@ -1,9 +1,10 @@
 import { ref } from 'vue';
 
 /**
- * 自定义导航顶部位置
+ * 自定义导航栏吸顶偏移量
+ * (返回 height = 状态栏 + 导航栏高度,供 wd-sticky offset-top 使用)
  */
-export function useCustomNavbarPlaceholder(customNavbarHeight?: number) {
+export function useNavbarSticky(customNavbarHeight?: number) {
 	const height = ref(0);
 
 	function init() {
