@@ -43,6 +43,9 @@
 	const socialAvatarClass = computed(() =>
 		settings.value.avatarShape === 'circle' ? '!rounded-full !border-none' : '!rounded-xl uh-shadow-xs'
 	)
+	const socialMiniAvatarClass = computed(() =>
+		settings.value.avatarShape === 'circle' ? '!rounded-full !border-none' : '!rounded-md uh-shadow-xs'
+	)
 
 	const CARD_LAYOUTS = computed(()=> ({
 		image_top: {
@@ -51,7 +54,7 @@
 			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
-			avatar: '',
+			avatar: socialMiniAvatarClass.value,
 			nickname: '',
 			infoCol: 'items-center gap-x-1',
 			time: 'flex-1 text-center',
@@ -79,7 +82,7 @@
 			contentWrapper: 'w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
-			avatar: '',
+			avatar: socialMiniAvatarClass.value,
 			nickname: '',
 			infoCol: 'items-center gap-x-1',
 			time: '!hidden',
@@ -93,7 +96,7 @@
 			contentWrapper: 'order-1 w-0 flex-1 justify-between',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
-			avatar: '',
+			avatar: socialMiniAvatarClass.value,
 			nickname: '',
 			infoCol: 'items-center gap-x-1',
 			time: '!hidden',
@@ -190,7 +193,7 @@
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
 				<view class="flex items-center" :class="cardLayout.authorGroup">
 					<image :src="checkAvatarUrl(article.owner?.avatar || '')"
-						class="uh-global-card-glass h-5 w-5 rounded-full" :class="cardLayout.avatar"
+						class="uh-global-card-glass h-5 w-5" :class="cardLayout.avatar"
 						mode="aspectFill" />
 					<template v-if="isSocialCard">
 						<view :class="cardLayout.infoCol">

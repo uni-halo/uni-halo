@@ -4,6 +4,7 @@
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { useSettingStore } from '@/store/setting'
 	import { usePreferenceRows } from '@/hooks/usePreferenceRows'
+	import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 	import { isWechat } from '@/utils/platform'
 
 	const settingStore = useSettingStore()
@@ -118,7 +119,12 @@
 				<view class="box-border flex flex-col gap-y-6 pb-1">
 					<!-- 布局 -->
 					<template v-if="activeTab === 'layout'">
-						<view v-for="group in filterLayoutGroups" :key="group.key" class="flex flex-col gap-y-3">
+						<!-- 路由过滤后无匹配分组:空态提示 -->
+						<uh-data-loading v-if="filterLayoutGroups.length === 0"
+							:loading-status="DataLoadingStatusEnum.Empty" size="mini" empty-text="无匹配的设置"
+							empty-sub-text="当前页面没有可配置的布局项" min-height="30vh" :use-refresh-button="false" />
+						<template v-else>
+							<view v-for="group in filterLayoutGroups" :key="group.key" class="flex flex-col gap-y-3">
 							<uh-section-title>{{ group.label }}</uh-section-title>
 							<view class="uh-global-card-glass shadow-none overflow-hidden rounded-xl">
 								<view v-for="(row) in group.rows" :key="row.key" class="box-border p-3">
@@ -153,11 +159,17 @@
 								</view>
 							</view>
 						</view>
+						</template>
 					</template>
 
 					<!-- 功能:按功能分组(通用功能/友链功能) -->
 					<template v-else>
-						<view v-for="group in filterFeatureGroups" :key="group.key" class="flex flex-col gap-y-3">
+						<!-- 空态兜底(当前功能分组不过滤页面,防御性提示) -->
+						<uh-data-loading v-if="filterFeatureGroups.length === 0"
+							:loading-status="DataLoadingStatusEnum.Empty" size="mini" empty-text="无匹配的设置"
+							empty-sub-text="当前没有可配置的功能项" min-height="30vh" :use-refresh-button="false" />
+						<template v-else>
+							<view v-for="group in filterFeatureGroups" :key="group.key" class="flex flex-col gap-y-3">
 							<uh-section-title>{{ group.label }}</uh-section-title>
 							<view class="uh-global-card-glass shadow-none overflow-hidden rounded-2xl">
 								<view v-for="(row, index) in group.rows" :key="row.key" class="px-4 py-4"
@@ -190,6 +202,7 @@
 								</view>
 							</view>
 						</view>
+						</template>
 					</template>
 				</view>
 			</scroll-view>
