@@ -48,6 +48,9 @@
 	/** 各评论已加载回复(展开后缓存,收起再展开不重拉) */
 	const repliesMap = reactive(new Map<string, IRepliesState>())
 
+	/** 待展开的评论 name(刷新后自动展开其回复区,如回复成功后定位到最新回复) */
+	const pendingExpandName = ref('')
+
 	async function handleGetData() {
 		loading.value = 'loading'
 		try {
@@ -58,11 +61,26 @@
 			expanded.clear()
 			repliesMap.clear()
 			loading.value = 'success'
+			applyPendingExpand()
 			emit('on-loaded', dataList.value)
 		}
 		catch (err) {
 			console.error('获取评论失败', err)
 			loading.value = 'error'
+		}
+	}
+
+	/** 刷新后自动展开待展开评论的回复区(并重新拉取该条回复) */
+	function applyPendingExpand() {
+		if (!pendingExpandName.value) {
+			return
+		}
+		const name = pendingExpandName.value
+		pendingExpandName.value = ''
+		const target = dataList.value.find(item => item.metadata.name === name)
+		if (target) {
+			expanded.add(name)
+			loadReplies(target)
 		}
 	}
 
@@ -186,18 +204,24 @@
 		})
 	}
 
-	/** 外部刷新(评论成功后由宿主调用) */
-	function refresh() {
+	/**
+	 * 外部刷新(评论成功后由宿主调用)
+	 * options.expandCommentName:刷新后自动展开该评论的回复区(回复成功场景)
+	 */
+	function refresh(options ?: { expandCommentName ?: string }) {
+		pendingExpandName.value = options?.expandCommentName || ''
 		handleGetData()
 	}
 
 	/** 兼容旧广播链路(article-detail 评论成功后 uni.$emit('comment_list_refresh')) */
+	const handleBroadcastRefresh = (payload ?: { expandCommentName ?: string }) => refresh(payload)
+
 	onMounted(() => {
-		uni.$on('comment_list_refresh', handleGetData)
+		uni.$on('comment_list_refresh', handleBroadcastRefresh)
 	})
 
 	onUnmounted(() => {
-		uni.$off('comment_list_refresh', handleGetData)
+		uni.$off('comment_list_refresh', handleBroadcastRefresh)
 	})
 
 	defineExpose({ refresh })

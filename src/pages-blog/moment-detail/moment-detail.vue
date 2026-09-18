@@ -162,7 +162,7 @@
 		quoteReply: '',
 	})
 	/** 评论列表组件实例(评论成功后刷新) */
-	const commentListRef = ref<{ refresh : () => void } | null>(null)
+	const commentListRef = ref<{ refresh : (options ?: { expandCommentName ?: string }) => void } | null>(null)
 
 	function handleToComment() {
 		const current = moment.value
@@ -192,11 +192,11 @@
 		}
 	}
 
-	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean }) {
+	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean, replyTo ?: string }) {
 		commentModal.value.show = false
 		if (data.isSubmit) {
-			// 评论成功后刷新评论列表与计数
-			commentListRef.value?.refresh()
+			// 评论成功后刷新评论列表与计数;回复时自动展开对应回复区
+			commentListRef.value?.refresh(data.replyTo ? { expandCommentName: data.replyTo } : undefined)
 			loadMoment()
 		}
 	}

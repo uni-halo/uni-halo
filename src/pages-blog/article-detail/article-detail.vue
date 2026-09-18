@@ -332,13 +332,13 @@
 		}
 	}
 
-	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean }) {
+	function handleOnCommentModalClose(data : { refresh : boolean, isSubmit : boolean, replyTo ?: string }) {
 		if (result.value?.metadata.annotations?.restrictReadEnable === 'comment') {
 			handleGetData()
 		}
 		if (data.refresh && data.isSubmit) {
-			// 评论成功后刷新(通过 uni.$emit 广播给 comment-list)
-			uni.$emit('comment_list_refresh')
+			// 评论成功后刷新(通过 uni.$emit 广播给 comment-list);回复时自动展开对应回复区
+			uni.$emit('comment_list_refresh', data.replyTo ? { expandCommentName: data.replyTo } : undefined)
 		}
 		commentModal.value.show = false
 	}

@@ -2,6 +2,8 @@
 	import { computed, ref, watch } from 'vue'
 	import { addPostComment, addPostCommentReply } from '@/api/halo'
 	import { getCommentWidgetCaptcha, getCommentWidgetConfig } from '@/api/uni-halo'
+	import { useTokenStore } from '@/store/token'
+	import { useUserStore } from '@/store/user'
 	import { setCache } from '@/utils/storage'
 	import { deepMerge } from '@/utils/merge'
 	import { UniHaloError } from '@/http/tools/exception'
@@ -22,10 +24,21 @@
 	})
 
 	const emit = defineEmits<{
-		(e : 'on-close', data : { isSubmit : boolean, refresh : boolean }) : void
+		(e : 'on-close', data : { isSubmit : boolean, refresh : boolean, replyTo ?: string }) : void
 	}>()
 
 	const isShow = ref(false)
+
+	const tokenStore = useTokenStore()
+	const userStore = useUserStore()
+
+	/** 是否登录态:登录时评论者由服务端依据 token 解析,不采集访客信息 */
+	const isLoggedIn = computed(() => tokenStore.hasLogin)
+
+	/** 邮箱格式 */
+	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+	/** 网站地址格式(须以 http(s):// 开头) */
+	const SITE_RE = /^https?:\/\/[^\s]+\.[^\s]+/i
 
 	interface ICaptchaConfig {
 		security ?: {
@@ -97,12 +110,12 @@
 		}
 	}
 
-	/** 获取评论组件配置(验证码开关) */
+	/** 获取评论组件配置(验证码开关;仅匿名评论需要验证码) */
 	async function handleGetConfig() {
 		try {
 			const res = await getCommentWidgetConfig()
 			config.value = deepMerge(config.value as Record<string, unknown>, res.data as Record<string, unknown>) as ICaptchaConfig
-			if (config.value?.security?.captcha?.anonymousCommentCaptcha) {
+			if (!isLoggedIn.value && config.value?.security?.captcha?.anonymousCommentCaptcha) {
 				handleGetCaptchaImage()
 			}
 		}
@@ -127,8 +140,11 @@
 		}
 	}
 
-	/** 初始化访客信息 */
+	/** 初始化访客信息(仅匿名评论) */
 	function handleInitVisitor() {
+		if (isLoggedIn.value) {
+			return
+		}
 		const visitor = uni.getStorageSync('Visitor')
 		if (!visitor)
 			return
@@ -144,8 +160,11 @@
 		}
 	}
 
-	/** 保存访客信息 */
+	/** 保存访客信息(仅匿名评论) */
 	function handleSetVisitor() {
+		if (isLoggedIn.value) {
+			return
+		}
 		setCache('Visitor', {
 			author: form.value.author,
 			avatar: form.value.avatar,
@@ -160,19 +179,52 @@
 			uni.showToast({ icon: 'none', title: '请填写评论内容' })
 			return false
 		}
-		if (!form.value.author.trim()) {
-			uni.showToast({ icon: 'none', title: '请填写昵称' })
-			return false
-		}
-		if (!form.value.email.trim()) {
-			uni.showToast({ icon: 'none', title: '请填写邮箱' })
-			return false
-		}
-		if (config.value?.security?.captcha?.anonymousCommentCaptcha && !form.value.captchaCode?.trim()) {
-			uni.showToast({ icon: 'none', title: '请填写验证码结果！' })
-			return false
+		// 访客身份校验(登录态由服务端解析评论者,无需填写)
+		if (!isLoggedIn.value) {
+			if (!form.value.author.trim()) {
+				uni.showToast({ icon: 'none', title: '请填写昵称' })
+				return false
+			}
+			const email = form.value.email.trim()
+			if (!email) {
+				uni.showToast({ icon: 'none', title: '请填写邮箱' })
+				return false
+			}
+			if (!EMAIL_RE.test(email)) {
+				uni.showToast({ icon: 'none', title: '邮箱格式不正确' })
+				return false
+			}
+			const site = form.value.authorUrl.trim()
+			if (site && !SITE_RE.test(site)) {
+				uni.showToast({ icon: 'none', title: '网站地址需以 http(s):// 开头' })
+				return false
+			}
+			if (config.value?.security?.captcha?.anonymousCommentCaptcha && !form.value.captchaCode?.trim()) {
+				uni.showToast({ icon: 'none', title: '请填写验证码结果！' })
+				return false
+			}
 		}
 		return true
+	}
+
+	/** 匿名评论的访客身份;登录态省略 owner,服务端依据 token 解析当前用户 */
+	function buildOwner() {
+		if (isLoggedIn.value) {
+			return undefined
+		}
+		return {
+			displayName: form.value.author,
+			email: form.value.email,
+			website: form.value.authorUrl,
+		}
+	}
+
+	/** 验证码仅在「匿名评论验证码」开启且未登录时提交 */
+	function buildCaptchaCode() {
+		return !isLoggedIn.value
+			&& config.value?.security?.captcha?.anonymousCommentCaptcha
+			? form.value.captchaCode
+			: undefined
 	}
 
 	async function handleHandle() {
@@ -187,18 +239,14 @@
 					allowNotification: form.value.allowNotification,
 					raw: form.value.content,
 					content: form.value.content,
-					owner: {
-						displayName: form.value.author,
-						email: form.value.email,
-						website: form.value.authorUrl,
-					},
+					owner: buildOwner(),
 					subjectRef: {
 						group: 'content.halo.run',
 						kind: props.subjectKind,
 						name: form.value.postName,
 						version: 'v1alpha1',
 					},
-					captchaCode: config.value?.security?.captcha?.anonymousCommentCaptcha ? form.value.captchaCode : undefined,
+					captchaCode: buildCaptchaCode(),
 				})
 				uni.showToast({ icon: 'none', title: '评论成功，可能需要审核！' })
 			}
@@ -208,24 +256,20 @@
 					allowNotification: form.value.allowNotification,
 					raw: form.value.content,
 					content: form.value.content,
-					owner: {
-						displayName: form.value.author,
-						email: form.value.email,
-						website: form.value.authorUrl,
-					},
+					owner: buildOwner(),
 					quoteReply: props.quoteReply || undefined,
-					captchaCode: config.value?.security?.captcha?.anonymousCommentCaptcha ? form.value.captchaCode : undefined,
+					captchaCode: buildCaptchaCode(),
 				})
 				uni.showToast({ icon: 'none', title: '回复成功，可能需要审核！' })
 			}
 
 			handleSetVisitor()
-			handleClose(true)
+			handleSubmitSuccess()
 			handleResetForm()
 		}
 		catch (err : any) {
 			const error = err as UniHaloError
-			if (config.value?.security?.captcha?.anonymousCommentCaptcha) {
+			if (!isLoggedIn.value && config.value?.security?.captcha?.anonymousCommentCaptcha) {
 				captchaData.value.status = 'success'
 				form.value.captchaCode = undefined
 				if (error?.data?.captcha) {
@@ -248,15 +292,27 @@
 		}
 	}
 
-	function handleClose(refresh = false) {
+	/** 提交成功:关闭弹窗并通知宿主刷新;replyTo=回复时的一级评论名,宿主可自动展开其回复区 */
+	function handleSubmitSuccess() {
 		isShow.value = false
-		emit('on-close', { isSubmit: true, refresh })
+		emit('on-close', {
+			isSubmit: true,
+			refresh: true,
+			replyTo: props.isComment ? undefined : props.postName,
+		})
+	}
+
+	/** 手动关闭(关闭按钮/遮罩),不触发列表刷新 */
+	function handleManualClose() {
+		isShow.value = false
+		emit('on-close', { isSubmit: false, refresh: false })
 	}
 
 	watch(() => props.show, (newVal) => {
 		if (!newVal) {
 			return
 		}
+		tokenStore.updateNowTime()
 		isShow.value = true
 		handleResetForm()
 		form.value.postName = props.postName
@@ -276,7 +332,7 @@
 				<text>{{ calcTitle }} </text>
 				<view
 					class="absolute right-0 top-0 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg flex items-center justify-center"
-					@click="handleClose">
+					@click="handleManualClose">
 					<wd-icon name="close" size="28rpx" class="text-gray-500"></wd-icon>
 				</view>
 			</view>
@@ -288,29 +344,36 @@
 						:placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200" />
 				</view>
 
-				<view class="form-item mb-4 flex items-center">
-					<text class="label w-16 shrink-0 text-xs text-gray-500">我的昵称</text>
-					<input v-model="form.author"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
-						placeholder="请输入您的昵称...">
+				<!-- 登录态:评论者由服务端依据 token 解析 -->
+				<view v-if="isLoggedIn" class="form-item mb-4 text-xs text-gray-400">
+					将以当前登录账号「{{ userStore.userInfo.nickname || userStore.userInfo.username }}」的身份发表
 				</view>
 
-				<view class="form-item mb-4 flex items-center">
-					<text class="label w-16 shrink-0 text-sm text-gray-500">我的邮箱</text>
-					<input v-model="form.email"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
-						placeholder="请输入您的邮箱...">
-				</view>
+				<template v-else>
+					<view class="form-item mb-4 flex items-center">
+						<text class="label w-16 shrink-0 text-xs text-gray-500">我的昵称</text>
+						<input v-model="form.author"
+							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
+							placeholder="请输入您的昵称...">
+					</view>
 
-				<view class="form-item mb-4 flex items-center">
-					<text class="label w-16 shrink-0 text-sm text-gray-500">我的网站</text>
-					<input v-model="form.authorUrl"
-						class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
-						placeholder="[ 可选 ] 请输入您的网址...">
-				</view>
+					<view class="form-item mb-4 flex items-center">
+						<text class="label w-16 shrink-0 text-sm text-gray-500">我的邮箱</text>
+						<input v-model="form.email"
+							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
+							placeholder="请输入您的邮箱...">
+					</view>
+
+					<view class="form-item mb-4 flex items-center">
+						<text class="label w-16 shrink-0 text-sm text-gray-500">我的网站</text>
+						<input v-model="form.authorUrl"
+							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
+							placeholder="[ 可选 ] 请输入您的网址...">
+					</view>
+				</template>
 
 				<!-- 匿名评论验证码 -->
-				<view v-if="config?.security?.captcha?.anonymousCommentCaptcha"
+				<view v-if="!isLoggedIn && config?.security?.captcha?.anonymousCommentCaptcha"
 					class="form-item mb-4 flex items-center">
 					<text class="w-16 shrink-0 text-sm text-gray-500">验证码</text>
 					<view class="flex flex-1 items-center gap-3">

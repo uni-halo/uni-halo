@@ -46,13 +46,24 @@
 
 	const activeTab = ref<'layout' | 'feature'>('layout')
 
-	// 进行过滤，只保留当前页面的布局和功能
-	const pages = getCurrentPages()
-	const currentPage = pages[pages.length - 1]
+	/**
+	 * 布局分组按当前页面过滤。
+	 * 弹窗在 App.ku.vue 全局只挂载一次,getCurrentPages 必须在每次打开时重新读取,
+	 * 否则 currentPage 永远是启动入口页(通常是 home),其他页面的布局设置将错位。
+	 */
+	const routeKey = ref('')
+	watch(() => props.modelValue, (visible) => {
+		if (visible) {
+			const pages = getCurrentPages()
+			const current = pages[pages.length - 1]
+			routeKey.value = current?.route?.split('/').pop() || ''
+		}
+	})
+	/** 路由末段 → 布局分组 key(user-profile 笔记 tab 消费文章卡片配置,归入 articles 组) */
+	const ROUTE_GROUP_ALIAS : Record<string, string> = { 'user-profile': 'articles' }
 	const filterLayoutGroups = computed(() => {
-		return layoutGroups.value.filter((group) => {
-			return currentPage.route.split('/').pop() === group.key
-		})
+		const key = ROUTE_GROUP_ALIAS[routeKey.value] || routeKey.value
+		return layoutGroups.value.filter((group) => group.key === key)
 	})
 	/** 功能分组:全局性偏好(通用功能/友链功能),不做页面过滤 */
 	const filterFeatureGroups = computed(() => featureGroups.value)

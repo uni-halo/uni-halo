@@ -183,6 +183,9 @@ export interface IAddCommentReq {
 
 /**
  * 新增评论(captchaCode 拆出转 X-Captcha-Code 头 + Cookie)
+ *
+ * 登录态下请求体省略 owner 时,服务端(CommentServiceImpl.populateOwner)
+ * 会依据 Authorization token 自动解析当前用户为评论者
  */
 export function addPostComment(data: IAddCommentReq) {
 	const { captchaCode, ...rest } = data;
@@ -195,12 +198,12 @@ export function addPostComment(data: IAddCommentReq) {
 	return http.Post<IResponse<IComment>>('/apis/api.halo.run/v1alpha1/comments', rest, {
 		headers,
 		cacheFor: 0,
-		meta: { requestFrom: RequestFrom.Halo }
+		meta: { requestFrom: RequestFrom.Halo, needAuthToken: true }
 	});
 }
 
 /**
- * 新增评论回复(同上,验证码逻辑)
+ * 新增评论回复(同上,验证码逻辑;登录态省略 owner 时服务端依据 token 解析当前用户)
  */
 export function addPostCommentReply(commentName: string, data: IAddCommentReq) {
 	const { captchaCode, ...rest } = data;
@@ -213,7 +216,7 @@ export function addPostCommentReply(commentName: string, data: IAddCommentReq) {
 	return http.Post<IResponse<IComment>>(`/apis/api.halo.run/v1alpha1/comments/${commentName}/reply`, rest, {
 		headers,
 		cacheFor: 0,
-		meta: { requestFrom: RequestFrom.Halo }
+		meta: { requestFrom: RequestFrom.Halo, needAuthToken: true }
 	});
 }
 
