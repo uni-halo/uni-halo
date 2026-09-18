@@ -225,7 +225,11 @@
 	}
 
 	/** 月份变化后重置分页并重新拉取 */
-	function refreshByMonth() {
+	const lastQueriedMonth = ref<string | null>(null)
+	function refreshByMonth(month = selectedMonth.value) {
+		// 月份未变化则不重复请求
+		if (lastQueriedMonth.value === month) { return }
+		lastQueriedMonth.value = month
 		resetLoadMoreStatus()
 		queryParams.value.page = 1
 		handleGetData()
