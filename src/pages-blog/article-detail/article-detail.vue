@@ -302,7 +302,7 @@
 	}
 
 	/* ---------------- 评论 ---------------- */
-	/** 底部悬浮评论按钮:滚动到评论区(新增评论入口在评论区头部「写评论」/空态「抢沙发」) */
+	/** 底部悬浮评论按钮:滚动到评论区并弹出评论窗 */
 	function handleToComment() {
 		if (!result.value) {
 			return
@@ -315,6 +315,13 @@
 			return
 		}
 		handleScrollToSelector('#comment-section')
+		commentModal.value = {
+			show: true,
+			isComment: true,
+			postName: result.value.metadata.name,
+			title: '新增评论',
+			quoteReply: '',
+		}
 	}
 
 	function handleOnComment(data : { isComment : boolean, postName : string, title : string, quoteReply ?: string }) {
@@ -584,9 +591,10 @@
 					<!-- 评论区域 -->
 					<view id="comment-section" class="box-border">
 						<uh-comment-list v-if="calcIsShowComment && result"
-							:disallow-comment="!result.spec.allowComment" :post-name="result.metadata.name"
+							:disallow-comment="!result.spec.allowComment" :show-entry="calcIsShowComment"
+							:post-name="result.metadata.name"
 							:post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"
-							@on-loaded="handleCommentLoaded" />
+							@on-comment-entry="handleToComment()" @on-loaded="handleCommentLoaded" />
 					</view>
 				</view>
 			</view>

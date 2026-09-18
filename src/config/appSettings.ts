@@ -5,7 +5,7 @@ export interface IAppSettings {
   homeListLayout: string
   homeCardType: string
   articlesListLayout: string
-  articleCardType: string
+  articlesCardType: string
   archivesListLayout: string
   archivesCardType: string
   /** 友情链接页展示偏好（插件端 preferences.linkPage） */
@@ -19,8 +19,8 @@ export const DefaultAppSettings: IAppSettings = {
   avatarShape: 'square',
   homeListLayout: 'single',
   homeCardType: 'image_top',
-  articlesListLayout: 'double',
-  articleCardType: 'image_top',
+  articlesListLayout: 'single',
+  articlesCardType: 'image_top',
   archivesListLayout: 'single',
   archivesCardType: 'image_top',
   linkPage: {

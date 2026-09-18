@@ -27,31 +27,42 @@ export const PAGE_GROUPS = [
 	{ key: 'archives', label: '归档页面' }
 ];
 
+/** 每组对应的插件端字段名(注意:文章卡片样式字段为 articlesCardType,无 s,
+ * 不能用 ${group.key}CardType 模板拼接,否则弹窗会写入无人消费的野键) */
+const GROUP_FIELDS: Record<string, { listKey : string, cardKey : string }> = {
+	home: { listKey: 'homeListLayout', cardKey: 'homeCardType' },
+	articles: { listKey: 'articlesListLayout', cardKey: 'articlesCardType' },
+	archives: { listKey: 'archivesListLayout', cardKey: 'archivesCardType' }
+};
+
 /** 布局偏好字段(页面分组 × 列表布局/卡片样式;path 直接为插件端顶层字段名,无映射) */
-export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
-	{
-		key: `${group.key}ListLayout`,
-		label: '列表布局',
-		kind: 'enum',
-		path: [`${group.key}ListLayout`],
-		options: [
-			{ label: '单列', value: 'single' },
-			{ label: '双列', value: 'double' }
-		]
-	},
-	{
-		key: `${group.key}CardType`,
-		label: '卡片样式',
-		kind: 'enum',
-		path: [`${group.key}CardType`],
-		options: [
-			{ label: '上图下文', value: 'image_top' },
-			{ label: '左文右图', value: 'image_right' },
-			{ label: '上文下图', value: 'image_bottom' },
-			{ label: '左图右文', value: 'image_left' }
-		]
-	}
-]);
+export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => {
+	const fields = GROUP_FIELDS[group.key];
+	return [
+		{
+			key: fields.listKey,
+			label: '列表布局',
+			kind: 'enum',
+			path: [fields.listKey],
+			options: [
+				{ label: '单列', value: 'single' },
+				{ label: '双列', value: 'double' }
+			]
+		},
+		{
+			key: fields.cardKey,
+			label: '卡片样式',
+			kind: 'enum',
+			path: [fields.cardKey],
+			options: [
+				{ label: '上图下文', value: 'image_top' },
+				{ label: '左文右图', value: 'image_right' },
+				{ label: '上文下图', value: 'image_bottom' },
+				{ label: '左图右文', value: 'image_left' }
+			]
+		}
+	];
+});
 
 /** 功能偏好按分组展示(通用功能 / 友链功能) */
 export const FEATURE_GROUPS = [
@@ -170,13 +181,16 @@ export function usePreferenceRows() {
 
 	/** 布局设置按页面分组的展示行（列表布局 + 卡片样式两行） */
 	const layoutGroups = computed(() =>
-		PAGE_GROUPS.map((group) => ({
-			key: group.key,
-			label: group.label,
-			rows: layoutRows.value.filter((row) =>
-				row.path[0] === `${group.key}ListLayout` || row.path[0] === `${group.key}CardType`
-			)
-		}))
+		PAGE_GROUPS.map((group) => {
+			const fields = GROUP_FIELDS[group.key];
+			return {
+				key: group.key,
+				label: group.label,
+				rows: layoutRows.value.filter((row) =>
+					row.path[0] === fields.listKey || row.path[0] === fields.cardKey
+				)
+			};
+		})
 	);
 
 	/** 当前项是否处于「跟随站点默认」(本地未覆盖) */
@@ -189,15 +203,17 @@ export function usePreferenceRows() {
 		savePreference(buildPatch(path, null));
 	}
 
-	/** 给定字段路径,判断该页面列表布局是否为双列(path[0] 即插件端顶层字段名；
-	 * 列表布局行直接取值,卡片样式行推导同组 ListLayout 字段) */
+	/** 给定卡片样式字段路径,判断同组列表布局是否为双列(字段名经 GROUP_FIELDS 配对,
+	 * 不能用 CardType→ListMode 字符串替换推导——articlesCardType 对应的是 articlesListLayout) */
 	function isDoubleColumn(path: string[]): boolean {
-		const field = path[0] || ''
-		const listKey = field.endsWith('CardType') ? field.replace(/CardType$/, 'ListLayout') : field
-		if (listKey.endsWith('ListLayout')) {
-			return prefValueOf([listKey]) === 'double';
+		const field = path[0] || '';
+		const pair = Object.values(GROUP_FIELDS).find(
+			(p) => p.cardKey === field || p.listKey === field
+		);
+		if (!pair) {
+			return false;
 		}
-		return false;
+		return prefValueOf([pair.listKey]) === 'double';
 	}
 
 	/** 卡片样式选项是否因双列约束被禁用(双列仅允许 image_top) */
@@ -210,11 +226,11 @@ export function usePreferenceRows() {
 			handleRevert(path);
 		} else {
 			savePreference(buildPatch(path, value));
-			// 双列约束:列表布局改为双列时,卡片样式强制为 image_top
+			// 双列约束:列表布局改为双列时,同组卡片样式强制为 image_top
 			if (path[0].endsWith('ListLayout') && value === 'double') {
-				const cardTypePath = [path[0].replace(/ListLayout$/, 'CardType')];
-				if (prefValueOf(cardTypePath) !== 'image_top') {
-					savePreference(buildPatch(cardTypePath, 'image_top'));
+				const pair = Object.values(GROUP_FIELDS).find((p) => p.listKey === path[0]);
+				if (pair && prefValueOf([pair.cardKey]) !== 'image_top') {
+					savePreference(buildPatch([pair.cardKey], 'image_top'));
 				}
 			}
 		}

@@ -165,7 +165,7 @@
 	/** 评论列表组件实例(评论成功后刷新) */
 	const commentListRef = ref<{ refresh : (options ?: { expandCommentName ?: string }) => void } | null>(null)
 
-	/** 底部悬浮评论按钮:滚动到评论区(新增评论入口在评论区头部「写评论」/空态「抢沙发」) */
+	/** 底部悬浮评论按钮:滚动到评论区并弹出评论窗 */
 	function handleToComment() {
 		const current = moment.value
 		if (!current)
@@ -175,6 +175,13 @@
 			return
 		}
 		handleScrollToSelector('#comment-section')
+		commentModal.value = {
+			show: true,
+			isComment: true,
+			postName: current.metadata.name,
+			title: '新增评论',
+			quoteReply: '',
+		}
 	}
 
 	/** 评论列表触发(回复某条评论/新增) */
@@ -362,7 +369,8 @@
 		<!-- 评论列表(瞬间评论,kind=Moment) -->
 		<view v-if="moment" id="comment-section">
 			<uh-comment-list ref="commentListRef" :post-name="moment.metadata.name" :post="moment"
-				kind="Moment" :disallow-comment="!moment.spec.allowComment" @on-comment="handleOnComment" />
+				kind="Moment" :disallow-comment="!moment.spec.allowComment" :show-entry="moment.spec.allowComment"
+				@on-comment="handleOnComment" @on-comment-entry="handleToComment()" />
 		</view>
 		</view>
 

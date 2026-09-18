@@ -59,7 +59,7 @@ export function clearLocalPrefs(): void {
  * 偏好字段与 getConfigs.preferences 字段名完全一致,只做值校验后透传,
  * 不改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套。
  * 字段对照(与插件端一致):
- * - preferences.homeListLayout/homeCardType/articlesListLayout/articleCardType/
+ * - preferences.homeListLayout/homeCardType/articlesListLayout/articlesCardType/
  *   archivesListLayout/archivesCardType → 同名顶层字段;
  * - preferences.avatarShape → avatarShape。
  */
@@ -88,7 +88,7 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
       }
     }
     setLayout('homeListLayout', 'homeCardType')
-    setLayout('articlesListLayout', 'articleCardType')
+    setLayout('articlesListLayout', 'articlesCardType')
     setLayout('archivesListLayout', 'archivesCardType')
 
     if (prefs.avatarShape === 'square' || prefs.avatarShape === 'circle') {

@@ -109,7 +109,7 @@
 	/** 各页面卡片样式字段名(与插件端 preferences 字段一致) */
 	const CARD_TYPE_KEY : Record<'home' | 'articles' | 'archives', string> = {
 		home: 'homeCardType',
-		articles: 'articleCardType',
+		articles: 'articlesCardType',
 		archives: 'archivesCardType',
 	}
 

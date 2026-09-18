@@ -257,7 +257,7 @@ export interface IAppConfig {
 			/** image_top/image_right/image_bottom/image_left */
 			homeCardType?: string;
 			articlesListLayout?: 'single' | 'double' | string;
-			articleCardType?: string;
+			articlesCardType?: string;
 			archivesListLayout?: 'single' | 'double' | string;
 			archivesCardType?: string;
 			/** 头像外观：square 方形（默认）/ circle 圆形 */

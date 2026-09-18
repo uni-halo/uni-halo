@@ -9,13 +9,16 @@
 		post : { metadata : { name : string } }
 		/** 评论目标 kind(笔记 Post / 瞬间 Moment) */
 		kind ?: string
+		showEntry ?: boolean
 	}>(), {
 		disallowComment: false,
 		kind: 'Post',
+		showEntry: true,
 	})
 
 	const emit = defineEmits<{
 		(e : 'on-comment', data : { isComment : boolean, postName : string, title : string, quoteReply ?: string }) : void
+		(e : 'on-comment-entry', postName : string) : void
 		(e : 'on-comment-detail', data : { postName : string, comment : IComment }) : void
 		(e : 'on-loaded', list : IComment[]) : void
 	}>()
@@ -237,8 +240,8 @@
 				评论列表
 				<template #right>
 					<view class="flex items-center gap-3">
-						<text v-if="!disallowComment" class="text-xs text-gray-500 font-normal"
-							@click="handleToComment()">写评论</text>
+						<text v-if="showEntry" class="text-xs text-gray-500 font-normal"
+							@click="emit('on-comment-entry', props.post.metadata.name)">写评论</text>
 						<text class="text-xs text-gray-500 font-normal" @click="handleGetData">刷新</text>
 					</view>
 				</template>
