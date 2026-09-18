@@ -99,7 +99,7 @@
 <template>
 	<view class="box-border min-h-screen w-screen bg-page pb-safe">
 		<!-- 自定义导航 -->
-		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :scroll-title="title" title-color="text-gray-900" />
 
 		<!-- 加载/错误/空态(状态机) -->
 		<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="75vh"
@@ -108,7 +108,7 @@
 		<!-- 正文 -->
 		<view v-else class="box-border p-4">
 			<image v-if="cover" class="mb-5 h-[320rpx] w-full rounded-xl" :src="cover" mode="aspectFill" />
-			<view class="text-[36rpx] font-bold leading-snug text-gray-900">
+			<view class="text-md font-bold leading-snug text-gray-900">
 				{{ title }}
 			</view>
 
@@ -124,18 +124,16 @@
 				</text>
 			</view>
 
-			<view class="box-border w-full mt-2 pt-4 pb-6">
+			<view class="box-border w-full mt-2 pt-4 pb-12 text-3xs text-gray-900">
 				<mp-html :content="content" lazy-load :domain="markdownConfig.domain ?? ''" scroll-table selectable
 					:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
 					:show-line-number="false" copy-by-long-press />
 			</view>
 
-			<view v-if="hasLink" class="fixed left-0 right-0 bottom-0 pb-safe px-4 box-border">
-				<view class="w-full h-full uh-global-card-glass border rounded-full mb-4">
-					<uh-button custom-class="w-full !rounded-full py-2.5 font-medium" @click="handleCopy">
+			<view v-if="hasLink" class="fixed left-0 right-0 bottom-4 pb-safe px-4 box-border">
+					<uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleCopy">
 						复制原文地址
 					</uh-button>
-				</view>
 			</view>
 		</view>
 	</view>
