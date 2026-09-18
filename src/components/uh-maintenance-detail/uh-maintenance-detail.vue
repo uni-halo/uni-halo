@@ -47,7 +47,7 @@
 				copy-by-long-press />
 		</scroll-view>
 		<view class="w-full box-border flex items-center p-3">
-			<uh-button class="w-full flex-1" custom-class="w-full flex-1 shadow-none bg-white text-primary" @click="close()">关闭</uh-button>
+			<uh-button class="w-full flex-1" custom-class="w-full flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white text-primary" @click="close()">关闭</uh-button>
 		</view>
 	</uh-glass-popup>
 </template>

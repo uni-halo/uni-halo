@@ -95,7 +95,7 @@
 				<view
 					class="uh-global-card-glass !bg-white/5 border flex h-6 w-6 rounded-lg items-center justify-center text-gray-500"
 					@click="handleClose">
-					<wd-icon name="close" size="16px" />
+					<wd-icon name="close" size="28rpx" />
 				</view>
 			</view>
 
@@ -119,7 +119,7 @@
 				<view class="text-xs text-gray-600 " @click="handleDismissForever">
 					今日不再提醒
 				</view>
-				<uh-button custom-class="text-xs" @click="handleViewAll">
+				<uh-button custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 !rounded-xl" @click="handleViewAll()">
 					查看全文 →
 				</uh-button>
 			</view>

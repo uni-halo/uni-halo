@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 /**
  * 瞬间编辑弹窗
- *
- * 用法：
- * - 发布模式：<uh-admin-moment-edit-popup :show="visible" @on-close="..." />
- * - 编辑模式：通过 ref.openEdit(name) 仅传 metadata.name，组件内部查询详情回填
  */
 import { nextTick, ref, watch } from 'vue'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
@@ -190,7 +186,7 @@ defineExpose({ openEdit })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+  <uh-glass-popup v-model="isShow" :z-index="999" safe-area-inset-bottom position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
       <view class="w-full flex flex-col gap-y-1">
         <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>
@@ -200,8 +196,7 @@ defineExpose({ openEdit })
         <wd-icon name="close" size="32rpx" class="text-gray-500" />
       </view>
     </view>
-    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-      <!-- 正文编辑（官方 editor，经 uh-rich-editor 封装，带基础格式工具条） -->
+    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] px-4 pt-0">
       <view class="uh-global-card-glass mb-4 overflow-hidden rounded-xl shadow-none">
         <uh-rich-editor
           ref="editorRef"
@@ -212,8 +207,8 @@ defineExpose({ openEdit })
       </view>
 
       <!-- 图片九宫格 -->
-      <view class="mb-5">
-        <text class="mb-2 block text-sm text-[#666]">图片</text>
+      <view class="mb-3">
+        <text class="mb-2 block text-sm text-gray-500">图片</text>
         <view class="grid grid-cols-4 gap-2">
           <view v-for="img in images" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
             <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
@@ -239,8 +234,8 @@ defineExpose({ openEdit })
     </scroll-view>
 
     <!-- 底部固定操作栏（滚动区外） -->
-    <view class="border-t border-black/5 px-4 pb-safe pt-3">
-      <uh-button custom-class="py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
+    <view class="box-border px-4 pt-2">
+      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
         {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
       </uh-button>
     </view>

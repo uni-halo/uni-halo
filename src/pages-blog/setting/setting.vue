@@ -267,12 +267,12 @@
 					@change="handlePickerChange" />
 				<!-- 底部操作:取消 / 确认 -->
 				<view class="mt-4 flex items-center justify-center gap-x-3">
-					<uh-button custom-class="flex-1 py-2 uh-global-card-glass border !rounded-xl bg-white/90"
+					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 						@click="handlePickerCancel">
 						取消
 					</uh-button>
 					<uh-button
-						custom-class="flex-1 py-2 uh-global-card-glass !rounded-xl border bg-primary text-gray-900"
+						custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
 						@click="handlePickerConfirm">
 						确定
 					</uh-button>

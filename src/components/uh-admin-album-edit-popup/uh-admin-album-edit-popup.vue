@@ -206,7 +206,7 @@ defineExpose({ openEdit })
 
     <!-- 底部固定操作栏（滚动区外） -->
     <view class="border-t border-black/5 px-4 pb-safe pt-3">
-      <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
         保存
       </uh-button>
     </view>

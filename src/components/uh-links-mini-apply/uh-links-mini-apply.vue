@@ -316,7 +316,7 @@
 			</view>
 
 			<view class="my-6">
-				<uh-button custom-class="py-2 !rounded-xl" @click="handleHandle">
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleHandle">
 					提交申请
 				</uh-button>
 			</view>

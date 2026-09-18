@@ -6,27 +6,22 @@
 	import type { IBannerPublicItem } from '@/api/types/uni-halo'
 
 	export interface IBannerItem {
-		/** 条目标识(Banner 为 metadata.name;兼容旧数据) */
 		id ?: string | number
-		/** Banner 条目 metadata.name(custom 详情页跳转用) */
 		name ?: string
 		title ?: string
 		image ?: string
 		src ?: string
-		/** 来源:post=文章快照 / custom=自定义 */
 		type ?: string
-		/** 文章 id(source=post 时跳转文章详情) */
 		postId ?: string
 		content ?: string
 		url ?: string
-		/** 展示日期(ISO 快照) */
 		date ?: string
 		authorName ?: string
 		authorAvatar ?: string
 		[key : string] : unknown
 	}
 
-	/* ---------------- 数据(高内聚:内部请求公开接口) ---------------- */
+	/* ---------------- 数据 ---------------- */
 	const bannerList = ref<IBannerItem[]>([])
 	const currentIndex = ref(0)
 	const currentBanner = ref<IBannerItem | null>(null)
@@ -104,9 +99,9 @@
 				</swiper-item>
 			</swiper>
 			<view v-if="currentBanner"
-				class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5 backdrop-blur-[2rpx]">
-				<view class="box-border mt-3 flex items-center justify-center bg-secondary px-3 py-1 rounded-xl">
-					<text class="text-2xs text-gray-900 font-semibold">
+				class="box-border pt-safe pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5 backdrop-blur-[2rpx]">
+				<view class="max-w-[60vw] truncate box-border mt-3 flex items-center justify-center bg-secondary px-3 py-1.5 rounded-xl">
+					<text class="text-xs text-gray-900 font-semibold">
 						{{ currentBanner.title }}
 					</text>
 				</view>
@@ -121,7 +116,7 @@
 				class="uh-global-card-glass border w-4/5 rounded-full px-4 py-2.5 text-gray-600 flex items-center justify-center gap-x-2"
 				@click="handleToSearch()">
 				<wd-icon name="search-line" size="32rpx"></wd-icon>
-				<text class="text-2xs">哈喽，想看些什么 <text class="bg-secondary rounded-xl px-1">{ 内容 }</text> 呢~</text>
+				<text class="text-2xs">哈喽，想看些什么 <text class="bg-secondary rounded-lg px-1">{ 内容 }</text> 呢~</text>
 			</view>
 		</view>
 	</view>

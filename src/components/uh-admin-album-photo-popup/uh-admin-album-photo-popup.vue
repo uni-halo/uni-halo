@@ -175,7 +175,7 @@ defineExpose({ openDetail })
 
     <!-- 提交待传照片：底部固定操作栏（滚动区外） -->
     <view v-if="pendingPhotos.length" class="border-t border-black/5 px-4 pb-safe pt-3">
-      <uh-button custom-class="py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
+      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
         {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
       </uh-button>
     </view>

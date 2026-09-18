@@ -281,10 +281,10 @@
 </script>
 
 <template>
-	<view class="app-page box-border min-h-screen w-screen bg-page pb-safe">
+	<view class="box-border min-h-screen w-screen bg-page pb-safe">
 		<uh-navbar :scroll-y="scrollY" default-title="瞬间详情" title-color="text-gray-900" />
 
-		<uh-data-loading v-if="status !== 'success'" :loading-status="status" min-height="60vh" error-text="瞬间内容加载失败"
+		<uh-data-loading v-if="status !== 'success'" :loading-status="status" min-height="70vh" error-text="瞬间内容加载失败"
 			empty-text="瞬间不存在或已被删除" @refresh="loadMoment" />
 
 		<view v-else-if="moment" class="box-border px-3 pt-2 pb-14">

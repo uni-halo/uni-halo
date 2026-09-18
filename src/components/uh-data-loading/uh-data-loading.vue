@@ -36,19 +36,19 @@
 			icon: '60rpx',
 			stage: 'h-16 w-16',
 			glow: 'h-12 w-12',
-			button: '!rounded-lg py-0.5'
+			button: 'py-0.5'
 		},
 		small: {
 			icon: '100rpx',
 			stage: 'h-22 w-22',
 			glow: 'h-18 w-18',
-			button: '!rounded-lg py-1'
+			button: ' py-1'
 		},
 		large: {
 			icon: '120rpx',
 			stage: 'h-32 w-32',
 			glow: 'h-28 w-28',
-			button: '!rounded-lg'
+			button: ''
 		},
 	}
 
@@ -117,7 +117,7 @@
 				{{ statusScene.subText }}
 			</text>
 			<view v-if="props.useRefreshButton" class="mt-4">
-				<uh-button :custom-class="'uh-global-card-glass text-xs py-2 uh-shadow-xs border' + sizeClasses.button"
+				<uh-button :custom-class="'uh-global-card-glass !text-xs !rounded-full py-2 uh-shadow-xs border' + sizeClasses.button"
 					@click="emit('refresh')">
 					刷新试试
 				</uh-button>

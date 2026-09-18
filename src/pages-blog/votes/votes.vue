@@ -311,7 +311,7 @@
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>

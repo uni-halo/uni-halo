@@ -177,7 +177,7 @@
 			</view>
 
 			<view class="my-6">
-				<uh-button custom-class="py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
 					提交申请
 				</uh-button>
 			</view>

@@ -239,7 +239,6 @@
 		}, 1800)
 	}
 
-	/** 刷新看看:转圈 → 静默重查(恢复则回入口页),仍在维护则提示 */
 	async function handleRefresh() {
 		if (spinning.value) { return }
 		spinning.value = true
@@ -303,7 +302,7 @@
 					<view
 						class="bob flex items-center justify-center absolute inset-0 rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass border-4 border-white">
 						<image v-if="appLogo" class="h-full w-full rounded-full" :src="appLogo" mode="aspectFill" />
-						<wd-icon v-else class-prefix="uhemoji-icon" name="-thinking" size="140rpx"
+						<wd-icon v-else class-prefix="uhemoji-icon" name="-injury" size="140rpx"
 							class="text-gray-900" />
 					</view>
 					<view
@@ -391,9 +390,9 @@
 					</view>
 
 					<!-- 操作 -->
-					<view class="mt-2 w-full flex flex-col gap-4">
+					<view class="box-border mt-2 w-full flex flex-col gap-4 px-12">
 						<uh-button
-							custom-class="uh-global-card-glass w-full border flex-1 py-3 !rounded-full font-semibold"
+							custom-class="uh-global-card-glass w-full border flex-1 py-2.5 !rounded-full font-semibold"
 							@click="handleRefresh">{{ spinning?'请稍等...':'刷新试试'}}</uh-button>
 						<view v-if="detailHtml"
 							class="uh-global-card-glass w-full py-2 flex flex-1 items-center justify-center rounded-full bg-white text-sm text-primary font-extrabold uh-shadow-xs"
@@ -402,8 +401,8 @@
 						</view>
 					</view>
 					<!-- 页脚 -->
-					<view class="mt-[12rpx] flex flex-col items-center">
-						<view class="mt-[18rpx] text-center text-[21rpx] text-black/50 font-medium leading-[1.7]">
+					<view class="mt-4 flex flex-col items-center">
+						<view class="mt-6 text-center text-xs text-gray-600 font-medium leading-5">
 							升级期间给你带来不便，非常抱歉
 							<text class="block">
 								去喝杯奶茶等等吧～

@@ -394,7 +394,7 @@
 					<view class="story-html text-sm text-gray-900 leading-7" v-html="currentStory.content" />
 				</scroll-view>
 				<view class="w-full mt-3">
-					<uh-button custom-class="uh-global-card-glass border !bg-love/90 !py-2 text-white" @click="showDetail = false">关闭</uh-button>
+					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white" @click="showDetail = false">关闭</uh-button>
 				</view>
 			</view>
 		</uh-glass-popup>

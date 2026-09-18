@@ -23,7 +23,7 @@
 	const pageTitle = usePageTitle('dataVisual', '数据看板')
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginDataStatistics,
-		tips: '阿偶，检测到当前插件没有安装或者启用，无法使用功能哦，请联系管理员',
+		tips: '阿偶，功能正在维护中...',
 	})
 
 	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
@@ -197,7 +197,7 @@
 		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
-			:checking="checking" @on-refresh="handlePluginRefresh" />
+			:checking="checking" @on-refresh="handlePluginRefresh" custom-class="h-[70vh]"/>
 			
 		<template v-else>
 			<uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" empty-text="暂无统计数据"

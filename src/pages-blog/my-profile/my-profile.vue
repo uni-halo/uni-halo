@@ -485,12 +485,12 @@
 					</text>
 				</view>
 				<view class="mt-4 flex items-center justify-center gap-x-3">
-					<uh-button custom-class="flex-1 py-2 uh-global-card-glass border !rounded-xl bg-white/90"
+					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 						@click="passwordSheet = false">
 						取消
 					</uh-button>
 					<uh-button
-						custom-class="flex-1 py-2 uh-global-card-glass !rounded-xl border bg-primary text-gray-900"
+						custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
 						:class="passwordSaving ? 'opacity-60' : ''" @action-click="savePassword">
 						{{ passwordSaving ? '保存中' : '确定' }}
 					</uh-button>

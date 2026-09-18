@@ -78,7 +78,7 @@
 				}
 			}
 
-			// 审核模式数据已随 bootstrap 拉取(auditData/auditModeEnabled 即可用)
+			// 审核模式数据已随 bootstrap 拉取
 			applySiteDefaults(collectSiteDefaults(configs.value))
 
 			// 拦截:主插件未激活 或 维护模式开启(任一命中)→ 跳转维护页
@@ -93,13 +93,10 @@
 </script>
 
 <template>
-	<!-- 初始化页(纯静态):bootstrap/拦截期间占位,避免白屏。视觉骨架取自维护页(背景渐变+呼吸光斑+浮动表情) -->
 	<view class="relative min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-[#f5fae8]">
-		<!-- 顶部渐变背景 -->
 		<view
 			class="fixed left-0 top-0 z-0 h-[46vh] w-full from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b" />
 
-		<!-- 背景光斑(呼吸/静态) -->
 		<view
 			class="breathe pointer-events-none absolute left-[-60rpx] top-[16vh] z-0 h-[260rpx] w-[260rpx] rounded-full bg-white/40 uh-blur-52" />
 		<view
@@ -109,17 +106,23 @@
 		<view
 			class="pointer-events-none absolute bottom-[6vh] left-[48rpx] z-0 h-[140rpx] w-[140rpx] rounded-full bg-[#ebfabf] opacity-90 uh-blur-52" />
 
-		<!-- 中央表情(浮动) -->
-		<view class="relative z-10 h-[236rpx] w-[236rpx]">
+		<view class="relative z-10 h-28 w-28">
 			<view
 				class="bob absolute inset-0 flex items-center justify-center rounded-full border-4 border-solid border-white from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass">
-				<wd-icon class-prefix="uhemoji-icon" name="-thinking" size="140rpx" class="text-gray-900" />
+				<wd-icon class-prefix="uhemoji-icon" name="-flushed" size="120rpx" class="text-gray-900" />
 			</view>
 		</view>
 
-		<!-- 初始化文案 -->
-		<view class="relative z-10 mt-8 text-5 font-black leading-8">
+		<view class="relative z-10 mt-8 text-lg font-black leading-8">
 			<uh-text-underline>正在初始化...</uh-text-underline>
+		</view>
+		<view class="mt-4 flex flex-col items-center">
+			<text class="text-center text-xs text-gray-600 font-medium leading-6">
+				稍等，正在加载所需要的资源
+				<text class="block">
+					马上就好~
+				</text>
+			</text>
 		</view>
 	</view>
 </template>

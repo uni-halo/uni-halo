@@ -165,7 +165,7 @@
 			<view v-if="hasLogin" class="box-border w-full flex shrink-0 items-center"
 				:class="[isWechat ? '' : 'pb-4']">
 				<uh-button class="flex-1"
-					custom-class="flex-1 uh-global-card-glass bg-red-400 border py-2 text-xs text-white !rounded-full"
+					custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-full bg-red-400 text-white"
 					@action-click="handleLogout()">
 					退出登录
 				</uh-button>

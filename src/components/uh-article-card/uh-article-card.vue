@@ -42,7 +42,7 @@
 	const CARD_LAYOUTS = computed(()=> ({
 		image_top: {
 			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
-			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''}`,
+			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''} ${props.article.spec.cover?'':'pt-2'}`,
 			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
@@ -165,7 +165,7 @@
 			<view class="truncate font-bold text-3xs">
 				{{ article.spec.title }}
 			</view>
-			<view class="text-xs" :class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
+			<view class="text-xs leading-5" :class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
 				{{ article.status?.excerpt }}
 			</view>
 			<view v-if="!isGrid" class="box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">

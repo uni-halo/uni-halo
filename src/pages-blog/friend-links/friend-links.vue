@@ -34,14 +34,13 @@
 	const appConfigStore = useAppConfigStore()
 	const { configs, auditData, auditModeEnabled } = storeToRefs(appConfigStore)
 
-	/* ---------------- 依赖插件(参考 gallery 对象传参模式) ---------------- */
+	/* ---------------- 依赖插件 ---------------- */
 	/** 站点 tab:PluginLinks */
 	const { pluginId: sitePluginId, checking: siteChecking, tips: siteTips, available: sitePluginAvailable, check: checkSitePluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginLinks,
 		tips: '啊偶，功能正在维护中...',
 		callback: (isAvailable) => {
-			if (!isAvailable)
-				return
+			if (!isAvailable) { return }
 			uni.pageScrollTo({
 				scrollTop: 0,
 				duration: 0,
@@ -54,8 +53,7 @@
 		pluginId: NeedPluginIds.PluginUniHalo,
 		tips: '啊偶，功能正在维护中...',
 		callback: (isAvailable) => {
-			if (!isAvailable)
-				return
+			if (!isAvailable) { return }
 			uni.pageScrollTo({
 				scrollTop: 0,
 				duration: 0,
@@ -456,8 +454,8 @@
 
 		<!-- ==================== 站点 tab ==================== -->
 		<template v-if="activeTabIndex === 0">
-			<uh-plugin-unavailable v-if="!sitePluginAvailable" :plugin-id="sitePluginId" :error-text="siteTips"
-				:checking="siteChecking" @on-refresh="handleSitePluginRefresh" />
+			<uh-plugin-unavailable v-if="!sitePluginAvailable" custom-class="h-[60vh]" :plugin-id="sitePluginId"
+				:error-text="siteTips" :checking="siteChecking" @on-refresh="handleSitePluginRefresh" />
 			<template v-else>
 				<view v-if="siteLoadingStatus !== 'success'">
 					<uh-data-loading :loading-status="siteLoadingStatus" empty-text="啊偶,博主还没有朋友呢~"
@@ -505,9 +503,9 @@
 								<text class="text-md font-bold">站点详情</text>
 							</view>
 							<view
-								class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
+								class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
 								@click="miniDetail.show = false">
-								<wd-icon name="close" size="32rpx" class="text-gray-500" />
+								<wd-icon name="close" size="28rpx" />
 							</view>
 						</view>
 						<scroll-view v-if="detail.data" :scroll-y="true" :show-scrollbar="false"
@@ -551,8 +549,8 @@
 
 		<!-- ==================== 小程序 tab ==================== -->
 		<template v-else>
-			<uh-plugin-unavailable v-if="!miniPluginAvailable" :plugin-id="miniPluginId" :error-text="miniTips"
-				:checking="miniChecking" @on-refresh="handleMiniPluginRefresh" />
+			<uh-plugin-unavailable v-if="!miniPluginAvailable" custom-class="h-[60vh]" :plugin-id="miniPluginId"
+				:error-text="miniTips" :checking="miniChecking" @on-refresh="handleMiniPluginRefresh" />
 			<template v-else>
 				<uh-data-loading v-if="miniLoadingStatus !== 'success'" :loading-status="miniLoadingStatus"
 					empty-text="还没有收录的小程序呢~" @refresh="handleGetMiniProgramLinks" />
@@ -602,9 +600,9 @@
 							<text class="text-md font-bold">小程序详情</text>
 						</view>
 						<view
-							class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
+							class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
 							@click="miniDetail.show = false">
-							<wd-icon name="close" size="32rpx" class="text-gray-500" />
+							<wd-icon name="close" size="28rpx" />
 						</view>
 					</view>
 					<scroll-view v-if="miniDetail.data" :scroll-y="true" :show-scrollbar="false"
@@ -682,6 +680,7 @@
 						<!-- #ifdef MP-WEIXIN -->
 						<view class="w-full mt-6">
 							<uh-button class="uh-global-card-glass border !py-2 text-xs"
+								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
 								@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
 						</view>
 						<!-- #endif -->

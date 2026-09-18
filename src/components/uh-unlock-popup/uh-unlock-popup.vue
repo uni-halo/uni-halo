@@ -202,12 +202,12 @@
 			<!-- 操作按钮:取消 + 解锁(强制解锁场景隐藏取消) -->
 			<view class="w-full mt-6 box-border flex items-center justify-center gap-4">
 				<uh-button v-if="closeable" class="flex-1"
-					custom-class="py-2 flex-1 uh-global-card-glass text-xs border rounded-xl bg-white/90"
+					custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleOnCancel">
 					取消
 				</uh-button>
 				<uh-button class="flex-1"
-					custom-class="py-2 flex-1 uh-global-card-glass rounded-xl text-xs !bg-love/90 text-white border"
+					custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl !bg-love/90 text-white"
 					@click="handleOnConfirm">
 					{{ loading ? '解锁中...' : confirmText }}
 				</uh-button>

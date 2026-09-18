@@ -34,7 +34,7 @@
 	const userStore = useUserStore()
 	const { configs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 	const { userInfo } = storeToRefs(userStore)
-	const offsetTop = computed(()=>{
+	const offsetTop = computed(() => {
 		return height.value - 12
 	})
 
@@ -42,12 +42,7 @@
 	const pageUsername = ref('')
 	const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userInfo.value.username)
 
-	/* ---------------- 头部资料(全部居中展示在封面图区域) ---------------- */
-	/**
-	 * 头像/昵称存原始地址,渲染时 check 补全。
-	 * 本人视角:取 user store;他人视角:Halo 2.26 无公开用户资料 REST,
-	 * 从文章/瞬间列表返回的顶层 owner 字段回填(IPost.owner / IMoment.owner 均含 avatar/displayName/bio)。
-	 */
+	/* ---------------- 头部资料 ---------------- */
 	const ownerInfo = ref<{ displayName ?: string, avatar ?: string, bio ?: string }>({})
 
 	const headerUser = computed(() => ({
@@ -57,7 +52,8 @@
 		role: isSelf.value
 			? (userInfo.value.roles?.includes('super-role') ? '超级管理员' : '普通用户')
 			: '',
-		bio: ownerInfo.value.bio || '这个人很懒~什么都没有留下',
+		isAdmin: isSelf.value && userInfo.value.roles?.includes('super-role'),
+		bio: ownerInfo.value.bio || '这个人很懒，什么都没有留下~',
 	}))
 
 	/** 封面图:复用 mine.vue(关于页)的 aboutConfig.bgImageUrl;空时 checkImageUrl 自动回落默认背景图 */
@@ -335,31 +331,30 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<!-- 顶部导航不占位,封面图直接顶到状态栏下,做沉浸式头部 -->
-		<uh-navbar :scroll-y="scrollY" default-title="个人主页" :need-placeholder="false" />
+		<uh-navbar :scroll-y="scrollY" default-title="个人主页" :scroll-title="headerUser.nickname"
+			:need-placeholder="false" />
 
-		<!-- 头部封面图 + 黑色模糊遮罩 + 用户信息居中 + 底部渐变过渡(参考 mine.vue) -->
 		<view class="box-border relative h-76 w-full overflow-hidden pt-10">
-			<!-- 封面背景图(空时 checkImageUrl 回落默认背景图) -->
 			<view class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :style="profileStyle" />
-			<!-- 黑色半透明遮罩 + backdrop-filter 模糊 -->
 			<view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
-			<!-- 用户信息(垂直水平居中) -->
 			<view class="relative z-10 flex h-full flex-col items-center justify-center px-6">
 				<image :src="checkAvatarUrl(headerUser.avatar)"
-					class="uh-global-card-glass uh-shadow-xs h-20 w-20 rounded-full border-2 border-white/40" mode="aspectFill" />
-				<view class="mt-3 text-md text-white font-black drop-shadow">{{ headerUser.nickname || headerUser.username }}</view>
+					class="uh-global-card-glass uh-shadow-xs h-20 w-20 rounded-full border-2 border-white/40"
+					mode="aspectFill" />
+				<view class="mt-3 text-md text-white font-black drop-shadow">
+					{{ headerUser.nickname || headerUser.username }}</view>
 				<view class="mt-1.5 flex items-center gap-x-2">
 					<text v-if="headerUser.role"
-						class="rounded-full bg-white/20 px-2 py-0.5 text-20rpx text-white backdrop-blur-sm">{{ headerUser.role }}</text>
+						class="box-border rounded-full px-2 py-0.5 text-xs"
+						:class="[headerUser.isAdmin?'bg-secondary text-gray-900':'bg-white/20 text-white']"
+						>{{ headerUser.role }}</text>
 				</view>
 				<text class="mt-2 max-w-[85%] text-center text-2xs text-white/80">{{ headerUser.bio }}</text>
 			</view>
-			<!-- 底部渐变过渡到内容区背景(参考 mine.vue 的 wave 区渐变) -->
-			<view class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
+			<view
+				class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
 		</view>
 
-		<!-- 分段 Tab(文章 / 瞬间):wd-sticky 吸顶,offset-top 对齐导航栏高度(同 gallery.vue 用法) -->
 		<wd-sticky :offset-top="offsetTop">
 			<view class="w-screen box-border px-16">
 				<view class="flex items-center w-full uh-global-card-glass border mt-4 shadow-none flex rounded-xl p-1">
@@ -377,38 +372,35 @@
 			</view>
 		</wd-sticky>
 
-		<!-- 文章 Tab(全局卡片 uh-article-card) -->
 		<template v-if="activeTab === 'post'">
 			<uh-data-loading v-if="postState.loadingStatus.value !== DataLoadingStatusEnum.Success"
 				:loading-status="postState.loadingStatus.value" empty-text="啊偶，还没有发布过文章哦~" min-height="50vh"
 				@refresh="postState.refresh()" />
 			<view v-else class="box-border flex flex-col gap-3 p-3">
-				<uh-article-card v-for="article in postState.list.value" :key="article.metadata.name"
-					from="articles" variant="list" :article="article" :audit-mode="calcAuditModeEnabled" />
+				<uh-article-card v-for="article in postState.list.value" :key="article.metadata.name" from="articles"
+					variant="list" :article="article" :audit-mode="calcAuditModeEnabled" />
 				<uh-data-loadmore :status="postState.loadMoreStatus.value.status"
 					:text="postState.loadMoreStatus.value.text" />
 			</view>
 		</template>
 
-	<!-- 瞬间 Tab(复用全局 uh-moment-card) -->
-	<template v-else>
-		<uh-data-loading v-if="momentState.loadingStatus.value !== DataLoadingStatusEnum.Success"
-			:loading-status="momentState.loadingStatus.value" empty-text="啊偶，还没有发布过瞬间哦~" min-height="50vh"
-			@refresh="momentState.refresh()" />
-		<view v-else class="box-border flex flex-col gap-3 p-3">
-			<uh-moment-card v-for="moment in momentState.list.value" :key="moment.metadata.name"
-				:moment="moment" :blogger="{ nickname: headerUser.nickname, avatar: checkAvatarUrl(headerUser.avatar) }"
-				@detail="handleToMoment(moment)" @like="handleMomentLike(moment)"
-				@comment="handleToMoment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
-			<uh-data-loadmore :status="momentState.loadMoreStatus.value.status"
-				:text="momentState.loadMoreStatus.value.text" />
-		</view>
-	</template>
+		<template v-else>
+			<uh-data-loading v-if="momentState.loadingStatus.value !== DataLoadingStatusEnum.Success"
+				:loading-status="momentState.loadingStatus.value" empty-text="啊偶，还没有发布过瞬间哦~" min-height="50vh"
+				@refresh="momentState.refresh()" />
+			<view v-else class="box-border flex flex-col gap-3 p-3">
+				<uh-moment-card v-for="moment in momentState.list.value" :key="moment.metadata.name" :moment="moment"
+					:blogger="{ nickname: headerUser.nickname, avatar: checkAvatarUrl(headerUser.avatar) }"
+					@detail="handleToMoment(moment)" @like="handleMomentLike(moment)" @comment="handleToMoment(moment)"
+					@favorite="handleToggleMomentFavorite(moment)" />
+				<uh-data-loadmore :status="momentState.loadMoreStatus.value.status"
+					:text="momentState.loadMoreStatus.value.text" />
+			</view>
+		</template>
 	</view>
 </template>
 
-<style scoped>
-	/* 黑色遮罩:半透明底色 + 背景模糊(部分小程序环境不支持 backdrop-filter,底色兜底保证可读性) */
+<style scoped lang="scss">
 	.uh-profile-mask {
 		background-color: rgba(0, 0, 0, 0.35);
 		backdrop-filter: blur(8rpx);

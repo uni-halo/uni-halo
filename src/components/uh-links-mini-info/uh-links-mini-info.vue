@@ -221,7 +221,7 @@
 				</view>
 
 				<view class="mt-6">
-					<uh-button custom-class="py-2 !rounded-xl" @click="handleCopyInfo">
+					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleCopyInfo">
 						复制小程序申请信息
 					</uh-button>
 				</view>

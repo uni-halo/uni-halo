@@ -529,7 +529,7 @@
 				</view>
 
 				<!-- 内容区域 -->
-				<view class="box-border flex flex-col gap-y-4 p-4 pt-2 text-gray-900 text-3xs">
+				<view class="box-border flex flex-col gap-y-4 p-4 pt-2 text-gray-900 text-3xs leading-7">
 					<!-- 受限阅读 -->
 					<template v-if="checkPostRestrictRead(result!)">
 						<view v-if="showContentArr.length === 0">
@@ -538,17 +538,19 @@
 								:button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
 								@refresh="readMore" />
 						</view>
-						<view v-for="(showContent, showContentIndex) in showContentArr" v-else :key="showContentIndex">
-							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
-								:loading-img="markdownConfig.loadingGif" scroll-table selectable
-								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-								:content="showContent" :markdown="true" :show-line-number="true"
-								:show-language-name="true" copy-by-long-press />
-							<uh-restrict-read-skeleton :loading="true" :lines="3"
-								:tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-								:button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-								@refresh="readMore" />
-						</view>
+						<template v-else>
+							<view v-for="(showContent, showContentIndex) in showContentArr" :key="showContentIndex">
+								<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+									:loading-img="markdownConfig.loadingGif" scroll-table selectable
+									:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+									:content="showContent" :markdown="true" :show-line-number="true"
+									:show-language-name="true" copy-by-long-press />
+								<uh-restrict-read-skeleton :loading="true" :lines="3"
+									:tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
+									:button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
+									@refresh="readMore" />
+							</view>
+						</template>
 					</template>
 
 					<!-- 正常渲染 -->

@@ -348,7 +348,7 @@
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" :plugin-id="pluginId" :error-text="tips"
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId" :error-text="tips"
 			:checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
@@ -370,7 +370,7 @@
 			    <view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
 			   </view>
 			  </view>
-			  <uh-moment-card :moment="moment" :blogger="bloggerInfo"
+			  <uh-moment-card class="flex-1" :moment="moment" :blogger="bloggerInfo"
 			   @detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
 			   @comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
 			 </view>

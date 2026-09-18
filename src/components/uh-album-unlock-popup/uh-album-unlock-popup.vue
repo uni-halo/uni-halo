@@ -177,11 +177,11 @@
 
 			<!-- 操作按钮:取消 + 解锁 -->
 			<view class="mt-6 box-border flex gap-4">
-				<uh-button custom-class="py-2 flex-1 uh-global-card-glass rounded-xl bg-white/90"
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleOnCancel">
 					取消
 				</uh-button>
-				<uh-button custom-class="py-2 flex-1 uh-global-card-glass rounded-xl !bg-love/90 text-white border"
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white"
 					@click="handleOnConfirm">
 					{{ loading ? '解锁中...' : '解锁' }}
 				</uh-button>

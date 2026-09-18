@@ -137,11 +137,11 @@
 
 			<!-- 底部关闭 -->
 			<view class="w-full shrink-0 flex items-center justify-center gap-x-2">
-				<uh-button class="flex-1" custom-class="py-2 flex-1 uh-global-card-glass text-xs border rounded-xl bg-white/90"
+				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleClose">
 					关闭
 				</uh-button>
-				<uh-button class="flex-1" custom-class="flex-1 py-2 uh-global-card-glass text-xs rounded-xl !bg-love/90 text-white border"
+				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl !bg-love/90 text-white"
 					@click="handleLoadPhotos">
 					刷新
 				</uh-button>

@@ -82,7 +82,7 @@ function handleScan() {
     <view class="box-border h-[46px] w-full flex items-center gap-x-4 px-4">
       <view class="min-w-18 flex shrink-0 items-center">
         <view
-          class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center gap-x-2 border rounded-full text-primary"
+          class="uh-global-card-glass uh-shadow-xs h-7 w-7 flex items-center justify-center gap-x-2 border rounded-full text-primary"
           @click="handleScan()"
         >
           <wd-icon name="scan" size="30rpx" />
