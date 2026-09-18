@@ -39,6 +39,11 @@
 
 	const isGrid = computed(() => props.variant === 'grid')
 
+	/** 头像形状(偏好 avatarRadius:开=圆形,关=方形,默认方形;仅 image_bottom 社交卡大头像生效) */
+	const socialAvatarClass = computed(() =>
+		settings.value.avatarRadius ? '!rounded-full !border-none' : '!rounded-xl uh-shadow-xs'
+	)
+
 	const CARD_LAYOUTS = computed(()=> ({
 		image_top: {
 			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
@@ -60,7 +65,7 @@
 			contentWrapper: 'w-full',
 			footer: 'order-first flex items-center mb-1',
 			authorGroup: 'items-center gap-x-2',
-			avatar: '!h-9 !w-9 !rounded-xl uh-shadow-xs',
+			avatar: `!h-9 !w-9 ${socialAvatarClass.value}`,
 			nickname: '!text-3xs mb-1 font-semibold text-gray-900',
 			infoCol: 'leading-tight',
 			time: '',

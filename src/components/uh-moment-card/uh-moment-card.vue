@@ -3,7 +3,10 @@
  * 瞬间卡片
  *
  */
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useFavoritesStore } from '@/store/favorites'
+import { useSettingStore } from '@/store/setting'
 import { useUpvote } from '@/hooks/useUpvote'
 import { checkAvatarUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
@@ -40,6 +43,12 @@ const emit = defineEmits<{
 const { isFavorite } = useFavoritesStore()
 const { hasUpvoted } = useUpvote('moments', () => '')
 
+/** 头像形状(偏好 avatarRadius:开=圆形,关=方形,默认方形;方形 = 文章卡片 image_bottom 同款) */
+const { settings } = storeToRefs(useSettingStore())
+const avatarShapeClass = computed(() =>
+  settings.value.avatarRadius ? 'rounded-full' : 'rounded-xl uh-shadow-xs'
+)
+
 /** 格式化瞬间时间 */
 function formatMomentTime(time?: string): string {
   return time ? formatTime({ d: time, f: 'yyyy年MM月dd日 星期w' }) : ''
@@ -57,7 +66,7 @@ function handlePreview(index: number, list: { url: string }[]) {
   <view class="uh-global-card-glass uh-shadow-xs flex-1 overflow-hidden rounded-xl">
     <view class="box-border flex items-center px-4 pt-4">
       <view class="flex flex-1 items-center">
-        <image class="avatar h-9 w-9 shrink-0 rounded-full"
+        <image class="avatar h-9 w-9 shrink-0" :class="avatarShapeClass"
           :src="checkAvatarUrl(moment.owner?.avatar || blogger.avatar)" mode="aspectFill" />
         <view class="ml-2 flex flex-col gap-y-1">
           <view class="text-3xs text-gray-900 font-bold">

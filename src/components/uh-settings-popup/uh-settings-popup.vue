@@ -167,7 +167,7 @@
 							<view class="uh-global-card-glass shadow-none overflow-hidden rounded-2xl">
 								<template v-for="(row, index) in featureRows" :key="row.key">
 									<!-- 布尔项 -->
-									<view v-if="row.kind === 'bool' && false" class="box-border p-3"
+									<view v-if="row.kind === 'bool'" class="box-border p-3"
 										:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 										<view class="flex items-center justify-between">
 											<text

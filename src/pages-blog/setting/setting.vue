@@ -187,7 +187,7 @@
 					<view class="setting-sheet uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
 						<template v-for="(row, index) in featureRows" :key="row.key">
 							<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
-							<view v-if="row.kind === 'bool' && false" class="box-border p-3"
+							<view v-if="row.kind === 'bool'" class="box-border p-3"
 								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
 								<view class="flex items-center justify-between">
 									<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
