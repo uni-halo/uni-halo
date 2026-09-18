@@ -5,7 +5,7 @@
  * 用法：通过 ref.openDetail(album) 打开；增删成功后 emit on-close({ refresh: true }) 由父级刷新列表
  */
 import { computed, ref } from 'vue'
-import { addLoveAlbumPhoto, getLoveAlbumAdmin, removeLoveAlbumPhoto } from '@/api/uni-admin'
+import { getLoveAlbumAdmin, removeLoveAlbumPhoto, updateLoveAlbumPhotos } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
@@ -27,7 +27,7 @@ const currentAlbum = ref<ILoveAlbum | null>(null)
 const currentPhotos = ref<ILovePhoto[]>([])
 const detailLoading = ref(false)
 
-/** 批量选图并上传，成功后逐张提交到相册（POST /photos，name 由服务端生成） */
+/** 批量选图并上传，成功后一次性整体提交到相册（PUT /photos，避免逐张 POST 的并发写冲突） */
 const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
 
 const dialog = useDialog()
@@ -70,10 +70,14 @@ async function commitPhotos() {
   if (newUrls.length === 0)
     return
   try {
-    const created = await Promise.all(newUrls.map(url => addLoveAlbumPhoto(name, { url })))
-    // 服务端返回整本相册（照片带生成的 name），直接以最新列表为准
-    const latestPhotos = (created[0]?.data as any)?.spec?.photos as ILovePhoto[] | undefined
-    currentPhotos.value = latestPhotos?.length ? latestPhotos : [...currentPhotos.value, ...newUrls.map(url => ({ url }) as ILovePhoto)]
+    // 现有照片（保留服务端生成的 name，删除接口依赖）+ 新增照片，拼成完整列表单次 PUT 提交
+    const merged: ILovePhoto[] = [
+      ...currentPhotos.value,
+      ...newUrls.map(url => ({ url }) as ILovePhoto),
+    ]
+    const res = await updateLoveAlbumPhotos(name, merged)
+    // 服务端返回整本相册（照片带生成的 name），以最新列表为准
+    currentPhotos.value = (res.data as any)?.spec?.photos?.length ? (res.data as any).spec.photos : merged
     pendingPhotos.value = []
     uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'success' })
     emit('on-close', { isSubmit: true, refresh: true })

@@ -218,12 +218,7 @@ export function deleteLoveAlbum(name: string) {
   return http.Delete<IResponse<null>>(`${LOVE_API_BASE}/love-albums/${name}`, undefined, loveAdminMeta())
 }
 
-/** 相册添加单张照片（插件端 POST /love-albums/{name}/photos，name 由服务端生成） */
-export function addLoveAlbumPhoto(name: string, photo: ILovePhoto) {
-  return http.Post<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos`, photo, loveAdminMeta())
-}
-
-/** 整体替换相册照片列表（插件端 PUT /love-albums/{name}/photos） */
+/** 整体替换相册照片列表（插件端 PUT /love-albums/{name}/photos，批量增删照片统一走此接口，单次原子写） */
 export function updateLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
   return http.Put<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos`, { photos }, loveAdminMeta())
 }

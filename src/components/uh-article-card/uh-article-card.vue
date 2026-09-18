@@ -47,11 +47,12 @@
 		settings.value.avatarShape === 'circle' ? '!rounded-full !border-none' : '!rounded-md uh-shadow-xs'
 	)
 
-	const CARD_LAYOUTS = computed(()=> ({
+	const CARD_LAYOUTS = computed(() => ({
 		image_top: {
 			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
-			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''} ${props.article.spec.cover?'':'pt-2'}`,
+			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''} ${props.article.spec.cover ? '' : 'pt-2'}`,
 			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
+			title: `${props.article.spec.cover ? '' : 'mt-2'}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
 			avatar: socialMiniAvatarClass.value,
@@ -165,15 +166,18 @@
 			:class="cardLayout.pinned">
 			置顶
 		</text>
-		<view v-if="article.spec.cover" class="relative overflow-hidden" :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
-			<image class="w-full h-full block" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
+		<view v-if="article.spec.cover" class="relative overflow-hidden"
+			:class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]">
+			<image class="w-full h-full block" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill"
+				lazy-load />
 		</view>
-		
+
 		<view class="flex flex-col gap-y-3 text-sm" :class="cardLayout.contentWrapper">
-			<view class="truncate font-bold text-3xs">
+			<view class="truncate font-bold text-3xs" :class="cardLayout.title">
 				{{ article.spec.title }}
 			</view>
-			<view class="text-xs leading-5" :class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
+			<view class="text-xs leading-5"
+				:class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
 				{{ article.status?.excerpt }}
 			</view>
 			<view v-if="!isGrid" class="box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
@@ -192,9 +196,8 @@
 			</view>
 			<view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
 				<view class="flex items-center" :class="cardLayout.authorGroup">
-					<image :src="checkAvatarUrl(article.owner?.avatar || '')"
-						class="uh-global-card-glass h-5 w-5" :class="cardLayout.avatar"
-						mode="aspectFill" />
+					<image :src="checkAvatarUrl(article.owner?.avatar || '')" class="uh-global-card-glass h-5 w-5"
+						:class="cardLayout.avatar" mode="aspectFill" />
 					<template v-if="isSocialCard">
 						<view :class="cardLayout.infoCol">
 							<text class="block truncate"

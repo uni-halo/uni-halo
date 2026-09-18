@@ -31,6 +31,20 @@
 
 	const emit = defineEmits<{ (e : 'refresh') : void }>()
 
+	const pages = getCurrentPages()
+	const currentPage = pages[pages.length - 1]
+ 
+	const customClasses = computed(() => {
+		const isLovePage = currentPage.route.includes('/love/')
+		return {
+			text: isLovePage ? 'text-love' : 'text-primary',
+			button: isLovePage ? '!bg-love !text-white' : '!bg-primary !text-gray-900',
+			dot: isLovePage ? 'bg-love' : 'bg-primary',
+			dotA: isLovePage ? 'bg-love' : 'bg-primary',
+			dotB: isLovePage ? 'bg-love/30' : 'bg-primary/30',
+		}
+	})
+
 	const SizeClasses = {
 		mini: {
 			icon: '60rpx',
@@ -41,13 +55,13 @@
 		small: {
 			icon: '100rpx',
 			stage: 'h-22 w-22',
-			glow: 'h-18 w-18',
+			glow: 'h-16 w-16',
 			button: ' py-1'
 		},
 		large: {
 			icon: '120rpx',
 			stage: 'h-32 w-32',
-			glow: 'h-28 w-28',
+			glow: 'h-24 w-24',
 			button: ''
 		},
 	}
@@ -59,11 +73,12 @@
 	const isLoading = computed(() => props.loadingStatus === 'loading')
 
 	const statusScene = computed(() => {
+			const isLovePage = currentPage.route.includes('/love/')
 		switch (props.loadingStatus) {
 			case 'error':
 				return {
 					icon: '-injury',
-					stageClass: 'stage-error',
+					glowClass: `${sizeClasses.value.glow} bg-red-100`,
 					mainTextClass: 'text-red-400',
 					mainText: props.errorText,
 					subText: props.errorSubText,
@@ -71,7 +86,7 @@
 			case 'empty':
 				return {
 					icon: '-confused',
-					stageClass: 'stage-empty',
+					glowClass: `${sizeClasses.value.glow} ${isLovePage?'bg-love/30':'bg-primary'}`,
 					mainTextClass: 'text-gray-900',
 					mainText: props.emptyText,
 					subText: props.emptySubText,
@@ -79,8 +94,8 @@
 			default:
 				return {
 					icon: '-happy-1',
-					stageClass: 'stage-loading',
-					mainTextClass: 'text-primary',
+					glowClass: `${sizeClasses.value.glow} ${isLovePage?'bg-love/30':'bg-primary'}`,
+					mainTextClass: customClasses.value.text,
 					mainText: props.loadingText,
 					subText: props.loadingSubText,
 				}
@@ -93,10 +108,10 @@
 		:style="{ minHeight: props.minHeight }">
 
 		<view class="scene relative z-1 flex items-center justify-center"
-			:class="[statusScene.stageClass,sizeClasses.stage]">
-			<view class="glow absolute inset-0 m-auto rounded-full" :class="sizeClasses.glow" />
-			<view class="deco-dot dot-a absolute rounded-full" />
-			<view class="deco-dot dot-b absolute rounded-full" />
+			:class="sizeClasses.stage">
+			<view class="glow absolute inset-0 m-auto rounded-full" :class="statusScene.glowClass" />
+			<view class="deco-dot dot-a absolute rounded-full" :class="customClasses.dotA"/>
+			<view class="deco-dot dot-b absolute rounded-full" :class="customClasses.dotB"/>
 			<view class="bubble">
 				<view class="bubble-icon">
 					<wd-icon class-prefix="uhemoji-icon" :name="statusScene.icon" :size="sizeClasses.icon" />
@@ -109,7 +124,7 @@
 			<view class="flex items-center justify-center text-2xs font-medium" :class="statusScene.mainTextClass">
 				<text>{{ statusScene.mainText }}</text>
 				<view v-if="isLoading" class="ml-1 flex items-end gap-1">
-					<view v-for="n in 3" :key="n" class="typing-dot bg-primary"
+					<view v-for="n in 3" :key="n" class="typing-dot" :class="customClasses.dot" 
 						:style="{ animationDelay: `${(n - 1) * 0.15}s` }" />
 				</view>
 			</view>
@@ -117,7 +132,8 @@
 				{{ statusScene.subText }}
 			</text>
 			<view v-if="props.useRefreshButton" class="mt-4">
-				<uh-button :custom-class="'uh-global-card-glass !text-xs !rounded-full py-2 uh-shadow-xs border' + sizeClasses.button"
+				<uh-button
+					:custom-class="`uh-global-card-glass !text-xs !rounded-full py-2 uh-shadow-xs border ${sizeClasses.button} ${customClasses.button}`"
 					@click="emit('refresh')">
 					刷新试试
 				</uh-button>
@@ -138,19 +154,7 @@
 	.glow {
 		animation: glow-pulse 2.4s ease-in-out infinite;
 	}
-
-	.stage-loading .glow {
-		background: rgba(185, 228, 36, 0.32);
-	}
-
-	.stage-error .glow {
-		background: rgba(248, 113, 113, 0.24);
-	}
-
-	.stage-empty .glow {
-		background: rgba(217, 249, 157, 0.5);
-	}
-
+ 
 	.deco-dot {
 		animation: deco-float 2s ease-in-out infinite;
 	}
@@ -160,7 +164,7 @@
 		left: 10rpx;
 		width: 22rpx;
 		height: 22rpx;
-		background: rgba(163, 230, 53, 0.9);
+		// background: rgba(163, 230, 53, 0.9);
 	}
 
 	.dot-b {
@@ -168,7 +172,7 @@
 		right: 14rpx;
 		width: 14rpx;
 		height: 14rpx;
-		background: rgba(217, 249, 157, 0.95);
+		// background: rgba(217, 249, 157, 0.95);
 		animation-delay: -0.7s;
 	}
 
