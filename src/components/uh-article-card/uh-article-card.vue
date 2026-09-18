@@ -60,8 +60,8 @@
 			contentWrapper: 'w-full',
 			footer: 'order-first flex items-center mb-1',
 			authorGroup: 'items-center gap-x-2',
-			avatar: '!h-9 !w-9 !rounded-xl',
-			nickname: '!text-xs mb-0.5',
+			avatar: '!h-9 !w-9 !rounded-xl uh-shadow-xs',
+			nickname: '!text-3xs mb-1 font-semibold text-gray-900',
 			infoCol: 'leading-tight',
 			time: '',
 			tagCategory: '',
@@ -105,7 +105,7 @@
 		archives: 'archivesCardType',
 	}
 
-	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/文章列表/文章归档)> image_top;窄列场景左右布局回退上图下文 */
+	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/笔记列表/笔记归档)> image_top;窄列场景左右布局回退上图下文 */
 	const effectiveLayout = computed<CardLayout>(() => {
 		const globalSettings = settings.value
 		const page = props.from === 'home' || props.from === 'articles' || props.from === 'archives'

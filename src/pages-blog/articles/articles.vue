@@ -15,7 +15,7 @@
 
 	definePage({
 		style: {
-			navigationBarTitleText: '文章列表',
+			navigationBarTitleText: '笔记列表',
 			navigationStyle: 'custom',
 			enablePullDownRefresh: true,
 		},
@@ -24,14 +24,14 @@
 	const { height: offsetTop } = useNavbarSticky()
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
-	const pageTitle = usePageTitle('articles', '文章列表')
+	const pageTitle = usePageTitle('articles', '笔记列表')
 	const appConfigStore = useAppConfigStore()
 	const { auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 	const settingStore = useSettingStore()
 	const { settings } = storeToRefs(settingStore)
 
-	/** 文章列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
+	/** 笔记列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
 	const articlesListLayout = computed(() => settings.value.articlesListLayout)
 
 	/* ---------------- 状态 ---------------- */
@@ -113,7 +113,7 @@
 				})
 			}
 			catch (err) {
-				console.error('获取审核文章失败', err)
+				console.error('获取审核笔记失败', err)
 				updateLoadingStatus(DataLoadingStatusEnum.Error)
 				updateLoadMoreStatus({
 					active: false,
@@ -136,7 +136,7 @@
 				...queryParams.value,
 				sort: sortMap[filterValues.value.sort] || sortMap.default,
 			}
-			// 注意:/posts 公开接口不支持 category 过滤参数,分类筛选需走分类下文章接口
+			// 注意:/posts 公开接口不支持 category 过滤参数,分类筛选需走分类下笔记接口
 			const res = category
 				? await getCategoryPostList(category, params)
 				: await getPostList(params)
@@ -157,7 +157,7 @@
 			})
 		}
 		catch (err) {
-			console.error('获取文章失败', err)
+			console.error('获取笔记失败', err)
 			if (loadMoreStatus.value.active) {
 				updateLoadMoreStatus({
 					active: false,

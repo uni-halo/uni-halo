@@ -122,7 +122,7 @@ export default {
         url: `https://api.example.com/article/${id}`,
         success: (res) => {
           this.article = res.data
-          // 使用文章标题作为页面标题
+          // 使用笔记标题作为页面标题
           uni.setNavigationBarTitle({
             title: res.data.title
           })

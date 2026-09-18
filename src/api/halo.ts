@@ -39,10 +39,10 @@ import type {
 /** 评论验证码 cookie key */
 const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha';
 
-/* ==================== 文章 ==================== */
+/* ==================== 笔记 ==================== */
 
 /**
- * 文章列表
+ * 笔记列表
  */
 export function getPostList(params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>('/apis/api.content.halo.run/v1alpha1/posts', {
@@ -52,7 +52,7 @@ export function getPostList(params: IPostListReq) {
 }
 
 /**
- * UC「我的文章」列表(服务端强制 owner=当前登录用户)。
+ * UC「我的笔记」列表(服务端强制 owner=当前登录用户)。
  * 个人主页兜底:公开接口 fieldSelector=spec.owner 实测查不到内容,见 PRD 5.4。
  * 固定 publishPhase=PUBLISHED 仅返回已发布,与站点可见性保持一致。
  * 响应为 UC ListedPost 结构(post 包裹 + 顶层 owner/stats),调用方需 mapUcListedPost 映射。
@@ -70,7 +70,7 @@ export function getUcMyPostList(params: { page?: number, size?: number, sort?: s
 }
 
 /**
- * 文章详情(带访客标识头)
+ * 笔记详情(带访客标识头)
  */
 export function getPostByName(name: string) {
 	return http.Get<IResponse<IPost>>(`/apis/api.content.halo.run/v1alpha1/posts/${name}`, {
@@ -84,7 +84,7 @@ export function getPostByName(name: string) {
 }
 
 /**
- * 关键词搜索文章
+ * 关键词搜索笔记
  */
 export function getPostListByKeyword(params: ISearchReq) {
 	return http.Post<IResponse<ISearchRes>>('/apis/api.halo.run/v1alpha1/indices/-/search', params, {
@@ -107,7 +107,7 @@ export function getCategoryList(params: ICategoryListReq) {
 }
 
 /**
- * 分类下文章列表
+ * 分类下笔记列表
  */
 export function getCategoryPostList(name: string, params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>(`/apis/api.content.halo.run/v1alpha1/categories/${name}/posts`, {
@@ -128,7 +128,7 @@ export function getTagList(params: ICategoryListReq) {
 }
 
 /**
- * 标签下文章列表
+ * 标签下笔记列表
  */
 export function getPostByTagName(tagName: string, params: IPostListReq) {
 	return http.Get<IResponse<IPostListRes>>(`/apis/api.content.halo.run/v1alpha1/tags/${tagName}/posts`, {

@@ -125,7 +125,7 @@ export default {
         url: `https://api.example.com/article/${id}`,
         success: (res) => {
           this.article = res.data
-          // 根据文章主题色设置导航栏
+          // 根据笔记主题色设置导航栏
           if (res.data.theme === 'dark') {
             uni.setNavigationBarColor({
               frontColor: '#ffffff',

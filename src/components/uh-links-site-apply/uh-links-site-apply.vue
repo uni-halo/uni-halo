@@ -166,7 +166,7 @@
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">RSS地址</text>
 				<input v-model="form.rssUrl"
 					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
-					placeholder="用于抓取文章(选填)">
+					placeholder="用于抓取笔记(选填)">
 			</view>
 
 			<view class="mb-4">

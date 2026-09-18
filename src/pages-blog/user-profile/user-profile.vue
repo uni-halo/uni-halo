@@ -180,7 +180,7 @@
 		}
 	}
 
-	/* ---------- 文章 Tab(本人走 UC 端点;他人走公开接口 fieldSelector) ---------- */
+	/* ---------- 笔记 Tab(本人走 UC 端点;他人走公开接口 fieldSelector) ---------- */
 	const postState = usePagedList<IPost>({
 		fetcher: (page, size) => {
 			if (isSelf.value) {
@@ -330,38 +330,41 @@
 </script>
 
 <template>
-	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
+	<view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
 		<uh-navbar :scroll-y="scrollY" default-title="个人主页" :scroll-title="headerUser.nickname"
 			:need-placeholder="false" />
 
-		<view class="box-border relative h-76 w-full overflow-hidden pt-10">
+		<view class="box-border relative h-52 w-full mb-8">
 			<view class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :style="profileStyle" />
 			<view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
-			<view class="relative z-10 flex h-full flex-col items-center justify-center px-6">
-				<image :src="checkAvatarUrl(headerUser.avatar)"
-					class="uh-global-card-glass uh-shadow-xs h-20 w-20 rounded-full border-2 border-white/40"
-					mode="aspectFill" />
-				<view class="mt-3 text-md text-white font-black drop-shadow">
-					{{ headerUser.nickname || headerUser.username }}</view>
-				<view class="mt-1.5 flex items-center gap-x-2">
-					<text v-if="headerUser.role"
-						class="box-border rounded-full px-2 py-0.5 text-xs"
-						:class="[headerUser.isAdmin?'bg-secondary text-gray-900':'bg-white/20 text-white']"
-						>{{ headerUser.role }}</text>
+			<view class="absolute -bottom-6 left-0 z-30 flex items-center justify-center gap-x-4 px-4">
+				<view class="shrink-0">
+					<image :src="checkAvatarUrl(headerUser.avatar)"
+						class="uh-global-card-glass uh-shadow-xs h-20 w-20 rounded-full border-2 border-white/40"
+						mode="aspectFill" />
 				</view>
-				<text class="mt-2 max-w-[85%] text-center text-2xs text-white/80">{{ headerUser.bio }}</text>
+				<view class="flex-1 flex flex-col gap-y-1.5">
+					<view class="text-md text-gray-900 font-black drop-shadow">
+						{{ headerUser.nickname || headerUser.username }}
+					</view>
+					<view class="flex items-center gap-x-2">
+						<text v-if="headerUser.role" class="box-border rounded-full px-2 py-0.5 text-xs"
+							:class="[headerUser.isAdmin?'bg-secondary text-gray-900':'bg-white/20 text-white']">{{ headerUser.role }}</text>
+					</view>
+					<text class=" line-clamp-2 text-center text-xs text-gray-900">{{ headerUser.bio }}</text>
+				</view>
 			</view>
 			<view
 				class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
 		</view>
 
-		<wd-sticky :offset-top="offsetTop">
+		<!-- <wd-sticky :offset-top="offsetTop">
 			<view class="w-screen box-border px-16">
 				<view class="flex items-center w-full uh-global-card-glass border mt-4 shadow-none flex rounded-xl p-1">
 					<view class="flex-1 rounded-lg py-2 text-center text-2xs"
 						:class="activeTab === 'post' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
 						@click="switchTab('post')">
-						文章
+						笔记
 					</view>
 					<view class="flex-1 rounded-lg py-2 text-center text-2xs"
 						:class="activeTab === 'moment' ? 'bg-primary text-gray-900 font-bold' : 'text-gray-500'"
@@ -370,11 +373,11 @@
 					</view>
 				</view>
 			</view>
-		</wd-sticky>
+		</wd-sticky> -->
 
 		<template v-if="activeTab === 'post'">
 			<uh-data-loading v-if="postState.loadingStatus.value !== DataLoadingStatusEnum.Success"
-				:loading-status="postState.loadingStatus.value" empty-text="啊偶，还没有发布过文章哦~" min-height="50vh"
+				:loading-status="postState.loadingStatus.value" empty-text="啊偶，还没有发布过笔记哦~" min-height="50vh"
 				@refresh="postState.refresh()" />
 			<view v-else class="box-border flex flex-col gap-3 p-3">
 				<uh-article-card v-for="article in postState.list.value" :key="article.metadata.name" from="articles"
@@ -397,13 +400,37 @@
 					:text="momentState.loadMoreStatus.value.text" />
 			</view>
 		</template>
+
+		<view class="fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe uh-translate-x-center">
+			<view
+				class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary">
+				<view
+					class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+					:class="[activeTab === 'post'?'bg-primary font-medium ':'']" @click="switchTab('post')">
+					<text class="shrink-0 text-3xs font-semibold text-gray-900">笔记</text>
+				</view>
+				<view
+					class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+					:class="[activeTab === 'moment'?'bg-primary font-medium':'']" @click="switchTab('moment')">
+					<text class="shrink-0 text-3xs font-semibold text-gray-900">瞬间</text>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
 <style scoped lang="scss">
 	.uh-profile-mask {
-		background-color: rgba(0, 0, 0, 0.35);
-		backdrop-filter: blur(8rpx);
-		-webkit-backdrop-filter: blur(8rpx);
+		background-color: rgba(0, 0, 0, 0.075);
+		backdrop-filter: blur(4rpx);
+		-webkit-backdrop-filter: blur(4rpx);
+	}
+
+	.uh-content-lift {
+		transform: translateY(-3rem);
+	}
+
+	.uh-translate-x-center {
+		transform: translateX(-50%);
 	}
 </style>

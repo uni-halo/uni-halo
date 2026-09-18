@@ -4,7 +4,7 @@ import { favoriteKey, isValidFavoriteItem } from '@/utils/favorite'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
 
 /**
- * 本地收藏 store(文章/瞬间统一格式,persist 持久化)
+ * 本地收藏 store(笔记/瞬间统一格式,persist 持久化)
  * - 纯本地:收藏数据自包含快照,不依赖接口回源
  * - 去重键 kind + ':' + id;持久化读回数据为边界数据,展示前经 isValidFavoriteItem 过滤
  */
@@ -22,7 +22,7 @@ export const useFavoritesStore = defineStore(
       return [...items].sort((a, b) => b.createTime.localeCompare(a.createTime))
     }
 
-    /** 文章收藏(倒序) */
+    /** 笔记收藏(倒序) */
     const postItems = computed(() => sortByCreateTimeDesc(validList.value.filter(item => item.kind === 'post')))
     /** 瞬间收藏(倒序) */
     const momentItems = computed(() => sortByCreateTimeDesc(validList.value.filter(item => item.kind === 'moment')))

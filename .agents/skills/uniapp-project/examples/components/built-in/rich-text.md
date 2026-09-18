@@ -159,7 +159,7 @@ export default {
 </script>
 ```
 
-### 示例 5: 文章详情页
+### 示例 5: 笔记详情页
 
 ```vue
 <template>
@@ -177,15 +177,15 @@ export default {
   data() {
     return {
       article: {
-        title: '文章标题',
+        title: '笔记标题',
         date: '2024-01-01',
         content: `
           <div>
             <h2>第一章</h2>
-            <p>这是文章的第一段内容...</p>
+            <p>这是笔记的第一段内容...</p>
             <img src="https://example.com/image.jpg" />
             <h2>第二章</h2>
-            <p>这是文章的第二段内容...</p>
+            <p>这是笔记的第二段内容...</p>
           </div>
         `
       }

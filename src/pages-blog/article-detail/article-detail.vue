@@ -29,7 +29,7 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
-	/** 页面标题（插件端可配置，留空回退内置默认；滚动后显示文章题目） */
+	/** 页面标题（插件端可配置，留空回退内置默认；滚动后显示笔记题目） */
 	const pageTitle = usePageTitle('postDetail', '内容详情')
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
@@ -155,12 +155,12 @@
 				}
 			}
 			result.value = tempResult
-			uni.setNavigationBarTitle({ title: '文章详情' })
+			uni.setNavigationBarTitle({ title: '笔记详情' })
 			updateLoadingStatus(DataLoadingStatusEnum.Success)
 			handleTrackersCounter()
 		}
 		catch (err) {
-			console.error('获取文章失败', err)
+			console.error('获取笔记失败', err)
 			updateLoadingStatus(DataLoadingStatusEnum.Error)
 		}
 		finally {
@@ -206,13 +206,13 @@
 	}
 
 	/* ---------------- 收藏 ---------------- */
-	/** 当前文章是否已收藏 */
+	/** 当前笔记是否已收藏 */
 	function hasFavorited() : boolean {
 		const name = result.value?.metadata.name
 		return !!name && favoritesStore.isFavorite('post', name)
 	}
 
-	/** 切换收藏(收藏/取消),收藏时按当前文章内容生成快照入库 */
+	/** 切换收藏(收藏/取消),收藏时按当前笔记内容生成快照入库 */
 	function handleTogglePostFavorite() {
 		const post = result.value
 		if (!post)
@@ -310,7 +310,7 @@
 			return
 		}
 		if (!result.value.spec.allowComment) {
-			uni.showToast({ icon: 'none', title: '文章已开启禁止评论！' })
+			uni.showToast({ icon: 'none', title: '笔记已开启禁止评论！' })
 			return
 		}
 		commentModal.value = {
@@ -420,7 +420,7 @@
 
 	/* ---------------- 生命周期 ---------------- */
 	onLoad((options) => {
-		uni.setNavigationBarTitle({ title: '文章加载中...' })
+		uni.setNavigationBarTitle({ title: '笔记加载中...' })
 		queryName.value = options?.name || ''
 		handleGetData()
 	})
@@ -478,7 +478,7 @@
 					<view class="flex items-center gap-x-2">
 						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
 							mode="aspectFill" />
-						<text class="text-sm text-gray-900">{{ result?.owner?.displayName }}</text>
+						<text class="text-sm text-gray-600">{{ result?.owner?.displayName }}</text>
 					</view>
 					<view class="font-semibold">
 						{{ result?.spec.title }}

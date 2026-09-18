@@ -20,7 +20,7 @@ definePage({
 const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 吸顶偏移 = 自定义导航栏高度(与 notice/votes 等列表页同用法) */
 const { height: offsetTop } = useNavbarSticky()
-/** 分类文章列表页默认标题（插件端可配置，动态分类名加载后覆盖） */
+/** 分类笔记列表页默认标题（插件端可配置，动态分类名加载后覆盖） */
 const configTitle = usePageTitle('categoryArticles', '分类详情')
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ size: 10, page: 0 })
@@ -170,7 +170,7 @@ onShareTimeline(() => ({
     <view v-if="loadingStatus !== 'success'">
       <uh-data-loading
         :loading-status="loadingStatus"
-        empty-text="该分类下暂无文章"
+        empty-text="该分类下暂无笔记"
         @refresh="handleGetData"
       />
     </view>

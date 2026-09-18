@@ -10,7 +10,7 @@
 		isComment ?: boolean
 		title ?: string
 		postName : string
-		/** 评论目标 kind(文章 Post / 瞬间 Moment) */
+		/** 评论目标 kind(笔记 Post / 瞬间 Moment) */
 		subjectKind ?: string
 		/** 回复的回复:被引用回复(CommentReply)的 name,提交时转 quoteReply */
 		quoteReply ?: string

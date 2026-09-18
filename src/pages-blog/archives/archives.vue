@@ -50,7 +50,7 @@
 	const postLabelMonthKey = 'content.halo.run/archive-month'
 
 	/* ---------------- 数据处理 ---------------- */
-	/** 按 tab 分组文章 */
+	/** 按 tab 分组笔记 */
 	function handleGetPosts(list : IPost[]) : Record<string, IPost[]> {
 		const posts : Record<string, IPost[]> = {}
 		list.forEach((item) => {
@@ -109,7 +109,7 @@
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
 		if (calcAuditModeEnabled.value) {
-			// 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
+			// 审核模式:真实笔记按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
 			resetLoadMoreStatus()
 			const auditPostNames = appConfigStore.auditNamesOf('posts')
 			try {
@@ -289,7 +289,7 @@
 							<text v-if="activeTabIndex === 0"
 								class="text-md text-gray-900 font-bold">{{ item.month }}月</text>
 							<text class="ml-2 rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">共
-								{{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '文章' }}</text>
+								{{ item.posts.length }} 篇{{ calcAuditModeEnabled ? '内容' : '笔记' }}</text>
 						</view>
 
 						<view v-if="item.posts.length !== 0"
@@ -298,7 +298,7 @@
 								:variant="archivesListLayout === 'double' ? 'grid' : 'list'" :article="post"
 								:audit-mode="calcAuditModeEnabled" />
 						</view>
-						<uh-data-loading v-else :loading-status="DataLoadingStatusEnum.Empty" empty-text="该分类下暂无文章"
+						<uh-data-loading v-else :loading-status="DataLoadingStatusEnum.Empty" empty-text="该分类下暂无笔记"
 							@refresh="handleGetData" />
 					</view>
 				</view>

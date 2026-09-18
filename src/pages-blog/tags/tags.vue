@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /**
- * 文章标签页
+ * 笔记标签页
  */
 definePage({
   style: {
@@ -11,7 +11,7 @@ definePage({
 
 <template>
   <view class="text-[30rpx] text-[#303133]">
-    文章标签页面
+    笔记标签页面
   </view>
 </template>
 

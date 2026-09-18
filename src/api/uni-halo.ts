@@ -470,7 +470,7 @@ export function getCommentWidgetCaptcha() {
 export interface IDataStatistics {
   tags: { name: string, count: number }[]
   categories: { name: string, total: number }[]
-  /** 发布趋势:articleTotal=当日文章数,momentTotal=当日瞬间数,total=二者之和 */
+  /** 发布趋势:articleTotal=当日笔记数,momentTotal=当日瞬间数,total=二者之和 */
   articles: { date: string, articleTotal: number, momentTotal: number, name: string, total: number }[]
   comments: { username: string, count: number }[]
   top10Articles: { name: string, views: number }[]
@@ -479,7 +479,7 @@ export interface IDataStatistics {
 
 /**
  * 获取图表统计数据
- * @description 标签、分类、文章发布趋势、评论活跃用户、热门文章 top10
+ * @description 标签、分类、笔记发布趋势、评论活跃用户、热门笔记 top10
  */
 export function getChartData() {
   return http.Get<IResponse<IDataStatistics>>('/apis/api.data.statistics.xhhao.com/v1alpha1/chart/data', {

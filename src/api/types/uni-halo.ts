@@ -76,9 +76,9 @@ export interface IBannerPublicItem {
 	date?: string;
 	authorName?: string;
 	authorAvatar?: string;
-	/** 来源:post=文章快照 / custom=自定义 */
+	/** 来源:post=笔记快照 / custom=自定义 */
 	source?: 'post' | 'custom';
-	/** 文章 id(source=post 时跳转文章详情) */
+	/** 笔记 id(source=post 时跳转笔记详情) */
 	postId?: string;
 	link?: string;
 	priority?: number;
@@ -100,7 +100,7 @@ export interface IPageTitles {
 	// 博客页
 	articles?: string;
 	archives?: string;
-	/** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
+	/** 笔记详情页导航栏默认标题（滚动后仍显示笔记题目） */
 	postDetail?: string;
 	categoryArticles?: string;
 	tags?: string;
@@ -129,7 +129,7 @@ export interface IHomeCategoryItem {
 	cover?: string;
 	/** 分类排序权重（Halo Category.spec.priority，越大越靠前） */
 	priority?: number;
-	/** 分类文章数（Halo Category.status.postCount 冗余快照，缺失默认 0） */
+	/** 分类笔记数（Halo Category.status.postCount 冗余快照，缺失默认 0） */
 	postCount?: number;
 }
 
@@ -137,7 +137,7 @@ export interface IPageConfig {
 	/** 全站页面标题（插件端「功能设置 → 页面设置 → 页面标题」配置） */
 	titles?: IPageTitles;
 	homeConfig?: {
-		/** 是否显示首页分类栏（精品文章分类） */
+		/** 是否显示首页分类栏（精品笔记分类） */
 		useCategory?: boolean;
 		/** 是否显示快捷导航(首页) */
 		useQuickNavigation?: boolean;
@@ -164,7 +164,7 @@ export interface IPageConfig {
 	disclaimers?: {
 		content?: string;
 	};
-	/** 文章详情页配置（评论开关与版权文案） */
+	/** 笔记详情页配置（评论开关与版权文案） */
 	postDetailConfig?: {
 		showComment?: boolean;
 		copyrightEnabled?: boolean;
@@ -185,7 +185,7 @@ export interface IAuditDataRef {
 	extra?: string;
 	/** 排序权重(分类=spec.priority,其余可空) */
 	priority?: number;
-	/** 文章数(分类=status.postCount,缺失默认 0) */
+	/** 笔记数(分类=status.postCount,缺失默认 0) */
 	postCount?: number;
 }
 
@@ -194,7 +194,7 @@ export interface IAuditDataResult {
 	enabled: boolean;
 	/** 选中的引用快照列表(数组顺序即展示顺序;开关关闭时为空) */
 	spec?: {
-		/** 选中的文章 Post 引用列表 */
+		/** 选中的笔记 Post 引用列表 */
 		posts?: IAuditDataRef[];
 		/** 选中的分类 Category 引用列表 */
 		categories?: IAuditDataRef[];
@@ -215,7 +215,7 @@ export interface IAuditDataResult {
 		cover?: string;
 		/** 排序权重(Halo Category.spec.priority) */
 		priority?: number;
-		/** 文章数(Halo Category.status.postCount,缺失默认 0) */
+		/** 笔记数(Halo Category.status.postCount,缺失默认 0) */
 		postCount?: number;
 	}>;
 }
@@ -246,7 +246,7 @@ export interface IAppConfig {
 			/** 页脚版权（显示于博主页页脚） */
 			copyrightConfig?: { enabled?: boolean; content?: string };
 		};
-		/** 页面配置（页面标题/首页/博主页/我的页面/免责声明页/文章详情页） */
+		/** 页面配置（页面标题/首页/博主页/我的页面/免责声明页/笔记详情页） */
 		pages?: IPageConfig;
 		/** 资源与兜底（loadingGifUrl/loadingErrUrl；app 端暂不消费，保留键位） */
 		assets?: Record<string, unknown>;
@@ -302,7 +302,7 @@ export interface IAppConfig {
 	/** 平台接入（setting.yaml 组原样：第三方插件） */
 	integrationConfig?: {
 		pluginConfig?: {
-			/** 工具箱插件（文章受限访问等） */
+			/** 工具箱插件（笔记受限访问等） */
 			toolsPlugin?: IToolsPluginConfig;
 		};
 	};

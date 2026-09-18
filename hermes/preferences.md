@@ -25,8 +25,8 @@ interface IPageLayoutPref {
 
 layout: {
   home: IPageLayoutPref      // 首页
-  articles: IPageLayoutPref  // 文章列表页
-  archives: IPageLayoutPref  // 文章归档页
+  articles: IPageLayoutPref  // 笔记列表页
+  archives: IPageLayoutPref  // 笔记归档页
 }
 ```
 
@@ -44,8 +44,8 @@ layout: {
 | 页面 | listLayout | cardType |
 |------|-----------|----------|
 | home(首页) | `single` | `image_top` |
-| articles(文章列表) | `double` | `image_top` |
-| archives(文章归档) | `single` | `image_top` |
+| articles(笔记列表) | `double` | `image_top` |
+| archives(笔记归档) | `single` | `image_top` |
 
 ## 3. 后端插件字段映射(getConfigs.preferences)
 

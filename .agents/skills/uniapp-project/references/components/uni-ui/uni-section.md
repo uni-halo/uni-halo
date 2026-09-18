@@ -88,7 +88,7 @@ See official docs for platform support table: `https://uniapp.dcloud.net.cn/comp
 <template>
     <view class="uni-wrap">
         <view class="example-info">
-            <text class="example-info-text"> uni-section 组件主要用于文章、列表详情等标题展示 </text>
+            <text class="example-info-text"> uni-section 组件主要用于笔记、列表详情等标题展示 </text>
         </view>
         <uni-section class="mb-10" title="基础用法" sub-title="副标题"></uni-section>
         <uni-section class="mb-10" title="竖线装饰" sub-title="副标题" type="line"></uni-section>
@@ -154,7 +154,7 @@ See official docs for platform support table: `https://uniapp.dcloud.net.cn/comp
 <template>
     <view class="uni-wrap">
         <view class="example-info">
-            <text class="example-info-text"> uni-section 组件主要用于文章、列表详情等标题展示 </text>
+            <text class="example-info-text"> uni-section 组件主要用于笔记、列表详情等标题展示 </text>
         </view>
         <uni-section class="mb-10" title="基础用法" sub-title="副标题"></uni-section>
         <uni-section class="mb-10" title="竖线装饰" sub-title="副标题" type="line"></uni-section>

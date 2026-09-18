@@ -212,7 +212,7 @@
 			<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 		</view>
 
-		<!-- 底部悬浮：新增（参考文章详情悬浮设计） -->
+		<!-- 底部悬浮：新增（参考笔记详情悬浮设计） -->
 		<uh-permission permission="LOVE_DAILY_MANAGE">
 			<view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
 				<view

@@ -23,7 +23,7 @@ export interface PrefDef {
 /** 布局设置按页面分组(每组:列表布局 + 卡片样式) */
 export const PAGE_GROUPS = [
 	{ key: 'home', label: '首页' },
-	{ key: 'articles', label: '文章页面' },
+	{ key: 'articles', label: '笔记页面' },
 	{ key: 'archives', label: '归档页面' }
 ];
 

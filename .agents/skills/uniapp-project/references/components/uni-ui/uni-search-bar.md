@@ -121,7 +121,7 @@ See official docs for platform support table: `https://uniapp.dcloud.net.cn/comp
 <template>
 	<view>
 		<uni-card :is-shadow="false" is-full>
-			<text class="uni-h6">搜索栏组件，通常用于搜索商品、文章等。</text>
+			<text class="uni-h6">搜索栏组件，通常用于搜索商品、笔记等。</text>
 		</uni-card>
 
 		<uni-section title="基本用法" type="line">
@@ -158,7 +158,7 @@ See official docs for platform support table: `https://uniapp.dcloud.net.cn/comp
 <template>
 	<view>
 		<uni-card :is-shadow="false" is-full>
-			<text class="uni-h6">搜索栏组件，通常用于搜索商品、文章等。</text>
+			<text class="uni-h6">搜索栏组件，通常用于搜索商品、笔记等。</text>
 		</uni-card>
 
 		<uni-section title="基本用法" type="line">

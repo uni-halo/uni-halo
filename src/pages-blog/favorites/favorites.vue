@@ -25,11 +25,11 @@ const favoritesStore = useFavoritesStore()
 const { counts, postItems, momentItems } = storeToRefs(favoritesStore)
 const { remove } = favoritesStore
 
-/* ---------------- Tab(文章/瞬间) ---------------- */
+/* ---------------- Tab(笔记/瞬间) ---------------- */
 const activeKind = ref<FavoriteKind>('post')
 
 const tabList = computed(() => [
-  { key: 'post' as FavoriteKind, label: '文章', count: counts.value.post },
+  { key: 'post' as FavoriteKind, label: '笔记', count: counts.value.post },
   { key: 'moment' as FavoriteKind, label: '瞬间', count: counts.value.moment },
 ])
 
@@ -75,7 +75,7 @@ function handleRemove(item: IFavoriteItem) {
 }
 
 /* ---------------- 空态文案 ---------------- */
-const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏文章' : '还没有收藏瞬间'))
+const emptyText = computed(() => (activeKind.value === 'post' ? '还没有收藏笔记' : '还没有收藏瞬间'))
 
 /* ---------------- 滚动 ---------------- */
 onPageScroll((option: Page.PageScrollOption) => {
@@ -108,12 +108,12 @@ onPageScroll((option: Page.PageScrollOption) => {
       <!-- 空态(当前 Tab 无收藏):uh-data-loading 统一渲染,视觉与 tabbar 页一致 -->
       <uh-data-loading
         v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
-       :use-refresh-button="false" :empty-text="emptyText" empty-sub-text="快去阅读文章/瞬间点击收藏吧"
+       :use-refresh-button="false" :empty-text="emptyText" empty-sub-text="快去阅读笔记/瞬间点击收藏吧"
       />
 
       <!-- 成功态:当前 Tab 列表 -->
       <template v-else>
-        <!-- 文章卡 -->
+        <!-- 笔记卡 -->
         <template v-if="activeKind === 'post'">
           <view
             v-for="item in currentItems" :key="item.id"

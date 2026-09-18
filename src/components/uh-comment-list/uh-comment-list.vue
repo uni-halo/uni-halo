@@ -7,7 +7,7 @@
 		disallowComment ?: boolean
 		postName : string
 		post : { metadata : { name : string } }
-		/** 评论目标 kind(文章 Post / 瞬间 Moment) */
+		/** 评论目标 kind(笔记 Post / 瞬间 Moment) */
 		kind ?: string
 	}>(), {
 		disallowComment: false,
@@ -146,7 +146,7 @@
 	/** 回复/新增评论(data 有值=回复某条评论;parentComment=所属一级评论,回复接口需要其 name) */
 	function handleToComment(data ?: { type : string, comment : ICommentReply }, parentComment ?: IComment) {
 		if (props.disallowComment) {
-			uni.showToast({ icon: 'none', title: '文章已禁止评论！' })
+			uni.showToast({ icon: 'none', title: '笔记已禁止评论！' })
 			return
 		}
 		if (data && parentComment) {

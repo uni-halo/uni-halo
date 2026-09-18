@@ -67,7 +67,7 @@
 		data: { categories: [] as string[], series: [{ name: '分类', data: [] as number[] }] },
 	})
 
-	/** 文章发布趋势(热度图) */
+	/** 笔记发布趋势(热度图) */
 	const trandArticleChart = ref({
 		isExpand: true,
 		type: 'hotmap',
@@ -81,7 +81,7 @@
 		data: { categories: [] as string[], series: [{ name: '评论', data: [] as number[] }] },
 	})
 
-	/** 热门文章 Top10(柱状图) */
+	/** 热门笔记 Top10(柱状图) */
 	const top10ArticlesChart = ref({
 		isExpand: true,
 		type: 'column',
@@ -101,9 +101,9 @@
 				},
 			],
 		}
-		// 中间文案:文章总数(articles 按日 articleTotal 求和,避免多标签文章重复计数)
+		// 中间文案:笔记总数(articles 按日 articleTotal 求和,避免多标签笔记重复计数)
 		const total = statistics.value.articles.reduce((sum, item) => sum + item.articleTotal, 0)
-		tagChart.value.title = { name: '文章总数', fontSize: 13, color: '#909399' }
+		tagChart.value.title = { name: '笔记总数', fontSize: 13, color: '#909399' }
 		tagChart.value.subtitle = { name: `${total} 篇`, fontSize: 24, color: themeColor }
 	}
 
@@ -211,7 +211,7 @@
 						标签统计
 						<template #right>
 							<view class="flex items-center gap-x-2">
-								<text class="text-xs text-gray-500">（全部标签的文章数量占比）</text>
+								<text class="text-xs text-gray-500">（全部标签的笔记数量占比）</text>
 								<wd-icon :name="tagChart.isExpand ? 'up' : 'down'" size="16px" color="#909399"
 									@click="tagChart.isExpand = !tagChart.isExpand" />
 							</view>
@@ -229,7 +229,7 @@
 						分类统计
 						<template #right>
 							<view class="flex items-center gap-x-2">
-								<text class="text-xs text-gray-500">（全部分类的文章数量占比）</text>
+								<text class="text-xs text-gray-500">（全部分类的笔记数量占比）</text>
 								<wd-icon :name="categoryChart.isExpand ? 'up' : 'down'" size="16px" color="#909399"
 									@click="categoryChart.isExpand = !categoryChart.isExpand" />
 							</view>
@@ -241,13 +241,13 @@
 					</view>
 				</view>
 
-				<!-- 文章发布趋势 -->
+				<!-- 笔记发布趋势 -->
 				<view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-4">
 					<uh-section-title>
-						文章发布趋势
+						笔记发布趋势
 						<template #right>
 							<view class="flex items-center gap-x-2">
-								<text class="text-xs text-gray-500">（按日期统计文章发布数量）</text>
+								<text class="text-xs text-gray-500">（按日期统计笔记发布数量）</text>
 								<wd-icon :name="trandArticleChart.isExpand ? 'up' : 'down'" size="16px" color="#909399"
 									@click="trandArticleChart.isExpand = !trandArticleChart.isExpand" />
 							</view>
@@ -276,13 +276,13 @@
 					</view>
 				</view>
 
-				<!-- 热门文章 Top10 -->
+				<!-- 热门笔记 Top10 -->
 				<view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-4">
 					<uh-section-title>
-						热门文章前10
+						热门笔记前10
 						<template #right>
 							<view class="flex items-center gap-x-2">
-								<text class="text-xs text-gray-500">（按访问量排序的热门文章）</text>
+								<text class="text-xs text-gray-500">（按访问量排序的热门笔记）</text>
 								<wd-icon :name="top10ArticlesChart.isExpand ? 'up' : 'down'" size="16px" color="#909399"
 									@click="top10ArticlesChart.isExpand = !top10ArticlesChart.isExpand" />
 							</view>

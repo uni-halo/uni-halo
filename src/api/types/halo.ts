@@ -34,7 +34,7 @@ export interface IOwner {
 	metadata:{name:string}
 }
 
-/* ---------- 文章 Post ---------- */
+/* ---------- 笔记 Post ---------- */
 
 export interface IPostSpec {
   title: string
@@ -81,7 +81,7 @@ export interface IPostStats {
   comments?: number
 }
 
-/** 文章内容(含受限阅读的 raw 源文本) */
+/** 笔记内容(含受限阅读的 raw 源文本) */
 export interface IContent {
   raw: string
   content: string
@@ -106,7 +106,7 @@ export interface IPost {
   }
 }
 
-/** 文章列表请求参数(分页 + 过滤) */
+/** 笔记列表请求参数(分页 + 过滤) */
 export interface IPostListReq {
   page?: number
   size?: number
@@ -132,7 +132,7 @@ export interface IUcListedPost {
 
 export type IUcPostListRes = IListResult<IUcListedPost>
 
-/** 文章搜索请求参数(关键字) */
+/** 笔记搜索请求参数(关键字) */
 export interface ISearchReq {
   keyword?: string
   /** 返回条数上限(默认 50) */
@@ -164,7 +164,7 @@ export interface ICategory {
     visiblePostCount?: number
   }
   children?: ICategory[]
-  /** 文章数 */
+  /** 笔记数 */
   postCount?: number
 }
 
@@ -178,7 +178,7 @@ export interface ICategoryListReq {
 
 export type ICategoryListRes = IListResult<ICategory>
 
-/** 分类下文章列表请求 */
+/** 分类下笔记列表请求 */
 export interface ICategoryPostListReq extends IPostListReq {
   /** 私密分类密码(加密分类访问) */
   password?: string
@@ -285,7 +285,7 @@ export interface ICommentListReq {
   page?: number
   size?: number
   sort?: string[]
-  /** 主题名称(文章 name) */
+  /** 主题名称(笔记 name) */
   name?: string
   /** 是否携带该评论的部分回复(默认 false) */
   withReplies?: boolean

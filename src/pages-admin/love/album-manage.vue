@@ -187,7 +187,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       <uh-data-loadmore v-if="albumList.length" class="col-span-2" :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
     </view>
 
-    <!-- 底部悬浮：新建相册（参考文章详情悬浮设计） -->
+    <!-- 底部悬浮：新建相册（参考笔记详情悬浮设计） -->
     <uh-permission permission="LOVE_ALBUM_MANAGE">
       <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
         <view

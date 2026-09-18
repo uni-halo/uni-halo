@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 标签详情页
- * 展示某标签下的文章列表,分页加载
+ * 展示某标签下的笔记列表,分页加载
  */
 import { ref } from 'vue'
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
@@ -17,7 +17,7 @@ definePage({
 })
 
 const loading = ref<'loading' | 'success' | 'error'>('loading')
-/** 标签文章列表页默认标题（插件端可配置，动态标签名加载后覆盖） */
+/** 标签笔记列表页默认标题（插件端可配置，动态标签名加载后覆盖） */
 const configTitle = usePageTitle('tagDetail', '标签详情')
 const queryParams = ref({ size: 10, page: 0 })
 const name = ref('')
@@ -107,7 +107,7 @@ onReachBottom(() => {
 
     <block v-else>
       <view v-if="dataList.length === 0" class="empty h-[60vh] flex items-center justify-center">
-        <wd-empty description="该标签下暂无文章" />
+        <wd-empty description="该标签下暂无笔记" />
       </view>
 
       <block v-else>

@@ -91,10 +91,10 @@
 		handleGetArticleList()
 	}
 
-	/** 文章列表 */
+	/** 笔记列表 */
 	async function handleGetArticleList() {
 		if (calcAuditModeEnabled.value) {
-			// 审核模式:真实文章按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
+			// 审核模式:真实笔记按 audit-data posts 过滤(数组顺序即展示顺序),一次拉取不分页
 			resetLoadMoreStatus()
 			const auditPostNames = appConfigStore.auditNamesOf('posts')
 			try {
@@ -115,7 +115,7 @@
 				})
 			}
 			catch (err) {
-				console.error('获取审核文章失败', err)
+				console.error('获取审核笔记失败', err)
 				updateLoadingStatus(DataLoadingStatusEnum.Error)
 				updateLoadMoreStatus({
 					active: false,
@@ -152,7 +152,7 @@
 			})
 		}
 		catch (err) {
-			console.error('获取文章失败', err)
+			console.error('获取笔记失败', err)
 			if (loadMoreStatus.value.active) {
 				updateLoadMoreStatus({
 					active: false,
@@ -236,7 +236,7 @@
 		<!-- 精选分类 -->
 		<uh-home-category />
 
-		<!-- 最新文章 -->
+		<!-- 最新笔记 -->
 		<view class="mb-4 box-border px-3">
 			<uh-section-title>
 				最新推荐

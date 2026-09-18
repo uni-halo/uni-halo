@@ -1,6 +1,6 @@
 /**
  * 受限阅读工具
- * 处理文章受限内容(密码/验证码/登录/付费/评论)的检测与占位符替换
+ * 处理笔记受限内容(密码/验证码/登录/付费/评论)的检测与占位符替换
  */
 import type { IPost } from '@/api/types/halo'
 
@@ -29,8 +29,8 @@ function isHtmlEmpty(html: string): boolean {
 }
 
 /**
- * 检查文章是否受限
- * @param post 文章对象
+ * 检查笔记是否受限
+ * @param post 笔记对象
  * @returns 是否受限
  */
 export function checkPostRestrictRead(post: IPost): boolean {
@@ -55,7 +55,7 @@ export function checkPostRestrictRead(post: IPost): boolean {
 
 /**
  * 替换受限内容
- * @param post 文章对象
+ * @param post 笔记对象
  * @param replacement 替换内容,默认空字符串
  * @returns 替换后的 raw 文本
  */
@@ -84,7 +84,7 @@ export function replaceRestrictedContent(post: IPost, replacement = ''): string 
 
 /**
  * 获取可展示的 HTML 内容块
- * @param post 文章对象
+ * @param post 笔记对象
  * @returns 分割后的 HTML 片段数组
  */
 export function getShowableContent(post: IPost): string[] {
@@ -112,7 +112,7 @@ export function getShowableContent(post: IPost): string[] {
 
 /**
  * 获取受限阅读类型名称
- * @param post 文章对象
+ * @param post 笔记对象
  * @returns 类型名称(密码/验证码/登录/付费/评论)
  */
 export function getRestrictReadTypeName(post: IPost): string {

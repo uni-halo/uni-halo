@@ -184,7 +184,7 @@
 							{{ item.spec.displayName }}
 						</text>
 						<text class="text-xs text-white opacity-80">
-							共 {{ item.postCount }} 篇文章
+							共 {{ item.postCount }} 篇笔记
 						</text>
 					</view>
 				</view>

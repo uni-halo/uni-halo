@@ -4,6 +4,7 @@
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 	import { getPostListByKeyword } from '@/api/halo'
 	import { sleep } from '@/utils/common'
+	import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -59,6 +60,7 @@
 		title ?: string
 		description ?: string
 		content ?: string
+		creationTimestamp ?: string
 		updateTimestamp ?: string
 	}[]>([])
 
@@ -79,8 +81,7 @@
 
 	/* ---------------- 搜索 ---------------- */
 	async function handleGetData() {
-		if (calcAuditModeEnabled.value)
-			{return}
+		if (calcAuditModeEnabled.value) { return }
 		if (!loadMoreStatus.value.active) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		}
@@ -136,6 +137,12 @@
 	const handleOnInput = debounce(() => {
 		handleOnSearch()
 	}, 400)
+
+	/** 格式化时间 */
+	function formatTime(date ?: string, fmt = 'yyyy-MM-dd HH:mm') : string {
+		return date ? formatTimeUtil({ d: date, f: fmt }) : ''
+	}
+
 
 	function isArticle(item : { type ?: string }) : boolean {
 		return item.type === 'post.content.halo.run'
@@ -219,21 +226,21 @@
 		<!-- 自定义导航 -->
 		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId" :error-text="tips"
-			:checking="checking" @on-refresh="handlePluginRefresh" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
 			<!-- 顶部搜索框(玻璃胶囊,与 gallery 吸顶胶囊同视觉) -->
 			<wd-sticky :offset-top="offsetTop">
 				<view class="w-screen box-border px-3 py-2">
-					<view class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full border pl-3 pr-3">
-						<wd-icon name="search" size="16px" />
+					<view
+						class="box-border uh-global-card-glass h-9 flex items-center gap-3 rounded-full border pl-3 pr-3">
+						<wd-icon name="search-line" size="32rpx" />
 						<input v-model="queryParams.keyword" class="flex-1 text-sm text-gray-900"
 							placeholder="哈喽，想看些什么呢~" placeholder-class="text-gray-400" confirm-type="search"
 							@input="handleOnInput" @confirm="handleOnSearch">
-						<view v-if="queryParams.keyword" class="clear-btn flex items-center"
-							@click="handleResetSearch()">
-							<wd-icon name="close" size="28rpx" />
+						<view v-if="queryParams.keyword" class="flex items-center" @click="handleResetSearch()">
+							<wd-icon name="close" size="32rpx" />
 						</view>
 					</view>
 				</view>
@@ -252,16 +259,20 @@
 						<view class="card-head mb-3 flex items-center">
 							<view class="type-tag mr-3 shrink-0 rounded-md px-1.5 py-1 text-xs leading-none"
 								:class="isArticle(item) ? 'bg-secondary text-gray-900' : 'bg-blue-500 text-gray-50'">
-								{{ isArticle(item) ? '文章' : '瞬间' }}
+								{{ isArticle(item) ? '笔记' : '瞬间' }}
 							</view>
 							<text
-								class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-gray-900 font-bold">{{ item.title }}</text>
+								class="flex-1 truncate text-sm text-gray-900 font-bold">
+								{{ isArticle(item)?item.title:formatTime(item.creationTimestamp,'yyyy年MM月dd日 HH点ss分 星期w') }}
+							</text>
 						</view>
-						<mp-html class="evan-markdown" lazy-load :domain="markdownConfig.domain ?? ''"
-							:loading-img="markdownConfig.loadingGif" scroll-table selectable
-							:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-							:content="item.description || item.content || ''" :markdown="true" :show-line-number="true"
-							:show-language-name="true" copy-by-long-press />
+						<view class="w-full text-3xs">
+							<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+								:loading-img="markdownConfig.loadingGif" scroll-table selectable
+								:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+								:content="item.description || item.content || ''" :markdown="true"
+								:show-line-number="true" :show-language-name="true" copy-by-long-press />
+						</view>
 					</view>
 				</block>
 				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
@@ -269,21 +280,3 @@
 		</template>
 	</view>
 </template>
-
-<style scoped lang="scss">
-	.fade-up {
-		animation: fade-up 0.4s ease-out both;
-
-		@keyframes fade-up {
-			from {
-				opacity: 0;
-				transform: translateY(24rpx);
-			}
-
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-	}
-</style>

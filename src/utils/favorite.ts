@@ -1,5 +1,5 @@
 /**
- * 收藏快照:把文章(IPost)/瞬间(IMoment)组装为统一收藏项 IFavoriteItem
+ * 收藏快照:把笔记(IPost)/瞬间(IMoment)组装为统一收藏项 IFavoriteItem
  * 纯函数层,快照自包含(纯文本摘要截断),供 store 与三处收藏按钮共用
  */
 import type { IMoment, IPost } from '@/api/types/halo'
@@ -17,35 +17,35 @@ export interface IFavoriteOwner {
   avatar: string
 }
 
-/** 统一收藏项(文章/瞬间,纯本地) */
+/** 统一收藏项(笔记/瞬间,纯本地) */
 export interface IFavoriteItem {
   kind: FavoriteKind
   /** 详情 id(metadata.name) */
   id: string
-  /** 封面(仅文章) */
+  /** 封面(仅笔记) */
   cover?: string
-  /** 标题(仅文章) */
+  /** 标题(仅笔记) */
   title?: string
-  /** 纯文本摘要:文章 excerpt/正文抽 120 字;瞬间正文抽 200 字 */
+  /** 纯文本摘要:笔记 excerpt/正文抽 120 字;瞬间正文抽 200 字 */
   content: string
   /** 收藏时刻(ISO 字符串) */
   createTime: string
   owner: IFavoriteOwner
 }
 
-/** 文章正文/摘要截断字数 */
+/** 笔记正文/摘要截断字数 */
 const POST_EXCERPT_MAX = 120
 /** 瞬间正文截断字数 */
 const MOMENT_EXCERPT_MAX = 200
 
-/** 取文章摘要文本(excerpt 优先,兜底从正文抽取;候选字段可能被接口返回非字符串,逐个过滤) */
+/** 取笔记摘要文本(excerpt 优先,兜底从正文抽取;候选字段可能被接口返回非字符串,逐个过滤) */
 function getPostExcerptText(post: IPost): string {
   const candidates = [post.spec.excerpt, post.content?.content, post.content?.raw]
   const source = candidates.find((item): item is string => typeof item === 'string' && item.trim() !== '')
   return extractPlainExcerpt(source, POST_EXCERPT_MAX)
 }
 
-/** 文章 → 收藏快照 */
+/** 笔记 → 收藏快照 */
 export function buildPostFavoriteItem(post: IPost, now: Date = new Date()): IFavoriteItem {
   const owner = post.owner
   const cover = post.spec.cover ? checkImageUrl(post.spec.cover) : undefined

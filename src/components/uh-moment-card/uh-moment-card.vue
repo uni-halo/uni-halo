@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 /**
- * 瞬间卡片：头像信息 + 正文 + 媒体 + 标签 + 点赞/评论/收藏操作栏
+ * 瞬间卡片
  *
- * 用法：<uh-moment-card :moment="item" :blogger="bloggerInfo" @detail @like @comment @favorite />
  */
 import { useFavoritesStore } from '@/store/favorites'
 import { useUpvote } from '@/hooks/useUpvote'

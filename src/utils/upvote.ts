@@ -1,6 +1,6 @@
 /**
  * 点赞状态工具
- * 文章/瞬间点赞状态本地缓存
+ * 笔记/瞬间点赞状态本地缓存
  */
 import { getCache, setCache } from './storage'
 

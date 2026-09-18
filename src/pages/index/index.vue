@@ -33,7 +33,7 @@
 	// 维护拦截
 	const { reason, interceptOrContinue, redirectToMaintenance } = useMaintenanceIntercept()
 
-	/** 通过二维码 scene 获取文章 id */
+	/** 通过二维码 scene 获取笔记 id */
 	async function getPostIdByQRCode(key : string) : Promise<string | null> {
 		try {
 			const response = await getQRCodeInfo(key)
@@ -66,7 +66,7 @@
 				return
 			}
 
-			// 二维码 scene 进入:解析 postId 跳文章详情
+			// 二维码 scene 进入:解析 postId 跳笔记详情
 			if (options.scene && options.scene !== '') {
 				const postId = await getPostIdByQRCode(decodeURIComponent(options.scene))
 				if (postId) {

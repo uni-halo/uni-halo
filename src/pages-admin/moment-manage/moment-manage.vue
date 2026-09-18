@@ -221,7 +221,7 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
 
-      <!-- 底部悬浮：发布瞬间（参考文章详情悬浮设计） -->
+      <!-- 底部悬浮：发布瞬间（参考笔记详情悬浮设计） -->
       <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
         <view
           class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"

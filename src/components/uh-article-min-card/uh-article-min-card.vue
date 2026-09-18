@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
- * 文章迷你卡片
- * 用于分类页 list-post 视图的文章列表
+ * 笔记迷你卡片
+ * 用于分类页 list-post 视图的笔记列表
  */
 import { computed } from 'vue'
 import dayjs from 'dayjs'

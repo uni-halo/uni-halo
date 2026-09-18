@@ -141,7 +141,7 @@
   .page-body { height: calc(100% - 220px + 64px); overflow-y: auto; padding-bottom: 40px; scrollbar-width: none; }
   .page-body::-webkit-scrollbar { display: none; }
 
-  /* 文章卡片 */
+  /* 笔记卡片 */
   .post-list { padding: 14px 16px 0; display: flex; flex-direction: column; gap: 12px; }
   .post-card {
     border-radius: 18px; padding: 12px; display: flex; gap: 12px; cursor: pointer;
@@ -227,25 +227,25 @@
     <!-- Tab 切换 -->
     <div class="tabs glass">
       <div class="tab-slider" id="slider"></div>
-      <div class="tab active" id="tab-post" onclick="switchTab('post')">文章</div>
+      <div class="tab active" id="tab-post" onclick="switchTab('post')">笔记</div>
       <div class="tab" id="tab-moment" onclick="switchTab('moment')">瞬间</div>
     </div>
 
-    <!-- 文章列表 -->
+    <!-- 笔记列表 -->
     <div class="tab-panel active" id="panel-post">
       <!-- uh-data-loading 三态（对应 loadingStatus !== 'success'） -->
       <div class="tri-state glass" data-tri="loading">
-        <div class="bubble loading">😊</div>
+        <div class="bubble loading"></div>
         <div class="tri-main loading">稍等，正在加载中哦~<span class="dots"><i></i><i></i><i></i></span></div>
       </div>
       <div class="tri-state glass" data-tri="empty">
-        <div class="bubble empty">😕</div>
+        <div class="bubble empty"></div>
         <div class="tri-main empty">啊偶，暂时没有数据呢~</div>
-        <div class="tri-sub">快去发布第一篇文章吧～</div>
+        <div class="tri-sub">快去发布第一篇笔记吧～</div>
         <button class="btn-refresh">刷新试试</button>
       </div>
       <div class="tri-state glass" data-tri="error">
-        <div class="bubble error">🤒</div>
+        <div class="bubble error"></div>
         <div class="tri-main error">哎呀，加载失败了呢~</div>
         <div class="tri-sub">请检查网络连接，或稍后再试</div>
         <button class="btn-refresh">刷新试试</button>
@@ -257,28 +257,28 @@
           <div class="cover-thumb"></div>
           <div class="post-info">
             <div class="post-title"><span class="pin-tag">置顶</span>uni-app + Halo 打造全端个人博客的踩坑实录</div>
-            <div class="post-meta"><span>📖 2.3k</span><span>💬 48</span><span>2026-09-10</span></div>
+            <div class="post-meta"><span> 2.3k</span><span> 48</span><span>2026-09-10</span></div>
           </div>
         </div>
         <div class="post-card glass" onclick="alert('跳转 article-detail?name=post-2')">
           <div class="cover-thumb" style="background:linear-gradient(135deg,#f0a58f,#c96a9e)"></div>
           <div class="post-info">
             <div class="post-title">从 0 到 1 设计一套玻璃拟态移动端组件样式规范</div>
-            <div class="post-meta"><span>📖 986</span><span>💬 21</span><span>2026-08-28</span></div>
+            <div class="post-meta"><span> 986</span><span> 21</span><span>2026-08-28</span></div>
           </div>
         </div>
         <div class="post-card glass" onclick="alert('跳转 article-detail?name=post-3')">
           <div class="cover-thumb" style="background:linear-gradient(135deg,#8fb8f0,#5a6fd8)"></div>
           <div class="post-info">
             <div class="post-title">Halo 2.26 插件开发：Reactor 上下文与 PAT 认证实践</div>
-            <div class="post-meta"><span>📖 1.4k</span><span>💬 33</span><span>2026-08-15</span></div>
+            <div class="post-meta"><span> 1.4k</span><span> 33</span><span>2026-08-15</span></div>
           </div>
         </div>
         <div class="post-card glass" onclick="alert('跳转 article-detail?name=post-4')">
           <div class="cover-thumb" style="background:linear-gradient(135deg,#f5d76e,#e08f4c)"></div>
           <div class="post-info">
             <div class="post-title">秋日骑行手记：环洱海 120km 的补给与装备清单</div>
-            <div class="post-meta"><span>📖 657</span><span>💬 12</span><span>2026-07-30</span></div>
+            <div class="post-meta"><span> 657</span><span> 12</span><span>2026-07-30</span></div>
           </div>
         </div>
       </div>
@@ -290,17 +290,17 @@
     <!-- 瞬间列表 -->
     <div class="tab-panel" id="panel-moment">
       <div class="tri-state glass" data-tri="loading">
-        <div class="bubble loading">😊</div>
+        <div class="bubble loading"></div>
         <div class="tri-main loading">稍等，正在加载中哦~<span class="dots"><i></i><i></i><i></i></span></div>
       </div>
       <div class="tri-state glass" data-tri="empty">
-        <div class="bubble empty">😕</div>
+        <div class="bubble empty"></div>
         <div class="tri-main empty">啊偶，暂时没有数据呢~</div>
         <div class="tri-sub">发一条瞬间记录今天吧～</div>
         <button class="btn-refresh">刷新试试</button>
       </div>
       <div class="tri-state glass" data-tri="error">
-        <div class="bubble error">🤒</div>
+        <div class="bubble error"></div>
         <div class="tri-main error">哎呀，加载失败了呢~</div>
         <div class="tri-sub">请检查网络连接，或稍后再试</div>
         <button class="btn-refresh">刷新试试</button>
@@ -309,26 +309,26 @@
       <div data-list="moment">
       <div class="moment-list">
         <div class="moment-card glass" onclick="alert('跳转 moment-detail?name=moment-1')">
-          <div class="moment-text">晚风把云揉碎在湖面上，今天的日落值得被记录 📷</div>
+          <div class="moment-text">晚风把云揉碎在湖面上，今天的日落值得被记录 </div>
           <div class="img-grid"><div class="ph"></div><div class="ph"></div><div class="ph"></div></div>
           <div class="moment-foot">
             <span>2026-09-14 19:32</span>
-            <span class="ops"><span>❤️ 26</span><span>💬 5</span></span>
+            <span class="ops"><span>❤️ 26</span><span> 5</span></span>
           </div>
         </div>
         <div class="moment-card glass" onclick="alert('跳转 moment-detail?name=moment-2')">
-          <div class="moment-text">给 uni-halo 的个人主页画完了高保真原型，玻璃卡片 + 主题绿，和弹窗风格无缝衔接 🎨</div>
+          <div class="moment-text">给 uni-halo 的个人主页画完了高保真原型，玻璃卡片 + 主题绿，和弹窗风格无缝衔接 </div>
           <div class="img-grid"><div class="ph" style="background:linear-gradient(135deg,#f0a58f,#c96a9e)"></div><div class="ph" style="background:linear-gradient(135deg,#8fb8f0,#5a6fd8)"></div></div>
           <div class="moment-foot">
             <span>2026-09-12 23:05</span>
-            <span class="ops"><span>❤️ 41</span><span>💬 9</span></span>
+            <span class="ops"><span>❤️ 41</span><span> 9</span></span>
           </div>
         </div>
         <div class="moment-card glass" onclick="alert('跳转 moment-detail?name=moment-3')">
           <div class="moment-text">凌晨一点的服务器日志终于安静了，插件解绑接口 <b>&lt;50 行</b>搞定 ✅</div>
           <div class="moment-foot">
             <span>2026-09-11 01:14</span>
-            <span class="ops"><span>❤️ 18</span><span>💬 3</span></span>
+            <span class="ops"><span>❤️ 18</span><span> 3</span></span>
           </div>
         </div>
       </div>

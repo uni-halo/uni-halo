@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 贡献热度图
- * 按日期统计文章发布数量,以年度格子图展示
+ * 按日期统计笔记发布数量,以年度格子图展示
  */
 import { computed, ref } from 'vue'
 import dayjs from 'dayjs'
@@ -144,7 +144,7 @@ function changeYear(value: number) {
   <view class="uh-heatmap box-border w-full rounded-xl bg-white p-3">
     <view class="header mb-6 flex items-center justify-between">
       <view class="title text-[28rpx] text-[#303133] font-bold">
-        {{ currentYear }}年 文章发布趋势
+        {{ currentYear }}年 笔记发布趋势
       </view>
       <view class="controls flex gap-3">
         <view

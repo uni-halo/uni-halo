@@ -40,7 +40,7 @@ src/
 │   ├── tabbar/     # tabbar 四个主页面（home/category/gallery/moments/about）
 │   ├── auth/       # 登录/注册
 │   └── maintenance/ # 维护页
-├── pages-blog/     # 分包一：博客业务页面（对应旧版 pagesA，如文章、投票、图库、瞬间）
+├── pages-blog/     # 分包一：博客业务页面（对应旧版 pagesA，如笔记、投票、图库、瞬间）
 ├── pages-demo/     # 分包二：demo 预留
 ├── components/     # 全局组件（uh- 前缀，easycom 自动注册，免 import）
 ├── api/            # API 定义（alova），类型在 api/types/ 下
@@ -68,7 +68,7 @@ src/
 
 | API 文件 | 类型文件 | 内容 |
 |---------|---------|------|
-| `src/api/halo.ts` | `src/api/types/halo.ts` | Halo 官方接口（文章/分类/标签/评论/瞬间/图库/友链） |
+| `src/api/halo.ts` | `src/api/types/halo.ts` | Halo 官方接口（笔记/分类/标签/评论/瞬间/图库/友链） |
 | `src/api/uni-halo.ts` | `src/api/types/uni-halo.ts` | uni-halo-plugin 插件与三方插件接口 |
 | `src/api/login.ts` | `src/api/types/login.ts` | 登录相关 |
 
@@ -81,7 +81,7 @@ src/
 
 ```ts
 // src/api/types/halo.ts
-/** 文章列表请求参数 */
+/** 笔记列表请求参数 */
 export interface IPostListReq {
   page: number
   size: number
@@ -90,7 +90,7 @@ export interface IPostListReq {
   [key: string]: unknown
 }
 
-/** 文章列表响应 */
+/** 笔记列表响应 */
 export interface IPostListRes {
   page: number
   size: number
@@ -146,7 +146,7 @@ export function getPostListByKeyword(params: ISearchReq) {
 但它是 uni.request 原生的 query 参数（支持复杂序列化），项目约定**需要时直接传 `query: params`**：
 
 ```ts
-/** 文章列表（复杂参数序列化：用 query 而非 params） */
+/** 笔记列表（复杂参数序列化：用 query 而非 params） */
 export function getPostList(params: IPostListReq) {
   return http.Get<IResponse<IPostListRes>>('/apis/api.content.halo.run/v1alpha1/posts', {
     query: params, // 复杂/嵌套参数走 query；简单键值参数才用 params
@@ -297,7 +297,7 @@ onLoad(() => {
 
 ### 5.4 子页面自定义导航（uh-navbar 组件）
 
-**用途**：子页面（非 tabbar 页，如文章详情、设置、投票详情等）的顶部自定义导航栏。
+**用途**：子页面（非 tabbar 页，如笔记详情、设置、投票详情等）的顶部自定义导航栏。
 配合页面 `navigationStyle: 'custom'` 使用，**新页面一律使用它，不要用默认导航栏**。
 
 **前提（definePage 里必须声明）**：
@@ -491,7 +491,7 @@ onReachBottom(() => {
 - 模板里 `v-if="loadingStatus !== DataLoadingStatusEnum.Success"` 显示 `<uh-data-loading>`，否则渲染数据
 - `<uh-data-loading>` 常用 props：`loading-status`（必传）、`min-height`、`loading-text`、
   `error-text`、`empty-text`（留空显示默认文案）；`@refresh` 绑重试函数
-- 首页特例：入口拦截 + 文章列表空时用 `v-if="loadingStatus !== Success && articleList.length === 0"`，
+- 首页特例：入口拦截 + 笔记列表空时用 `v-if="loadingStatus !== Success && articleList.length === 0"`，
   避免轮播/公告区被占位组件顶掉
 - 详情页等单数据场景（如 `moment-detail`）可用 `useDataLoading` 状态机（返回 `{ data, status, run }`），
   列表页/四态展示优先 `updateLoadingStatus` 写法
@@ -702,7 +702,7 @@ UnoCSS 原子类（优先） → <style scoped lang="scss">（页面/组件内�
 
 ### 7.5 富文本
 
-文章/瞬间正文用 `mp-html` 渲染（easycom 已配），配置走 `markdownConfig`：
+笔记/瞬间正文用 `mp-html` 渲染（easycom 已配），配置走 `markdownConfig`：
 
 ```vue
 <mp-html
@@ -769,7 +769,7 @@ loadMoreText.value = t('common.loadMore')
 
 ### 8.6 Git 提交与合入
 
-- **提交信息必须使用中文**：subject 用中文描述（如 `feat: 新增投票功能`、`fix: 修复文章详情白屏`）
+- **提交信息必须使用中文**：subject 用中文描述（如 `feat: 新增投票功能`、`fix: 修复笔记详情白屏`）
 - commitlint 强制 conventional commits：`feat: / fix: / docs: / style: / refactor: / perf: / test: / chore:`
 - 版本发布走 changesets（`pnpm upload:changeset`）
 - 合入前三条命令全过（见 §10）

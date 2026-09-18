@@ -148,7 +148,7 @@
 				</view>
 			</view>
 
-			<!-- 布局:按页面分组(首页/文章列表/文章归档 × 列表布局/卡片样式) -->
+			<!-- 布局:按页面分组(首页/笔记列表/笔记归档 × 列表布局/卡片样式) -->
 			<template v-if="activeTab === 'layout'">
 				<view v-for="group in layoutGroups" :key="group.key" class="flex flex-col gap-y-3">
 					<uh-section-title>{{ group.label }}</uh-section-title>

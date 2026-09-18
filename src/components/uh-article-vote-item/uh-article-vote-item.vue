@@ -283,7 +283,7 @@
 						<view v-for="(option, optionIndex) in voteData.spec?.options || []" :key="optionIndex"
 							class="radio-item" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
 							:style="{ width: `${handleCalcPercent(option)}%` }">
-							<view class="option-item box-border w-full rounded-lg px-3 py-2"
+							<view class="option-item box-border w-full rounded-xl px-3 py-2"
 								:class="optionIndex === 0 ? 'option-item-left' : 'option-item-right'">
 								{{ handleCalcPercent(option) }}%
 							</view>
@@ -309,7 +309,7 @@
 					</template>
 					<template v-else>
 						<view v-for="(option, optionIndex) in voteData.spec?.options || []" :key="optionIndex"
-							class="vote-select-option box-border rounded-xl bg-gray-100 px-4 py-2.5 text-xs"
+							class="uh-global-card-glass uh-shadow-xs border box-border rounded-xl bg-gray-100 px-4 py-2.5 text-xs"
 							:class="option.checked ? 'bg-primary text-gray-900 font-semibold' : ''"
 							@click="handleSelectSingleOption(option)">
 							选项{{ optionIndex + 1 }}：{{ option.title }}
@@ -324,36 +324,37 @@
 					结束：永久有效
 				</text>
 				<text v-else-if="voteState?.state === '未开始'" class="text-xs text-gray-400">
-					开始：{{ formatTime(voteData.spec?.startDate) }}
+					开始：{{ formatTime(voteData.spec?.startDate,'yyyy/MM/dd HH:mm') }}
 				</text>
 				<text v-else class="text-xs text-gray-400">
-					结束：{{ formatTime(voteData.spec?.endDate) }}
+					结束：{{ formatTime(voteData.spec?.endDate,'yyyy/MM/dd HH:mm') }}
 				</text>
 				<view class="flex items-center gap-2">
 					<text class="text-xs text-gray-400">{{ voteData.stats?.voteCount || 0 }} 人已参与</text>
-					<text v-if="isVoted" class="rounded bg-primary/15 px-2 py-0.5 text-xs text-primary">已投票</text>
+					<text v-if="isVoted" class="rounded bg-secondary px-1 py-0.5 text-xs text-gray-500">已投票</text>
 				</view>
 			</view>
 
-			<!-- 提交按钮(选择后才出现状态机) -->
+			<!-- 提交按钮(选择后才出现状态机;uh-button 与投票详情页同款) -->
 			<view v-if="submitForm.voteData.length !== 0" class="mt-3">
-				<wd-button v-if="isVoted" disabled block>
+				<uh-button v-if="isVoted" custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full">
 					您已参与投票
-				</wd-button>
-				<wd-button v-else-if="voteState?.state === '未开始'" plain block type="warning"
+				</uh-button>
+				<uh-button v-else-if="voteState?.state === '未开始'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
 					@click="handleSubmitTip('投票未开始')">
 					投票未开始
-				</wd-button>
-				<wd-button v-else-if="voteState?.state === '已结束'" plain block type="danger"
+				</uh-button>
+				<uh-button v-else-if="voteState?.state === '已结束'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
 					@click="handleSubmitTip('投票已结束')">
 					投票已结束
-				</wd-button>
-				<wd-button v-else-if="!voteData.spec?.canAnonymously" plain block type="danger" @click="handleSubmit()">
+				</uh-button>
+				<uh-button v-else-if="!voteData.spec?.canAnonymously" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
+					@click="handleSubmit()">
 					不支持匿名投票
-				</wd-button>
-				<wd-button v-else block type="primary" :loading="isSubmit" :disabled="isSubmit" @click="handleSubmit()">
-					提交投票
-				</wd-button>
+				</uh-button>
+				<uh-button v-else custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full" @click="handleSubmit()">
+					{{ isSubmit ? '正在提交...' : '提交投票' }}
+				</uh-button>
 			</view>
 		</template>
 	</view>

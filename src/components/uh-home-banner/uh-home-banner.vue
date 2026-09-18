@@ -76,7 +76,7 @@
 			}
 			return
 		}
-		// 文章来源 
+		// 笔记来源 
 		uni.navigateTo({
 			url: `/pages-blog/article-detail/article-detail?name=${item.postId}`,
 			animationType: 'slide-in-right',

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 /**
  * 轮播详情页(自定义 Banner 条目点击后进入)
- * 通过公开详情接口(getBannerDetail)拉取 content 富文本与外链,类文章详情页
+ * 通过公开详情接口(getBannerDetail)拉取 content 富文本与外链,类笔记详情页
  * 外链平台差异(条件编译):非 APP-PLUS(小程序/H5)提供复制链接,APP-PLUS 提供访问按钮(web-view)
  */
 import { computed, ref } from 'vue'
