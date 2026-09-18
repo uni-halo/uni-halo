@@ -236,7 +236,11 @@
 			<uh-section-title>
 				评论列表
 				<template #right>
-					<text class="text-xs text-gray-500 font-normal" @click="handleGetData">刷新</text>
+					<view class="flex items-center gap-3">
+						<text v-if="!disallowComment" class="text-xs text-gray-500 font-normal"
+							@click="handleToComment()">写评论</text>
+						<text class="text-xs text-gray-500 font-normal" @click="handleGetData">刷新</text>
+					</view>
 				</template>
 			</uh-section-title>
 

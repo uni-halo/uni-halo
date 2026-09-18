@@ -34,6 +34,44 @@ export function handleToTopPage(duration = 500) {
   })
 }
 
+/**
+ * 固定导航栏遮挡高度(状态栏 + 46px 导航体,与 uh-navbar 实际高度一致)
+ */
+function getFixedNavbarOffset(): number {
+  const winInfo = uni.getWindowInfo()
+  const statusHeight = winInfo.safeArea?.top || winInfo.statusBarHeight || 0
+  return statusHeight + 46
+}
+
+/**
+ * 滚动页面至指定元素区域(自动避开固定导航栏遮挡)
+ * 通过 selectorQuery 计算目标元素绝对位置后 pageScrollTo,兼容 H5/小程序/App
+ * @param selector 目标元素选择器,如 '#comment-section'
+ * @param duration 滚动时长,默认 300
+ */
+export function handleScrollToSelector(selector: string, duration = 300) {
+  uni.createSelectorQuery()
+    .selectViewport().scrollOffset(() => {})
+    .select(selector).boundingClientRect()
+    .exec((res) => {
+      const viewport = res?.[0] as { scrollTop?: number } | undefined
+      const rect = res?.[1] as { top?: number } | undefined
+      if (!rect || rect.top === undefined || rect.top === null) {
+        console.error('滚动目标不存在:', selector)
+        return
+      }
+      // 目标绝对位置 = 当前滚动量 + 元素相对视口位置;再扣除固定导航栏高度并预留 12px 呼吸空间
+      const target = Math.max(0, (viewport?.scrollTop || 0) + rect.top - getFixedNavbarOffset() + 12)
+      uni.pageScrollTo({
+        scrollTop: target,
+        duration,
+        fail: (err) => {
+          console.error('滚动失败', err)
+        },
+      })
+    })
+}
+
 /** 初始化动画索引值(需要在每个页面调用) */
 export function handleResetSetAniWaitIndex() {
   aniWaitIndex = 0

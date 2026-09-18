@@ -15,6 +15,7 @@
 	import { buildPostFavoriteItem } from '@/utils/favorite'
 	import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
 	import { getDomainOnly } from '@/utils/urlParams'
+	import { handleScrollToSelector } from '@/utils/page'
 	import { markdownConfig } from '@/config/markdown'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IComment, IPost } from '@/api/types/halo'
@@ -50,7 +51,6 @@
 
 	const showContentArr = ref<string[]>([])
 	const restrictReadInputCode = ref('')
-	const commentListScrollTop = ref(0)
 
 	const passwordModal = ref({ show: false })
 	const verificationCodeModal = ref({
@@ -302,6 +302,7 @@
 	}
 
 	/* ---------------- 评论 ---------------- */
+	/** 底部悬浮评论按钮:滚动到评论区(新增评论入口在评论区头部「写评论」/空态「抢沙发」) */
 	function handleToComment() {
 		if (!result.value) {
 			return
@@ -313,13 +314,7 @@
 			uni.showToast({ icon: 'none', title: '笔记已开启禁止评论！' })
 			return
 		}
-		commentModal.value = {
-			show: true,
-			isComment: true,
-			postName: result.value.metadata.name,
-			title: '新增评论',
-			quoteReply: '',
-		}
+		handleScrollToSelector('#comment-section')
 	}
 
 	function handleOnComment(data : { isComment : boolean, postName : string, title : string, quoteReply ?: string }) {
@@ -516,7 +511,8 @@
 								<text class="text-xs">喜欢</text>
 								<text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
 							</view>
-							<view v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500">
+							<view v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500"
+							@click="handleToComment()">
 								<text class="text-xs">评论</text>
 								<text class="text-xs text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
 							</view>
@@ -586,7 +582,7 @@
 					</view>
 
 					<!-- 评论区域 -->
-					<view class="box-border">
+					<view id="comment-section" class="box-border">
 						<uh-comment-list v-if="calcIsShowComment && result"
 							:disallow-comment="!result.spec.allowComment" :post-name="result.metadata.name"
 							:post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"

@@ -20,8 +20,7 @@
 		'pages/tabbar/moments/moments',
 		'pages-blog/articles/articles',
 		'pages-blog/article-detail/article-detail',
-		'pages-blog/archives/archives',
-		'pages-blog/user-profile/user-profile'
+		'pages-blog/archives/archives'
 	]
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]

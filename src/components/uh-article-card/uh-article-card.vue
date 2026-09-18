@@ -113,7 +113,8 @@
 		archives: 'archivesCardType',
 	}
 
-	/** 实际生效布局:显式 layout > 按页面读取全局 cardType(首页/笔记列表/笔记归档)> image_top;窄列场景左右布局回退上图下文 */
+	/** 实际生效布局:显式 layout > 按 from 读取对应页面 cardType(首页/笔记列表/笔记归档)> image_top;
+	 * 窄列(双列网格)统一回退上图下文(与首页行为一致,双列仅支持上图下文) */
 	const effectiveLayout = computed<CardLayout>(() => {
 		const globalSettings = settings.value
 		const page = props.from === 'home' || props.from === 'articles' || props.from === 'archives'
@@ -125,8 +126,7 @@
 				? (globalSettings[CARD_TYPE_KEY[page]] as CardLayout)
 				: 'image_top'
 		}
-		const narrow = isGrid.value || (props.from === 'home' && globalSettings.homeListLayout === 'double')
-		if (narrow && raw !== 'image_top') {
+		if (isGrid.value && raw !== 'image_top') {
 			return 'image_top'
 		}
 		return raw
