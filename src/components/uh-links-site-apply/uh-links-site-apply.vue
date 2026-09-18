@@ -111,7 +111,7 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl"
+	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" safe-area-inset-bottom custom-class="!border rounded-xl"
 		@close="handleClose(false)">
 		<view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
 			<view class="w-full flex flex-col gap-y-1">
@@ -123,64 +123,63 @@
 				<wd-icon name="close" size="32rpx" class="text-gray-500" />
 			</view>
 		</view>
-		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-			<view class="mb-5 flex items-center">
+		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[52vh] p-4 pt-0">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
 				<input v-model="form.name"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="请输入网站名称">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">网址 *</text>
 				<input v-model="form.url"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="请输入网站地址">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">Logo</text>
 				<input v-model="form.logo"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="请输入网站Logo(选填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">邮箱</text>
 				<input v-model="form.email"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="请输入邮箱(选填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">友链页面</text>
 				<input v-model="form.linkPageUrl"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="贵站友情链接页面地址(选填)">
 			</view>
 			<view class="mb-2 pl-[140rpx] text-xs text-gray-400 -mt-3">
 				（即包含本站链接的页面）
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">RSS地址</text>
 				<input v-model="form.rssUrl"
-					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
+					class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
 					placeholder="用于抓取文章(选填)">
 			</view>
 
-			<view class="mb-5">
+			<view class="mb-4">
 				<text class="label mb-2 block text-sm text-[#666]">网站描述</text>
 				<textarea v-model="form.description"
 					class="uh-global-card-glass box-border h-24 w-full flex-1 border rounded-xl p-3 text-sm shadow-none"
 					placeholder="请输入网站描述,不超过30字符(选填)" :maxlength="30" />
 			</view>
-
-			<view class="my-6">
-				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
-					提交申请
-				</uh-button>
-			</view>
 		</scroll-view>
+		<view class="box-border w-full px-4">
+			<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
+				提交申请
+			</uh-button>
+		</view>
 	</uh-glass-popup>
 </template>

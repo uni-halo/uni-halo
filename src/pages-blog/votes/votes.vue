@@ -240,16 +240,6 @@
 		}
 	}
 
-	/** 卡片点击跳详情 */
-	function handleOnVoteClick(vote : IVoteItem) {
-		const name = vote.metadata?.name
-		if (!name)
-			return
-		uni.navigateTo({
-			url: `/pages-blog/vote-detail/vote-detail?name=${name}`,
-		})
-	}
-
 	function handleToTopPage(duration = 500) {
 		uni.pageScrollTo({
 			scrollTop: 0,
@@ -345,8 +335,7 @@
 
 			<view v-else class="box-border flex flex-col gap-4 p-3">
 				<block v-if="dataList.length !== 0">
-					<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote"
-						@click="handleOnVoteClick(vote)" />
+					<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
 					<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 				</block>
 			</view>

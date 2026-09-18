@@ -134,7 +134,8 @@
 	<wd-dialog />
 	<view class="box-border min-h-screen bg-page">
 		<!-- 自定义标题 -->
-		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" :need-placeholder="true" />
+		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900"
+			:need-placeholder="true" />
 
 		<!-- 内容区域 -->
 		<view class="box-border flex flex-col gap-y-6 p-3">
@@ -153,8 +154,7 @@
 					<uh-section-title>{{ group.label }}</uh-section-title>
 					<view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
 						<view v-for="(row, index) in group.rows" :key="row.key"
-							class="pick-row flex items-center justify-between px-4 py-4"
-							:class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''"
+							class="pick-row flex items-center justify-between p-3"
 							@click="handleOpenEnum(row)">
 							<view class="row-left flex flex-col gap-1">
 								<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
@@ -181,7 +181,7 @@
 					<uh-section-title>
 						功能
 						<template #right>
-							<text class="text-2xs text-gray-400">一些常用的功能性设置</text>
+							<text class="text-xs text-gray-400">一些常用的功能性设置</text>
 						</template>
 					</uh-section-title>
 					<view class="setting-sheet uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
@@ -218,8 +218,7 @@
 								</view>
 							</view>
 							<!-- 枚举选择 -->
-							<view v-else class="pick-row flex items-center justify-between px-4 py-4"
-								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''"
+							<view v-else class="pick-row flex items-center justify-between p-3"
 								@click="handleOpenEnum(row)">
 								<view class="row-left flex flex-col gap-1">
 									<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
@@ -248,7 +247,7 @@
 			</template>
 			<!-- 底部操作栏-->
 			<view class="box-border w-full">
-				<uh-button custom-class="uh-global-card-glass py-2.5 text-xs !rounded-xl" @click="handleResetAll">
+				<uh-button custom-class="uh-global-card-glass py-2 !rounded-xl" @click="handleResetAll">
 					恢复默认
 				</uh-button>
 			</view>
@@ -266,12 +265,13 @@
 					custom-class="uh-picker-view !p-0 !bg-transparent !rounded-xl overflow-hidden"
 					@change="handlePickerChange" />
 				<!-- 底部操作:取消 / 确认 -->
-				<view class="mt-4 flex items-center justify-center gap-x-3">
-					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+				<view class="w-full box-border px-4 mt-4 flex items-center justify-center gap-x-3">
+					<uh-button class="flex-1"
+						custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 						@click="handlePickerCancel">
 						取消
 					</uh-button>
-					<uh-button
+					<uh-button class="flex-1"
 						custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
 						@click="handlePickerConfirm">
 						确定

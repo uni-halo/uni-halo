@@ -94,7 +94,7 @@
 			</view>
 
 			<!-- 交换信息文案 -->
-			<view class="mt-4 whitespace-pre-wrap text-xs text-gray-600 leading-5">
+			<view class="mt-4 whitespace-pre-wrap text-3xs text-gray-900 leading-6">
 				<text>{{ calcBlogContent }}</text>
 			</view>
 

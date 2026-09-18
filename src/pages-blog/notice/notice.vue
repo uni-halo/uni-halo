@@ -213,7 +213,7 @@
 					<view class="box-border flex gap-2 px-3 pb-1.5">
 						<view v-for="opt in SORT_OPTIONS" :key="opt.id"
 							class="uh-global-card-glass shadow-none inline-flex border rounded-2xl px-4 py-1.5 text-xs"
-							:class="{ 'bg-primary text-gray-900 font-semibold': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
+							:class="{ 'bg-primary text-gray-900': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
 							@click="sortKey = opt.id">
 							{{ opt.label }}
 						</view>

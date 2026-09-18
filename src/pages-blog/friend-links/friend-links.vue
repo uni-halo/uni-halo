@@ -496,7 +496,7 @@
 					</view>
 
 					<!-- 详情弹窗 -->
-					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999"
+					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999" safe-area-inset-bottom
 						custom-class="rounded-xl !border">
 						<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
 							<view class="w-full flex flex-col gap-y-1">
@@ -522,10 +522,6 @@
 											class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-500 text-gray-900">
 											{{ detail.data.spec.groupName }}
 										</text>
-										<text
-											class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-500 text-gray-900">
-											复制地址
-										</text>
 									</view>
 									<view @click="handleCopyLink(detail.data)">
 										<text class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
@@ -536,6 +532,13 @@
 								{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
 							</view>
 						</scroll-view>
+						<view class="box-border px-4 pt-3">
+							<uh-button class="flex-1"
+								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+								@click="handleCopyLink(detail.data)">
+								提交申请
+							</uh-button>
+						</view>
 					</uh-glass-popup>
 
 					<uh-data-loadmore :status="siteLoadMoreStatus.status" :text="siteLoadMoreStatus.text" />
@@ -593,7 +596,7 @@
 				</view>
 
 				<!-- 小程序详情弹窗 -->
-				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom"
+				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom" safe-area-inset-bottom
 					custom-class="!rounded-xl !border">
 					<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
 						<view class="w-full flex flex-col gap-y-1">
@@ -618,7 +621,7 @@
 
 							<view class="w-full flex flex-col gap-y-1">
 								<!-- 名称与分组 -->
-								<text class="text-lg text-gray-900 font-bold">
+								<text class="text-lg text-gray-900 font-semibold">
 									{{ miniDetail.data.spec?.displayName }}
 								</text>
 
@@ -677,14 +680,14 @@
 								</text>
 							</view>
 						</view>
-						<!-- #ifdef MP-WEIXIN -->
-						<view class="w-full mt-6">
-							<uh-button class="uh-global-card-glass border !py-2 text-xs"
-								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
-								@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
-						</view>
-						<!-- #endif -->
 					</scroll-view>
+					<!-- #ifdef MP-WEIXIN -->
+					<view class="box-border w-full px-4">
+						<uh-button class="uh-global-card-glass border !py-2 text-xs"
+							custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
+							@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
+					</view>
+					<!-- #endif -->
 				</uh-glass-popup>
 
 				<!-- 底部悬浮操作栏(通用组件)；提交申请入口按 submissionEnabled 显隐 -->
