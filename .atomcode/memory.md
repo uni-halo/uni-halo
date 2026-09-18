@@ -1,2 +1,3 @@
 - 功能注释必须简洁，只说明当前功能/代码的用途，禁止写入“迁移说明、迁移日期、查看xxx.md文档”等历史性/指向性内容。
 - uni-halo 项目：Pinia setup store 取值统一用 storeToRefs 解构（不要 store实例.ref.value 双重解包）；管理页通用模式=uh-navbar+useDataLoadingStatus 分页+底部悬浮操作按钮（uh-translate-x-center 需在页面 scoped style 定义）+uh-glass-popup 表单弹窗（参考 uh-links-site-apply）+wd-icon（禁 emoji 图标）+mp-html markdown 预览；插件端无 love-albums/{name}/photos 子端点，照片增删走 PUT love-albums/{name} 整体更新 spec.photos
+- 注释风格（用户强调）：功能注释只写简短功能名（如"年份选择器"），禁止"参考xxx/使用xxx组件/底部取消确认"等实现描述与指向性内容，注释保持极简。

@@ -70,8 +70,16 @@
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ size: 10, page: 1 })
-	/** 周历选中日期（UI 先行，暂不过滤列表） */
-	const selectedDate = ref(dayjs().format('YYYY-MM-DD'))
+	/** 月历选中月份 */
+	const selectedMonth = ref(dayjs().format('YYYY-MM'))
+	/** 选中月份的查询区间（ISO 8601，月初 ~ 下月初，供 startDate/endDate） */
+	const monthRange = computed(() => {
+		const start = dayjs(selectedMonth.value).startOf('month')
+		return {
+			startDate: start.toISOString(),
+			endDate: start.add(1, 'month').toISOString(),
+		}
+	})
 	/** 列表卡片 */
 	type MomentCard = IMoment & {
 		images ?: { type ?: string, url : string }[]
@@ -134,7 +142,7 @@
 			resetLoadMoreStatus()
 			const auditMomentNames = appConfigStore.auditNamesOf('moments')
 			try {
-				const res = await getMomentList({ page: 1, size: 0 })
+				const res = await getMomentList({ page: 1, size: 0, ...monthRange.value })
 				const filtered = res.data.items
 					.filter(x => x.spec.visible === 'PUBLIC' && auditMomentNames.includes(x.metadata.name))
 				const orderMap = new Map(auditMomentNames.map((name, index) => [name, index]))
@@ -166,7 +174,7 @@
 		}
 
 		try {
-			const res = await getMomentList({ ...queryParams.value })
+			const res = await getMomentList({ ...queryParams.value, ...monthRange.value })
 
 			const tempItems = res.data.items
 				.filter(x => x.spec.visible === 'PUBLIC')
@@ -205,8 +213,56 @@
 	}
 
 	/* ---------------- 交互 ---------------- */
-	function handleCalendarChange(date : string) {
-		selectedDate.value = date
+	function handleMonthCalendarChange(month : string) {
+		selectedMonth.value = month
+		refreshByMonth()
+	}
+
+	/** 回到本年本月 */
+	function handleBackToThisMonth() {
+		selectedMonth.value = dayjs().format('YYYY-MM')
+		refreshByMonth()
+	}
+
+	/** 月份变化后重置分页并重新拉取 */
+	function refreshByMonth() {
+		resetLoadMoreStatus()
+		queryParams.value.page = 1
+		handleGetData()
+	}
+
+	/* ---------------- 年份选择器 ---------------- */
+	const yearSheet = ref<{ show : boolean }>({ show: false })
+	const yearPickerValue = ref<(string | number)[]>([''])
+	/** 年份候选：今年往前推 10 年 */
+	const yearColumns = computed(() => {
+		const nowYear = dayjs().year()
+		return Array.from({ length: 10 }, (_, i) => ({
+			label: `${nowYear - i}`,
+			value: `${nowYear - i}`,
+		}))
+	})
+
+	function handleOpenYearPicker() {
+		yearPickerValue.value = [selectedMonth.value.split('-')[0]]
+		yearSheet.value.show = true
+	}
+
+	/** wd-picker-view 滚动变化 */
+	function handleYearPickerChange(payload : { selectedValues : (string | number)[] }) {
+		yearPickerValue.value = payload.selectedValues
+	}
+
+	function handleYearPickerCancel() {
+		yearSheet.value.show = false
+	}
+
+	function handleYearPickerConfirm() {
+		yearSheet.value.show = false
+		const year = `${yearPickerValue.value[0]}`
+		// 切到该年同月，月历跳到其所在页并高亮
+		selectedMonth.value = `${year}-${selectedMonth.value.split('-')[1]}`
+		refreshByMonth()
 	}
 
 	function handleToMomentDetail(moment : IMoment) {
@@ -357,13 +413,20 @@
 		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" >
 			<template #left>
 				<view class="flex items-center gap-x-1">
-					<!-- 这里显示年月，支持点击选择年月 -->
-					<uh-button custom-class="box-border uh-global-card-glass border text-gray-900 !p-1 text-xs !rounded-md"> 2026/09 </uh-button>
-					<view class="box-border text-xs uh-global-card-glass border bg-primary rounded-md p-1 text-gray-900">
-						今
+					<uh-button
+						custom-class="box-border uh-global-card-glass border text-gray-900 !p-1 text-xs !rounded-md"
+						@click="handleOpenYearPicker"
+					>
+						{{ selectedMonth.split('-')[0] }}
+					</uh-button>
+					<!-- 回到本年本月 -->
+					<view
+						class="box-border text-xs uh-global-card-glass border bg-primary rounded-md p-1 text-gray-900"
+						@click="handleBackToThisMonth"
+					>
+						本月
 					</view>
 				</view>
-				
 			</template>
 		</uh-navbar>
 
@@ -371,10 +434,11 @@
 			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
-			<!-- 吸顶周历 -->
+			<!-- 吸顶月历 -->
 			<wd-sticky :offset-top="offsetTop">
 				<view class="box-border w-screen px-3 pt-1">
-					<uh-week-calendar v-model="selectedDate" @change="handleCalendarChange" />
+					<uh-month-calendar v-model="selectedMonth" :show-year="true"
+						@change="handleMonthCalendarChange" />
 				</view>
 			</wd-sticky>
 
@@ -423,9 +487,47 @@
 
 	<!-- 发布瞬间弹窗(全局组件,编辑模式由管理页使用) -->
 	<uh-admin-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
+
+	<!-- 年份选择器 -->
+	<uh-glass-popup v-model="yearSheet.show" :z-index="999" :hide-when-close="true" position="bottom" custom-class="rounded-xl">
+		<view class="box-border px-4 py-4">
+			<view class="mb-3 flex items-center justify-between">
+				<text class="text-md font-bold">选择年份</text>
+				<view
+					class="uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
+					@click="handleYearPickerCancel"
+				>
+					<wd-icon name="close" size="28rpx" />
+				</view>
+			</view>
+			<wd-picker-view :columns="yearColumns" v-model="yearPickerValue"
+				custom-class="uh-picker-view !p-0 !bg-transparent !rounded-xl overflow-hidden"
+				@change="handleYearPickerChange" />
+			<view class="mt-4 flex items-center justify-center gap-x-3">
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+					@click="handleYearPickerCancel">
+					取消
+				</uh-button>
+				<uh-button
+					custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
+					@click="handleYearPickerConfirm">
+					确定
+				</uh-button>
+			</view>
+		</view>
+	</uh-glass-popup>
 </template>
 
 <style scoped lang="scss">
+	:deep(.uh-picker-view) {
+		.wd-picker-view__mask {
+			background: transparent !important;
+		}
+
+		.wd-picker-view__roller {
+			border-radius: 16rpx !important;
+		}
+	}
 	.uh-translate-x-center {
 		transform: translateX(-50%);
 	}
