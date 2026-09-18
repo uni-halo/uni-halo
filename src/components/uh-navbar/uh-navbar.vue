@@ -27,7 +27,7 @@
 		backClass: 'text-gray-900',
 	})
 
-	const maxAlpha = ref(0.75) 
+	const maxAlpha = ref(0.75)
 	const customStyle = computed(() => {
 		const alpha = Math.min(props.scrollY / 360, maxAlpha.value)
 		return {
@@ -91,14 +91,16 @@
 	<view class="fixed left-0 top-0 z-100 box-border w-full pt-safe" :class="customCalss" :style="[customStyle]">
 		<view class="box-border h-[46px] w-full flex items-center gap-x-4 px-3">
 			<!-- 左边 -->
-			<view class="min-w-18 shrink-0" @click="handleBack()">
-				<view v-if="props.useBack"
-					class="uh-global-card-glass uh-shadow-xs h-8 flex items-center gap-x-2 border rounded-full px-3 text-sm"
-					:class="props.backClass" :style="[props.backStyle]">
-					<wd-icon name="arrow-left" size="30rpx" />
-					<view class="h-4 w-[1px] bg-white/60" />
-					<text class="text-[26rpx] font-bold">返回</text>
-				</view>
+			<view class="min-w-18 shrink-0">
+				<slot name="left">
+					<view v-if="props.useBack"
+						class="uh-global-card-glass uh-shadow-xs h-8 flex items-center gap-x-2 border rounded-full px-3 text-sm"
+						:class="props.backClass" :style="[props.backStyle]" @click="handleBack()">
+						<wd-icon name="arrow-left" size="30rpx" />
+						<view class="h-4 w-[1px] bg-white/60" />
+						<text class="text-[26rpx] font-bold">返回</text>
+					</view>
+				</slot>
 			</view>
 			<!-- 中间 -->
 			<view class="flex-1 truncate text-center font-bold transition-colors duration-300" :class="titleColorClass">

@@ -16,6 +16,7 @@
 	import { sleep } from '@/utils/common'
 	import { t } from '@/locale'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+	import { useCustomNavbarPlaceholder } from '@/hooks/useCustomNavbarPlaceholder'
 	import type { IMoment } from '@/api/types/halo'
 
 	definePage({
@@ -27,6 +28,7 @@
 	})
 
 	const { scrollY, updatePageScrollValue } = usePageScroll()
+	const { height: offsetTop } = useCustomNavbarPlaceholder()
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('moments', '我的日常')
 	const appConfigStore = useAppConfigStore()
@@ -68,6 +70,8 @@
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ size: 10, page: 1 })
+	/** 周历选中日期（UI 先行，暂不过滤列表） */
+	const selectedDate = ref(dayjs().format('YYYY-MM-DD'))
 	/** 列表卡片 */
 	type MomentCard = IMoment & {
 		images ?: { type ?: string, url : string }[]
@@ -201,6 +205,10 @@
 	}
 
 	/* ---------------- 交互 ---------------- */
+	function handleCalendarChange(date : string) {
+		selectedDate.value = date
+	}
+
 	function handleToMomentDetail(moment : IMoment) {
 		if (calcAuditModeEnabled.value)
 			return
@@ -348,45 +356,49 @@
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId" :error-text="tips"
-			:checking="checking" @on-refresh="handlePluginRefresh" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
+			<!-- 吸顶周历 -->
+			<wd-sticky :offset-top="offsetTop">
+				<view class="box-border w-screen px-3 pt-1">
+					<uh-week-calendar v-model="selectedDate" @change="handleCalendarChange" />
+				</view>
+			</wd-sticky>
+
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				min-height="75vh" @refresh="handleGetData" />
 
-			<view v-else class="box-border flex flex-col gap-3 px-3">
-			 <!-- 瞬间卡片 -->
-			 <view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
-			  <view class="shrink-0 flex flex-col gap-y-2 w-13">
-			   <view class="shrink-0 flex flex-col items-center font-bold">
-			    <text
-			     class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
-			    <text class="date-year-month mt-2 text-sm text-gray-600">{{ moment.year }}</text>
-			    <text class="date-weekend mt-1 text-xs text-gray-600">{{ moment.weekend }}</text>
-			   </view>
-			   <view class="flex-1 w-full flex flex-col items-center">
-			    <view class="shrink-0 w-4 h-4 bg-primary rounded-full uh-global-card-glass"></view>
-			    <view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
-			   </view>
-			  </view>
-			  <uh-moment-card class="flex-1" :moment="moment" :blogger="bloggerInfo"
-			   @detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
-			   @comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
-			 </view>
-			 <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
+			<view v-else class="box-border flex flex-col gap-3 px-3 mt-5">
+				<!-- 瞬间卡片 -->
+				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
+					<view class="shrink-0 flex flex-col gap-y-2 w-13">
+						<view class="shrink-0 flex flex-col items-center font-bold">
+							<text
+								class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
+							<text class="date-year-month mt-2 text-sm text-gray-600">{{ moment.year }}</text>
+							<text class="date-weekend mt-1 text-xs text-gray-600">{{ moment.weekend }}</text>
+						</view>
+						<view class="flex-1 w-full flex flex-col items-center">
+							<view class="shrink-0 w-4 h-4 bg-primary rounded-full uh-global-card-glass"></view>
+							<view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
+						</view>
+					</view>
+					<uh-moment-card class="flex-1" :moment="moment" :blogger="bloggerInfo"
+						@detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
+						@comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
+				</view>
+				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 
 		<!-- 发布瞬间悬浮按钮（仅 author/admin，参考瞬间管理页胶囊设计，悬浮于自定义 tabbar 上方） -->
-		<view
-			v-if="canPublish && uniHaloPluginAvailable"
-			class="uh-translate-x-center fixed bottom-78px left-1/2 z-50 flex items-center justify-center pb-safe"
-		>
+		<view v-if="canPublish && uniHaloPluginAvailable && loadingStatus !== DataLoadingStatusEnum.Loading"
+			class="uh-translate-x-center fixed bottom-78px left-1/2 z-50 flex items-center justify-center pb-safe">
 			<view
 				class="uh-global-card-glass uh-shadow-xs box-border py-2.5 flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary"
-				@click="handleToPublish"
-			>
+				@click="handleToPublish">
 				<wd-icon name="plus" size="32rpx" />
 				<text class="shrink-0 text-2xs font-semibold">发布瞬间</text>
 			</view>
@@ -403,7 +415,7 @@
 </template>
 
 <style scoped lang="scss">
-.uh-translate-x-center {
-	transform: translateX(-50%);
-}
+	.uh-translate-x-center {
+		transform: translateX(-50%);
+	}
 </style>
