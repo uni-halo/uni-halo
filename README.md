@@ -31,17 +31,17 @@
 基于 Halo 2.x 提供的 API 接口，为多端应用提供的一套开源的博客应用。
 
 - 完全免费开源，包括程序源码、插件源码
-- 页面支持插件配置
+- 页面支持插件配置，改内容不改代码
 - 使用最新流行的技术栈
 - 支持特色功能，恋爱日记
-- 支持账号登录与移动端内容管理
+- 支持账号登录、注册与移动端内容管理
 - 支持编译为 小程序（推荐）、APP、H5
 
 ### 部分截图
 
 |首页|分类|我的|
 |:--:|:--:|:--:|
-|![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v2.x/首页.png)|![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v2.x/分类.jpg)|![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v2.x/关于.jpg)|
+|![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/首页.png)|![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/分类.jpg)|![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/关于.jpg)|
 
 
 
@@ -49,20 +49,20 @@
 
 - 在 uni-halo 中，我们为您准备了一个恋爱日记的模块，您可以在其中记录您的恋爱故事，分享给您的朋友们。恋爱相册支持查看密码（页内解锁），管理员也可以直接在移动端管理相册、日记与故事。请扫示例小程序，在线体验恋爱日记的功能。
 
-![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v2.x/恋爱日记.jpg)
+![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/恋爱日记.jpg)
 
 <br/>
 
 
 ### 功能介绍
 
-- 基础功能：笔记列表、分类、标签、详情、归档、搜索、公告、图库与我的收藏、瞬间、友情链接、投票中心、数据看板、联系博主、偏好设置
+- 基础功能：文章列表、分类、标签、详情、归档、搜索、公告、图库与我的收藏、瞬间、友情链接（支持投稿申请）、投票中心、数据看板、联系博主、偏好设置
 
 - 特色功能：恋爱日记，精心为您设计了秀恩爱的模块，秀出关于你们的故事、情侣甜蜜相册（支持查看密码，页内解锁）、恋爱记录清单，为您的恋爱保驾护航。配套插件还内置恋爱日记前台模板，站点主题装上插件即可直接展示。
 
-- 登录管理：账号密码登录、注册、微信一键登录与微信绑定，基于角色的权限控制，管理员可在移动端直接管理恋爱相册、恋爱日记、恋爱故事与瞬间内容。
+- 登录管理：账号密码登录、注册、微信一键登录与微信绑定，基于角色的权限控制（RBAC），管理员可在移动端直接管理恋爱相册、恋爱日记、恋爱故事与瞬间内容。
 
-- 其他：站点维护模式页、公告通知、数据统计可视化。
+- 其他：站点维护模式页、公告通知、应用版本检查更新、数据统计可视化。
 
 
 ## 二、配套插件

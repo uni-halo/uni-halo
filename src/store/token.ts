@@ -1,11 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, getWxCode } from '@/api/auth';
-import { refreshToken as _refreshToken } from '@/api/login';
+import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, getWxCode, refreshToken as _refreshToken } from '@/api/auth';
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login';
 import { useUserStore } from './user';
 import { getCache } from '@/utils/storage';
-import type { ILoginForm } from '@/api/login';
+import type { ILoginForm } from '@/api/auth';
 import type { IAuthLoginRes, ISingleTokenRes } from '@/api/types/login';
 import type { ILoginResult } from '@/api/types/uni-halo';
 
@@ -226,7 +225,8 @@ export const useTokenStore = defineStore(
 		};
 
 		/**
-		 * 刷新token
+		 * 刷新token（双 token 模式预留）
+		 * 当前插件端为单 token 模式（Halo PAT），双 token 刷新接口待插件端提供后对接
 		 * @returns 刷新结果
 		 */
 		const refreshToken = async () => {
@@ -243,8 +243,7 @@ export const useTokenStore = defineStore(
 
 				const refreshToken = tokenInfo.value.refreshToken;
 				const res = await _refreshToken(refreshToken);
-				console.log('刷新token-res: ', res);
-				setTokenInfo(res);
+				setTokenInfo(res.data as IAuthLoginRes);
 				return res;
 			} catch (error) {
 				console.error('刷新token失败:', error);

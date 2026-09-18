@@ -12,6 +12,34 @@ import type { ILoginResult, IProfileResult } from './types/uni-halo'
 /** 认证接口基础路径(插件端 Constants.AUTH_API_BASE_PATH) */
 const AUTH_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/auth'
 
+/** 登录表单 */
+export interface ILoginForm {
+  username: string
+  password: string
+}
+
+/** 双 token 刷新请求 */
+export interface IRefreshTokenReq {
+  refreshToken: string
+}
+
+/**
+ * 刷新token（预留接口）
+ *
+ * 当前 uni-halo 插件端认证为单 token 模式（下发 Halo PAT，无刷新接口），
+ * 此函数为双 token 模式预留，待插件端提供 /auth/refreshToken 类接口后对接
+ */
+export function refreshToken(refreshToken: string) {
+  return http.Post<IResponse<{ accessToken: string, refreshToken: string, accessExpiresIn: number, refreshExpiresIn: number }>>(
+    `${AUTH_API_BASE}/refreshToken`,
+    { refreshToken } satisfies IRefreshTokenReq,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
 /**
  * 账号密码登录(公开接口)
  * 成功返回 LoginResult(token + user + roles + permissions),失败 401 返回 { code, message }
