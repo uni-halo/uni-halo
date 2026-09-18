@@ -34,11 +34,10 @@
 	const {
 		SETTING_TABS,
 		layoutGroups,
-		featureRows,
+		featureGroups,
 		prefValueOf,
 		isFollowing,
 		handleRevert,
-		handleBoolChange,
 		handleChoose,
 		isCardTypeOptionDisabled,
 	} = usePreferenceRows()
@@ -175,73 +174,36 @@
 				</view>
 			</template>
 
-			<!-- 功能设置 -->
+			<!-- 功能设置:按功能分组(通用功能/友链功能) -->
 			<template v-else>
-				<view class="flex flex-col gap-y-3">
-					<uh-section-title>
-						功能
-						<template #right>
-							<text class="text-xs text-gray-400">一些常用的功能性设置</text>
-						</template>
-					</uh-section-title>
-					<view class="setting-sheet uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
-						<template v-for="(row, index) in featureRows" :key="row.key">
-							<!-- 布尔项:内联分段器(默认 / 开 / 关) -->
-							<view v-if="row.kind === 'bool'" class="box-border p-3"
-								:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-								<view class="flex items-center justify-between">
-									<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
-									<view class="flex items-center gap-2">
-										<text v-if="row.following" class="row-sub text-xs text-gray-400">默认</text>
-										<view v-else
-											class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
+				<view v-for="group in featureGroups" :key="group.key" class="flex flex-col gap-y-3">
+					<uh-section-title>{{ group.label }}</uh-section-title>
+					<view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
+						<view v-for="(row, index) in group.rows" :key="row.key"
+							class="pick-row flex items-center justify-between p-3"
+							:class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''"
+							@click="handleOpenEnum(row)">
+							<view class="row-left flex flex-col gap-1">
+								<text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
+								<view class="flex items-center gap-2">
+									<text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
+									<template v-else>
+										<view
+											class="rounded-full bg-secondary px-2 py-0.5 text-xs text-[#4d7c0f] leading-none">
 											已自定义
 										</view>
-									</view>
-								</view>
-								<view class="mt-3 flex flex-wrap gap-2">
-									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-										:class="row.following ? 'bg-secondary font-bold' : 'text-gray-500'"
-										@click="handleRevert(row.path)">
-										默认
-									</view>
-									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-										:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
-										@click="handleBoolChange(row.path, true)">
-										开
-									</view>
-									<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-										:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'text-gray-500'"
-										@click="handleBoolChange(row.path, false)">
-										关
-									</view>
+										<text class="revert-text text-xs text-gray-400 underline"
+											@click.stop="handleRevert(row.path)">
+											恢复默认
+										</text>
+									</template>
 								</view>
 							</view>
-							<!-- 枚举选择 -->
-							<view v-else class="pick-row flex items-center justify-between p-3"
-								@click="handleOpenEnum(row)">
-								<view class="row-left flex flex-col gap-1">
-									<text class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
-									<view class="flex items-center gap-2">
-										<text v-if="row.following" class="row-sub text-2xs text-gray-400">跟随站点默认</text>
-										<template v-else>
-											<view
-												class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
-												已自定义
-											</view>
-											<text class="revert-text text-2xs text-gray-400 underline"
-												@click.stop="handleRevert(row.path)">
-												恢复默认
-											</text>
-										</template>
-									</view>
-								</view>
-								<view class="flex items-center gap-2 text-gray-400">
-									<text class="text-xs">{{ row.displayValue }}</text>
-									<wd-icon name="arrow-right" size="24rpx" />
-								</view>
+							<view class="flex items-center gap-2 text-gray-400">
+								<text class="text-xs">{{ row.displayValue }}</text>
+								<wd-icon name="arrow-right" size="24rpx" />
 							</view>
-						</template>
+						</view>
 					</view>
 				</view>
 			</template>

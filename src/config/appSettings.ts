@@ -1,6 +1,6 @@
 export interface IAppSettings {
-  /** 头像是否圆形(开=圆形,关=方形,默认方形;插件端字段 avatarRadius;应用于文章卡片 image_bottom 与瞬间卡片用户头像) */
-  avatarRadius: boolean
+  /** 头像外观(square 方形=默认 / circle 圆形;插件端字段 avatarShape;应用于文章卡片 image_bottom 与瞬间卡片用户头像) */
+  avatarShape: string
   /** 布局偏好(按页面分组,字段名 = 插件端 preferences 字段名,可直接消费 getConfigs) */
   homeListLayout: string
   homeCardType: string
@@ -16,7 +16,7 @@ export interface IAppSettings {
 }
 
 export const DefaultAppSettings: IAppSettings = {
-  avatarRadius: false,
+  avatarShape: 'square',
   homeListLayout: 'single',
   homeCardType: 'image_top',
   articlesListLayout: 'double',

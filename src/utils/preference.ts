@@ -57,11 +57,11 @@ export function clearLocalPrefs(): void {
 /**
  * 把 L0 站点默认(getConfigs 下发值)中与偏好相关的字段收集为本地差异形状的站点默认。
  * 偏好字段与 getConfigs.preferences 字段名完全一致,只做值校验后透传,
- * 不改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套/isAvatarRadius。
+ * 不改写为 layout.{home,articles,archives}.{listLayout,cardType} 嵌套。
  * 字段对照(与插件端一致):
  * - preferences.homeListLayout/homeCardType/articlesListLayout/articleCardType/
  *   archivesListLayout/archivesCardType → 同名顶层字段;
- * - preferences.avatarRadius → avatarRadius。
+ * - preferences.avatarShape → avatarShape。
  */
 export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
   const result: LocalPrefs = {}
@@ -91,8 +91,8 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
     setLayout('articlesListLayout', 'articleCardType')
     setLayout('archivesListLayout', 'archivesCardType')
 
-    if (typeof prefs.avatarRadius === 'boolean') {
-      result.avatarRadius = prefs.avatarRadius
+    if (prefs.avatarShape === 'square' || prefs.avatarShape === 'circle') {
+      result.avatarShape = prefs.avatarShape
     }
 
     // 友情链接页展示偏好（嵌套结构 linkPage.miniProgramOpenMode，值校验后透传）

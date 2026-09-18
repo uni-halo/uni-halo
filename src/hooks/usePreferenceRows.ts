@@ -10,11 +10,11 @@ import { useSettingStore } from '@/store/setting';
 import { isLocalOverride, readLocalPrefs } from '@/utils/preference';
 import type { LocalPrefs } from '@/utils/preference';
 
-/** 偏好字段定义 */
+/** 偏好字段定义(当前均为枚举选择项) */
 export interface PrefDef {
 	key: string;
 	label: string;
-	kind: 'bool' | 'enum';
+	kind: 'enum';
 	path: string[];
 	options?: { label: string; value: string }[];
 	siteLabelOf?: (value: string) => string;
@@ -53,13 +53,28 @@ export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => [
 	}
 ]);
 
+/** 功能偏好按分组展示(通用功能 / 友链功能) */
+export const FEATURE_GROUPS = [
+	{ key: 'general', label: '通用功能' },
+	{ key: 'link', label: '友链功能' }
+];
+
 /** 功能偏好字段(字段名与插件端一致) */
 export const FEATURE_PREFS: PrefDef[] = [
-	/** 头像外观:开=圆形,关=方形(默认方形);应用于文章卡片(image_bottom)与瞬间卡片 */
-	{ key: 'avatarRadius', label: '头像外观', kind: 'bool', path: ['avatarRadius'] },
+	/** 头像外观:square 方形(默认) / circle 圆形;应用于文章卡片(image_bottom)与瞬间卡片 */
+	{
+		key: 'avatarShape',
+		label: '头像外观',
+		kind: 'enum',
+		path: ['avatarShape'],
+		options: [
+			{ label: '方形', value: 'square' },
+			{ label: '圆形', value: 'circle' }
+		]
+	},
 	{
 		key: 'miniProgramOpenMode',
-		label: '小程序友情链接跳转模式',
+		label: '小程序友链打开模式',
 		kind: 'enum',
 		path: ['linkPage', 'miniProgramOpenMode'],
 		options: [
@@ -125,22 +140,33 @@ export function usePreferenceRows() {
 	interface PrefRow extends PrefDef {
 		displayValue: string;
 		following: boolean;
-		/** 仅 kind==='bool' 使用 */
-		boolValue: boolean;
 	}
 
 	function buildRows(defs: PrefDef[]): PrefRow[] {
 		return defs.map((def) => ({
 			...def,
 			displayValue: enumLabelOf(def, prefValueOf(def.path)),
-			following: isFollowing(def.path),
-			boolValue: def.kind === 'bool' ? prefValueOf(def.path) === true : false
+			following: isFollowing(def.path)
 		}));
 	}
 
 	const layoutRows = computed(() => buildRows(LAYOUT_PREFS));
 	/** 功能偏好展示行(页面与全局弹窗共用) */
 	const featureRows = computed(() => buildRows(FEATURE_PREFS));
+
+	/** 功能偏好按分组的展示行(通用功能 / 友链功能) */
+	const featureGroups = computed(() =>
+		FEATURE_GROUPS.map((group) => ({
+			key: group.key,
+			label: group.label,
+			rows: featureRows.value.filter((row) => {
+				if (group.key === 'general') {
+					return row.key === 'avatarShape';
+				}
+				return row.key === 'miniProgramOpenMode';
+			})
+		}))
+	);
 
 	/** 布局设置按页面分组的展示行（列表布局 + 卡片样式两行） */
 	const layoutGroups = computed(() =>
@@ -161,11 +187,6 @@ export function usePreferenceRows() {
 	/** 单项还原为跟随站点默认 */
 	function handleRevert(path: string[]): void {
 		savePreference(buildPatch(path, null));
-	}
-
-	/** 开关类:选值等于站点默认则还原为跟随(只存差异) */
-	function handleBoolChange(path: string[], next: boolean): void {
-		savePreference(buildPatch(path, next));
 	}
 
 	/** 给定字段路径,判断该页面列表布局是否为双列(path[0] 即插件端顶层字段名；
@@ -201,6 +222,7 @@ export function usePreferenceRows() {
 
 	return {
 		PAGE_GROUPS,
+		FEATURE_GROUPS,
 		SETTING_TABS,
 		getByPath,
 		buildPatch,
@@ -211,10 +233,10 @@ export function usePreferenceRows() {
 		buildRows,
 		layoutRows,
 		featureRows,
+		featureGroups,
 		layoutGroups,
 		isFollowing,
 		handleRevert,
-		handleBoolChange,
 		handleChoose,
 		isDoubleColumn,
 		isCardTypeOptionDisabled

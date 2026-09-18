@@ -260,7 +260,8 @@ export interface IAppConfig {
 			articleCardType?: string;
 			archivesListLayout?: 'single' | 'double' | string;
 			archivesCardType?: string;
-			avatarRadius?: boolean;
+			/** 头像外观：square 方形（默认）/ circle 圆形 */
+			avatarShape?: 'square' | 'circle' | string;
 			/** 友情链接页：小程序打开模式 fullscreen 全屏（默认）/ halfScreen 半屏 */
 			linkPage?: {
 				miniProgramOpenMode?: 'fullscreen' | 'halfScreen' | string;

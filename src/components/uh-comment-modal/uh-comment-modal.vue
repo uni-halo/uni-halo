@@ -328,14 +328,13 @@
 						</view>
 					</view>
 				</view>
-
-				<view class="submit-btn my-6">
-					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl"
-						@click="handleHandle">
-						提交
-					</uh-button>
-				</view>
 			</scroll-view>
+			<view class="box-border pt-2">
+				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+					@click="handleHandle">
+					提交评论
+				</uh-button>
+			</view>
 		</view>
 	</uh-glass-popup>
 </template>

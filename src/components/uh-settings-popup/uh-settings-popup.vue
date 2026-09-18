@@ -24,11 +24,9 @@
 	const {
 		SETTING_TABS,
 		layoutGroups,
-		featureRows,
+		featureGroups,
 		prefValueOf,
 		isFollowing,
-		handleRevert,
-		handleBoolChange,
 		handleChoose,
 		isCardTypeOptionDisabled,
 	} = usePreferenceRows()
@@ -55,6 +53,8 @@
 			return currentPage.route.split('/').pop() === group.key
 		})
 	})
+	/** 功能分组:全局性偏好(通用功能/友链功能),不做页面过滤 */
+	const filterFeatureGroups = computed(() => featureGroups.value)
 
 	/* ---------------- 交互 ---------------- */
 	function currentValueOf(path : string[]) : string | null {
@@ -155,83 +155,39 @@
 						</view>
 					</template>
 
-					<!-- 功能 -->
+					<!-- 功能:按功能分组(通用功能/友链功能) -->
 					<template v-else>
-						<view class="flex flex-col gap-y-3">
-							<uh-section-title>
-								功能
-								<template #right>
-									<text class="text-2xs text-gray-400">常用的功能性设置</text>
-								</template>
-							</uh-section-title>
+						<view v-for="group in filterFeatureGroups" :key="group.key" class="flex flex-col gap-y-3">
+							<uh-section-title>{{ group.label }}</uh-section-title>
 							<view class="uh-global-card-glass shadow-none overflow-hidden rounded-2xl">
-								<template v-for="(row, index) in featureRows" :key="row.key">
-									<!-- 布尔项 -->
-									<view v-if="row.kind === 'bool'" class="box-border p-3"
-										:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-										<view class="flex items-center justify-between">
-											<text
-												class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
-											<view class="flex items-center gap-2">
-												<text v-if="row.following"
-													class="row-sub text-xs text-gray-400">默认</text>
-												<view v-else
-													class="rounded-full bg-secondary px-2 py-1 text-xs text-gray-900 leading-none">
-													已自定义
-												</view>
-											</view>
-										</view>
-										<view class="mt-3 flex flex-wrap gap-2">
-											<view
-												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="row.following ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
-												@click="handleRevert(row.path)">
-												默认
-											</view>
-											<view
-												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="!row.following && row.boolValue ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
-												@click="handleBoolChange(row.path, true)">
-												开
-											</view>
-											<view
-												class="rounded-full px-3 py-1 text-xs uh-global-card-glass shadow-none border"
-												:class="!row.following && !row.boolValue ? 'bg-secondary font-bold' : 'border-gray-100 text-gray-500'"
-												@click="handleBoolChange(row.path, false)">
-												关
+								<view v-for="(row, index) in group.rows" :key="row.key" class="px-4 py-4"
+									:class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''">
+									<view class="flex items-center justify-between">
+										<text
+											class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
+										<view class="flex items-center gap-2">
+											<text v-if="row.following"
+												class="row-sub text-xs text-gray-400">跟随站点默认</text>
+											<view v-else
+												class="rounded-full bg-secondary px-2 py-0.5 text-xs text-gray-900 leading-none">
+												已自定义
 											</view>
 										</view>
 									</view>
-									<!-- 枚举项 -->
-									<view v-else class="px-4 py-4"
-										:class="index < featureRows.length - 1 ? 'border-b border-black/5' : ''">
-										<view class="flex items-center justify-between">
-											<text
-												class="row-label text-[28rpx] text-gray-900 font-bold">{{ row.label }}</text>
-											<view class="flex items-center gap-2">
-												<text v-if="row.following"
-													class="row-sub text-xs text-gray-400">跟随站点默认</text>
-												<view v-else
-													class="rounded-full bg-secondary px-2 py-0.5 text-[20rpx] text-[#4d7c0f] leading-none">
-													已自定义
-												</view>
-											</view>
+									<view class="mt-3 flex flex-wrap gap-2">
+										<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass border uh-shadow-xs"
+											:class="currentValueOf(row.path) === null ? 'bg-secondary font-semibold' : 'border-gray-100 text-gray-500'"
+											@click="handleInlineChoose(row.path, null)">
+											默认
 										</view>
-										<view class="mt-3 flex flex-wrap gap-2">
-											<view class="rounded-full px-3 py-1 text-xs uh-global-card-glass border uh-shadow-xs"
-												:class="currentValueOf(row.path) === null ? 'bg-secondary font-semibold' : 'border-gray-100 text-gray-500'"
-												@click="handleInlineChoose(row.path, null)">
-												默认
-											</view>
-											<view v-for="opt in row.options" :key="opt.value"
-												class="rounded-full px-3 py-1 text-xs uh-global-card-glass border uh-shadow-xs"
-												:class="currentValueOf(row.path) === opt.value ? 'bg-secondary font-semibold' : 'border-gray-100 text-gray-500'"
-												@click="handleInlineChoose(row.path, opt.value)">
-												{{ opt.label }}
-											</view>
+										<view v-for="opt in row.options" :key="opt.value"
+											class="rounded-full px-3 py-1 text-xs uh-global-card-glass border uh-shadow-xs"
+											:class="currentValueOf(row.path) === opt.value ? 'bg-secondary font-semibold' : 'border-gray-100 text-gray-500'"
+											@click="handleInlineChoose(row.path, opt.value)">
+											{{ opt.label }}
 										</view>
 									</view>
-								</template>
+								</view>
 							</view>
 						</view>
 					</template>

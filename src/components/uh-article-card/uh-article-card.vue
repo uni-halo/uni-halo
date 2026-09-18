@@ -39,9 +39,9 @@
 
 	const isGrid = computed(() => props.variant === 'grid')
 
-	/** 头像形状(偏好 avatarRadius:开=圆形,关=方形,默认方形;仅 image_bottom 社交卡大头像生效) */
+	/** 头像外观(偏好 avatarShape:square 方形=默认 / circle 圆形;仅 image_bottom 社交卡大头像生效) */
 	const socialAvatarClass = computed(() =>
-		settings.value.avatarRadius ? '!rounded-full !border-none' : '!rounded-xl uh-shadow-xs'
+		settings.value.avatarShape === 'circle' ? '!rounded-full !border-none' : '!rounded-xl uh-shadow-xs'
 	)
 
 	const CARD_LAYOUTS = computed(()=> ({

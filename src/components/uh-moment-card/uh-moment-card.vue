@@ -43,10 +43,10 @@ const emit = defineEmits<{
 const { isFavorite } = useFavoritesStore()
 const { hasUpvoted } = useUpvote('moments', () => '')
 
-/** 头像形状(偏好 avatarRadius:开=圆形,关=方形,默认方形;方形 = 文章卡片 image_bottom 同款) */
+/** 头像外观(偏好 avatarShape:square 方形=默认 / circle 圆形;方形 = 文章卡片 image_bottom 同款) */
 const { settings } = storeToRefs(useSettingStore())
 const avatarShapeClass = computed(() =>
-  settings.value.avatarRadius ? 'rounded-full' : 'rounded-xl uh-shadow-xs'
+  settings.value.avatarShape === 'circle' ? 'rounded-full' : 'rounded-xl uh-shadow-xs uh-global-card-glass'
 )
 
 /** 格式化瞬间时间 */

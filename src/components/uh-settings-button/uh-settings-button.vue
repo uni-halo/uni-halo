@@ -15,7 +15,14 @@
 	})
 
 	// 白名单模式
-	const whiteList = ['pages/tabbar/home/home', 'pages-blog/articles/articles', 'pages-blog/archives/archives']
+	const whiteList = [
+		'pages/tabbar/home/home',
+		'pages/tabbar/moments/moments',
+		'pages-blog/articles/articles',
+		'pages-blog/article-detail/article-detail',
+		'pages-blog/archives/archives',
+		'pages-blog/user-profile/user-profile'
+	]
 	const pages = getCurrentPages()
 	const currentPage = pages[pages.length - 1]
 	const visible = computed(() => {
@@ -23,10 +30,10 @@
 	})
 
 	const _customClass = computed(() => {
-	  const colorClass = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
-	  return `${props.customClass} ${colorClass}`
+		const colorClass = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
+		return `${props.customClass} ${colorClass}`
 	})
-	
+
 	function handleClick() {
 		emits('action-click')
 	}
