@@ -354,7 +354,18 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" />
+		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" >
+			<template #left>
+				<view class="flex items-center gap-x-1">
+					<!-- 这里显示年月，支持点击选择年月 -->
+					<uh-button custom-class="box-border uh-global-card-glass border text-gray-900 !p-1 text-xs !rounded-md"> 2026/09 </uh-button>
+					<view class="box-border text-xs uh-global-card-glass border bg-primary rounded-md p-1 text-gray-900">
+						今
+					</view>
+				</view>
+				
+			</template>
+		</uh-navbar>
 
 		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
 			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
@@ -373,7 +384,7 @@
 			<view v-else class="box-border flex flex-col gap-3 px-3 mt-5">
 				<!-- 瞬间卡片 -->
 				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
-					<view class="shrink-0 flex flex-col gap-y-2 w-13">
+					<view v-if="false" class="shrink-0 flex flex-col gap-y-2 w-13">
 						<view class="shrink-0 flex flex-col items-center font-bold">
 							<text
 								class="date-day text-xl text-primary leading-none">{{ moment.day }}/{{ moment.month }}</text>
