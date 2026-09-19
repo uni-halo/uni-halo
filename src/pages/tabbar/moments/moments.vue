@@ -476,12 +476,12 @@
 		</view>
 	</view>
 
-	<!-- 评论弹窗(瞬间评论,subjectKind=Moment) -->
+	<!-- 评论弹窗 -->
 	<uh-comment-modal v-if="commentModal.show" :show="commentModal.show" :is-comment="commentModal.isComment"
 		:title="commentModal.title" :post-name="commentModal.postName" subject-kind="Moment"
 		@on-close="handleOnCommentModalClose" />
 
-	<!-- 发布瞬间弹窗(全局组件,编辑模式由管理页使用) -->
+	<!-- 发布瞬间弹窗 -->
 	<uh-admin-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
 
 	<!-- 年份选择器 -->

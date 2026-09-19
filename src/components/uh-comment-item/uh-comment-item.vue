@@ -13,7 +13,7 @@
 		useActions ?: boolean
 		useSolid ?: boolean
 		useContentBg ?: boolean
-		disallowComment ?: boolean
+		allowComment ?: boolean
 		postName ?: string
 		classItem ?: string[]
 		/** 回复引用名映射(quoteReply name -> 被引用人 displayName),命中时显示「回复 @xxx」 */
@@ -23,7 +23,7 @@
 		useActions: true,
 		useSolid: true,
 		useContentBg: true,
-		disallowComment: false,
+		allowComment: false,
 		postName: '',
 		classItem: () => [],
 		quoteReplyMap: () => ({}),
@@ -128,7 +128,7 @@
 			<view class="mt-2 flex items-center gap-x-4">
 				<text class="text-gray-600 text-xs">{{ createTimeText }}</text>
 				<view v-if="useActions" class="actions flex gap-2 ">
-					<view v-if="!disallowComment" class="text-xs font-medium" @click="handleOnReply">
+					<view v-if="props.allowComment" class="text-xs font-medium" @click="handleOnReply">
 						回复
 					</view>
 					<view class=" text-xs font-medium" @click="handleOnCopy">

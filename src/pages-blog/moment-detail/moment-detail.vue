@@ -369,7 +369,7 @@
 		<!-- 评论列表(瞬间评论,kind=Moment) -->
 		<view v-if="moment" id="comment-section">
 			<uh-comment-list ref="commentListRef" :post-name="moment.metadata.name" :post="moment"
-				kind="Moment" :disallow-comment="!moment.spec.allowComment" :show-entry="moment.spec.allowComment"
+				kind="Moment" :allow-comment="moment.spec.allowComment"
 				@on-comment="handleOnComment" @on-comment-entry="handleToComment()" />
 		</view>
 		</view>

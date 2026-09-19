@@ -488,7 +488,8 @@
 					<view class="font-semibold">
 						{{ result?.spec.title }}
 					</view>
-					<view class="flex flex-wrap items-center gap-2 text-xs">
+					<view v-if="result?.categories.length!==0 || result?.tags.length!==0"
+						class="flex flex-wrap items-center gap-2 text-xs">
 						<text v-for="(item, index) in result?.categories" :key="index"
 							class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1"
 							@click="handleToCate(item)">
@@ -593,8 +594,7 @@
 
 					<!-- 评论区域 -->
 					<view id="comment-section" class="box-border">
-						<uh-comment-list v-if="calcIsShowComment && result"
-							:disallow-comment="!result.spec.allowComment" :show-entry="calcIsShowComment"
+						<uh-comment-list v-if="calcIsShowComment && result" :allow-comment="result.spec.allowComment"
 							:post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
 							@on-comment-detail="handleOnShowCommentDetail" @on-comment-entry="handleToComment()"
 							@on-loaded="handleCommentLoaded" />

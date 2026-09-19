@@ -1,19 +1,18 @@
 <script lang="ts" setup>
 	import { onMounted, onUnmounted, reactive, ref } from 'vue'
 	import { getPostCommentList, getPostCommentReplyList } from '@/api/halo'
+	import { sleep } from '@/utils/common'
+	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import type { IComment, ICommentListRes, ICommentReply } from '@/api/types/halo'
 
 	const props = withDefaults(defineProps<{
-		disallowComment ?: boolean
+		allowComment ?: boolean
 		postName : string
 		post : { metadata : { name : string } }
-		/** 评论目标 kind(笔记 Post / 瞬间 Moment) */
 		kind ?: string
-		showEntry ?: boolean
 	}>(), {
-		disallowComment: false,
+		allowComment: false,
 		kind: 'Post',
-		showEntry: true,
 	})
 
 	const emit = defineEmits<{
@@ -23,14 +22,15 @@
 		(e : 'on-loaded', list : IComment[]) : void
 	}>()
 
-	const loading = ref<'loading' | 'success' | 'error'>('loading')
+	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
+
 	const queryParams = ref({
 		group: 'content.halo.run',
 		kind: props.kind,
 		version: 'v1alpha1',
 		name: props.postName,
 		page: 1,
-		size: 50,
+		size: 0,
 	})
 	const result = ref<ICommentListRes | null>(null)
 	const dataList = ref<IComment[]>([])
@@ -46,6 +46,7 @@
 		status : 'loading' | 'success' | 'error'
 	}
 
+
 	/** 已展开的评论 name 集合 */
 	const expanded = reactive(new Set<string>())
 	/** 各评论已加载回复(展开后缓存,收起再展开不重拉) */
@@ -54,22 +55,24 @@
 	/** 待展开的评论 name(刷新后自动展开其回复区,如回复成功后定位到最新回复) */
 	const pendingExpandName = ref('')
 
+
 	async function handleGetData() {
-		loading.value = 'loading'
+		updateLoadingStatus(DataLoadingStatusEnum.Loading)
 		try {
 			const res = await getPostCommentList({ ...queryParams.value })
 			result.value = res.data
 			dataList.value = res.data.items
 			// 列表刷新后清空展开缓存,保证回复区展示最新数据
+			await sleep(600)
 			expanded.clear()
 			repliesMap.clear()
-			loading.value = 'success'
+			updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 			applyPendingExpand()
 			emit('on-loaded', dataList.value)
 		}
 		catch (err) {
 			console.error('获取评论失败', err)
-			loading.value = 'error'
+			updateLoadingStatus(DataLoadingStatusEnum.Error)
 		}
 	}
 
@@ -166,7 +169,7 @@
 
 	/** 回复/新增评论(data 有值=回复某条评论;parentComment=所属一级评论,回复接口需要其 name) */
 	function handleToComment(data ?: { type : string, comment : ICommentReply }, parentComment ?: IComment) {
-		if (props.disallowComment) {
+		if (!props.allowComment) {
 			uni.showToast({ icon: 'none', title: '笔记已禁止评论！' })
 			return
 		}
@@ -185,7 +188,7 @@
 			emit('on-comment', {
 				isComment: true,
 				postName: props.post.metadata.name,
-				title: '新增评论',
+				title: '写评论',
 			})
 		}
 	}
@@ -237,11 +240,11 @@
 		<view class="uh-global-card-glass box-border uh-shadow-xs rounded-xl p-3">
 			<!-- 顶部区域 -->
 			<uh-section-title>
-				评论列表
+				说点什么
 				<template #right>
 					<view class="flex items-center gap-3">
-						<text v-if="showEntry" class="text-xs text-gray-500 font-normal"
-							@click="emit('on-comment-entry', props.post.metadata.name)">写评论</text>
+						<text v-if="props.allowComment" class="text-xs text-gray-500 font-normal"
+							@click="emit('on-comment-entry', props.post.metadata.name)">写一个</text>
 						<text class="text-xs text-gray-500 font-normal" @click="handleGetData">刷新</text>
 					</view>
 				</template>
@@ -249,90 +252,70 @@
 
 			<!-- 内容区域 -->
 			<view class="mt-2">
-				<view v-if="loading !== 'success'"
-					class="loading-wrap h-[506rpx] w-full flex items-center justify-center">
-					<view v-if="loading === 'loading'" class="loading flex flex-col items-center justify-center">
-						<view class="loading-text text-[26rpx] text-[#999]">
-							加载中，请稍等...
-						</view>
-					</view>
-					<view v-else-if="loading === 'error'" class="error flex flex-col items-center">
-						<text class="text-grey">加载失败</text>
-						<wd-button v-if="!disallowComment" size="small" plain type="primary" class="mt-2"
-							@click="handleGetData">
-							刷新试试
-						</wd-button>
-					</view>
+				<view v-if="loadingStatus !== DataLoadingStatusEnum.Success">
+					<uh-data-loading min-height="32vh" :loading-status="loadingStatus" size="small"
+						:use-refresh-button="loadingStatus!==DataLoadingStatusEnum.Empty" empty-text="啊偶，暂无数据~"
+						empty-sub-text="" @refresh="handleGetData">
+						<uh-button v-if="props.allowComment && loadingStatus === DataLoadingStatusEnum.Empty"
+							custom-class="uh-global-card-glass border uh-shadow-xs mt-4 text-black text-xs px-4 !rounded-full"
+							@click="handleToComment()">
+							抢沙发
+						</uh-button>
+					</uh-data-loading>
 				</view>
 
 				<block v-else>
-					<view v-if="dataList.length === 0" class="py-12">
-						<view class="flex flex-col items-center">
-							<wd-icon class-prefix="uhemoji-icon" name="-confused" size="100rpx" class="text-primary" />
-							<text class="mt-2 text-xs text-gray-500">暂无评论</text>
-							<view v-if="disallowComment" class="mt-2 text-xs text-red-400">
-								已关闭评论
-							</view>
-							<view v-else class="mt-2 bg-primary text-black text-xs px-4 py-1.5 rounded-lg"
-								@click="handleToComment()">
-								抢沙发
-							</view>
-						</view>
-					</view>
+					<!-- 一级评论 + 按需展开的回复区 -->
+					<template v-for="comment in dataList" :key="comment.metadata.name">
+						<uh-comment-item :use-content-bg="false" :is-child="false" :comment="comment"
+							:post-name="postName" :allow-comment="props.allowComment" @on-copy="handleCopyContent"
+							@on-comment="(d) => handleToComment(d, comment)" @on-detail="handleShowCommentDetail" />
 
-					<block v-else>
-						<!-- 一级评论 + 按需展开的回复区 -->
-						<template v-for="comment in dataList" :key="comment.metadata.name">
-							<uh-comment-item :use-content-bg="false" :is-child="false" :comment="comment"
-								:post-name="postName" :disallow-comment="disallowComment" @on-copy="handleCopyContent"
-								@on-comment="(d) => handleToComment(d, comment)" @on-detail="handleShowCommentDetail" />
+						<!-- 回复展开区(默认收起) -->
+						<view v-if="getReplyCount(comment) > 0">
+							<!-- 未展开:仅显示回复数 -->
+							<view v-if="!expanded.has(comment.metadata.name)"
+								class="mt-2 ml-10 inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-xs text-gray-500"
+								@click="toggleReplies(comment)">
+								共 {{ getReplyCount(comment) }} 条回复
+							</view>
 
-							<!-- 回复展开区(默认收起) -->
-							<view v-if="getReplyCount(comment) > 0">
-								<!-- 未展开:仅显示回复数 -->
-								<view v-if="!expanded.has(comment.metadata.name)"
-									class="mt-2 ml-10 inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-xs text-gray-500"
-									@click="toggleReplies(comment)">
-									共 {{ getReplyCount(comment) }} 条回复
+							<!-- 已展开:回复列表 -->
+							<block v-else>
+								<view v-if="getRepliesState(comment)?.status === 'error'"
+									class="mt-2 ml-10 text-xs text-red-400" @click="loadReplies(comment)">
+									回复加载失败,点击重试
 								</view>
+								<view
+									v-else-if="getRepliesState(comment)?.status === 'loading' && getRepliesState(comment)?.list.length === 0"
+									class="mt-2 ml-10 text-xs text-gray-400">
+									回复加载中...
+								</view>
+								<template v-else>
+									<uh-comment-item v-for="childComment in getRepliesState(comment)?.list"
+										:key="childComment.metadata.name" :use-content-bg="false" :is-child="true"
+										:comment="childComment" :post-name="postName"
+										:allow-comment="props.allowComment"
+										:quote-reply-map="buildQuoteReplyMap(comment)" @on-copy="handleCopyContent"
+										@on-comment="(d) => handleToComment(d, comment)"
+										@on-detail="handleShowCommentDetail" />
 
-								<!-- 已展开:回复列表 -->
-								<block v-else>
-									<view v-if="getRepliesState(comment)?.status === 'error'"
-										class="mt-2 ml-10 text-xs text-red-400" @click="loadReplies(comment)">
-										回复加载失败,点击重试
+									<!-- 加载更多(响应 hasNext) -->
+									<view v-if="getRepliesState(comment)?.hasNext"
+										class="mt-2 flex items-center justify-center">
+										<text class="text-xs text-gray-400" @click="loadMoreReplies(comment)">
+											{{ getRepliesState(comment)?.status === 'loading' ? '加载中...' : '加载更多回复' }}
+										</text>
 									</view>
-									<view
-										v-else-if="getRepliesState(comment)?.status === 'loading' && getRepliesState(comment)?.list.length === 0"
-										class="mt-2 ml-10 text-xs text-gray-400">
-										回复加载中...
-									</view>
-									<template v-else>
-										<uh-comment-item v-for="childComment in getRepliesState(comment)?.list"
-											:key="childComment.metadata.name" :use-content-bg="false" :is-child="true"
-											:comment="childComment" :post-name="postName"
-											:disallow-comment="disallowComment"
-											:quote-reply-map="buildQuoteReplyMap(comment)" @on-copy="handleCopyContent"
-											@on-comment="(d) => handleToComment(d, comment)"
-											@on-detail="handleShowCommentDetail" />
+								</template>
 
-										<!-- 加载更多(响应 hasNext) -->
-										<view v-if="getRepliesState(comment)?.hasNext"
-											class="mt-2 flex items-center justify-center">
-											<text class="text-xs text-gray-400" @click="loadMoreReplies(comment)">
-												{{ getRepliesState(comment)?.status === 'loading' ? '加载中...' : '加载更多回复' }}
-											</text>
-										</view>
-									</template>
-
-									<!-- 收起 -->
-									<view class="mt-2 ml-10 text-xs text-gray-400" @click="toggleReplies(comment)">
-										收起回复
-									</view>
-								</block>
-							</view>
-						</template>
-					</block>
+								<!-- 收起 -->
+								<view class="mt-2 ml-10 text-xs text-gray-400" @click="toggleReplies(comment)">
+									收起回复
+								</view>
+							</block>
+						</view>
+					</template>
 				</block>
 			</view>
 		</view>

@@ -138,6 +138,7 @@
 					刷新试试
 				</uh-button>
 			</view>
+			<slot />
 		</view>
 	</view>
 </template>
