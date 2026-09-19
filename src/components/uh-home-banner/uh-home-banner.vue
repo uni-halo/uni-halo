@@ -93,8 +93,8 @@
 
 <template>
 	<view v-if="bannerList.length > 0" class="relative w-full mb-6 box-border ">
-		<view class="box-border relative w-full h-56 overflow-hidden">
-			<swiper class="w-full h-56" :circular="true" :indicator-dots="false" :autoplay="true" :interval="3000"
+		<view class="box-border relative w-full h-64 overflow-hidden">
+			<swiper class="w-full h-64" :circular="true" :indicator-dots="false" :autoplay="true" :interval="3000"
 				:duration="1000" @change="handleBannerChange">
 				<swiper-item v-for="(item, index) in bannerList" :key="index" class="relative">
 					<image :src="item.image || item.src" class="h-full w-full" mode="aspectFill"
