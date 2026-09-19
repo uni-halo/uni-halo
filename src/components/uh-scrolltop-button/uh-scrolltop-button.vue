@@ -15,12 +15,14 @@ function handleScrollTop() {
 
 // 黑名单模式
 const balckList = [
+  'pages/auth/login',
   'pages/index/index',
+  'pages/tabbar/blogger/blogger',
   'pages/maintenance/maintenance',
   'pages-blog/setting/setting',
   'pages-blog/love/love',
-  'pages/tabbar/blogger/blogger',
-  'pages/auth/login',
+  'pages-blog/contact/contact',
+  'pages-blog/about-project/about-project',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

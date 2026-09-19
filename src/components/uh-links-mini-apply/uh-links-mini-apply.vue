@@ -227,79 +227,79 @@
 			</view>
 			<view class="absolute right-4 top-4 w-6 h-6 uh-global-card-glass shadow-none border rounded-lg text-center"
 				@click="handleClose(false)">
-				<wd-icon name="close" size="32rpx" class="text-gray-500"></wd-icon>
+				<wd-icon name="close" size="28rpx" class="text-gray-500"></wd-icon>
 			</view>
 		</view>
-		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border p-4 pt-0 max-h-[60vh]">
-			<view class="mb-5 flex items-center">
+		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border px-4 pt-0 max-h-[52vh]">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">名称 *</text>
 				<input v-model="form.displayName"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="请输入小程序名称">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">太阳码 *</text>
 				<input v-model="form.miniProgramCode"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="小程序码图片链接(必填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">小程序 AppID *</text>
 				<input v-model="form.appId"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="小程序 AppID，如 wx1234567890abcdef(必填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">页面路径</text>
 				<input v-model="form.path"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="跳转页面路径，如 pages/index/index(选填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">小程序地址</text>
 				<input v-model="form.link"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="跳转链接(选填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">作者昵称</text>
 				<input v-model="form.authorName"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs" placeholder="选填">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">作者头像</text>
 				<input v-model="form.avatar"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
 					placeholder="头像图片链接(选填)">
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">作者网站</text>
 				<input v-model="form.website"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs" placeholder="选填">
 			</view>
 
-			<view class="mb-5">
+			<view class="mb-4">
 				<text class="label mb-2 block text-3xs text-gray-600">小程序描述</text>
 				<textarea v-model="form.description"
 					class="w-full h-24 uh-global-card-glass box-border shadow-none border flex-1 rounded-xl p-3 text-sm"
 					placeholder="介绍一下这个小程序(选填)" :maxlength="200" />
 			</view>
 
-			<view class="mb-5">
+			<view class="mb-4">
 				<text class="label mb-2 block text-3xs text-gray-600">申请说明</text>
 				<textarea v-model="form.applyRemark"
 					class="w-full h-24 uh-global-card-glass box-border shadow-none border flex-1 rounded-xl p-3 text-sm"
 					placeholder="方便管理员了解申请意图(选填)" :maxlength="200" />
 			</view>
 
-			<view class="mb-5 flex items-center">
+			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">通知邮箱</text>
 				<input v-model="form.email"
 					class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-4 box-border text-3xs"
@@ -307,7 +307,7 @@
 			</view>
 
 			<!-- 防刷验证码(提交 403 后展示;点击图片可刷新) -->
-			<view v-if="captchaSrc" class="captcha-box mb-5 flex items-center">
+			<view v-if="captchaSrc" class="captcha-box mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-3xs text-gray-600">验证码 *</text>
 				<image :src="captchaSrc" class="captcha-img h-[76rpx] w-[200rpx] shrink-0 rounded-lg" mode="widthFix"
 					@click="handleRefreshCaptcha" />
@@ -315,7 +315,7 @@
 					placeholder="输入图中字符">
 			</view>
 		</scroll-view>
-		<view class="box-border px-4 pt-3">
+		<view class="box-border w-full px-4 pt-3 flex items-center">
 			<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleHandle">
 				提交申请
 			</uh-button>

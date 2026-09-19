@@ -38,7 +38,7 @@ const saving = ref(false)
 const { list: imageList, choose: chooseImages, remove: removeImage, retry: imageRetry } = useHaloUpload({ maxCount: 9 })
 
 /* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装，带工具条） ---------------- */
-const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, clear(): void } | null>(null)
+const editorRef = ref<{ setHtml: (html: string) => void, getHtml: () => Promise<string>, clear: () => void } | null>(null)
 
 /** 获取编辑器 HTML */
 async function getEditorHtml(): Promise<string> {
@@ -143,31 +143,31 @@ defineExpose({ openEdit })
         <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一段属于你们的回忆' : '修改故事信息' }}</text>
       </view>
       <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="32rpx" class="text-gray-500" />
+        <wd-icon name="close" size="28rpx" class="text-gray-500" />
       </view>
     </view>
     <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
       <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-sm text-[#666]">标题 *</text>
-        <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入故事标题">
+        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">标题 *</text>
+        <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入故事标题">
       </view>
       <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-sm text-[#666]">日期</text>
+        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">日期</text>
         <view
-          class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-sm shadow-none"
+          class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-3xs shadow-none"
           @click="openDatePicker"
         >
           <text :class="form.date ? 'text-gray-900' : 'text-gray-400'">{{ form.date || '如 2024-06-01(选填)' }}</text>
           <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
         </view>
       </view>
-      <wd-datetime-picker v-model="dateTs" :z-index="999" type="date" title="选择日期" root-portal v-model:visible="dateShow" @confirm="handleDateConfirm" />
+      <wd-datetime-picker v-model="dateTs" v-model:visible="dateShow" :z-index="999" type="date" title="选择日期" root-portal @confirm="handleDateConfirm" />
       <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-sm text-[#666]">地点</text>
-        <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入地点(选填)">
+        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">地点</text>
+        <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入地点(选填)">
       </view>
       <view class="mb-5">
-        <text class="mb-2 block text-sm text-[#666]">故事内容</text>
+        <text class="mb-2 block text-3xs text-gray-600">故事内容</text>
         <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">
           <uh-rich-editor
             ref="editorRef"
@@ -177,7 +177,7 @@ defineExpose({ openEdit })
         </view>
       </view>
       <view class="mb-5">
-        <text class="mb-2 block text-sm text-[#666]">图片</text>
+        <text class="mb-2 block text-3xs text-gray-600">图片</text>
         <view class="grid grid-cols-4 gap-2">
           <view v-for="img in imageList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
             <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
@@ -203,7 +203,7 @@ defineExpose({ openEdit })
     </scroll-view>
 
     <!-- 底部固定操作栏（滚动区外） -->
-    <view class="border-t border-black/5 px-4 pb-safe pt-3">
+    <view class="border-t border-black/5 px-4 pt-3">
       <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
         保存
       </uh-button>

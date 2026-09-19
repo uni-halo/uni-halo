@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 /**
- * 恋爱故事管理页：列表（分页加载）+ 新增 + 编辑 + 删除
- * 新增/编辑弹窗为全局组件 uh-admin-story-edit-popup（内聚表单与上传逻辑）
+ * 恋爱故事管理页
  */
 import { ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
@@ -9,7 +8,7 @@ import { getLoveStories } from '@/api/uni-halo'
 import { deleteLoveStory } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDialog } from '@wot-ui/ui'
-import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
@@ -98,7 +97,7 @@ onReachBottom(() => {
 
 /* ---------------- 新增/编辑弹窗 ---------------- */
 const storyEditVisible = ref(false)
-const storyEditRef = ref<{ openEdit(story: ILoveStory): void } | null>(null)
+const storyEditRef = ref<{ openEdit: (story: ILoveStory) => void } | null>(null)
 
 function openCreate() {
   storyEditVisible.value = true
@@ -180,12 +179,7 @@ onPageScroll((option: Page.PageScrollOption) => {
           class="box-border flex items-center justify-end gap-4 border-t border-gray-100 border-t-solid px-4 py-2.5 text-xs"
         >
           <view class="flex flex-1 items-center gap-x-2">
-            <view
-              class="uh-global-card-glass flex items-center justify-center border rounded-full bg-love px-1.5 py-0.5 text-10px text-white"
-            >
-              {{ index + 1 }}
-            </view>
-            <view v-if="item.spec?.date" class="flex items-center gap-x-1 text-xs text-love font-bold">
+            <view v-if="item.spec?.date" class="flex items-center gap-x-1 text-3xs text-love font-bold">
               <text>{{ item.spec.date }}</text>
             </view>
           </view>

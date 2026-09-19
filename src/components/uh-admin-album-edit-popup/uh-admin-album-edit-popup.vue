@@ -148,7 +148,7 @@ defineExpose({ openEdit })
         <text class="text-xs text-gray-500">{{ formMode === 'create' ? '创建一个新相册来存放回忆' : '修改相册信息' }}</text>
       </view>
       <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="32rpx" class="text-gray-500" />
+        <wd-icon name="close" size="28rpx" class="text-gray-500" />
       </view>
     </view>
     <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">

@@ -151,7 +151,7 @@
 				<view
 					class="w-6 h-6 uh-global-card-glass border uh-shadow-xs flex items-center justify-center rounded-lg"
 					@click="handleOnCancel">
-					<wd-icon name="close" size="32rpx"></wd-icon>
+					<wd-icon name="close" size="28rpx"></wd-icon>
 				</view>
 			</view>
 			<view class="mt-6 flex flex-col items-center">

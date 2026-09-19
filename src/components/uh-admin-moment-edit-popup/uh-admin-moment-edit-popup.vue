@@ -193,7 +193,7 @@ defineExpose({ openEdit })
         <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录此刻的想法与生活' : '修改这条瞬间' }}</text>
       </view>
       <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="32rpx" class="text-gray-500" />
+        <wd-icon name="close" size="28rpx" class="text-gray-500" />
       </view>
     </view>
     <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] px-4 pt-0">

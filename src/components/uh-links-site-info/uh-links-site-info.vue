@@ -75,7 +75,7 @@
 			</view>
 			<view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
 				@click="handleClose">
-				<wd-icon name="close" size="32rpx" class="text-gray-500" />
+				<wd-icon name="close" size="28rpx" class="text-gray-500" />
 			</view>
 		</view>
 		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4">

@@ -111,7 +111,7 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" safe-area-inset-bottom custom-class="!border rounded-xl"
+	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl"
 		@close="handleClose(false)">
 		<view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
 			<view class="w-full flex flex-col gap-y-1">
@@ -120,10 +120,10 @@
 			</view>
 			<view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
 				@click="handleClose(false)">
-				<wd-icon name="close" size="32rpx" class="text-gray-500" />
+				<wd-icon name="close" size="28rpx" class="text-gray-500" />
 			</view>
 		</view>
-		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[52vh] p-4 pt-0">
+		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[52vh] px-4 pt-0">
 			<view class="mb-4 flex items-center">
 				<text class="label w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
 				<input v-model="form.name"
@@ -176,8 +176,8 @@
 					placeholder="请输入网站描述,不超过30字符(选填)" :maxlength="30" />
 			</view>
 		</scroll-view>
-		<view class="box-border w-full px-4">
-			<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
+		<view class="box-border w-full px-4 pt-3 flex items-center">
+			<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="submitting" @click="handleSubmit">
 				提交申请
 			</uh-button>
 		</view>

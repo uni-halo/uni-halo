@@ -138,7 +138,7 @@ defineExpose({ openDetail })
         <text class="text-xs text-gray-500">管理相册照片，点击图片可预览</text>
       </view>
       <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="32rpx" class="text-gray-500" />
+        <wd-icon name="close" size="28rpx" class="text-gray-500" />
       </view>
     </view>
 

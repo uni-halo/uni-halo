@@ -90,7 +90,7 @@
 <template>
 	<uh-glass-popup v-model="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
 		safe-area-inset-bottom @close="handleClose">
-		<view class="box-border h-full w-full flex flex-col gap-y-3 p-4">
+		<view class="box-border h-full w-full flex flex-col gap-y-3 p-4 pb-0">
 			<view class="w-full flex shrink-0 items-center justify-between">
 				<view class="flex items-center gap-x-1 font-bold">
 					{{ albumName }}
