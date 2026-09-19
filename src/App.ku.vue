@@ -7,8 +7,8 @@
 
 	const isCurrentPageTabbar = ref(true)
 
-	const { popupVisible:settingsPopupVisible, openPopup:openSettingsPopup } = useOpenPopup()
-	const { popupVisible:userPopupVisible, openPopup:openUserPopup } = useOpenPopup()
+	const { popupVisible: settingsPopupVisible, openPopup: openSettingsPopup } = useOpenPopup()
+	const { popupVisible: userPopupVisible, openPopup: openUserPopup } = useOpenPopup()
 	onShow(() => {
 		const { path } = currRoute()
 		if (path === '/') {
@@ -30,6 +30,9 @@
 
 		<uh-settings-popup v-model="settingsPopupVisible" />
 		<uh-user-popup v-model="userPopupVisible" />
+
+		<!-- ui 全局组件 -->
+		<wd-dialog />
 
 		<KuRootView />
 

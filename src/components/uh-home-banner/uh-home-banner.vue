@@ -28,22 +28,25 @@
 
 	/** 公开 Banner 条目 → 轮播展示项 */
 	function mapBanners(items : IBannerPublicItem[]) : IBannerItem[] {
-		return items.map(item => ({
-			id: item.name,
-			name: item.name,
-			title: item.title || '',
-			image: checkThumbnailUrl(item.cover),
-			src: checkThumbnailUrl(item.cover),
-			type: item.source,
-			postId: item.postId,
-			url: item.link,
-			date: formatTime({
-				d: item.date,
-				f: 'yyyy年MM月dd日 星期w'
-			}),
-			authorName: item.authorName,
-			authorAvatar: item.authorAvatar ? checkAvatarUrl(item.authorAvatar) : '',
-		}))
+		return items.map(item => {
+			item.date = item.date || Date.now()
+			return {
+				id: item.name,
+				name: item.name,
+				title: item.title || '',
+				image: checkThumbnailUrl(item.cover),
+				src: checkThumbnailUrl(item.cover),
+				type: item.source,
+				postId: item.postId,
+				url: item.link,
+				date: formatTime({
+					d: item.date,
+					f: 'yyyy年MM月dd日 星期w'
+				}),
+				authorName: item.authorName,
+				authorAvatar: item.authorAvatar ? checkAvatarUrl(item.authorAvatar) : '',
+			}
+		})
 	}
 
 	onMounted(async () => {
@@ -99,8 +102,9 @@
 				</swiper-item>
 			</swiper>
 			<view v-if="currentBanner"
-				class="box-border pt-safe pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5 backdrop-blur-[2rpx]">
-				<view class="max-w-[60vw] truncate box-border mt-3 flex items-center justify-center bg-secondary px-3 py-1.5 rounded-xl">
+				class="box-border pt-safe pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-2 bg-white/5">
+				<view
+					class="max-w-[60vw] truncate box-border mt-3 flex items-center justify-center bg-secondary px-3 py-1.5 rounded-xl">
 					<text class="text-xs text-gray-900 font-semibold">
 						{{ currentBanner.title }}
 					</text>
@@ -123,8 +127,8 @@
 </template>
 
 <style scoped lang="scss">
-/* 向上偏移定位 */
-.uh-translate-y-n6 {
-  transform: translateY(-1.5rem);
-}
+	/* 向上偏移定位 */
+	.uh-translate-y-n6 {
+		transform: translateY(-1.5rem);
+	}
 </style>

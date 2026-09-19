@@ -78,7 +78,7 @@
 	}
 
 	/* ---------------- 重置全部 ---------------- */
-	const dialog = useDialog()
+	const dialog = useDialog('settings-popup')
 
 	async function handleResetAll() {
 		try {
@@ -104,9 +104,11 @@
 
 <template>
 	<uh-glass-popup v-model="popupVisible" position="bottom" custom-class="rounded-xl !border"
-		safe-area-inset-bottom :z-index="110" hide-when-close>
-		<view class="box-border px-3 pt-3">
-			<view class="mb-3 flex items-center justify-between">
+		 :z-index="110" hide-when-close>
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
+			<view class="flex items-center justify-between">
 				<text class="text-md font-bold">偏好设置</text>
 				<view
 					class="uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
@@ -125,9 +127,10 @@
 				</view>
 			</view>
 
-			<!-- 内容区 -->
-			<scroll-view scroll-y :show-scrollbar="false" class="mt-4 max-h-[60vh]">
-				<view class="box-border flex flex-col gap-y-6 pb-1">
+			<!-- 滚动区域 -->
+			<scroll-view scroll-y :show-scrollbar="false" class="max-h-[60vh]">
+				<!-- 滚动内部容器 -->
+				<view class="w-full box-border flex flex-col gap-y-3">
 					<!-- 布局 -->
 					<template v-if="activeTab === 'layout'">
 						<!-- 路由过滤后无匹配分组:空态提示 -->
@@ -218,8 +221,8 @@
 				</view>
 			</scroll-view>
 
-			<!-- 底部操作栏 -->
-			<view class="box-border w-full pt-3 flex items-center gap-x-2" :class="[isWechat?'':'pb-3']">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center gap-x-2">
 				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs bg-white/90 border py-2 !rounded-xl"
 					@click="handleClose()">
 					关闭
@@ -231,5 +234,5 @@
 			</view>
 		</view>
 	</uh-glass-popup>
-	<wd-dialog />
+	<wd-dialog selector="settings-popup"/>
 </template>

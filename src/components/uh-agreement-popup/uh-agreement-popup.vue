@@ -56,9 +56,11 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="popupVisible" position="bottom" custom-class="rounded-2xl" :safe-area-inset-bottom="true">
-		<view class="box-border flex flex-col p-3">
-			<view class="mb-3 flex items-center justify-between">
+	<uh-glass-popup v-model="popupVisible" position="bottom" custom-class="rounded-2xl">
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
+			<view class="flex items-center justify-between">
 				<text class="text-md font-semibold">协议与政策</text>
 				<view
 					class="box-border uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
@@ -75,18 +77,21 @@
 				</view>
 			</view>
 
-			<scroll-view scroll-y class="box-border mt-4 h-[50vh]">
+			<!-- 滚动区域 -->
+			<scroll-view scroll-y class="box-border h-[50vh]">
 				<mp-html v-if="activeContent" :content="activeContent" lazy-load :domain="markdownConfig.domain"
 					:loading-img="markdownConfig.loadingGif" scroll-table selectable />
 				<uh-data-loading v-else :loading-status="DataLoadingStatusEnum.Empty" :empty-text="emptyText"
 					min-height="46vh" size="small" :use-refresh-button="false"></uh-data-loading>
 			</scroll-view>
 
-			<uh-button v-if="showAgreeButton" class="w-full"
-				custom-class="mt-4 uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900"
-				@click="handleAgree">
-				同意并继续
-			</uh-button>
+			<view v-if="showAgreeButton" class="box-border w-full flex items-center">
+				<uh-button class="w-full"
+					custom-class="uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900"
+					@click="handleAgree">
+					同意并继续
+				</uh-button>
+			</view>
 		</view>
 	</uh-glass-popup>
 </template>

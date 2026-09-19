@@ -452,7 +452,7 @@
 			</wd-sticky>
 
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-				min-height="60vh" @refresh="handleGetData" />
+				min-height="65vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-3 px-3 mt-5">
 				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
@@ -482,8 +482,8 @@
 			<view
 				class="uh-global-card-glass uh-shadow-xs box-border py-2.5 flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary"
 				@click="handleToPublish">
-				<wd-icon name="plus" size="32rpx" />
-				<text class="shrink-0 text-2xs font-semibold">发布瞬间</text>
+				<wd-icon name="plus" size="28rpx" />
+				<text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
 			</view>
 		</view>
 	</view>
@@ -499,8 +499,10 @@
 	<!-- 年份选择器 -->
 	<uh-glass-popup v-model="yearSheet.show" :z-index="999" :hide-when-close="true" position="bottom"
 		custom-class="rounded-xl">
-		<view class="box-border px-4 py-4">
-			<view class="mb-3 flex items-center justify-between">
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
+			<view class="flex items-center justify-between">
 				<text class="text-md font-bold">选择年份</text>
 				<view
 					class="uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
@@ -511,7 +513,8 @@
 			<wd-picker-view :columns="yearColumns" v-model="yearPickerValue"
 				custom-class="uh-picker-view !p-0 !bg-transparent !rounded-xl overflow-hidden"
 				@change="handleYearPickerChange" />
-			<view class="mt-4 flex items-center justify-center gap-x-3">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center gap-x-3">
 				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleYearPickerCancel">
 					取消

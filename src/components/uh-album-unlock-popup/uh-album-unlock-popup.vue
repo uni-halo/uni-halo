@@ -143,8 +143,10 @@
 
 <template>
 	<uh-glass-popup :model-value="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
-		safe-area-inset-bottom @update:model-value="handleOnPopupClose">
-		<view class="box-border p-4 w-full">
+		 @update:model-value="handleOnPopupClose">
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
 			<view class="w-full flex items-center justify-between">
 				<view class="font-bold flex items-center gap-x-1"> <wd-icon name="lock" size="42rpx"></wd-icon> 解锁相册
 				</view>
@@ -154,7 +156,7 @@
 					<wd-icon name="close" size="28rpx"></wd-icon>
 				</view>
 			</view>
-			<view class="mt-6 flex flex-col items-center">
+			<view class="flex flex-col items-center">
 				<view class="album-name mb-3 text-lg text-gray-900 font-bold">
 					{{ albumName }}
 				</view>
@@ -163,20 +165,20 @@
 				</view>
 			</view>
 			<input v-model="password" :password="true" placeholder="请输入相册密码"
-				class="box-border mt-6 h-10 px-3 rounded-xl text-sm uh-global-card-glass uh-shadow-xs border" />
+				class="box-border h-10 px-3 rounded-xl text-sm uh-global-card-glass uh-shadow-xs border" />
 
-			<view v-if="captchaSrc" class="mt-5 flex items-center justify-center gap-4">
+			<view v-if="captchaSrc" class="flex items-center justify-center gap-4">
 				<input v-model="captchaCode" placeholder="验证码"
 					class="box-border flex-1 h-10 px-3 rounded-xl text-sm uh-global-card-glass uh-shadow-xs border" />
 				<image :src="captchaSrc" class="shrink-0 h-10 w-26 rounded-xl" mode="widthFix"
 					@click="handleRefreshCaptcha" />
 			</view>
-			<view v-if="captchaSrc" class="mt-4 text-center text-xs text-gray-500">
+			<view v-if="captchaSrc" class="text-center text-xs text-gray-500">
 				点击图片刷新验证码
 			</view>
 
-			<!-- 操作按钮:取消 + 解锁 -->
-			<view class="mt-6 box-border flex gap-4">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center gap-4">
 				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleOnCancel">
 					取消

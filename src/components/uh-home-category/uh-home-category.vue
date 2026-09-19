@@ -100,7 +100,7 @@
 					<text class="text-xs font-semibold">
 						{{ category.spec.displayName }}
 					</text>
-					<text class="mt-1 text-xs text-gray-200">共 {{ category.postCount ?? 0 }} 篇</text>
+					<text v-if="category.postCount" class="mt-1 text-xs text-gray-200">共 {{ category.postCount ?? 0 }} 篇</text>
 				</view>
 			</view>
 		</view>

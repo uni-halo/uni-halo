@@ -128,20 +128,26 @@
 <template>
 	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl"
 		@close="handleClose">
-		<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
-			<view class="w-full flex flex-col gap-y-1">
-				<text class="text-md font-bold">小程序友链信息</text>
-				<text class="text-xs text-gray-500">本站小程序申请提交的信息,欢迎互换</text>
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
+			<view class="relative box-border w-full flex items-center justify-around">
+				<view class="w-full flex flex-col gap-y-1">
+					<text class="text-md font-bold">小程序友链信息</text>
+					<text class="text-xs text-gray-500">本站小程序申请提交的信息,欢迎互换</text>
+				</view>
+				<view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none"
+					@click="handleClose">
+					<wd-icon name="close" size="28rpx" class="text-gray-500" />
+				</view>
 			</view>
-			<view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
-				@click="handleClose">
-				<wd-icon name="close" size="28rpx" class="text-gray-500" />
-			</view>
-		</view>
 
-		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4">
-			<!-- 未配置信息占位 -->
-			<view v-if="!hasInfo" class="py-10 text-center text-xs text-gray-400">
+			<!-- 滚动区域 -->
+			<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
+				<!-- 滚动内部容器 -->
+				<view class="w-full flex flex-col gap-y-3">
+				<!-- 未配置信息占位 -->
+				<view v-if="!hasInfo" class="py-10 text-center text-xs text-gray-400">
 				暂未配置小程序申请信息
 			</view>
 
@@ -165,13 +171,13 @@
 						</view>
 					</view>
 				</view>
-				<view class="mt-2 flex items-center ">
+				<view class="flex items-center">
 					<text class="text-xs text-gray-400">温馨提示：点击图片可以预览太阳码</text>
 				</view>
 
 				<!-- AppID / 页面路径 -->
 				<view v-if="miniInfo.appId || miniInfo.path"
-					class="uh-global-card-glass shadow-none border mt-2 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
+					class="uh-global-card-glass shadow-none border flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
 					<view v-if="miniInfo.appId" class="flex items-center justify-between">
 						<view>
 							<text class="text-gray-400">小程序 AppID：</text>{{ miniInfo.appId }}
@@ -188,7 +194,7 @@
 
 				<!-- 跳转地址 -->
 				<view v-if="miniInfo.link"
-					class="mini-link mt-2 flex items-center justify-between rounded-xl bg-secondary p-4">
+					class="mini-link flex items-center justify-between rounded-xl bg-secondary p-4">
 					<view
 						class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
 						{{ miniInfo.link }}
@@ -198,7 +204,7 @@
 
 				<!-- 申请说明 -->
 				<view v-if="miniInfo.applyRemark"
-					class="uh-global-card-glass shadow-none border mt-2 flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
+					class="uh-global-card-glass shadow-none border flex flex-col gap-2 rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500">
 					<view v-if="miniInfo.applyRemark">
 						<text class="text-gray-400">申请说明：</text>{{ miniInfo.applyRemark }}
 					</view>
@@ -206,7 +212,7 @@
 
 				<!-- 作者信息 -->
 				<view v-if="miniInfo.authorName || miniInfo.avatar || miniInfo.website"
-					class="uh-global-card-glass shadow-none border mt-5 flex items-center rounded-xl p-4">
+					class="uh-global-card-glass shadow-none border flex items-center rounded-xl p-4">
 					<image v-if="miniInfo.avatar" class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
 						:src="checkAvatarUrl(miniInfo.avatar)" mode="aspectFill" />
 					<view class="author-detail ml-4 flex flex-1 flex-col">
@@ -219,13 +225,16 @@
 						</text>
 					</view>
 				</view>
-
-				<view class="mt-6">
-					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleCopyInfo">
-						复制小程序申请信息
-					</uh-button>
+				</template>
 				</view>
-			</template>
-		</scroll-view>
+			</scroll-view>
+
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center">
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleCopyInfo">
+					复制小程序申请信息
+				</uh-button>
+			</view>
+		</view>
 	</uh-glass-popup>
 </template>

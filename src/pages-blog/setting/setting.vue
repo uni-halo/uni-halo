@@ -230,9 +230,10 @@ async function handleResetAll() {
 
     <!-- 枚举选择弹层 -->
     <uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" :z-index="999" position="bottom" custom-class="rounded-xl">
-      <view class="box-border px-4 py-4">
-        <!-- 标题 -->
-        <view class="mb-3 flex items-center justify-between">
+      <!-- 弹窗容器 -->
+      <view class="w-full box-border flex flex-col gap-y-3 p-3">
+        <!-- 顶部 -->
+        <view class="flex items-center justify-between">
           <text class="text-md font-bold">{{ enumSheet.def?.label || '请选择' }}</text>
         </view>
         <!-- 选择器 -->
@@ -241,8 +242,8 @@ async function handleResetAll() {
           custom-class="uh-picker-view !p-0 !bg-transparent !rounded-xl overflow-hidden"
           @change="handlePickerChange"
         />
-        <!-- 底部操作:取消 / 确认 -->
-        <view class="mt-4 box-border w-full flex items-center justify-center gap-x-3 px-4">
+        <!-- 底部固定操作区域 -->
+        <view class="box-border w-full flex items-center justify-center gap-x-3">
           <uh-button
             class="flex-1"
             custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"

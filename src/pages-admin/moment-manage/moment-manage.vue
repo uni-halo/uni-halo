@@ -227,8 +227,8 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
           class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
           @click="handleOpenPublish"
         >
-          <wd-icon name="add-circle" size="36rpx" />
-          <text class="shrink-0 text-xs font-semibold">发布瞬间</text>
+          <wd-icon name="plus" size="28rpx" />
+          <text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
         </view>
       </view>
 

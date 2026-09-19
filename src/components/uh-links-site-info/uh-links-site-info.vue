@@ -66,43 +66,53 @@
 </script>
 
 <template>
-	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl"
+	<uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-2xl"
 		@close="handleClose">
-		<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
-			<view class="w-full flex flex-col gap-y-1">
-				<text class="text-md font-bold">友链信息</text>
-				<text class="text-xs text-gray-500">本站友链交换信息,欢迎申请互换友链</text>
-			</view>
-			<view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none"
-				@click="handleClose">
-				<wd-icon name="close" size="28rpx" class="text-gray-500" />
-			</view>
-		</view>
-		<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4">
-			<!-- 博客名片 -->
-			<view class="flex items-center">
-				<image class="uh-global-card-glass h-14 w-14 shrink-0 rounded-2xl"
-					:src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
-				<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1">
-					<text class="text-md text-gray-900 font-bold">
-						{{ blogDetail.displayName || '未命名博客' }}
-					</text>
-					<text class="text-xs text-gray-500">
-						{{ blogDetail.description || '这个博主很懒，没写简介~' }}
-					</text>
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
+			<view class="relative box-border w-full flex items-center justify-around">
+				<view class="w-full flex flex-col gap-y-1">
+					<text class="text-md font-bold">友链信息</text>
+					<text class="text-xs text-gray-500">本站友链交换信息,欢迎申请互换友链</text>
+				</view>
+				<view
+					class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none"
+					@click="handleClose">
+					<wd-icon name="close" size="28rpx" class="text-gray-500" />
 				</view>
 			</view>
+			<!-- 滚动区域 -->
+			<scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
+				<!-- 滚动内部容器 -->
+				<view class="w-full flex flex-col gap-y-3">
+					<!-- 博客名片 -->
+					<view class="flex items-center">
+					<image class="uh-global-card-glass h-14 w-14 shrink-0 rounded-2xl"
+						:src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
+					<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1">
+						<text class="text-md text-gray-900 font-bold">
+							{{ blogDetail.displayName || '未命名博客' }}
+						</text>
+						<text class="text-xs text-gray-500">
+							{{ blogDetail.description || '这个博主很懒，没写简介~' }}
+						</text>
+					</view>
+				</view>
 
-			<!-- 交换信息文案 -->
-			<view class="mt-4 whitespace-pre-wrap text-3xs text-gray-900 leading-6">
-				<text>{{ calcBlogContent }}</text>
-			</view>
-
-			<view class="mt-6">
-				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" @click="handleCopyLink">
+				<!-- 交换信息文案 -->
+				<view class="whitespace-pre-wrap text-3xs text-gray-900 leading-6">
+					<text>{{ calcBlogContent }}</text>
+				</view>
+				</view>
+			</scroll-view>
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center">
+				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+					@click="handleCopyLink">
 					复制友链交换信息
 				</uh-button>
 			</view>
-		</scroll-view>
+		</view>
 	</uh-glass-popup>
 </template>

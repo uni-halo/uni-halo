@@ -169,8 +169,10 @@
 
 <template>
 	<uh-glass-popup :model-value="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
-		:close-on-click-modal="closeable" safe-area-inset-bottom @update:model-value="handleOnPopupClose">
-		<view class="box-border p-4 w-full">
+		:close-on-click-modal="closeable" @update:model-value="handleOnPopupClose">
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
 			<view class="w-full flex items-center justify-between">
 				<view class="font-bold flex items-center gap-x-1 text-love">
 					<wd-icon name="lock" size="42rpx"></wd-icon> {{ title }}
@@ -181,26 +183,26 @@
 					<wd-icon name="close" size="28rpx"></wd-icon>
 				</view>
 			</view>
-			<view class="mt-6 flex flex-col items-center">
+			<view class="flex flex-col items-center">
 				<view class="tip-text text-xs text-gray-600">
 					{{ tip }}
 				</view>
 			</view>
 			<input v-model="password" :password="true" :placeholder="placeholder"
-				class="box-border mt-6 h-9 px-3 rounded-xl text-xs uh-global-card-glass uh-shadow-xs border" />
+				class="box-border h-9 px-3 rounded-xl text-xs uh-global-card-glass uh-shadow-xs border" />
 
-			<view v-if="captchaEnabled && captchaSrc" class="mt-5 flex items-center justify-center gap-4">
+			<view v-if="captchaEnabled && captchaSrc" class="flex items-center justify-center gap-4">
 				<input v-model="captchaCode" placeholder="验证码"
 					class="box-border flex-1 h-9 px-3 rounded-xl text-xs uh-global-card-glass uh-shadow-xs border" />
 				<image :src="captchaSrc" class="shrink-0 h-9 w-24 rounded-xl" mode="widthFix"
 					@click="handleRefreshCaptcha" />
 			</view>
-			<view v-if="captchaEnabled && captchaSrc" class="mt-4 text-center text-xs text-gray-500">
+			<view v-if="captchaEnabled && captchaSrc" class="text-center text-xs text-gray-500">
 				点击图片刷新验证码
 			</view>
 
-			<!-- 操作按钮:取消 + 解锁(强制解锁场景隐藏取消) -->
-			<view class="w-full mt-6 box-border flex items-center justify-center gap-4">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center gap-4">
 				<uh-button v-if="closeable" class="flex-1"
 					custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleOnCancel">

@@ -24,7 +24,7 @@
 	const settingStore = useSettingStore()
 	const { can } = usePermission()
 
-	const dialog = useDialog()
+	const dialog = useDialog('user-popup')
 
 	interface IProps {
 		modelValue : boolean
@@ -178,5 +178,5 @@
 			</view>
 		</view>
 	</uh-glass-popup>
-	<wd-dialog />
+	<wd-dialog selector="user-popup"/>
 </template>

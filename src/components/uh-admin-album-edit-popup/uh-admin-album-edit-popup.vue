@@ -142,73 +142,80 @@ defineExpose({ openEdit })
 
 <template>
   <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
-    <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
-      <view class="w-full flex flex-col gap-y-1">
-        <text class="text-md font-bold">{{ formMode === 'create' ? '新建相册' : '编辑相册' }}</text>
-        <text class="text-xs text-gray-500">{{ formMode === 'create' ? '创建一个新相册来存放回忆' : '修改相册信息' }}</text>
+    <!-- 弹窗容器 -->
+    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+      <!-- 顶部 -->
+      <view class="relative box-border w-full flex items-center justify-around">
+        <view class="w-full flex flex-col gap-y-1">
+          <text class="text-md font-bold">{{ formMode === 'create' ? '新建相册' : '编辑相册' }}</text>
+          <text class="text-xs text-gray-500">{{ formMode === 'create' ? '创建一个新相册来存放回忆' : '修改相册信息' }}</text>
+        </view>
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+          <wd-icon name="close" size="28rpx" class="text-gray-500" />
+        </view>
       </view>
-      <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="28rpx" class="text-gray-500" />
-      </view>
-    </view>
-    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-      <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-sm text-[#666]">名称 *</text>
-        <input v-model="form.displayName" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="请输入相册名称">
-      </view>
-      <view class="mb-5 flex items-start">
-        <text class="w-[140rpx] shrink-0 pt-2.5 text-sm text-[#666]">描述</text>
-        <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 flex-1 border rounded-xl p-3 text-sm shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
-      </view>
-      <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-sm text-[#666]">排序</text>
-        <input v-model="form.priority" type="number" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none" placeholder="数字越大越靠前，默认 0">
-      </view>
-      <view class="mb-5 flex items-start">
-        <text class="w-[140rpx] shrink-0 pt-1 text-sm text-[#666]">封面</text>
-        <view class="grid flex-1 grid-cols-4 gap-2">
-          <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
-            <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
-            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeCover(img.tempPath); handleCoverChange()">
-              <wd-icon name="close" size="22rpx" />
+      <!-- 滚动区域 -->
+      <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
+        <!-- 滚动内部容器 -->
+        <view class="w-full flex flex-col gap-y-3">
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">名称 *</text>
+            <input v-model="form.displayName" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入相册名称">
+          </view>
+          <view class="flex items-start">
+            <text class="w-[140rpx] shrink-0 pt-2.5 text-3xs text-gray-600">描述</text>
+            <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 flex-1 border rounded-xl p-3 text-3xs shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
+          </view>
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">排序</text>
+            <input v-model="form.priority" type="number" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="数字越大越靠前，默认 0">
+          </view>
+          <view class="flex items-start">
+            <text class="w-[140rpx] shrink-0 pt-1 text-3xs text-gray-600">封面</text>
+            <view class="grid flex-1 grid-cols-4 gap-2">
+              <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
+                <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
+                <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeCover(img.tempPath); handleCoverChange()">
+                  <wd-icon name="close" size="22rpx" />
+                </view>
+              </view>
+              <view v-if="!coverList.length" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseCover">
+                <wd-icon name="camera" size="36rpx" />
+              </view>
             </view>
           </view>
-          <view v-if="!coverList.length" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseCover">
-            <wd-icon name="camera" size="36rpx" />
-          </view>
-        </view>
-      </view>
-      <text v-if="coverUploading" class="mb-4 block pl-[140rpx] text-3xs text-gray-400">封面上传中…</text>
-      <view class="mb-5">
-        <view class="flex items-center">
-          <text class="w-[140rpx] shrink-0 text-sm text-[#666]">查看密码</text>
-          <input
-            v-model="form.password"
-            class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-sm shadow-none"
-            :placeholder="formMode === 'create' ? '设置查看密码(选填)' : '输入新密码重设，留空保持不变'"
-            password
-          >
-        </view>
-        <!-- 密码状态与操作：单独一行在输入框下方 -->
-        <view v-if="formMode === 'edit'" class="mt-2 flex items-center gap-4 pl-[140rpx]">
-          <text class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
-            {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
-          </text>
-          <view v-if="form.passwordEnabled" class="flex items-center gap-1.5" @click="form.passwordRemoved = !form.passwordRemoved">
-            <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
-              <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
+          <text v-if="coverUploading" class="block pl-[140rpx] text-3xs text-gray-400">封面上传中…</text>
+          <view>
+            <view class="flex items-center">
+              <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">查看密码</text>
+              <input
+                v-model="form.password"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
+                :placeholder="formMode === 'create' ? '设置查看密码(选填)' : '输入新密码重设，留空保持不变'"
+                password
+              >
             </view>
-            <text class="text-3xs text-gray-500">清除查看密码</text>
+            <!-- 密码状态与操作：单独一行在输入框下方 -->
+            <view v-if="formMode === 'edit'" class="mt-2 flex items-center gap-4 pl-[140rpx]">
+              <text class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
+                {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
+              </text>
+              <view v-if="form.passwordEnabled" class="flex items-center gap-1.5" @click="form.passwordRemoved = !form.passwordRemoved">
+                <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
+                  <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
+                </view>
+                <text class="text-3xs text-love">点击清除查看密码</text>
+              </view>
+            </view>
           </view>
         </view>
+      </scroll-view>
+      <!-- 底部固定操作区域 -->
+      <view class="box-border w-full flex items-center">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+          保存
+        </uh-button>
       </view>
-    </scroll-view>
-
-    <!-- 底部固定操作栏（滚动区外） -->
-    <view class="border-t border-black/5 px-4 pb-safe pt-3">
-      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
-        保存
-      </uh-button>
     </view>
   </uh-glass-popup>
 </template>

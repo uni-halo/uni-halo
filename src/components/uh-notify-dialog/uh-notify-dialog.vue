@@ -76,7 +76,9 @@
 
 <template>
 	<uh-glass-popup v-model="isShow" position="center" :z-index="9999" custom-class="rounded-xl" @close="handleClose">
-		<view v-if="notice" class="box-border w-[80vw] p-4">
+		<!-- 弹窗容器 -->
+		<view v-if="notice" class="box-border flex flex-col gap-y-3 p-3 w-[80vw]">
+			<!-- 顶部 -->
 			<view class="flex items-center justify-between">
 				<view class="flex items-center gap-2">
 					<wd-icon class-prefix="uhemoji2-icon" name="-happy-" size="36rpx" />
@@ -99,7 +101,7 @@
 			</view>
 
 			<!-- 内容 -->
-			<view class="mt-4">
+			<view class="w-full">
 				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2"
 					mode="aspectFill" />
 
@@ -114,8 +116,8 @@
 				</view>
 			</view>
 
-			<!-- 操作 -->
-			<view class="box-border mt-4 flex items-center justify-between pt-4">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center justify-between">
 				<view class="text-xs text-gray-600 " @click="handleDismissForever">
 					今日不再提醒
 				</view>

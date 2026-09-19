@@ -89,8 +89,10 @@
 
 <template>
 	<uh-glass-popup v-model="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
-		safe-area-inset-bottom @close="handleClose">
-		<view class="box-border h-full w-full flex flex-col gap-y-3 p-4 pb-0">
+		 @close="handleClose">
+		<!-- 弹窗容器 -->
+		<view class="w-full box-border flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
 			<view class="w-full flex shrink-0 items-center justify-between">
 				<view class="flex items-center gap-x-1 font-bold">
 					{{ albumName }}
@@ -102,8 +104,10 @@
 				</view>
 			</view>
 
-			<!-- 照片列表 -->
+			<!-- 滚动区域 -->
 			<scroll-view class="w-full box-border max-h-[50vh] flex-1" scroll-y :show-scrollbar="false">
+				<!-- 滚动内部容器 -->
+				<view class="w-full flex flex-col gap-y-3">
 				<!-- 加载/错误/空占位(状态机) -->
 				<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :use-refresh-button="false"
 					:loading-status="loadingStatus" error-text="照片加载失败，请点击刷新重试" empty-text="这个相册暂时还没有照片~"
@@ -133,10 +137,11 @@
 						</view>
 					</view>
 				</view>
+				</view>
 			</scroll-view>
 
-			<!-- 底部关闭 -->
-			<view class="w-full shrink-0 flex items-center justify-center gap-x-2">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full shrink-0 flex items-center gap-x-2">
 				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleClose">
 					关闭

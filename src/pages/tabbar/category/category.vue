@@ -197,7 +197,7 @@
 						<text class="truncate text-2xs text-white font-bold">
 							{{ item.spec.displayName }}
 						</text>
-						<text class="text-xs text-white opacity-80">
+						<text v-if="item.postCount" class="text-xs text-white opacity-80">
 							共 {{ item.postCount }} 篇笔记
 						</text>
 					</view>

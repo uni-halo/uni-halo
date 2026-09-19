@@ -373,8 +373,10 @@
 
 		<!-- 故事详情弹窗 -->
 		<uh-glass-popup v-model="showDetail" :z-index="100" position="bottom" custom-class="rounded-xl">
-			<view class="box-border p-3 h-full w-full flex flex-col overflow-hidden rounded-xl bg-white">
-				<view class="story-detail-header box-border shrink-0 mb-4">
+			<!-- 弹窗容器 -->
+			<view class="w-full box-border flex flex-col gap-y-3 p-3 overflow-hidden rounded-xl bg-white">
+				<!-- 顶部 -->
+				<view class="story-detail-header box-border shrink-0">
 					<view class="story-detail-title text-lg text-gray-900 font-bold">
 						{{ currentStory.title }}
 					</view>
@@ -402,10 +404,15 @@
 					<image v-else :src="currentStory.images[0]" mode="aspectFill"
 						class="h-32 w-full" @click="handlePreviewImage(0)" />
 				</view>
-				<scroll-view scroll-y :show-scrollbar="false" class="mt-4 box-border max-h-[50vh] flex-1">
+				<!-- 滚动区域 -->
+				<scroll-view scroll-y :show-scrollbar="false" class="box-border max-h-[50vh] flex-1">
+					<!-- 滚动内部容器 -->
+					<view class="w-full flex flex-col gap-y-3">
 					<view class="story-html text-sm text-gray-900 leading-7" v-html="currentStory.content" />
+					</view>
 				</scroll-view>
-				<view class="w-full mt-3">
+				<!-- 底部固定操作区域 -->
+				<view class="box-border w-full flex items-center">
 					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white" @click="showDetail = false">关闭</uh-button>
 				</view>
 			</view>

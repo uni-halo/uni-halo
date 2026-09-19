@@ -15,7 +15,7 @@
 			navigationStyle: 'custom',
 		},
 	})
- 
+
 	const { configs } = storeToRefs(useAppConfigStore())
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('login', '登录')
@@ -35,7 +35,6 @@
 	const passwordLoginEnabled = computed(() => loginConfig.value?.passwordLoginEnabled !== false)
 	const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled === true)
 
-	const activeTab = ref<'password' | 'wechat'>('password')
 	const username = ref('')
 	const password = ref('')
 	const loading = ref(false)
@@ -180,18 +179,8 @@
 
 					<!-- 登录卡片(玻璃拟态) -->
 					<view v-else class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
-						<!-- 平台切换(仅一种登录方式时不显示切换条) -->
-						<view v-if="availableTabs.length > 1" class="mb-6 flex rounded-full bg-white/60 p-1">
-							<view v-for="tab in availableTabs" :key="tab"
-								class="flex-1 rounded-full py-1.5 text-center text-xs"
-								:class="activeTab === tab ? 'bg-primary text-gray-900' : 'text-gray-500'"
-								@click="activeTab = tab">
-								{{ tab === 'password' ? '账号密码' : '微信登录' }}
-							</view>
-						</view>
-
-						<!-- 账号密码登录表单 -->
-						<template v-if="activeTab === 'password' && passwordLoginEnabled">
+						<!-- 账号密码登录 -->
+						<template v-if="passwordLoginEnabled">
 							<wd-input v-model="username" custom-class="uh-login-input" prefix-icon="user" no-border
 								placeholder="请输入账号" :disabled="loading" />
 							<wd-input v-model="password" custom-class="uh-login-input mt-3" prefix-icon="lock"
@@ -207,13 +196,11 @@
 						<!-- 微信登录 -->
 						<template v-else-if="wechatLoginEnabled">
 							<!-- #ifdef MP-WEIXIN -->
-							<view class="box-border flex flex-col items-center justify-center py-12">
-								<button
-									class="uh-button-native w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-sm text-gray-900"
-									:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
-									{{ loading ? '登录中...' : '微信一键登录' }}
-								</button>
-							</view>
+							<button
+								class="mt-3 uh-button-native w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-sm text-gray-900"
+								:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
+								{{ loading ? '登录中...' : '微信一键登录' }}
+							</button>
 							<!-- #endif -->
 						</template>
 					</view>
@@ -236,7 +223,8 @@
 		</view>
 
 		<!-- 用户协议/隐私政策弹窗(底部弹出,tab 切换查看) -->
-		<uh-agreement-popup v-model="agreementPopupVisible" :show-agree-button="true" :contents="agreementContents" :initial-tab="agreementTab" />
+		<uh-agreement-popup v-model="agreementPopupVisible" :show-agree-button="true" :contents="agreementContents"
+			:initial-tab="agreementTab" />
 	</view>
 </template>
 

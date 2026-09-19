@@ -508,48 +508,57 @@
 					</view>
 
 					<!-- 详情弹窗 -->
-					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999" safe-area-inset-bottom
+					<uh-glass-popup v-model="detail.show" position="bottom" :z-index="999"
 						custom-class="rounded-xl !border">
-						<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
-							<view class="w-full flex flex-col gap-y-1">
-								<text class="text-md font-bold">站点详情</text>
-							</view>
-							<view
-								class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
-								@click="miniDetail.show = false">
-								<wd-icon name="close" size="28rpx" />
-							</view>
-						</view>
-						<scroll-view v-if="detail.data" :scroll-y="true" :show-scrollbar="false"
-							class="box-border max-h-[60vh] p-4">
-							<view class="flex">
-								<image class="uh-global-card-glass h-20 w-20 shrink-0 rounded-2xl"
-									:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
-								<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1.5">
-									<view class="text-md text-gray-900 font-bold">
-										{{ detail.data.spec.displayName }}
-									</view>
-									<view class="flex items-center gap-x-2">
-										<text
-											class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-500 text-gray-900">
-											{{ detail.data.spec.groupName }}
-										</text>
-									</view>
-									<view @click="handleCopyLink(detail.data)">
-										<text class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
-									</view>
+						<!-- 弹窗容器 -->
+						<view class="w-full box-border flex flex-col gap-y-3 p-3">
+							<!-- 顶部 -->
+							<view class="relative box-border w-full flex items-center justify-around">
+								<view class="w-full flex flex-col gap-y-1">
+									<text class="text-md font-bold">站点详情</text>
+								</view>
+								<view
+									class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
+									@click="miniDetail.show = false">
+									<wd-icon name="close" size="28rpx" />
 								</view>
 							</view>
-							<view class="poup-desc mt-4 text-xs text-gray-600 leading-5">
-								{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
+							<!-- 滚动区域 -->
+							<scroll-view v-if="detail.data" :scroll-y="true" :show-scrollbar="false"
+								class="box-border max-h-[60vh]">
+								<!-- 滚动内部容器 -->
+								<view class="w-full flex flex-col gap-y-3">
+									<view class="flex">
+										<image class="uh-global-card-glass h-20 w-20 shrink-0 rounded-2xl"
+											:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
+										<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1.5">
+											<view class="text-md text-gray-900 font-bold">
+												{{ detail.data.spec.displayName }}
+											</view>
+											<view class="flex items-center gap-x-2">
+												<text
+													class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-500 text-gray-900">
+													{{ detail.data.spec.groupName }}
+												</text>
+											</view>
+											<view @click="handleCopyLink(detail.data)">
+												<text class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
+											</view>
+										</view>
+									</view>
+									<view class="poup-desc text-xs text-gray-600 leading-5">
+										{{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
+									</view>
+								</view>
+							</scroll-view>
+							<!-- 底部固定操作区域 -->
+							<view class="box-border w-full flex items-center">
+								<uh-button class="flex-1"
+									custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+									@click="handleCopyLink(detail.data)">
+									提交申请
+								</uh-button>
 							</view>
-						</scroll-view>
-						<view class="box-border px-4 pt-3">
-							<uh-button class="flex-1"
-								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
-								@click="handleCopyLink(detail.data)">
-								提交申请
-							</uh-button>
 						</view>
 					</uh-glass-popup>
 
@@ -608,98 +617,107 @@
 				</view>
 
 				<!-- 小程序详情弹窗 -->
-				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom" safe-area-inset-bottom
+				<uh-glass-popup v-model="miniDetail.show" :z-index="999" position="bottom"
 					custom-class="!rounded-xl !border">
-					<view class="relative box-border w-full flex items-center justify-around px-4 pt-4">
-						<view class="w-full flex flex-col gap-y-1">
-							<text class="text-md font-bold">小程序详情</text>
-						</view>
-						<view
-							class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
-							@click="miniDetail.show = false">
-							<wd-icon name="close" size="28rpx" />
-						</view>
-					</view>
-					<scroll-view v-if="miniDetail.data" :scroll-y="true" :show-scrollbar="false"
-						class="box-border max-h-[60vh] p-4 w-full">
-						<view class="flex w-full items-center gap-x-3">
-							<!-- 太阳码大图(点击预览/长按保存) -->
-							<view class="code-area flex flex-col items-center">
-								<image class="h-16 w-16 rounded-full"
-									:src="checkImageUrl(miniDetail.data.spec?.miniProgramCode)" mode="aspectFill"
-									@click="handlePreviewMiniProgramCode(miniDetail.data)"
-									@longpress="handleSaveMiniProgramCode(miniDetail.data)" />
-							</view>
-
+					<!-- 弹窗容器 -->
+					<view class="w-full box-border flex flex-col gap-y-3 p-3">
+						<!-- 顶部 -->
+						<view class="relative box-border w-full flex items-center justify-around">
 							<view class="w-full flex flex-col gap-y-1">
-								<!-- 名称与分组 -->
-								<text class="text-lg text-gray-900 font-semibold">
-									{{ miniDetail.data.spec?.displayName }}
-								</text>
+								<text class="text-md font-bold">小程序详情</text>
+							</view>
+							<view
+								class="uh-global-card-glass shadow-none !bg-white/5 border absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
+								@click="miniDetail.show = false">
+								<wd-icon name="close" size="28rpx" />
+							</view>
+						</view>
+						<!-- 滚动区域 -->
+						<scroll-view v-if="miniDetail.data" :scroll-y="true" :show-scrollbar="false"
+							class="box-border max-h-[60vh]">
+							<!-- 滚动内部容器 -->
+							<view class="w-full flex flex-col gap-y-3">
+								<view class="flex w-full items-center gap-x-3">
+									<!-- 太阳码大图(点击预览/长按保存) -->
+									<view class="code-area flex flex-col items-center">
+										<image class="h-16 w-16 rounded-full"
+											:src="checkImageUrl(miniDetail.data.spec?.miniProgramCode)"
+											mode="aspectFill" @click="handlePreviewMiniProgramCode(miniDetail.data)"
+											@longpress="handleSaveMiniProgramCode(miniDetail.data)" />
+									</view>
 
-								<!-- 描述 -->
-								<view v-if="miniDetail.data.spec?.description"
-									class="mini-desc text-2xs text-gray-600 leading-[1.6]">
-									{{ miniDetail.data.spec.description }}
+									<view class="w-full flex flex-col gap-y-1">
+										<!-- 名称与分组 -->
+										<text class="text-lg text-gray-900 font-semibold">
+											{{ miniDetail.data.spec?.displayName }}
+										</text>
+
+										<!-- 描述 -->
+										<view v-if="miniDetail.data.spec?.description"
+											class="mini-desc text-2xs text-gray-600 leading-[1.6]">
+											{{ miniDetail.data.spec.description }}
+										</view>
+									</view>
+
+								</view>
+								<view class="code-tip flex items-center">
+									<text class="text-xs text-gray-400">提示：点击预览，长按保存太阳码</text>
+								</view>
+
+								<!-- 小程序地址 -->
+								<view v-if="miniDetail.data.spec?.link"
+									class="mini-link flex items-center justify-between rounded-xl bg-secondary p-4">
+									<view
+										class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
+										{{ miniDetail.data.spec.link }}
+									</view>
+									<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold"
+										@click="handleCopyMiniProgramCode(miniDetail.data)">
+										复制
+									</text>
+								</view>
+
+								<!-- 预览图轮播 -->
+								<view v-if="miniDetail.data.spec?.screenshots?.length" class="mini-screenshots">
+									<swiper class="screenshots-swiper h-[360rpx] w-full" indicator-dots circular>
+										<swiper-item v-for="(img, idx) in miniDetail.data.spec.screenshots" :key="idx">
+											<image class="screenshot-img h-full w-full rounded-xl"
+												:src="checkImageUrl(img)" mode="aspectFill"
+												@click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: img } } as IMiniProgramLink)" />
+										</swiper-item>
+									</swiper>
+								</view>
+
+								<!-- 作者信息 -->
+								<view
+									v-if="miniDetail.data.spec?.authorName || miniDetail.data.spec?.avatar || miniDetail.data.spec?.website"
+									class="uh-global-card-glass border shadow-none flex items-center rounded-xl p-4">
+									<image v-if="miniDetail.data.spec?.avatar"
+										class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
+										:src="checkAvatarUrl(miniDetail.data.spec.avatar)" mode="aspectFill" />
+									<view class="author-detail ml-4 flex flex-1 flex-col">
+										<text v-if="miniDetail.data.spec?.authorName"
+											class="author-name text-[28rpx] text-gray-900 font-medium">
+											{{ miniDetail.data.spec.authorName }}
+										</text>
+										<text v-if="miniDetail.data.spec?.website"
+											class="author-website mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
+											@click="handleCopyMiniProgramCode(miniDetail.data)">
+											网站：{{ miniDetail.data.spec.website }}
+										</text>
+									</view>
 								</view>
 							</view>
-
+						</scroll-view>
+						<!-- #ifdef MP-WEIXIN -->
+						<!-- 底部固定操作区域 -->
+						<view class="box-border w-full flex items-center">
+							<uh-button class="uh-global-card-glass border !py-2 text-xs"
+								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
+								@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
 						</view>
-						<view class="code-tip mt-3 flex items-center">
-							<text class="text-xs text-gray-400">提示：点击预览，长按保存太阳码</text>
-						</view>
-
-						<!-- 小程序地址 -->
-						<view v-if="miniDetail.data.spec?.link"
-							class="mini-link mt-4 flex items-center justify-between rounded-xl bg-secondary p-4">
-							<view
-								class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]">
-								{{ miniDetail.data.spec.link }}
-							</view>
-							<text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold"
-								@click="handleCopyMiniProgramCode(miniDetail.data)">
-								复制
-							</text>
-						</view>
-
-						<!-- 预览图轮播 -->
-						<view v-if="miniDetail.data.spec?.screenshots?.length" class="mini-screenshots mt-4">
-							<swiper class="screenshots-swiper h-[360rpx] w-full" indicator-dots circular>
-								<swiper-item v-for="(img, idx) in miniDetail.data.spec.screenshots" :key="idx">
-									<image class="screenshot-img h-full w-full rounded-xl" :src="checkImageUrl(img)"
-										mode="aspectFill"
-										@click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: img } } as IMiniProgramLink)" />
-								</swiper-item>
-							</swiper>
-						</view>
-
-						<!-- 作者信息 -->
-						<view
-							v-if="miniDetail.data.spec?.authorName || miniDetail.data.spec?.avatar || miniDetail.data.spec?.website"
-							class="mt-3 uh-global-card-glass border shadow-none flex items-center rounded-xl p-4">
-							<image v-if="miniDetail.data.spec?.avatar"
-								class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
-								:src="checkAvatarUrl(miniDetail.data.spec.avatar)" mode="aspectFill" />
-							<view class="author-detail ml-4 flex flex-1 flex-col">
-								<text v-if="miniDetail.data.spec?.authorName"
-									class="author-name text-[28rpx] text-gray-900 font-medium">
-									{{ miniDetail.data.spec.authorName }}
-								</text>
-								<text v-if="miniDetail.data.spec?.website"
-									class="author-website mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
-									@click="handleCopyMiniProgramCode(miniDetail.data)">
-									网站：{{ miniDetail.data.spec.website }}
-								</text>
-							</view>
-						</view>
-					</scroll-view>
-					<!-- #ifdef MP-WEIXIN -->
-					<view class="box-border w-full px-4">
-						<uh-button class="uh-global-card-glass border !py-2 text-xs"
-							custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
-							@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
+						<!-- #endif -->
 					</view>
-					<!-- #endif -->
 				</uh-glass-popup>
 
 				<!-- 底部悬浮操作栏(通用组件)；提交申请入口按 submissionEnabled 显隐 -->

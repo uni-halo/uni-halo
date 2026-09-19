@@ -496,8 +496,10 @@ onShow(() => {
       v-model="passwordSheet" :hide-when-close="false" position="bottom" :z-index="100"
       custom-class="rounded-xl"
     >
-      <view class="box-border px-4 py-4">
-        <view class="mb-3 flex items-center justify-between">
+      <!-- 弹窗容器 -->
+      <view class="w-full box-border flex flex-col gap-y-3 p-3">
+        <!-- 顶部 -->
+        <view class="flex items-center justify-between">
           <text class="text-md font-bold">修改密码</text>
         </view>
         <view class="flex flex-col gap-y-3">
@@ -517,16 +519,17 @@ onShow(() => {
             当前账号未设置过密码（如微信自动建号），可直接设置新密码
           </text>
         </view>
-        <view class="mt-4 w-full flex items-center justify-center gap-x-3">
+        <!-- 底部固定操作区域 -->
+        <view class="box-border w-full flex items-center justify-center gap-x-3">
           <uh-button
-            class="“flex-1"
+            class="flex-1"
             custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
             @click="passwordSheet = false"
           >
             取消
           </uh-button>
           <uh-button
-            class="“flex-1"
+            class="flex-1"
             custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
             :class="passwordSaving ? 'opacity-60' : ''" @action-click="savePassword"
           >

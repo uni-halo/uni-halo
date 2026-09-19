@@ -11,7 +11,7 @@ import { t } from '@/locale'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useDialog } from '@wot-ui/ui'
-import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import type { IBlogStats } from '@/api/types/halo'
 import { storeToRefs } from 'pinia'
 
@@ -58,10 +58,6 @@ const bloggerInfo = computed(() => {
 const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.aboutConfig as
   | { bgImageUrl?: string, waveImageUrl?: string, commonFeaturesMode?: 'grid' | 'list' }
   | undefined)
-
-const calcProfileStyle = computed(() => ({
-  backgroundImage: `url(${checkImageUrl(pageConfig.value?.bgImageUrl)})`,
-}))
 
 const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
 
@@ -128,8 +124,10 @@ const configuredFeatures = computed(() => {
 })
 
 const navList = ref<INavItem[]>([])
-/** 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页 → 常用功能显示方式」配置;缺省网格,与旧版行为一致;
- * 切为列表时常用/其他功能均为分组列表,并恢复站点统计卡片展示) */
+/**
+ * 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页 → 常用功能显示方式」配置;缺省网格,与旧版行为一致;
+ * 切为列表时常用/其他功能均为分组列表,并恢复站点统计卡片展示)
+ */
 const featureMode = computed<'grid' | 'list'>(() =>
   pageConfig.value?.commonFeaturesMode === 'list' ? 'list' : 'grid',
 )
@@ -266,7 +264,13 @@ onPageScroll((option: Page.PageScrollOption) => {
     <uh-mine-navbar :scroll-y="scrollY" :default-title="pageTitle" />
 
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
-    <view class="relative h-96 w-full bg-cover bg-no-repeat" :style="[calcProfileStyle]">
+    <view class="relative h-96 w-full">
+      <image
+        v-if="pageConfig?.bgImageUrl"
+        :src="checkImageUrl(pageConfig?.bgImageUrl)"
+        class="absolute left-0 top-0 z-0 h-full w-full"
+        mode="aspectFill"
+      />
       <view class="relative z-6 h-full flex flex-col items-center justify-center">
         <image
           class="uh-global-card-glass h-22 w-22 border-3 rounded-full" :src="bloggerInfo.avatar"
@@ -283,7 +287,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       </view>
 
       <!-- 遮罩 -->
-      <view class="absolute left-0 top-0 z-0 h-full w-full bg-white/5" style="backdrop-filter:blur(4rpx)" />
+      <view class="absolute left-0 top-0 z-1 h-full w-full bg-white/5" style="backdrop-filter:blur(4rpx)" />
       <image
         v-if="calcWaveUrl" :src="calcWaveUrl" mode="scaleToFill"
         class="gif-wave absolute bottom-0 left-0 z-90 h-18 w-full" style="mix-blend-mode: screen;"
@@ -399,7 +403,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 登录入口(任一登录方式开启才显示) -->
     <view v-if="loginEntryVisible" class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
-      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full py-2 ${hasLogin?'bg-red-400 text-white':''}`">
+      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full py-2 ${hasLogin ? 'bg-red-400 text-white' : ''}`">
         {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>
     </view>

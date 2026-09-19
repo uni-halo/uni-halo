@@ -137,76 +137,83 @@ defineExpose({ openEdit })
 
 <template>
   <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
-    <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
-      <view class="w-full flex flex-col gap-y-1">
-        <text class="text-md font-bold">{{ formMode === 'create' ? '新增故事' : '编辑故事' }}</text>
-        <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一段属于你们的回忆' : '修改故事信息' }}</text>
-      </view>
-      <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="28rpx" class="text-gray-500" />
-      </view>
-    </view>
-    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] p-4 pt-0">
-      <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">标题 *</text>
-        <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入故事标题">
-      </view>
-      <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">日期</text>
-        <view
-          class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-3xs shadow-none"
-          @click="openDatePicker"
-        >
-          <text :class="form.date ? 'text-gray-900' : 'text-gray-400'">{{ form.date || '如 2024-06-01(选填)' }}</text>
-          <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
+    <!-- 弹窗容器 -->
+    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+      <!-- 顶部 -->
+      <view class="relative box-border w-full flex items-center justify-around">
+        <view class="w-full flex flex-col gap-y-1">
+          <text class="text-md font-bold">{{ formMode === 'create' ? '新增故事' : '编辑故事' }}</text>
+          <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一段属于你们的回忆' : '修改故事信息' }}</text>
+        </view>
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+          <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
-      <wd-datetime-picker v-model="dateTs" v-model:visible="dateShow" :z-index="999" type="date" title="选择日期" root-portal @confirm="handleDateConfirm" />
-      <view class="mb-5 flex items-center">
-        <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">地点</text>
-        <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入地点(选填)">
-      </view>
-      <view class="mb-5">
-        <text class="mb-2 block text-3xs text-gray-600">故事内容</text>
-        <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">
-          <uh-rich-editor
-            ref="editorRef"
-            toolbar
-            placeholder="记录这段故事…"
-          />
-        </view>
-      </view>
-      <view class="mb-5">
-        <text class="mb-2 block text-3xs text-gray-600">图片</text>
-        <view class="grid grid-cols-4 gap-2">
-          <view v-for="img in imageList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
-            <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
-            <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeImage(img.tempPath)">
-              <wd-icon name="close" size="22rpx" />
-            </view>
-            <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
-              {{ img.progress }}%
-            </view>
-            <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white" @click="imageRetry(img.tempPath)">
-              <text>失败</text>
-              <text>点击重试</text>
-            </view>
-            <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
-              <wd-icon name="check" size="22rpx" />
+      <!-- 滚动区域 -->
+      <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
+        <!-- 滚动内部容器 -->
+        <view class="w-full flex flex-col gap-y-3">
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">标题 *</text>
+            <input v-model="form.title" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入故事标题">
+          </view>
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">日期</text>
+            <view
+              class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-3xs shadow-none"
+              @click="openDatePicker"
+            >
+              <text :class="form.date ? 'text-gray-900' : 'text-gray-400'">{{ form.date || '如 2024-06-01(选填)' }}</text>
+              <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
             </view>
           </view>
-          <view v-if="imageList.length < 9" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseImages">
-            <wd-icon name="camera" size="36rpx" />
+          <wd-datetime-picker v-model="dateTs" v-model:visible="dateShow" :z-index="999" type="date" title="选择日期" root-portal @confirm="handleDateConfirm" />
+          <view class="flex items-center">
+            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">地点</text>
+            <input v-model="form.location" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入地点(选填)">
+          </view>
+          <view>
+            <text class="mb-2 block text-3xs text-gray-600">故事内容</text>
+            <view class="uh-global-card-glass box-border w-full rounded-xl p-2 shadow-none">
+              <uh-rich-editor
+                ref="editorRef"
+                toolbar
+                placeholder="记录这段故事…"
+              />
+            </view>
+          </view>
+          <view>
+            <text class="mb-2 block text-3xs text-gray-600">图片</text>
+            <view class="grid grid-cols-4 gap-2">
+              <view v-for="img in imageList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
+                <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
+                <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeImage(img.tempPath)">
+                  <wd-icon name="close" size="22rpx" />
+                </view>
+                <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
+                  {{ img.progress }}%
+                </view>
+                <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white" @click="imageRetry(img.tempPath)">
+                  <text>失败</text>
+                  <text>点击重试</text>
+                </view>
+                <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+                  <wd-icon name="check" size="22rpx" />
+                </view>
+              </view>
+              <view v-if="imageList.length < 9" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="chooseImages">
+                <wd-icon name="camera" size="36rpx" />
+              </view>
+            </view>
           </view>
         </view>
+      </scroll-view>
+      <!-- 底部固定操作区域 -->
+      <view class="box-border w-full flex items-center">
+        <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
+          保存
+        </uh-button>
       </view>
-    </scroll-view>
-
-    <!-- 底部固定操作栏（滚动区外） -->
-    <view class="border-t border-black/5 px-4 pt-3">
-      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
-        保存
-      </uh-button>
     </view>
   </uh-glass-popup>
 </template>

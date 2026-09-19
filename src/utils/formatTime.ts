@@ -15,7 +15,7 @@ export function formatTime(data: FormatTimeInput): string {
   let dateTime = new Date(data as string | number | Date)
   let fmt = 'yyyy-MM-dd HH:mm:ss'
 
-  // 对象形式传参:uniapp filter 不支持多参数,用对象传 { d, f }
+  // 对象形式传参
   if (dateTime.toString() === 'Invalid Date') {
     if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
       const { d, f } = data
@@ -26,7 +26,7 @@ export function formatTime(data: FormatTimeInput): string {
       dateTime = new Date(d)
       if (dateTime.toString() === 'Invalid Date') {
         console.error('日期参数不正确，传入的参数列表：', data)
-        return '111'
+        return ''
       }
       if (Object.prototype.hasOwnProperty.call(data, 'f')) {
         fmt = f || fmt

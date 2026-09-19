@@ -193,7 +193,7 @@ defineExpose({ setHtml, getHtml, insertImage, clear })
       </view>
     </view>
     <editor
-      :id="editorId" class="w-full p-2 text-3xs text-gray-900 leading-5" :class="props.customClass"
+      :id="editorId" class="w-full p-3 text-3xs text-gray-900 leading-5" :class="props.customClass"
       :placeholder="props.placeholder" :read-only="props.readOnly" @ready="handleReady" @input="handleInput"
     />
   </view>

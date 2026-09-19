@@ -205,8 +205,8 @@ onPageScroll((option: Page.PageScrollOption) => {
           class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-love shadow-none"
           @click="openCreate"
         >
-          <wd-icon name="plus" size="32rpx" />
-          <text class="shrink-0 text-2xs font-semibold">新增故事</text>
+          <wd-icon name="plus" size="28rpx" />
+          <text class="shrink-0 text-3xs font-semibold">新增故事</text>
         </view>
       </view>
     </uh-permission>

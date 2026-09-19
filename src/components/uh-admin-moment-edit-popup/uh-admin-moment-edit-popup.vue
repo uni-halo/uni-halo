@@ -186,58 +186,65 @@ defineExpose({ openEdit })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="999" safe-area-inset-bottom position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
-    <view class="relative mb-4 box-border w-full flex items-center justify-around px-4 pt-4">
-      <view class="w-full flex flex-col gap-y-1">
-        <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>
-        <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录此刻的想法与生活' : '修改这条瞬间' }}</text>
-      </view>
-      <view class="uh-global-card-glass absolute right-4 top-4 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
-        <wd-icon name="close" size="28rpx" class="text-gray-500" />
-      </view>
-    </view>
-    <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh] px-4 pt-0">
-      <view class="uh-global-card-glass mb-4 overflow-hidden rounded-xl shadow-none">
-        <uh-rich-editor
-          ref="editorRef"
-          toolbar
-          placeholder="说点什么吧…"
-          @input="handleEditorInput"
-        />
-      </view>
-
-      <!-- 图片九宫格 -->
-      <view class="mb-3">
-        <text class="mb-2 block text-sm text-gray-500">图片</text>
-        <view class="grid grid-cols-4 gap-2">
-          <view v-for="img in images" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
-            <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
-            <view v-if="img.status !== 'uploading'" class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="remove(img.tempPath)">
-              <wd-icon name="close" size="22rpx" />
-            </view>
-            <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
-              {{ img.progress }}%
-            </view>
-            <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white" @click="retry(img.tempPath)">
-              <text>失败</text>
-              <text>点击重试</text>
-            </view>
-            <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
-              <wd-icon name="check" size="22rpx" />
-            </view>
-          </view>
-          <view v-if="images.length < 9" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="choose">
-            <wd-icon name="camera" size="36rpx" />
-          </view>
+  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+    <!-- 弹窗容器 -->
+    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+      <!-- 顶部 -->
+      <view class="relative box-border w-full flex items-center justify-around">
+        <view class="w-full flex flex-col gap-y-1">
+          <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>
+          <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录此刻的想法与生活' : '修改这条瞬间' }}</text>
+        </view>
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+          <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
-    </scroll-view>
+      <!-- 滚动区域 -->
+      <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
+        <!-- 滚动内部容器 -->
+        <view class="w-full flex flex-col gap-y-3">
+          <view class="uh-global-card-glass overflow-hidden rounded-xl shadow-none">
+            <uh-rich-editor
+              ref="editorRef"
+              toolbar
+              placeholder="说点什么吧…"
+              @input="handleEditorInput"
+            />
+          </view>
 
-    <!-- 底部固定操作栏（滚动区外） -->
-    <view class="box-border px-4 pt-2">
-      <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
-        {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
-      </uh-button>
+          <!-- 图片九宫格 -->
+          <view>
+            <text class="mb-2 block text-sm text-gray-500">图片</text>
+            <view class="grid grid-cols-4 gap-2">
+              <view v-for="img in images" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
+                <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
+                <view v-if="img.status !== 'uploading'" class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="remove(img.tempPath)">
+                  <wd-icon name="close" size="22rpx" />
+                </view>
+                <view v-if="img.status === 'uploading'" class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
+                  {{ img.progress }}%
+                </view>
+                <view v-else-if="img.status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white" @click="retry(img.tempPath)">
+                  <text>失败</text>
+                  <text>点击重试</text>
+                </view>
+                <view v-else-if="img.status === 'success'" class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+                  <wd-icon name="check" size="22rpx" />
+                </view>
+              </view>
+              <view v-if="images.length < 9" class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400" @click="choose">
+                <wd-icon name="camera" size="36rpx" />
+              </view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <!-- 底部固定操作区域 -->
+      <view class="box-border w-full flex items-center">
+        <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
+          {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
+        </uh-button>
+      </view>
     </view>
   </uh-glass-popup>
 </template>

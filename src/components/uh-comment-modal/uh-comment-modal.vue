@@ -326,7 +326,9 @@
 <template>
 	<uh-glass-popup v-model="isShow" position="bottom" custom-class="!border rounded-2xl" :z-index="100"
 		@close="handleOnChange(false)">
-		<view class="box-border p-4">
+		<!-- 弹窗容器 -->
+		<view class="box-border w-full flex flex-col gap-y-3 p-3">
+			<!-- 顶部 -->
 			<view
 				class="relative w-full flex items-center justify-around box-border px-12 text-md font-bold text-center">
 				<text>{{ calcTitle }} </text>
@@ -337,34 +339,37 @@
 				</view>
 			</view>
 
-			<scroll-view :scroll-y="true" class="form mt-6">
-				<view class="form-item mb-4 flex items-center">
+			<!-- 滚动区域 -->
+			<scroll-view :scroll-y="true" class="form">
+				<!-- 滚动内部容器 -->
+				<view class="w-full flex flex-col gap-y-3">
+					<view class="form-item flex items-center">
 					<textarea v-model="form.content"
 						class="h-22 uh-global-card-glass shadow-none border box-border w-full rounded-xl px-3 py-2 text-xs"
 						:placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200" />
 				</view>
 
 				<!-- 登录态:评论者由服务端依据 token 解析 -->
-				<view v-if="isLoggedIn" class="form-item mb-4 text-xs text-gray-400">
+				<view v-if="isLoggedIn" class="form-item text-xs text-gray-400">
 					将以当前登录账号「{{ userStore.userInfo.nickname || userStore.userInfo.username }}」的身份发表
 				</view>
 
 				<template v-else>
-					<view class="form-item mb-4 flex items-center">
+					<view class="form-item flex items-center">
 						<text class="label w-16 shrink-0 text-xs text-gray-500">我的昵称</text>
 						<input v-model="form.author"
 							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
 							placeholder="请输入您的昵称...">
 					</view>
 
-					<view class="form-item mb-4 flex items-center">
+					<view class="form-item flex items-center">
 						<text class="label w-16 shrink-0 text-sm text-gray-500">我的邮箱</text>
 						<input v-model="form.email"
 							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
 							placeholder="请输入您的邮箱...">
 					</view>
 
-					<view class="form-item mb-4 flex items-center">
+					<view class="form-item flex items-center">
 						<text class="label w-16 shrink-0 text-sm text-gray-500">我的网站</text>
 						<input v-model="form.authorUrl"
 							class="uh-global-card-glass shadow-none border h-9 flex-1 rounded-xl px-3 text-xs"
@@ -374,7 +379,7 @@
 
 				<!-- 匿名评论验证码 -->
 				<view v-if="!isLoggedIn && config?.security?.captcha?.anonymousCommentCaptcha"
-					class="form-item mb-4 flex items-center">
+					class="form-item flex items-center">
 					<text class="w-16 shrink-0 text-sm text-gray-500">验证码</text>
 					<view class="flex flex-1 items-center gap-3">
 						<input v-model="form.captchaCode"
@@ -391,8 +396,10 @@
 						</view>
 					</view>
 				</view>
+				</view>
 			</scroll-view>
-			<view class="box-border pt-2">
+			<!-- 底部固定操作区域 -->
+			<view class="box-border w-full flex items-center">
 				<uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
 					@click="handleHandle">
 					提交评论
