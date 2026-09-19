@@ -42,8 +42,8 @@ page {
 	box-shadow: inset 0 1rpx 0 rgb(255 255 255 / 75%), 0 8rpx 32rpx rgb(90 105 200 / 7%);
 }
 
-.uh-shadow-sm{
-	box-shadow: 0 0 24rpx rgba(0,0,0,0.1);
+.uh-shadow-sm {
+	box-shadow: 0 0 24rpx rgba(0, 0, 0, 0.1);
 }
 
 .uh-global-love-page {
@@ -58,6 +58,14 @@ page {
 		rgb(7 179 155 / 10%) 86%,
 		rgb(109 186 130 / 10%)
 	);
+}
+
+.uh-button-native {
+	outline: none !important;
+
+	&::after {
+		border: none !important;
+	}
 }
 /*
 border-t-1

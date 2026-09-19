@@ -19,7 +19,7 @@ const balckList = [
   'pages/maintenance/maintenance',
   'pages-blog/setting/setting',
   'pages-blog/love/love',
-  'pages/tabbar/mine/mine',
+  'pages/tabbar/blogger/blogger',
   'pages/auth/login',
 ]
 const pages = getCurrentPages()

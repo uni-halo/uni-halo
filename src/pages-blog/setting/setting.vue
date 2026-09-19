@@ -216,7 +216,7 @@
 		</view>
 
 		<!-- 枚举选择弹层-->
-		<uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" position="bottom" custom-class="rounded-xl">
+		<uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" :z-index="999" position="bottom" custom-class="rounded-xl">
 			<view class="box-border px-4 py-4">
 				<!-- 标题 -->
 				<view class="mb-3 flex items-center justify-between">

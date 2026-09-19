@@ -221,8 +221,8 @@
 			:checking="checking" @on-refresh="checkPluginAvailable" />
 
 		<template v-else>
-			<wd-sticky v-if="category.list.length!==0" class="w-full" :offset-top="offsetTop">
-				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+			<wd-sticky v-if="category.list.length!==0" :offset-top="offsetTop">
+				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pt-3">
 					<view v-for="(cate, index) in category.list" :key="cate.spec.displayName"
 						class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
 						:class="{ 'bg-primary text-gray-900 font-semibold': index === category.activeIndex }"

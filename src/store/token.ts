@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, getWxCode, refreshToken as _refreshToken } from '@/api/auth';
+import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, getWxCode, refreshToken as _refreshToken, registerByPassword as _registerByPassword, registerByWechat as _registerByWechat } from '@/api/auth';
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login';
 import { useUserStore } from './user';
 import { getCache } from '@/utils/storage';
-import type { ILoginForm } from '@/api/auth';
+import type { ILoginForm, IRegisterForm } from '@/api/auth';
 import type { IAuthLoginRes, ISingleTokenRes } from '@/api/types/login';
 import type { ILoginResult } from '@/api/types/uni-halo';
 
@@ -185,14 +185,73 @@ export const useTokenStore = defineStore(
 				await _postLogin(toSingleToken(result), result);
 				uni.showToast({
 					title: '登录成功',
-					icon: 'success'
+					icon: 'none'
 				});
 				return result;
 			} catch (error) {
 				console.error('微信登录失败:', error);
 				uni.showToast({
 					title: '微信登录失败，请重试',
-					icon: 'error'
+					icon: 'none'
+				});
+				throw error;
+			} finally {
+				updateNowTime();
+			}
+		};
+
+		/**
+		 * 注册并登录(账号密码,对接插件端 POST /auth/register)
+		 * 插件端中转 Halo 注册,成功直接返回 token + 用户信息,实现注册即登录
+		 * @param form 注册表单
+		 * @returns 注册结果(插件端 LoginResult)
+		 */
+		const register = async (form: IRegisterForm) => {
+			try {
+				const res = await _registerByPassword(form);
+				const result = res.data as ILoginResult;
+				await _postLogin(toSingleToken(result), result);
+				uni.showToast({
+					title: '注册成功',
+					icon: 'none'
+				});
+				return result;
+			} catch (error) {
+				console.error('注册失败:', error);
+				uni.showToast({
+					title: '注册失败，请重试',
+					icon: 'none'
+				});
+				throw error;
+			} finally {
+				updateNowTime();
+			}
+		};
+
+		/**
+		 * 微信注册并登录(对接插件端 POST /auth/register/wechat,仅微信小程序可用)
+		 * 与微信登录同源,用户不存在时服务端自动创建
+		 * @returns 注册结果(插件端 LoginResult)
+		 */
+		const wxRegister = async () => {
+			try {
+				// 获取微信小程序登录的code
+				const loginRes = await getWxCode();
+				const code = loginRes.code;
+				console.log('微信注册-code: ', code);
+				const res = await _registerByWechat(code);
+				const result = res.data as ILoginResult;
+				await _postLogin(toSingleToken(result), result);
+				uni.showToast({
+					title: '注册成功',
+					icon: 'none'
+				});
+				return result;
+			} catch (error) {
+				console.error('微信注册失败:', error);
+				uni.showToast({
+					title: '微信注册失败，请重试',
+					icon: 'none'
 				});
 				throw error;
 			} finally {
@@ -317,6 +376,8 @@ export const useTokenStore = defineStore(
 			// 核心API方法
 			login,
 			wxLogin,
+			register,
+			wxRegister,
 			logout,
 
 			// 认证状态判断（最常用的）

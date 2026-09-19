@@ -137,8 +137,11 @@
 
 	/* ---------------- 数据加载 ---------------- */
 	async function handleGetData() {
+		if (!loadMoreStatus.value.active) {
+			handleToTopPage(0)
+		}
 		if (calcAuditModeEnabled.value) {
-			// 审核模式:按 audit-data moments 顺序展示,一次拉取不分页
+			// 审核模式
 			resetLoadMoreStatus()
 			const auditMomentNames = appConfigStore.auditNamesOf('moments')
 			try {
@@ -188,7 +191,6 @@
 				await sleep(600)
 				updateLoadingStatus(dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
 			}
-
 			updateLoadMoreStatus({
 				active: false,
 				status: res.data.hasNext ? 'loadMore' : 'noMore',
@@ -270,8 +272,7 @@
 	}
 
 	function handleToMomentDetail(moment : IMoment) {
-		if (calcAuditModeEnabled.value)
-			return
+		if (calcAuditModeEnabled.value) { return }
 		uni.navigateTo({
 			url: `/pages-blog/moment-detail/moment-detail?name=${moment.metadata.name}`,
 			animationType: 'slide-in-right',
@@ -353,10 +354,7 @@
 	function handleToTopPage(duration = 500) {
 		uni.pageScrollTo({
 			scrollTop: 0,
-			duration,
-			fail: (err) => {
-				console.error('回顶失败', err)
-			},
+			duration
 		})
 	}
 
@@ -414,20 +412,17 @@
 
 <template>
 	<view class="box-border min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" >
+		<uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900">
 			<template #left>
 				<view class="flex items-center gap-x-1">
 					<uh-button
-						custom-class="box-border uh-global-card-glass border text-gray-900 !p-1 text-xs !rounded-md"
-						@click="handleOpenYearPicker"
-					>
+						custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 text-xs !rounded-md"
+						@click="handleOpenYearPicker">
 						{{ selectedMonth.split('-')[0] }}
 					</uh-button>
-					<!-- 回到本年本月 -->
 					<view
-						class="box-border text-xs uh-global-card-glass border bg-primary rounded-md p-1 text-gray-900"
-						@click="handleBackToThisMonth"
-					>
+						class="box-border text-xs uh-global-card-glass border bg-primary rounded-md px-1.5 py-1 text-gray-900"
+						@click="handleBackToThisMonth">
 						本月
 					</view>
 				</view>
@@ -438,19 +433,16 @@
 			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
-			<!-- 吸顶月历 -->
 			<wd-sticky :offset-top="offsetTop">
-				<view class="box-border w-screen px-3 pt-1">
-					<uh-month-calendar v-model="selectedMonth" :show-year="true"
-						@change="handleMonthCalendarChange" />
+				<view class="box-border w-screen px-3 pt-2">
+					<uh-month-calendar v-model="selectedMonth" :show-year="true" @change="handleMonthCalendarChange" />
 				</view>
 			</wd-sticky>
 
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-				min-height="75vh" @refresh="handleGetData" />
+				min-height="60vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-3 px-3 mt-5">
-				<!-- 瞬间卡片 -->
 				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
 					<view v-if="false" class="shrink-0 flex flex-col gap-y-2 w-13">
 						<view class="shrink-0 flex flex-col items-center font-bold">
@@ -472,7 +464,7 @@
 			</view>
 		</template>
 
-		<!-- 发布瞬间悬浮按钮（仅 author/admin，参考瞬间管理页胶囊设计，悬浮于自定义 tabbar 上方） -->
+		<!-- 发布瞬间 -->
 		<view v-if="canPublish && uniHaloPluginAvailable && loadingStatus !== DataLoadingStatusEnum.Loading"
 			class="uh-translate-x-center fixed bottom-78px left-1/2 z-50 flex items-center justify-center pb-safe">
 			<view
@@ -493,14 +485,14 @@
 	<uh-admin-moment-edit-popup :show="publishPopupVisible" @on-close="handlePublishPopupClose" />
 
 	<!-- 年份选择器 -->
-	<uh-glass-popup v-model="yearSheet.show" :z-index="999" :hide-when-close="true" position="bottom" custom-class="rounded-xl">
+	<uh-glass-popup v-model="yearSheet.show" :z-index="999" :hide-when-close="true" position="bottom"
+		custom-class="rounded-xl">
 		<view class="box-border px-4 py-4">
 			<view class="mb-3 flex items-center justify-between">
 				<text class="text-md font-bold">选择年份</text>
 				<view
 					class="uh-global-card-glass shadow-none !bg-white/5 border flex h-6 w-6 items-center justify-center rounded-lg text-gray-500"
-					@click="handleYearPickerCancel"
-				>
+					@click="handleYearPickerCancel">
 					<wd-icon name="close" size="28rpx" />
 				</view>
 			</view>
@@ -532,6 +524,7 @@
 			border-radius: 16rpx !important;
 		}
 	}
+
 	.uh-translate-x-center {
 		transform: translateX(-50%);
 	}

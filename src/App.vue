@@ -5,6 +5,7 @@
 	import { tabbarStore } from '@/tabbar/store'
 	import { permission } from '@/router/permission'
 	import { useAppConfigStore } from '@/store/appConfig'
+	import { checkUpdates } from '@/utils/checkUpdate'
 
 	const { proxy } = (getCurrentInstance() || {}) as any
 	const router = proxy?.$router
@@ -12,10 +13,13 @@
 	router && permission.install(router)
 
 	onLaunch((options) => {
+		console.log('App.vue onLaunch', options)
+		
 		// 初始化获取配置
 	    useAppConfigStore().refreshStatic()
 		
-		console.log('App.vue onLaunch', options)
+		// 检查更新
+		checkUpdates();
 	})
 	onShow((options) => {
 		console.log('App.vue onShow', options)
@@ -50,7 +54,3 @@
 	})
 	// #endif
  </script>
-
- <style lang="scss">
-
- </style>

@@ -12,6 +12,7 @@
 		container : string
 		cover : string
 		contentWrapper : string
+		title : string
 		footer : string
 		authorGroup : string
 		avatar : string
@@ -67,6 +68,7 @@
 			container: 'flex flex-col gap-y-2',
 			cover: 'order-2',
 			contentWrapper: 'w-full',
+			title: '',
 			footer: 'order-first flex items-center mb-1',
 			authorGroup: 'items-center gap-x-2',
 			avatar: `!h-9 !w-9 ${socialAvatarClass.value}`,
@@ -81,6 +83,7 @@
 			container: 'flex gap-x-3 !p-3',
 			cover: 'shrink-0 !w-36 !h-24',
 			contentWrapper: 'w-0 flex-1 justify-between',
+			title: '',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
 			avatar: socialMiniAvatarClass.value,
@@ -95,6 +98,7 @@
 			container: 'flex gap-x-3 !p-3',
 			cover: 'order-2 shrink-0 !w-36 !h-24',
 			contentWrapper: 'order-1 w-0 flex-1 justify-between',
+			title: '',
 			footer: 'flex items-center justify-between',
 			authorGroup: 'items-center gap-x-1',
 			avatar: socialMiniAvatarClass.value,
@@ -173,10 +177,10 @@
 		</view>
 
 		<view class="flex flex-col gap-y-3 text-sm" :class="cardLayout.contentWrapper">
-			<view class="truncate font-bold text-3xs" :class="cardLayout.title">
+			<view class="truncate font-bold text-sm" :class="cardLayout.title">
 				{{ article.spec.title }}
 			</view>
-			<view class="text-xs leading-5"
+			<view class="text-3xs leading-5"
 				:class="isGrid ? 'line-clamp-1 text-gray-600' : 'line-clamp-2 text-gray-600'">
 				{{ article.status?.excerpt }}
 			</view>

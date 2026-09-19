@@ -92,7 +92,7 @@ const alovaInstance = createAlova({
 
       // 保存评论验证码 cookie
       saveCommentCookies(method.url, header as Record<string, string> | undefined)
- 
+
       if (statusCode !== ResultEnum.Success200) {
         const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
         throw new UniHaloError({

@@ -98,6 +98,91 @@ export function logout() {
   )
 }
 
+/* ---------- 注册 ---------- */
+
+/** 注册表单 */
+export interface IRegisterForm {
+  username: string
+  /** 显示名称(昵称) */
+  displayName: string
+  password: string
+  /** 确认密码(插件端校验两次输入一致) */
+  confirmPassword: string
+  /** 邮箱(站点开启注册邮箱验证时必填) */
+  email?: string
+  /** 邮箱验证码(站点开启注册邮箱验证时必填) */
+  emailCode?: string
+}
+
+/**
+ * 账号密码注册并登录(公开接口)
+ * 插件端中转 Halo 注册,成功直接返回 LoginResult(token + user + roles + permissions),实现注册即登录
+ */
+export function registerByPassword(form: IRegisterForm) {
+  return http.Post<IResponse<ILoginResult>>(
+    `${AUTH_API_BASE}/register`,
+    form,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 微信注册并登录(公开接口,仅微信小程序可用)
+ * 与微信登录同源(wx.login code 换身份),用户不存在时服务端自动创建
+ * @param code uni.login({ provider: 'weixin' }) 获取的 wx.login 一次性凭证
+ */
+export function registerByWechat(code: string) {
+  return http.Post<IResponse<ILoginResult>>(
+    `${AUTH_API_BASE}/register/wechat`,
+    { code },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/** 站点全局信息(Halo /actuator/globalinfo,匿名可访问) */
+export interface IGlobalInfo {
+  allowRegistration?: boolean
+  mustVerifyEmailOnRegistration?: boolean
+}
+
+/**
+ * 发送注册邮箱验证码(Halo 匿名端点 POST /signup/send-email-code,2.20+)
+ *
+ * 请求体 { email },成功返回 202 Accepted(无响应体,由 http 层归一化 code=202),
+ * 服务端按客户端 IP 限流(resilience4j send-email-verification-code 配置),429 表示发送过于频繁。
+ * 验证码随注册表单(email + emailCode)经插件端 /auth/register 中转,由 Halo signUp 校验(邮箱须与发码时一致)。
+ */
+export function sendRegisterEmailCode(email: string) {
+  return http.Post<IResponse<null>>(
+    '/signup/send-email-code',
+    { email },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 获取站点全局信息(匿名公开接口)
+ * 注册入口/注册页据此判断 allowRegistration 开关
+ */
+export function getGlobalInfo() {
+  return http.Get<IResponse<IGlobalInfo>>(
+    '/actuator/globalinfo',
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
 /**
  * 获取微信登录凭证(code)
  * @returns Promise 包含 wx.login 的一次性凭证 code

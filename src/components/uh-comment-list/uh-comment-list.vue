@@ -291,7 +291,7 @@
 							<view v-if="getReplyCount(comment) > 0">
 								<!-- 未展开:仅显示回复数 -->
 								<view v-if="!expanded.has(comment.metadata.name)"
-									class="mt-2 ml-10 inline-flex items-center rounded-lg bg-gray-100 px-3 py-1 text-xs text-gray-500"
+									class="mt-2 ml-10 inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-xs text-gray-500"
 									@click="toggleReplies(comment)">
 									共 {{ getReplyCount(comment) }} 条回复
 								</view>

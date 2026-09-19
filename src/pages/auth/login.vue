@@ -5,6 +5,8 @@
 	import { useTokenStore } from '@/store/token'
 	import { checkImageUrl } from '@/utils/url'
 	import { usePageTitle } from '@/hooks/usePageTitle'
+	import { getGlobalInfo } from '@/api/auth'
+	import { REGISTER_PAGE } from '@/router/config'
 
 	definePage({
 		style: {
@@ -36,6 +38,39 @@
 	const username = ref('')
 	const password = ref('')
 	const loading = ref(false)
+
+	/* ---------- 注册开关(Halo /actuator/globalinfo,匿名可访问,读取失败视为关闭) ---------- */
+	const registrationAllowed = ref(false)
+	getGlobalInfo().then((res) => {
+		registrationAllowed.value = res.data?.allowRegistration === true
+	}).catch((error) => {
+		console.error('获取注册开关失败:', error)
+	})
+
+	/* ---------- 用户协议/隐私政策(登录即代表同意,可点击弹出查看;登录不做强制勾选) ---------- */
+	type AgreementType = 'userAgreement' | 'privacyPolicy'
+	const agreementPopupVisible = ref(false)
+	const agreementTab = ref<AgreementType>('userAgreement')
+
+	/** 协议内容(富文本 HTML;未配置时弹窗内显示空态) */
+	const agreementContents = computed(() => {
+		const agreement = configs.value.featureConfig?.pages?.agreement
+		return {
+			userAgreement: (agreement?.userAgreement || '').trim(),
+			privacyPolicy: (agreement?.privacyPolicy || '').trim(),
+		}
+	})
+
+	/** 打开协议弹窗(弹窗内可切换查看两份协议) */
+	function openAgreementPopup(type : AgreementType) {
+		agreementTab.value = type
+		agreementPopupVisible.value = true
+	}
+
+	/** 去注册 */
+	function goRegister() {
+		uni.navigateTo({ url: REGISTER_PAGE })
+	}
 
 	/** 可用登录方式(按插件端配置过滤;配置未就绪时默认展示账号密码登录) */
 	const availableTabs = computed(() => {
@@ -113,79 +148,94 @@
 			class="pointer-events-none absolute bottom-[280rpx] left-[-40rpx] z-0 h-[200rpx] w-[200rpx] rounded-full bg-[#ebfabf] opacity-90 uh-blur-44" />
 
 		<view class="relative z-10 box-border px-6 w-screen h-screen flex flex-col items-center justify-center gap-y-6">
-			<!-- 顶部:应用 logo + 欢迎语 -->
-			<view class="flex flex-col items-center">
-				<view class="bob relative h-24 w-24">
-					<view
-						class="flex items-center justify-center absolute inset-0 rounded-full overflow-hidden from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass border-2 uh-shadow-xs">
-						<image v-if="appInfo.logo" class="h-full w-full" :src="appInfo.logo"
-							mode="aspectFill" />
-						<wd-icon v-else class-prefix="uhemoji-icon" name="-smile-" size="100rpx"
-							class="text-gray-900" />
+			<view class="flex-1 w-full box-border pt-20 flex flex-col gap-y-4 items-center justify-center">
+				<!-- 顶部:应用 logo + 欢迎语 -->
+				<view class="flex flex-col items-center">
+					<view class="bob relative h-24 w-24">
+						<view
+							class="flex items-center justify-center absolute inset-0 rounded-full overflow-hidden from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-br uh-global-card-glass border-2 uh-shadow-xs">
+							<image v-if="appInfo.logo" class="h-full w-full" :src="appInfo.logo" mode="aspectFill" />
+							<wd-icon v-else class-prefix="uhemoji-icon" name="-smile-" size="100rpx"
+								class="text-gray-900" />
+						</view>
 					</view>
-				</view>
-				<view class="mt-6 text-xl text-gray-900 font-black">
-					欢迎回来
-				</view>
-				<view class="mt-2 text-[24rpx] text-black/50 font-medium">
-					登录 {{ appInfo.name }}，开启你的专属之旅
-				</view>
-			</view>
-
-			<!-- 登录内容区 -->
-			<view class="w-full box-border flex flex-col items-center">
-				<!-- 登录能力整体关闭提示 -->
-				<view v-if="availableTabs.length === 0"
-					class="uh-global-card-glass uh-shadow-xs border box-border w-full rounded-2xl p-8 text-center">
-					<view class="text-sm text-gray-500">
-						登录功能暂未开启
+					<view class="mt-6 text-xl text-gray-900 font-black">
+						欢迎回来
+					</view>
+					<view class="mt-2 text-xs text-black/50 font-medium">
+						登录 {{ appInfo.name }}，开启你的专属之旅
 					</view>
 				</view>
 
-				<!-- 登录卡片(玻璃拟态) -->
-				<view v-else class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
-					<!-- 平台切换(仅一种登录方式时不显示切换条) -->
-					<view v-if="availableTabs.length > 1" class="mb-6 flex rounded-full bg-white/60 p-1">
-						<view v-for="tab in availableTabs" :key="tab"
-							class="flex-1 rounded-full py-1.5 text-center text-2xs"
-							:class="activeTab === tab ? 'bg-primary text-gray-900' : 'text-gray-500'"
-							@click="activeTab = tab">
-							{{ tab === 'password' ? '账号密码' : '微信登录' }}
+				<!-- 登录内容区 -->
+				<view class="w-full box-border flex flex-col items-center">
+					<!-- 登录能力整体关闭提示 -->
+					<view v-if="availableTabs.length === 0"
+						class="uh-global-card-glass uh-shadow-xs border box-border w-full rounded-2xl p-8 text-center">
+						<view class="text-xs text-gray-500">
+							登录功能暂未开启
 						</view>
 					</view>
 
-					<!-- 账号密码登录表单 -->
-					<template v-if="activeTab === 'password' && passwordLoginEnabled">
-						<wd-input v-model="username" custom-class="uh-login-input" prefix-icon="user" no-border
-							placeholder="请输入账号" :disabled="loading" />
-						<wd-input v-model="password" custom-class="uh-login-input mt-3" prefix-icon="lock" show-password
-							no-border placeholder="请输入密码" :disabled="loading" @confirm="doPasswordLogin" />
-						<uh-button class="w-full"
-							custom-class="mt-6 uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none"
-							:class="loading ? 'opacity-60' : ''" @click="doPasswordLogin">
-							{{ loading ? '登录中...' : '登 录' }}
-						</uh-button>
-					</template>
-
-					<!-- 微信登录 -->
-					<template v-else-if="wechatLoginEnabled">
-						<!-- #ifdef MP-WEIXIN -->
-						<view class="box-border flex flex-col items-center justify-center py-12">
-							<button
-								class="w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-xs text-gray-900"
-								:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
-								{{ loading ? '登录中...' : '微信一键登录' }}
-							</button>
+					<!-- 登录卡片(玻璃拟态) -->
+					<view v-else class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-6">
+						<!-- 平台切换(仅一种登录方式时不显示切换条) -->
+						<view v-if="availableTabs.length > 1" class="mb-6 flex rounded-full bg-white/60 p-1">
+							<view v-for="tab in availableTabs" :key="tab"
+								class="flex-1 rounded-full py-1.5 text-center text-xs"
+								:class="activeTab === tab ? 'bg-primary text-gray-900' : 'text-gray-500'"
+								@click="activeTab = tab">
+								{{ tab === 'password' ? '账号密码' : '微信登录' }}
+							</view>
 						</view>
-						<!-- #endif -->
-					</template>
+
+						<!-- 账号密码登录表单 -->
+						<template v-if="activeTab === 'password' && passwordLoginEnabled">
+							<wd-input v-model="username" custom-class="uh-login-input" prefix-icon="user" no-border
+								placeholder="请输入账号" :disabled="loading" />
+							<wd-input v-model="password" custom-class="uh-login-input mt-3" prefix-icon="lock"
+								show-password no-border placeholder="请输入密码" :disabled="loading"
+								@confirm="doPasswordLogin" />
+							<uh-button class="w-full"
+								custom-class="mt-6 uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none"
+								:class="loading ? 'opacity-60' : ''" @click="doPasswordLogin">
+								{{ loading ? '登录中...' : '登 录' }}
+							</uh-button>
+						</template>
+
+						<!-- 微信登录 -->
+						<template v-else-if="wechatLoginEnabled">
+							<!-- #ifdef MP-WEIXIN -->
+							<view class="box-border flex flex-col items-center justify-center py-12">
+								<button
+									class="uh-button-native w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-sm text-gray-900"
+									:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
+									{{ loading ? '登录中...' : '微信一键登录' }}
+								</button>
+							</view>
+							<!-- #endif -->
+						</template>
+					</view>
+					<!-- 去注册 -->
+					<view v-if="registrationAllowed" class="mt-4 text-center text-xs text-black/50" @click="goRegister">
+						没有账号？去注册
+					</view>
+					<!-- 用户协议/隐私政策 -->
+					<view class="mt-4 text-center text-xs text-black/40 leading-5">
+						登录即代表同意<text class="text-primary"
+							@click="openAgreementPopup('userAgreement')">《用户协议》</text>与<text class="text-primary"
+							@click="openAgreementPopup('privacyPolicy')">《隐私政策》</text>
+					</view>
 				</view>
 			</view>
 			<!-- 页脚 -->
-			<view class="relative z-10 box-border py-6 w-full">
+			<view class="shrink-0 relative z-10 box-borderpt-4 pb-safe mb-4 w-full">
 				<uh-page-copyright />
 			</view>
 		</view>
+
+		<!-- 用户协议/隐私政策弹窗(底部弹出,tab 切换查看) -->
+		<uh-agreement-popup v-model="agreementPopupVisible" :show-agree-button="true" :contents="agreementContents" :initial-tab="agreementTab" />
 	</view>
 </template>
 

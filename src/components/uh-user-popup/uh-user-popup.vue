@@ -95,7 +95,7 @@
 				})
 				handleClose()
 			})
-		}).catch(() => {})
+		}).catch(() => { })
 	}
 </script>
 
@@ -144,7 +144,8 @@
 			<!-- 功能入口区域 -->
 			<view class="w-full flex flex-1 flex-col">
 				<uh-section-title>功能入口</uh-section-title>
-				<scroll-view scroll-y :show-scrollbar="false" class="mt-3 flex-1">
+				<scroll-view v-if="visibleAdminEntries.length !==0 " scroll-y :show-scrollbar="false"
+					class="mt-3 flex-1">
 					<view class="box-border flex flex-col gap-y-3">
 						<uh-permission v-for="entry in visibleAdminEntries" :key="entry.key"
 							:permission="entry.permission">
@@ -159,6 +160,11 @@
 						</uh-permission>
 					</view>
 				</scroll-view>
+				<view v-else
+					class="mt-3 flex-1 flex items-center justify-center box-border w-full uh-global-card-glass bg-white border shadow-none p-4 rounded-xl backdrop-filter-none">
+					<uh-data-loading :loading-status="DataLoadingStatusEnum.Empty" empty-text="您没有任何权限" size="small"
+						min-height="32vh" :use-refresh-button="false"/>
+				</view>
 			</view>
 
 			<!-- 底部操作栏 -->

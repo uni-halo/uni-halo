@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 	import { computed, ref, watch } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
 	import { checkAvatarUrl } from '@/utils/url'
+	import { useSettingStore } from '@/store/setting'
 	import type { ICommentReply } from '@/api/types/halo'
 
 	const props = withDefaults(defineProps<{
@@ -34,6 +36,8 @@
 	dayjs.extend(relativeTime)
 	dayjs.locale('zh-cn')
 
+	const { settings } = storeToRefs(useSettingStore())
+
 	const avatar = computed(() => checkAvatarUrl(props.comment.spec.owner.avatar))
 
 	/** 用户是否提供了头像(无头像时用昵称首字占位) */
@@ -50,6 +54,13 @@
 
 	/** 是否渲染图片头像(有头像且未加载失败) */
 	const showImage = computed(() => hasAvatar.value && !avatarError.value)
+
+	const avatarClass = computed(() => {
+		if (settings.value.avatarShape === 'circle') {
+			return 'rounded-full'
+		}
+		return 'rounded-xl'
+	})
 
 	/** 头像地址变化时重置加载失败标记(组件复用时) */
 	watch(() => props.comment.spec.owner.avatar, () => {
@@ -99,11 +110,12 @@
 		'pl-10':props.isChild,
 	}">
 		<view class="flex shrink-0">
-			<image v-if="showImage"
-				class="box-border h-10 w-10 shrink-0 rounded-full border border-white uh-shadow-xs border-solid" :src="avatar"
-				mode="aspectFill" @error="handleOnImageError" />
-			<view v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#bbe52a6b]">
-				<text class="text-sm font-bold text-gray-900">{{ avatarText }}</text>
+			<view
+				class="uh-global-card-glass uh-shadow-xs h-10 w-10 overflow-hidden flex items-center justify-center bg-[#bbe52a6b]"
+				:class="avatarClass">
+				<image v-if="showImage" :src="avatar" class="block w-full h-full" mode="aspectFill"
+					@error="handleOnImageError" />
+				<text v-else class="text-sm font-bold text-gray-900">{{ avatarText }}</text>
 			</view>
 		</view>
 		<view class="flex-1 box-border pl-2">
@@ -111,15 +123,15 @@
 				<text class="text-grey text-xs">{{ comment.spec.owner.displayName }}</text>
 			</view>
 			<view v-if="quoteReplyText" class="mt-1 text-xs text-gray-400">{{ quoteReplyText }}</view>
-			<view class="mt-0.5 box-border text-sm text-gray-900 leading-5" @click="handleOnDetail"
+			<view class="mt-0.5 box-border text-3xs text-gray-900 leading-5" @click="handleOnDetail"
 				v-html="comment.spec.raw" />
 			<view class="mt-2 flex items-center gap-x-4">
-				<text class="text-gray-900 text-xs">{{ createTimeText }}</text>
-				<view v-if="useActions" class="actions flex gap-2 font-medium">
-					<view v-if="!disallowComment" class="text-xs" @click="handleOnReply">
+				<text class="text-gray-600 text-xs">{{ createTimeText }}</text>
+				<view v-if="useActions" class="actions flex gap-2 ">
+					<view v-if="!disallowComment" class="text-xs font-medium" @click="handleOnReply">
 						回复
 					</view>
-					<view class="text-grey text-xs" @click="handleOnCopy">
+					<view class=" text-xs font-medium" @click="handleOnCopy">
 						复制
 					</view>
 				</view>

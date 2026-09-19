@@ -34,11 +34,10 @@
 	const pageTitle = usePageTitle('postDetail', '内容详情')
 	const appConfigStore = useAppConfigStore()
 	const favoritesStore = useFavoritesStore()
-	const settingStore = useSettingStore()
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 	const { configs: haloConfigs, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
-	const { settings: globalAppSettings } = storeToRefs(settingStore)
+	const { settings } = storeToRefs(useSettingStore())
 
 	/* ---------------- 状态 ---------------- */
 	const queryName = ref('')
@@ -86,6 +85,13 @@
 
 	const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
 	const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
+
+	const avatarClass = computed(() => {
+		if (settings.value.avatarShape === 'circle') {
+			return 'rounded-full'
+		}
+		return 'rounded-lg'
+	})
 
 	/** 从 HTML 提取投票块 id */
 	function extractVoteBlockIds(html : string) : string[] {
@@ -215,8 +221,7 @@
 	/** 切换收藏(收藏/取消),收藏时按当前笔记内容生成快照入库 */
 	function handleTogglePostFavorite() {
 		const post = result.value
-		if (!post)
-			return
+		if (!post) { return }
 		const favorited = favoritesStore.toggle(buildPostFavoriteItem(post))
 		uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 	}
@@ -472,14 +477,12 @@
 
 			<view
 				class="uh-global-card-glass box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none uh-content-lift"
-				:style="{
-					  boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)',
-					}">
+				:style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }">
 				<!-- 顶部信息 -->
 				<view class="box-border flex flex-col gap-3 p-4 pb-2">
 					<view class="flex items-center gap-x-2">
-						<image :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 rounded-full"
-							mode="aspectFill" />
+						<image :src="result.owner.avatar" class="overflow-hidden uh-global-card-glass block h-6 w-6"
+							:class="avatarClass" mode="aspectFill" />
 						<text class="text-sm text-gray-600">{{ result?.owner?.displayName }}</text>
 					</view>
 					<view class="font-semibold">
@@ -519,7 +522,7 @@
 								<text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
 							</view>
 							<view v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500"
-							@click="handleToComment()">
+								@click="handleToComment()">
 								<text class="text-xs">评论</text>
 								<text class="text-xs text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
 							</view>
@@ -592,9 +595,9 @@
 					<view id="comment-section" class="box-border">
 						<uh-comment-list v-if="calcIsShowComment && result"
 							:disallow-comment="!result.spec.allowComment" :show-entry="calcIsShowComment"
-							:post-name="result.metadata.name"
-							:post="result" @on-comment="handleOnComment" @on-comment-detail="handleOnShowCommentDetail"
-							@on-comment-entry="handleToComment()" @on-loaded="handleCommentLoaded" />
+							:post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
+							@on-comment-detail="handleOnShowCommentDetail" @on-comment-entry="handleToComment()"
+							@on-loaded="handleCommentLoaded" />
 					</view>
 				</view>
 			</view>
