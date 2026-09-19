@@ -92,7 +92,6 @@ async function handleGetData() {
 }
 
 onLoad(() => {
-  uni.hideShareMenu({ hideShareItems: [] })
   handleGetData()
 })
 

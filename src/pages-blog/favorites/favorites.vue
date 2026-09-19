@@ -9,11 +9,7 @@ import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
-
-onLoad(() => {
-  uni.hideShareMenu({ hideShareItems: [] })
-})
-
+ 
 definePage({
   style: {
     navigationBarTitleText: '我的收藏',

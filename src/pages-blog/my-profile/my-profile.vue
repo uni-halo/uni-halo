@@ -311,11 +311,7 @@
 	onPageScroll((option : Page.PageScrollOption) => {
 		updatePageScrollValue(option.scrollTop)
 	})
-
-	onLoad(() => {
-		uni.hideShareMenu({ hideShareItems: [] })
-	})
-
+ 
 	onShow(() => {
 		if (!tokenStore.updateNowTime().hasLogin) {
 			uni.showToast({ icon: 'none', title: '请先登录' })

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { computed, ref } from 'vue'
+	import { ref } from 'vue'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getNoticeTypes, getNotices } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -8,6 +8,7 @@
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
+	import { formatTime } from '@/utils/formatTime'
 	import type { INoticeListVo, INoticeType } from '@/api/types/uni-halo'
 
 	definePage({
@@ -32,8 +33,10 @@
 	const activeType = ref('')
 	type SortKey = 'latest' | 'earliest' | 'group'
 	const sortKey = ref<SortKey>('latest')
-	/** 请求并发锁(下拉刷新与触底加载互斥) */
+	/** 请求并发锁(触底加载与重置加载互斥) */
 	const fetching = ref(false)
+	/** 请求序列号:切换分类/排序时丢弃过期响应,避免旧结果覆盖新筛选结果 */
+	let requestSeq = 0
 	/** 触底加载更多底部文案(加载中/上拉加载更多/没有更多/失败提示) */
 	const loadMoreText = ref('')
 
@@ -42,6 +45,13 @@
 		{ id: 'earliest', label: '最早在前' },
 		{ id: 'group', label: '按类型分组' },
 	]
+
+	/** 前端排序键 → 服务端 sort 参数(筛选与排序均由服务端完成) */
+	const SORT_PARAM : Record<SortKey, string> = {
+		latest: 'date_desc',
+		earliest: 'date_asc',
+		group: 'type',
+	}
 
 	/* ---------------- 分享 ---------------- */
 
@@ -55,7 +65,7 @@
 		query: '',
 	}))
 
-	/* ---------------- 分类列表(公告分类接口,按 priority 排序) ---------------- */
+	/* ---------------- 分类列表 ---------------- */
 	const noticeTypes = ref<INoticeType[]>([])
 
 	async function loadNoticeTypes() {
@@ -67,61 +77,13 @@
 			console.error('获取公告分类失败', err)
 		}
 	}
+ 
 
-	/* ---------------- 时间与排序 ---------------- */
-	function formatDate(value ?: string) : string {
-		if (!value)
-			return ''
-		const date = new Date(value)
-		if (Number.isNaN(date.getTime()))
-			return ''
-		const pad = (n : number) => String(n).padStart(2, '0')
-		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-	}
-
-	function timeOf(item : INoticeListVo) : number {
-		const time = item.publishTime ? new Date(item.publishTime).getTime() : Number.NaN
-		return Number.isNaN(time) ? 0 : time
-	}
-
-	/** 展示列表:先按类型筛选,再按排序键排序(时间倒序/正序/按类型分组) */
-	const displayList = computed(() => {
-		let list = allItems.value
-		if (activeType.value !== '') {
-			list = list.filter(item => (item.typeName || '') === activeType.value)
-		}
-		if (sortKey.value === 'latest') {
-			list = [...list].sort((a, b) => timeOf(b) - timeOf(a))
-		}
-		else if (sortKey.value === 'earliest') {
-			list = [...list].sort((a, b) => timeOf(a) - timeOf(b))
-		}
-		else {
-			// 按类型分组:分类接口顺序,接口外的排最后,组内按发布时间倒序
-			const groupOrder = new Map<string, number>()
-			for (const t of noticeTypes.value) {
-				const key = t.metadata?.name || ''
-				if (key && !groupOrder.has(key)) {
-					groupOrder.set(key, groupOrder.size)
-				}
-			}
-			list = [...list].sort((a, b) => {
-				const ka = a.typeName || ''
-				const kb = b.typeName || ''
-				const ga = groupOrder.get(ka) ?? Number.MAX_SAFE_INTEGER
-				const gb = groupOrder.get(kb) ?? Number.MAX_SAFE_INTEGER
-				if (ga !== gb)
-					return ga - gb
-				return timeOf(b) - timeOf(a)
-			})
-		}
-		return list
-	})
-
-	/* ---------------- 数据加载(状态机:loading/empty/error/success) ---------------- */
+	/* ---------------- 数据加载---------------- */
 	async function loadNotices(reset : boolean) {
-		if (fetching.value)
-			return
+		// 触底加载受并发锁保护;重置加载(下拉刷新/切换筛选)优先执行
+		if (!reset && fetching.value) { return }
+		const seq = ++requestSeq
 		fetching.value = true
 		if (reset) {
 			updateLoadingStatus(DataLoadingStatusEnum.Loading)
@@ -132,7 +94,14 @@
 		}
 		try {
 			const target = reset ? 1 : page.value + 1
-			const res = await getNotices({ page: target, size: PAGE_SIZE })
+			const res = await getNotices({
+				page: target,
+				size: PAGE_SIZE,
+				type: activeType.value || undefined,
+				sort: SORT_PARAM[sortKey.value],
+			})
+			// 已被更新的请求(切换分类/排序)取代,丢弃本次结果
+			if (seq !== requestSeq) { return }
 			const body = res.data
 			const items = body?.items || []
 			if (reset) {
@@ -151,6 +120,8 @@
 			)
 		}
 		catch (err) {
+			// 已被更新的请求取代,不写错误态
+			if (seq !== requestSeq) { return }
 			console.error('公告列表加载失败', err)
 			if (reset) {
 				updateLoadingStatus(DataLoadingStatusEnum.Error)
@@ -161,11 +132,29 @@
 			}
 		}
 		finally {
-			setTimeout(() => {
-				fetching.value = false
-				uni.stopPullDownRefresh()
-			}, 500)
+			// 仅最新请求负责收尾,避免旧请求提前解锁
+			if (seq === requestSeq) {
+				setTimeout(() => {
+					fetching.value = false
+					uni.stopPullDownRefresh()
+				}, 500)
+			}
 		}
+	}
+
+	/** 切换分类:重新请求服务端筛选结果(再次点击已选中的分类则回到「全部」) */
+	function handleTypeChange(name : string) {
+		const next = activeType.value === name ? '' : name
+		if (activeType.value === next) { return }
+		activeType.value = next
+		loadNotices(true)
+	}
+
+	/** 切换排序:重新请求服务端排序结果 */
+	function handleSortChange(key : SortKey) {
+		if (sortKey.value === key) { return }
+		sortKey.value = key
+		loadNotices(true)
 	}
 
 	function loadMore() {
@@ -187,10 +176,7 @@
 	})
 
 	onPullDownRefresh(() => {
-		if (fetching.value) {
-			uni.stopPullDownRefresh()
-			return
-		}
+		// 重置加载可覆盖进行中的请求(旧响应按 requestSeq 丢弃)
 		loadNotices(true)
 	})
 
@@ -202,21 +188,22 @@
 </script>
 
 <template>
-	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
-		<!-- 自定义导航 -->
+	<view class="min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
 		<wd-sticky :offset-top="offsetTop">
 			<view class="w-screen overflow-hidden">
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-					<view class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
-						:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'" @click="activeType = ''">
+					<view
+						class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+						:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+						@click="handleTypeChange('')">
 						全部
 					</view>
 					<view v-for="(type) in noticeTypes" :key="type.metadata?.name"
 						class="mb-2 ml-3 box-border uh-global-card-glass shadow-none inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
 						:class="activeType === type.metadata?.name ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
-						@click="activeType = activeType === type.metadata?.name ? '' : type.metadata?.name || ''">
+						@click="handleTypeChange(type.metadata?.name || '')">
 						<view v-if="type.spec?.color" class="shrink-0 h-2 w-2 rounded-full"
 							:style="{ backgroundColor: type.spec.color }" />
 						<view class="shrink-0">{{ type.spec?.displayName }}</view>
@@ -227,7 +214,7 @@
 						<view v-for="opt in SORT_OPTIONS" :key="opt.id"
 							class="uh-global-card-glass shadow-none inline-flex border rounded-2xl px-4 py-1.5 text-xs"
 							:class="{ 'bg-primary text-gray-900': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
-							@click="sortKey = opt.id">
+							@click="handleSortChange(opt.id)">
 							{{ opt.label }}
 						</view>
 					</view>
@@ -236,44 +223,40 @@
 		</wd-sticky>
 
 		<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-			empty-text="暂无公告" empty-sub-text="" @refresh="loadNotices(true)" />
+			empty-text="暂无公告" min-height="75vh" @refresh="loadNotices(true)" />
 
 		<view v-else class="box-border pt-4">
-			<template v-if="displayList.length > 0">
-				<view class="box-border flex flex-col gap-3 px-3">
-					<view v-for="item in displayList" :key="item.name"
-						class="box-border uh-global-card-glass uh-shadow-xs flex overflow-hidden rounded-xl p-3"
-						@click="handleToDetail(item)">
-						<image v-if="item.cover" class="mr-3 h-18 w-24 shrink-0 rounded-lg"
-							:src="checkImageUrl(item.cover)" mode="aspectFill" />
-						<view class="min-w-0 flex-1 flex flex-col justify-between">
-							<view class="truncate text-sm text-gray-900 font-bold leading-snug">
-								{{ item.title }}
-							</view>
-							<view v-if="item.summary" class="truncate mt-1 text-[24rpx] text-gray-500 leading-relaxed">
-								{{ item.summary }}
-							</view>
-							<view class="mt-2 flex items-center gap-2">
-								<view v-if="item.typeDisplayName" class="rounded px-1.5 py-0.5 text-[20rpx]" :style="{
+			<view class="box-border flex flex-col gap-3 px-3">
+				<view v-for="item in allItems" :key="item.name"
+					class="box-border uh-global-card-glass uh-shadow-xs flex overflow-hidden rounded-xl p-3"
+					@click="handleToDetail(item)">
+					<image v-if="item.cover" class="mr-3 h-18 w-24 shrink-0 rounded-lg" :src="checkImageUrl(item.cover)"
+						mode="aspectFill" />
+					<view class="min-w-0 flex-1 flex flex-col justify-between">
+						<view class="truncate text-sm text-gray-900 font-bold leading-snug">
+							{{ item.title }}
+						</view>
+						<view v-if="item.summary" class="truncate mt-1 text-[24rpx] text-gray-500 leading-relaxed">
+							{{ item.summary }}
+						</view>
+						<view class="mt-2 flex items-center gap-2">
+							<view v-if="item.typeDisplayName" class="rounded px-1.5 py-0.5 text-[20rpx]" :style="{
 									color: item.typeColor || '#f83856',
 									backgroundColor: item.typeColor ? `${item.typeColor}1a` : '#fdeef1',
 								  }">
-									{{ item.typeDisplayName }}
-								</view>
-								<text class="text-[22rpx] text-gray-500">
-									{{ formatDate(item.publishTime) }}
-								</text>
+								{{ item.typeDisplayName }}
 							</view>
+							<text class="text-[22rpx] text-gray-500">
+								{{ formatTime({d:item.publishTime,f:'yyyy年MM月dd日 星期w'}) }}
+							</text>
 						</view>
 					</view>
-					<view class="load-text py-5 text-center text-[24rpx] text-gray-500">
-						{{ loadMoreText }}
-					</view>
 				</view>
-			</template>
+				<view class="load-text py-5 text-center text-[24rpx] text-gray-500">
+					{{ loadMoreText }}
+				</view>
+			</view>
 
-			<!-- 类型筛选后无匹配 -->
-			<uh-data-loading v-else :loading-status="DataLoadingStatusEnum.Empty"></uh-data-loading>
 		</view>
 	</view>
 </template>

@@ -169,9 +169,10 @@ export function buildCaptchaQuery(captcha?: ICaptchaQuery | null): ICaptchaQuery
 
 /**
  * 公告分页列表(公开,仅已发布;脱敏不含 content,内嵌类型信息)。
- * 注意:公开接口当前仅支持分页,类型筛选/排序由页面本地聚合处理(公告量小)。
+ * type:公告分类 metadata.name,传空/不传=全部分类;sort:date_desc 最新在前(默认,置顶优先)
+ * / date_asc 最早在前 / type 按类型分组(分类筛选与排序均由服务端完成)。
  */
-export function getNotices(params: { page?: number, size?: number }) {
+export function getNotices(params: { page?: number, size?: number, type?: string, sort?: string }) {
   return http.Get<IResponse<INoticeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notices', {
     params,
     cacheFor: 0,

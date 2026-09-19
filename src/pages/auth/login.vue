@@ -15,11 +15,7 @@
 			navigationStyle: 'custom',
 		},
 	})
-
-	onLoad(() => {
-		uni.hideShareMenu({ hideShareItems: [] })
-	})
-
+ 
 	const { configs } = storeToRefs(useAppConfigStore())
 	/** 页面标题（插件端可配置，留空回退内置默认） */
 	const pageTitle = usePageTitle('login', '登录')

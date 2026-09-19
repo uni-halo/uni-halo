@@ -36,7 +36,6 @@
 	})
 
 	onLoad((query) => {
-		uni.hideShareMenu({ hideShareItems: [] })
 		type.value = query?.type === 'privacyPolicy' ? 'privacyPolicy' : 'userAgreement'
 		uni.setNavigationBarTitle({ title: title.value })
 	})

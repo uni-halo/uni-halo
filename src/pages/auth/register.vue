@@ -29,8 +29,6 @@ import { sleep } from '@/utils/common'
 	const emailVerifyRequired = ref(false)
 
 	onLoad(() => {
-		uni.hideShareMenu({ hideShareItems: [] })
-		uni.setNavigationBarTitle({ title: pageTitle.value })
 		getGlobalInfo().then((res) => {
 			registrationAllowed.value = res.data?.allowRegistration !== false
 			emailVerifyRequired.value = res.data?.mustVerifyEmailOnRegistration === true

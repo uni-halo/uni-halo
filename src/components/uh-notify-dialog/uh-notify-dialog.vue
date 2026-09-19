@@ -101,8 +101,9 @@
 
 			<!-- 内容 -->
 			<view class="mt-4">
-				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2">
-				</image>
+				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2"
+					mode="aspectFill" />
+
 				<view class="text-sm font-bold leading-snug text-gray-900">
 					{{ notice.title }}
 				</view>
@@ -119,7 +120,8 @@
 				<view class="text-xs text-gray-600 " @click="handleDismissForever">
 					今日不再提醒
 				</view>
-				<uh-button custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 !rounded-xl" @click="handleViewAll()">
+				<uh-button custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 !rounded-xl"
+					@click="handleViewAll()">
 					查看全文 →
 				</uh-button>
 			</view>
