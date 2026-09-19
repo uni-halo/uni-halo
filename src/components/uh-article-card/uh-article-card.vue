@@ -52,7 +52,7 @@
 		image_top: {
 			container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
 			cover: `mb-1 ${isGrid.value ? 'rounded-lb-0 rounded-rb-0' : ''} ${props.article.spec.cover ? '' : 'pt-2'}`,
-			contentWrapper: `box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
+			contentWrapper: `gap-y-2 box-border w-full ${isGrid.value ? 'p-2 pt-0' : ''}`,
 			title: `${props.article.spec.cover ? '' : 'mt-2'}`,
 			footer: 'flex items-center',
 			authorGroup: 'flex-1 items-center justify-start gap-x-1',
@@ -67,7 +67,7 @@
 		image_bottom: {
 			container: 'flex flex-col gap-y-2',
 			cover: 'order-2',
-			contentWrapper: 'w-full',
+			contentWrapper: 'gap-y-2 w-full',
 			title: '',
 			footer: 'order-first flex items-center mb-1',
 			authorGroup: 'items-center gap-x-2',
@@ -176,7 +176,7 @@
 				lazy-load />
 		</view>
 
-		<view class="flex flex-col gap-y-3 text-sm" :class="cardLayout.contentWrapper">
+		<view class="flex flex-col text-sm" :class="cardLayout.contentWrapper">
 			<view class="truncate font-bold text-sm" :class="cardLayout.title">
 				{{ article.spec.title }}
 			</view>
