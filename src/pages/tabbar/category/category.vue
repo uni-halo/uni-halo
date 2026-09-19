@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getCategoryList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkThumbnailUrl } from '@/utils/url'
@@ -28,6 +28,20 @@
 	const appConfigStore = useAppConfigStore()
 
 	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+
+	const siteName = computed(() => haloConfigs.value.featureConfig?.profile?.appInfo?.name || 'uni-halo')
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		path: '/pages/tabbar/category/category',
+	}))
+
+	onShareTimeline(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		query: '',
+	}))
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadingStatus, resetLoadMoreStatus } = useDataLoadingStatus()

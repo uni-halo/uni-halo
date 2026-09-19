@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkImageUrl } from '@/utils/url'
@@ -28,6 +28,8 @@
 	const pageTitle = usePageTitle('gallery', '我的图库')
 	const appConfigStore = useAppConfigStore()
 	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+
+	const siteName = computed(() => haloConfigs.value.featureConfig?.profile?.appInfo?.name || 'uni-halo')
 
 	/** 依赖插件(PluginPhotos) */
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
@@ -165,6 +167,18 @@
 			loop: true,
 		})
 	}
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		path: '/pages/tabbar/gallery/gallery',
+	}))
+
+	onShareTimeline(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		query: '',
+	}))
 
 	/* ---------------- 生命周期 ---------------- */
 	onPageScroll((option : Page.PageScrollOption) => {

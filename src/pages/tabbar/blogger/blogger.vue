@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
+import { onPullDownRefresh, onShareAppMessage, onShareTimeline, onShow } from '@dcloudio/uni-app'
 import { getBlogStatistics } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
@@ -64,6 +64,20 @@ const calcProfileStyle = computed(() => ({
 }))
 
 const calcWaveUrl = computed(() => checkImageUrl(pageConfig.value?.waveImageUrl))
+
+/* ---------------- 分享 ---------------- */
+
+onShareAppMessage(() => ({
+  title: `${bloggerInfo.value.nickname}`,
+  path: '/pages/tabbar/blogger/blogger',
+  imageUrl: bloggerInfo.value.avatar,
+}))
+
+onShareTimeline(() => ({
+  title: `${bloggerInfo.value.nickname}`,
+  query: '',
+  imageUrl: bloggerInfo.value.avatar,
+}))
 
 /* ---------------- 状态 ---------------- */
 const statistics = ref<IBlogStats>({ post: 0, comment: 0, category: 0, visit: 0, upvote: 0 })

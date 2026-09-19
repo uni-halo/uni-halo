@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
-	import { onPageScroll } from '@dcloudio/uni-app'
+	import { onPageScroll, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -51,6 +51,18 @@ import { storeToRefs } from 'pinia'
 			.filter(item => item.visible && item.content.trim())
 			.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
 	})
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${bloggerInfo.value.nickname}·${pageTitle.value}`,
+		path: '/pages-blog/contact/contact',
+	}))
+
+	onShareTimeline(() => ({
+		title: `${bloggerInfo.value.nickname}·${pageTitle.value}`,
+		query: '',
+	}))
 
 	const isNotEmpty = computed(() => socialList.value.some(item => item.visible && item.content.trim()))
 

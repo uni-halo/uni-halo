@@ -32,6 +32,7 @@ import type {
   INoticeDetail,
   INoticeListRes,
   INoticeListVo,
+  INoticeTypeListRes,
   IQRCodeInfo,
   IRestrictReadCheckReq,
   IRestrictReadCheckRes,
@@ -193,6 +194,16 @@ export function getNoticeLatest() {
  */
 export function getNoticeDetail(name: string) {
   return http.Get<IResponse<INoticeDetail>>(`/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notices/${name}`, {
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 公告分类列表(公开,按 priority 排序,app 端筛选用)
+ */
+export function getNoticeTypes() {
+  return http.Get<IResponse<INoticeTypeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/notice-types', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })

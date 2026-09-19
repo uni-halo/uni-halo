@@ -175,6 +175,7 @@
 	})
 
 	onLoad(async () => {
+		uni.hideShareMenu({ hideShareItems: [] })
 		await checkPluginAvailable()
 		if (!uniHaloPluginAvailable.value) {
 			uni.stopPullDownRefresh()

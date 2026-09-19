@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkUrl } from '@/utils/url'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -23,6 +23,18 @@
 			logo: checkUrl('/plugins/uni-halo/assets/static/logo.png')
 		}
 	})
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: pageTitle.value,
+		path: '/pages-blog/about-project/about-project',
+	}))
+
+	onShareTimeline(() => ({
+		title: pageTitle.value,
+		query: '',
+	}))
 
 	const links = [
 		{ title: '小莫唐尼', value: 'https://www.xiaoxiaomo.cn', copy: 'https://www.xiaoxiaomo.cn', tip: '作者主页地址已复制', tileColor: '#26a69a', tileLetter: '作' },

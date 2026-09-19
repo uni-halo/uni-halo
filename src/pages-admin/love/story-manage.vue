@@ -77,6 +77,7 @@ function handleRetry() {
 }
 
 onLoad(() => {
+  uni.hideShareMenu({ hideShareItems: [] })
   handleGetData()
 })
 

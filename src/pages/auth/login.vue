@@ -7,12 +7,17 @@
 	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { getGlobalInfo } from '@/api/auth'
 	import { REGISTER_PAGE } from '@/router/config'
+	import { onLoad } from '@dcloudio/uni-app'
 
 	definePage({
 		style: {
 			navigationBarTitleText: '登录',
 			navigationStyle: 'custom',
 		},
+	})
+
+	onLoad(() => {
+		uni.hideShareMenu({ hideShareItems: [] })
 	})
 
 	const { configs } = storeToRefs(useAppConfigStore())

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getLoveDailyItems } from '@/api/uni-halo'
 	import { getLoveModuleToken, handleLoveModuleLocked } from '@/utils/loveModuleToken'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -60,6 +60,18 @@
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ page: 1, size: 10 })
 	const list = ref<ILoveItemCard[]>([])
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: '恋爱清单',
+		path: '/pages-blog/love/list',
+	}))
+
+	onShareTimeline(() => ({
+		title: '恋爱清单',
+		query: '',
+	}))
 
 	/* ---------------- 恋爱模块解锁（防分享直达：锁定未解锁时不加载数据） ---------------- */
 	const { bootstrap } = useAppConfigStore()

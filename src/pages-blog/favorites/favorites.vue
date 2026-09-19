@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
-import { onPageScroll } from '@dcloudio/uni-app'
+import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { formatTime } from '@/utils/formatTime'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -9,6 +9,10 @@ import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
+
+onLoad(() => {
+  uni.hideShareMenu({ hideShareItems: [] })
+})
 
 definePage({
   style: {

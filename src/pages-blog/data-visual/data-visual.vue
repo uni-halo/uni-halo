@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
-	import { onPageScroll, onPullDownRefresh } from '@dcloudio/uni-app'
+	import { onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getChartData } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
@@ -32,6 +32,18 @@
 			handleGetData()
 		}
 	}
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: pageTitle.value,
+		path: '/pages-blog/data-visual/data-visual',
+	}))
+
+	onShareTimeline(() => ({
+		title: pageTitle.value,
+		query: '',
+	}))
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()

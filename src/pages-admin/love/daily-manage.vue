@@ -82,6 +82,7 @@
 	}
 
 	onLoad(() => {
+		uni.hideShareMenu({ hideShareItems: [] })
 		handleGetData()
 	})
 

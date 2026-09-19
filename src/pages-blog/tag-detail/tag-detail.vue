@@ -4,7 +4,7 @@
  * 展示某标签下的笔记列表,分页加载
  */
 import { ref } from 'vue'
-import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onLoad, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getPostByTagName } from '@/api/halo'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import type { IPost } from '@/api/types/halo'
@@ -26,6 +26,18 @@ const dataList = ref<IPost[]>([])
 const hasNext = ref(false)
 const isLoadMore = ref(false)
 const loadMoreText = ref('')
+
+/* ---------------- 分享 ---------------- */
+
+onShareAppMessage(() => ({
+  title: `${pageTitle.value}·标签合集`,
+  path: `/pages-blog/tag-detail/tag-detail?name=${name.value}&title=${pageTitle.value}`,
+}))
+
+onShareTimeline(() => ({
+  title: `${pageTitle.value}·标签合集`,
+  query: name.value ? `name=${name.value}&title=${pageTitle.value}` : '',
+}))
 
 async function handleGetData() {
   if (!isLoadMore.value) {

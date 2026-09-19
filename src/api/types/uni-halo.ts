@@ -575,6 +575,28 @@ export interface INoticeDetail {
 	[key: string]: unknown;
 }
 
+/** 公告分类(NoticeType extension) */
+export interface INoticeType {
+	metadata?: { name?: string; [key: string]: unknown };
+	spec?: {
+		/** 类型名称,如「活动」「维护」 */
+		displayName?: string;
+		/** 标签颜色(hex) */
+		color?: string;
+		/** 排序,越大越靠前 */
+		priority?: number;
+	};
+	[key: string]: unknown;
+}
+
+/** 公告分类列表响应(Halo ListResult 形态) */
+export interface INoticeTypeListRes {
+	page?: number;
+	size?: number;
+	total?: number;
+	items: INoticeType[];
+}
+
 /* ---------- 恋爱模块(uni-halo love) ---------- */
 
 /** 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段） */

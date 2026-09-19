@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref, watch } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo'
 	import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -33,6 +33,18 @@
 	const pageTitle = usePageTitle('friendLinks', '友情链接')
 	const appConfigStore = useAppConfigStore()
 	const { configs, auditData, auditModeEnabled } = storeToRefs(appConfigStore)
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: pageTitle.value,
+		path: '/pages-blog/friend-links/friend-links',
+	}))
+
+	onShareTimeline(() => ({
+		title: pageTitle.value,
+		query: '',
+	}))
 
 	/* ---------------- 依赖插件 ---------------- */
 	/** 站点 tab:PluginLinks */

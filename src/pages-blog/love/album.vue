@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveAlbumByName, getLoveAlbums, unlockAlbum } from '@/api/uni-halo'
 	import type { ICaptchaQuery } from '@/api/uni-halo'
@@ -67,6 +67,18 @@
 	const queryParams = ref({ page: 1, size: 10 })
 	const dataList = ref<ILoveAlbumCard[]>([])
 	const unlockedAlbums = ref<Record<string, string>>({})
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: '恋爱相册',
+		path: '/pages-blog/love/album',
+	}))
+
+	onShareTimeline(() => ({
+		title: '恋爱相册',
+		query: '',
+	}))
 
 	/* ---------------- 恋爱模块解锁（防分享直达：锁定未解锁时不加载数据） ---------------- */
 	const {

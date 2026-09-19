@@ -26,6 +26,7 @@ const bindResult = ref<'success' | 'fail' | null>(null)
 const failReason = ref('')
 
 onLoad((query) => {
+  uni.hideShareMenu({ hideShareItems: [] })
   // #ifdef MP-WEIXIN
   const t = query?.ticket || ''
   if (!t) {

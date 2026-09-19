@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, ref, watch } from 'vue'
-import { onPageScroll, onShow } from '@dcloudio/uni-app'
+import { onPageScroll, onShareAppMessage, onShareTimeline, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
@@ -64,6 +64,18 @@ interface ILoveNavRenderItem {
 }
 
 const navList = ref<ILoveNavRenderItem[]>([])
+
+/* ---------------- 分享 ---------------- */
+
+onShareAppMessage(() => ({
+  title: '我们的恋爱日记',
+  path: '/pages-blog/love/love',
+}))
+
+onShareTimeline(() => ({
+  title: '我们的恋爱日记',
+  query: '',
+}))
 
 /* ---------------- 数据加载 ---------------- */
 function syncLoveConfigFromStore() {

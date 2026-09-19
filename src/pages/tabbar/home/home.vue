@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
+	import { onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline, onShow } from '@dcloudio/uni-app'
 	import { getPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
@@ -56,8 +56,7 @@
 
 	/** 切换推荐模式:重置分页并重新查询 */
 	function handleRecommendModeChange(mode : 'default' | 'pinned' | 'latest' | 'oldest') {
-		if (recommendMode.value === mode)
-			return
+		if (recommendMode.value === mode) { return }
 		recommendMode.value = mode
 		resetLoadMoreStatus()
 		articleList.value = []
@@ -186,6 +185,20 @@
 	}
 	init()
 
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${appInfo.value.name}`,
+		path: '/pages/index/index',
+		imageUrl: appInfo.value.logo,
+	}))
+
+	onShareTimeline(() => ({
+		title: `${appInfo.value.name}`,
+		query: '',
+		imageUrl: appInfo.value.logo,
+	}))
+	
 	/* ---------------- 生命周期 ---------------- */
 
 	// 维护检查

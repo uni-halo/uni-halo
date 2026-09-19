@@ -15,6 +15,7 @@ definePage({
 const webUrl = ref('')
 
 onLoad((options) => {
+  uni.hideShareMenu({ hideShareItems: [] })
   try {
     const data = JSON.parse(options?.data || '{}')
     const { title, url } = data

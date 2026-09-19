@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref, shallowRef } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
@@ -44,6 +44,18 @@
 
 	/* ---------------- 头部资料 ---------------- */
 	const ownerInfo = ref<{ displayName ?: string, avatar ?: string, bio ?: string }>({})
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${headerUser.value.nickname || headerUser.value.username}的个人主页`,
+		path: `/pages-blog/user-profile/user-profile?username=${pageUsername.value}`,
+	}))
+
+	onShareTimeline(() => ({
+		title: `${headerUser.value.nickname || headerUser.value.username}的个人主页`,
+		query: pageUsername.value ? `username=${pageUsername.value}` : '',
+	}))
 
 	const headerUser = computed(() => ({
 		nickname: (isSelf.value ? userInfo.value.nickname : ownerInfo.value.displayName) || pageUsername.value,

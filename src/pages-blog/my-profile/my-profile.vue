@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onPageScroll, onShow } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onShow } from '@dcloudio/uni-app'
 	import { storeToRefs } from 'pinia'
 	import { useDialog } from '@wot-ui/ui'
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
@@ -310,6 +310,10 @@
 	/* ---------------- 生命周期 ---------------- */
 	onPageScroll((option : Page.PageScrollOption) => {
 		updatePageScrollValue(option.scrollTop)
+	})
+
+	onLoad(() => {
+		uni.hideShareMenu({ hideShareItems: [] })
 	})
 
 	onShow(() => {

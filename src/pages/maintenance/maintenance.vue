@@ -250,6 +250,7 @@
 	}
 
 	onLoad((options) => {
+		uni.hideShareMenu({ hideShareItems: [] })
 		const from = options?.from
 		fromReason.value = from === 'plugin' || from === 'maintenance' ? from : null
 		load()

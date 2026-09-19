@@ -4,7 +4,7 @@
  */
 	import { computed } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onPageScroll } from '@dcloudio/uni-app'
+	import { onPageScroll, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
@@ -43,6 +43,18 @@
 			},
 		})
 	}
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: pageTitle.value,
+		path: '/pages-blog/disclaimers/disclaimers',
+	}))
+
+	onShareTimeline(() => ({
+		title: pageTitle.value,
+		query: '',
+	}))
 
 	onPageScroll((option : Page.PageScrollOption) => {
 		updatePageScrollValue(option.scrollTop)

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getLoveStories } from '@/api/uni-halo'
 	import { getLoveModuleToken, handleLoveModuleLocked } from '@/utils/loveModuleToken'
@@ -24,6 +24,18 @@
 	const { scrollY, updatePageScrollValue } = usePageScroll()
 	const { configs } = storeToRefs(useAppConfigStore())
 	const { bootstrap } = useAppConfigStore()
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: '我们的故事',
+		path: '/pages-blog/love/stories',
+	}))
+
+	onShareTimeline(() => ({
+		title: '我们的故事',
+		query: '',
+	}))
 
 	/* ---------------- 展示层类型 ---------------- */
 	/** 时间轴故事卡片(script 预处理后的干净展示数据) */

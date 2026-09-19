@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-	import { getNotices } from '@/api/uni-halo'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+	import { getNoticeTypes, getNotices } from '@/api/uni-halo'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
-	import type { INoticeListVo } from '@/api/types/uni-halo'
+	import type { INoticeListVo, INoticeType } from '@/api/types/uni-halo'
 
 	definePage({
 		style: {
@@ -43,18 +43,30 @@
 		{ id: 'group', label: '按类型分组' },
 	]
 
-	/* ---------------- 类型 chips(从已加载列表聚合) ---------------- */
-	const typeOptions = computed(() => {
-		const map = new Map<string, { typeName : string, typeDisplayName : string, typeColor : string }>()
-		for (const item of allItems.value) {
-			const key = item.typeName || ''
-			const display = item.typeDisplayName || '未分类'
-			if (!map.has(key)) {
-				map.set(key, { typeName: key, typeDisplayName: display, typeColor: item.typeColor || '' })
-			}
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: pageTitle.value,
+		path: '/pages-blog/notice/notice',
+	}))
+
+	onShareTimeline(() => ({
+		title: pageTitle.value,
+		query: '',
+	}))
+
+	/* ---------------- 分类列表(公告分类接口,按 priority 排序) ---------------- */
+	const noticeTypes = ref<INoticeType[]>([])
+
+	async function loadNoticeTypes() {
+		try {
+			const res = await getNoticeTypes()
+			noticeTypes.value = res.data?.items || []
 		}
-		return Array.from(map.values())
-	})
+		catch (err) {
+			console.error('获取公告分类失败', err)
+		}
+	}
 
 	/* ---------------- 时间与排序 ---------------- */
 	function formatDate(value ?: string) : string {
@@ -85,11 +97,11 @@
 			list = [...list].sort((a, b) => timeOf(a) - timeOf(b))
 		}
 		else {
-			// 按类型分组:未分类排最后,组内按发布时间倒序
+			// 按类型分组:分类接口顺序,接口外的排最后,组内按发布时间倒序
 			const groupOrder = new Map<string, number>()
-			for (const item of allItems.value) {
-				const key = item.typeName || ''
-				if (!groupOrder.has(key)) {
+			for (const t of noticeTypes.value) {
+				const key = t.metadata?.name || ''
+				if (key && !groupOrder.has(key)) {
 					groupOrder.set(key, groupOrder.size)
 				}
 			}
@@ -166,6 +178,7 @@
 	})
 
 	onLoad(() => {
+		loadNoticeTypes()
 		loadNotices(true)
 	})
 
@@ -200,13 +213,13 @@
 						:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'" @click="activeType = ''">
 						全部
 					</view>
-					<view v-for="(type) in typeOptions" :key="type.typeDisplayName"
+					<view v-for="(type) in noticeTypes" :key="type.metadata?.name"
 						class="mb-2 ml-3 box-border uh-global-card-glass shadow-none inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
-						:class="activeType === type.typeName ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
-						@click="activeType = activeType === type.typeName ? '' : type.typeName">
-						<view v-if="type.typeColor" class="shrink-0 h-2 w-2 rounded-full"
-							:style="{ backgroundColor: type.typeColor }" />
-						<view class="shrink-0">{{ type.typeDisplayName }}</view>
+						:class="activeType === type.metadata?.name ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+						@click="activeType = activeType === type.metadata?.name ? '' : type.metadata?.name || ''">
+						<view v-if="type.spec?.color" class="shrink-0 h-2 w-2 rounded-full"
+							:style="{ backgroundColor: type.spec.color }" />
+						<view class="shrink-0">{{ type.spec?.displayName }}</view>
 					</view>
 				</scroll-view>
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">

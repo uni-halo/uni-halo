@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
-	import { onLoad, onPageScroll } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getNoticeDetail } from '@/api/uni-halo'
+	import { formatTime } from '@/utils/formatTime'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
@@ -34,17 +35,25 @@
 		const raw = spec.value?.cover || ''
 		return raw ? checkImageUrl(raw) : ''
 	})
-	const publishTime = computed(() => formatDate(spec.value?.publishTime))
+
+	const publishTime = computed(() => formatTime({ d: spec.value?.publishTime, f: 'yyyy年MM月dd日 星期w' }) )
 	const hasLink = computed(() => !!spec.value?.link && checkIsUrl(spec.value?.link || ''))
+ 
+	/* ---------------- 分享 ---------------- */
 
-	function formatDate(value ?: string) : string {
-		if (!value) { return '' }
-		const date = new Date(value)
-		if (Number.isNaN(date.getTime())) { return '' }
-		const pad = (n : number) => String(n).padStart(2, '0')
-		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-	}
+	onShareAppMessage(() => ({
+		title: title.value || pageTitle.value,
+		path: `/pages-blog/notice/detail?name=${name.value}`,
+		imageUrl: cover.value,
+	}))
 
+	onShareTimeline(() => ({
+		title: title.value || pageTitle.value,
+		query: name.value ? `name=${name.value}` : '',
+		imageUrl: cover.value,
+	}))
+
+	/* ---------------- 跳转/复制 ---------------- */
 	function handleCopy() {
 		if (!spec.value?.link) { return }
 		uni.setClipboardData({
@@ -131,9 +140,11 @@
 			</view>
 
 			<view v-if="hasLink" class="fixed left-0 right-0 bottom-4 pb-safe px-4 box-border">
-					<uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleCopy">
-						复制原文地址
-					</uh-button>
+				<uh-button class="flex-1"
+					custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium"
+					@click="handleCopy">
+					复制原文地址
+				</uh-button>
 			</view>
 		</view>
 	</view>

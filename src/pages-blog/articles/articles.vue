@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getCategoryList, getCategoryPostList, getPostList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { useSettingStore } from '@/store/setting'
@@ -31,8 +31,22 @@
 	const settingStore = useSettingStore()
 	const { settings } = storeToRefs(settingStore)
 
+	const siteName = computed(() => appConfigStore.configs.featureConfig?.profile?.appInfo?.name || 'uni-halo')
+
 	/** 笔记列表页列表布局(偏好设置驱动:single=单列 / double=双列) */
 	const articlesListLayout = computed(() => settings.value.articlesListLayout)
+
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		path: '/pages-blog/articles/articles',
+	}))
+
+	onShareTimeline(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		query: '',
+	}))
 
 	/* ---------------- 状态 ---------------- */
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()

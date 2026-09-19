@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 	import { computed, ref } from 'vue'
 	import { storeToRefs } from 'pinia'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import dayjs from 'dayjs'
 	import { getMomentList } from '@/api/halo'
 	import { useAppConfigStore } from '@/store/appConfig'
@@ -359,6 +359,18 @@
 	}
 
 	/** 格式化瞬间时间 */
+	/* ---------------- 分享 ---------------- */
+
+	onShareAppMessage(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		path: '/pages/tabbar/moments/moments',
+	}))
+
+	onShareTimeline(() => ({
+		title: `${siteName.value}·${pageTitle.value}`,
+		query: '',
+	}))
+
 	/* ---------------- 生命周期 ---------------- */
 	onPageScroll((option : Page.PageScrollOption) => {
 		updatePageScrollValue(option.scrollTop)
