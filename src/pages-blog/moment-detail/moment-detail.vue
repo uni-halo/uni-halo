@@ -44,6 +44,13 @@ const siteName = computed(() => {
   return appInfo?.name || bloggerInfo.value.nickname || 'uni-halo'
 })
 
+/** 瞬间页配置 */
+const momentPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.momentPageConfig)
+/** 是否显示评论列表 */
+const calcShowCommentList = computed(() => !!momentPageConfig.value?.showCommentList)
+/** 是否开启评论（评论按钮显隐） */
+const calcEnableComment = computed(() => !!momentPageConfig.value?.enableComment)
+
 /* ---------------- 状态 ---------------- */
 const queryName = ref('')
 const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
@@ -165,8 +172,8 @@ function handleToComment() {
   const current = moment.value
   if (!current)
     return
-  if (!current.spec.allowComment) {
-    uni.showToast({ icon: 'none', title: '瞬间已开启禁止评论！' })
+  if (!calcEnableComment.value) {
+    uni.showToast({ icon: 'none', title: '评论功能未开启！' })
     return
   }
   handleScrollToSelector('#comment-section')
@@ -382,10 +389,10 @@ onShareTimeline(() => ({
       </view>
 
       <!-- 评论列表(瞬间评论,kind=Moment) -->
-      <view v-if="moment" id="comment-section">
+      <view v-if="moment && calcShowCommentList" id="comment-section">
         <uh-comment-list
           ref="commentListRef" :post-name="moment.metadata.name" :post="moment"
-          kind="Moment" :allow-comment="moment.spec.allowComment"
+          kind="Moment" :allow-comment="calcEnableComment"
           @on-comment="handleOnComment" @on-comment-entry="handleToComment()"
         />
       </view>
@@ -409,7 +416,7 @@ onShareTimeline(() => ({
         </view>
         <!-- 评论 -->
         <view
-          v-if="moment.spec.allowComment"
+          v-if="calcEnableComment"
           class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
           @click="handleToComment()"
         >

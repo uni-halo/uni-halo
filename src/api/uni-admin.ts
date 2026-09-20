@@ -102,12 +102,12 @@ export function createMoment(spec: IMomentSpec) {
   )
 }
 
-/** 更新自己的瞬间（UC API，请求体为完整 Moment 资源；服务端保留 owner/releaseTime 并重置审核） */
-export function updateMoment(name: string, spec: IMomentSpec) {
+/** 更新自己的瞬间 */
+export function updateMoment(name: string, spec: IMomentSpec, metadata: IMomentResource['metadata'] = {}) {
   const body: IMomentResource = {
     apiVersion: MOMENT_API_VERSION,
     kind: 'Moment',
-    metadata: { name },
+    metadata: { name, ...metadata },
     spec,
   }
   return http.Put<IResponse<{ metadata: { name: string }, spec: IMomentSpec, [key: string]: unknown }>>(

@@ -104,7 +104,7 @@ export interface IPageTitles {
 	postDetail?: string;
 	categoryArticles?: string;
 	tags?: string;
-	tagDetail?: string;
+	tagArticles?: string;
 	search?: string;
 	favorites?: string;
 	friendLinks?: string;
@@ -174,10 +174,17 @@ export interface IPageConfig {
 	/** 笔记详情页配置（评论开关与版权文案） */
 	postDetailConfig?: {
 		showComment?: boolean;
+		/** 启用评论（评论按钮显隐；插件端透传官方评论设置） */
+		enableComment?: boolean;
 		copyrightEnabled?: boolean;
 		copyrightAuthor?: string;
 		copyrightDesc?: string;
 		copyrightViolation?: string;
+	};
+	/** 瞬间页配置（评论列表显隐与评论开关） */
+	momentPageConfig?: {
+		showCommentList?: boolean;
+		enableComment?: boolean;
 	};
 }
 

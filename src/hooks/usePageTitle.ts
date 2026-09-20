@@ -13,7 +13,7 @@ export type PageTitleKey =
 	| 'postDetail'
 	| 'categoryArticles'
 	| 'tags'
-	| 'tagDetail'
+	| 'tagArticles'
 	| 'search'
 	| 'favorites'
 	| 'friendLinks'

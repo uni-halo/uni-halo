@@ -84,6 +84,10 @@ const bloggerInfo = computed(() => {
 })
 
 const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
+/** 是否启用评论（站点开关 + 文章自身开关，文章未配置时视为允许） */
+const calcEnableComment = computed(() =>
+  !!postDetailConfig.value?.enableComment
+  && result.value?.spec.allowComment !== false)
 const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
 const avatarClass = computed(() => {
@@ -312,10 +316,7 @@ function handleToComment() {
   if (!result.value) {
     return
   }
-  if (!calcIsShowComment.value) {
-    return
-  }
-  if (!result.value.spec.allowComment) {
+  if (!calcEnableComment.value) {
     uni.showToast({ icon: 'none', title: '笔记已开启禁止评论！' })
     return
   }
@@ -392,7 +393,7 @@ function handleToCate(category: { metadata: { name: string }, spec: { displayNam
 
 function handleToTag(tag: { metadata: { name: string }, spec: { displayName: string } }) {
   uni.navigateTo({
-    url: `/pages-blog/tag-detail/tag-detail?name=${tag.metadata.name}&title=${tag.spec.displayName}`,
+    url: `/pages-blog/tag-articles/tag-articles?name=${tag.metadata.name}&title=${tag.spec.displayName}`,
   })
 }
 
@@ -536,7 +537,7 @@ onShareTimeline(() => {
                 <text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
               </view>
               <view
-                v-if="calcIsShowComment" class="flex flex-1 items-center gap-x-2 text-gray-500"
+                v-if="calcEnableComment" class="flex flex-1 items-center gap-x-2 text-gray-500"
                 @click="handleToComment()"
               >
                 <text class="text-xs">评论</text>
@@ -621,7 +622,7 @@ onShareTimeline(() => {
           <!-- 评论区域 -->
           <view id="comment-section" class="box-border">
             <uh-comment-list
-              v-if="calcIsShowComment && result" :allow-comment="result.spec.allowComment"
+              v-if="calcIsShowComment && result" :allow-comment="calcEnableComment"
               :post-name="result.metadata.name" :post="result" @on-comment="handleOnComment"
               @on-comment-detail="handleOnShowCommentDetail" @on-comment-entry="handleToComment()"
               @on-loaded="handleCommentLoaded"
@@ -643,7 +644,7 @@ onShareTimeline(() => {
             <text class="shrink-0 text-xs font-semibold">点赞</text>
           </view>
           <view
-            v-if="calcIsShowComment"
+            v-if="calcEnableComment"
             class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
             @click="handleToComment()"
           >

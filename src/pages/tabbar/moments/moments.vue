@@ -36,6 +36,10 @@
 	const { configs: haloConfigs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 	/** 瞬间标签随机色（内置开启，插件端不再下发该配置项） */
 	const calcUseTagRandomColor = computed(() => true)
+	/** 瞬间页配置 */
+	const momentPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.momentPageConfig)
+	/** 是否开启评论（评论按钮显隐） */
+	const calcEnableComment = computed(() => !!momentPageConfig.value?.enableComment)
 
 	const bloggerInfo = computed(() => {
 		const blogger = haloConfigs.value.featureConfig?.profile?.blogger
@@ -303,8 +307,8 @@
 
 	function handleMomentComment(moment : MomentCard) {
 		if (!moment) { return }
-		if (!moment.spec.allowComment) {
-			uni.showToast({ icon: 'none', title: '瞬间已开启禁止评论！' })
+		if (!calcEnableComment.value) {
+			uni.showToast({ icon: 'none', title: '评论功能未开启！' })
 			return
 		}
 		commentModal.value = {
@@ -465,6 +469,7 @@
 						</view>
 					</view>
 					<uh-moment-card class="w-full flex-1" :moment="moment" :blogger="bloggerInfo"
+						:allow-comment="calcEnableComment"
 						@detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
 						@comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
 				</view>

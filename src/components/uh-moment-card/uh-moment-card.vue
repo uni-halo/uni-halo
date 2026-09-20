@@ -38,6 +38,8 @@ interface IProps {
   }
   /** 博主信息（owner 缺省时兜底展示） */
   blogger?: { nickname?: string, avatar?: string }
+  /** 是否开启评论（评论按钮显隐） */
+  allowComment?: boolean
 }
 
 const { isFavorite } = useFavoritesStore()
@@ -151,7 +153,7 @@ function handlePreview(index: number, list: { url: string }[]) {
     <!-- (点赞/评论/收藏) -->
     <view
       class="mb-1 mt-2 box-border w-full flex items-center border-t border-black/5 px-4 py-3 text-xs text-gray-400"
-      :class="[moment.spec.allowComment ? 'justify-between' : 'gap-x-6']"
+      :class="[props.allowComment ? 'justify-between' : 'gap-x-6']"
     >
       <view class="flex items-center gap-x-1" @click.stop="emit('like')">
         <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
@@ -159,7 +161,7 @@ function handlePreview(index: number, list: { url: string }[]) {
           点赞 {{ upvoteDisplay(moment.stats.upvote, moment.metadata.name) }}
         </text>
       </view>
-      <view v-if="moment.spec.allowComment" class="flex items-center gap-x-1" @click.stop="emit('comment')">
+      <view v-if="props.allowComment" class="flex items-center gap-x-1" @click.stop="emit('comment')">
         <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="32rpx" />
         <text class="text-3xs text-gray-600">评论 {{ moment.stats.totalComment || 0 }}</text>
       </view>

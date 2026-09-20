@@ -28,6 +28,8 @@ const emit = defineEmits<{
 const isShow = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editName = ref('')
+/** 编辑模式的原 Moment 资源 */
+const editMoment = ref<any>(null)
 const saving = ref(false)
 const loading = ref(false)
 
@@ -62,6 +64,7 @@ async function getEditorHtml(): Promise<string> {
 function handleResetForm() {
   formMode.value = 'create'
   editName.value = ''
+  editMoment.value = null
   editorContent.value = ''
   // 清空编辑器（编辑器未挂载时为 no-op，首开本就是空内容）
   editorRef.value?.setHtml('')
@@ -87,6 +90,7 @@ async function openEdit(name: string): Promise<boolean> {
     }
     formMode.value = 'edit'
     editName.value = moment.metadata?.name || name
+    editMoment.value = moment
     // 兼容对象格式 { raw, html, medium } 与数组格式 [{ content, medium }]
     const content = extractMomentContent(moment.spec.content)
     editorContent.value = content.raw || content.html || ''
@@ -150,7 +154,7 @@ async function handleSubmit() {
       await updateMoment(editName.value, {
         content: momentContent,
         visible: 'PUBLIC',
-      })
+      }, editMoment.value?.metadata)
       uni.showToast({ title: '已保存', icon: 'success' })
     }
     else {
