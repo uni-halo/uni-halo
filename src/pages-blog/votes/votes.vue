@@ -31,7 +31,7 @@
 
 	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
 		pluginId: NeedPluginIds.PluginVote,
-		tips: '啊偶，功能正在维护中...', 
+		tips: '啊偶，功能正在维护中...',
 		callback: (isAvailable) => {
 			if (!isAvailable) { return }
 			uni.pageScrollTo({
@@ -304,8 +304,8 @@
 	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
 		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId" :error-text="tips"
-			:checking="checking" @on-refresh="handlePluginRefresh" />
+		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
 
 		<template v-else>
 			<wd-sticky :offset-top="offsetTop">
@@ -339,10 +339,8 @@
 				empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData" />
 
 			<view v-else class="box-border flex flex-col gap-4 p-3 pt-2">
-				<block v-if="dataList.length !== 0">
-					<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
-					<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
-				</block>
+				<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
+				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</template>
 

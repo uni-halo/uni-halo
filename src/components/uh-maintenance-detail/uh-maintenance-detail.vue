@@ -45,7 +45,7 @@
 			</view>
 			<!-- 滚动区域 -->
 			<scroll-view scroll-y :show-scrollbar="false"
-				class="box-border max-h-[60vh] text-2xs text-gray-900 leading-5">
+				class="box-border max-h-[60vh] text-3xs text-gray-900 leading-5">
 				<mp-html :content="content" lazy-load :domain="markdownConfig.domain" scroll-table selectable
 					:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
 					copy-by-long-press />

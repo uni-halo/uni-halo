@@ -281,13 +281,14 @@
 	}
 
 	/* ---------------- 点赞(useUpvote 持久化防重复) ---------------- */
-	const { likeByName } = useUpvote('moments', () => '')
+	const { likeByName, upvoteDisplay, recordUpvoteCount } = useUpvote('moments', () => '')
 
 	function handleMomentLike(moment : MomentCard) {
 		if (!moment) { return }
 		likeByName(moment.metadata.name, () => {
 			if (moment.stats) {
 				moment.stats.upvote = (moment.stats.upvote || 0) + 1
+				recordUpvoteCount(moment.metadata.name, moment.stats.upvote)
 			}
 		})
 	}

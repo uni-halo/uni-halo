@@ -552,26 +552,10 @@ onShareTimeline(() => {
 
         <!-- 内容区域 -->
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
-			<view class="box-border text-sm text-gray-900 leading-6 uh-global-card-glass uh-shadow-xs !bg-white/10 rounded-xl p-3">
-          <!-- 受限阅读 -->
-          <template v-if="checkPostRestrictRead(result!)">
-            <view v-if="showContentArr.length === 0">
-              <uh-restrict-read-skeleton
-                :loading="true" :lines="3"
-                :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-                @refresh="readMore"
-              />
-            </view>
-            <template v-else>
-              <view v-for="(showContent, showContentIndex) in showContentArr" :key="showContentIndex">
-                <mp-html
-                  lazy-load :domain="markdownConfig.domain ?? ''"
-                  :loading-img="markdownConfig.loadingGif" scroll-table selectable
-                  :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                  :content="showContent" :markdown="true" :show-line-number="true"
-                  :show-language-name="true" copy-by-long-press
-                />
+          <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
+            <!-- 受限阅读 -->
+            <template v-if="checkPostRestrictRead(result!)">
+              <view v-if="showContentArr.length === 0">
                 <uh-restrict-read-skeleton
                   :loading="true" :lines="3"
                   :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
@@ -579,20 +563,36 @@ onShareTimeline(() => {
                   @refresh="readMore"
                 />
               </view>
+              <template v-else>
+                <view v-for="(showContent, showContentIndex) in showContentArr" :key="showContentIndex">
+                  <mp-html
+                    lazy-load :domain="markdownConfig.domain ?? ''"
+                    :loading-img="markdownConfig.loadingGif" scroll-table selectable
+                    :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+                    :content="showContent" :markdown="true" :show-line-number="true"
+                    :show-language-name="true" copy-by-long-press
+                  />
+                  <uh-restrict-read-skeleton
+                    :loading="true" :lines="3"
+                    :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
+                    :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
+                    @refresh="readMore"
+                  />
+                </view>
+              </template>
             </template>
-          </template>
 
-          <!-- 正常渲染 -->
-          <template v-else>
-            <mp-html
-              lazy-load :domain="markdownConfig.domain ?? ''"
-              :loading-img="markdownConfig.loadingGif" scroll-table selectable
-              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-              :content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
-              :show-language-name="true" copy-by-long-press
-            />
-          </template>
-		  </view>
+            <!-- 正常渲染 -->
+            <template v-else>
+              <mp-html
+                lazy-load :domain="markdownConfig.domain ?? ''"
+                :loading-img="markdownConfig.loadingGif" scroll-table selectable
+                :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+                :content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
+                :show-language-name="true" copy-by-long-press
+              />
+            </template>
+          </view>
         </view>
 
         <!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->

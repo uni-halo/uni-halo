@@ -315,7 +315,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 功能导航：非分组模式 -->
     <template v-if="featureMode === 'grid'">
       <view v-if="commonFeatures.length !== 0" class="relative z-100 box-border overflow-hidden p-4 -mt-20">
-        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-4 box-border gap-2 border rounded-lb-2xl rounded-lt-3xl rounded-rb-2xl rounded-rt-3xl p-3">
+        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-4 box-border gap-2 border rounded-3xl p-3">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
             class="uh-global-card-glass uh-shadow-xs flex flex-col items-center justify-between rounded-2xl p-2"

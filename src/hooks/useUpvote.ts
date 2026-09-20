@@ -7,19 +7,41 @@ import { submitUpvote } from '@/api/halo'
 import { getCache, setCache } from '@/utils/storage'
 
 const UPVOTE_CACHE_KEY = 'uh_upvoted_names'
+const UPVOTE_COUNT_KEY = 'uh_upvoted_counts'
 
 function readUpvotedNames(): string[] {
 	const list = getCache<string[]>(UPVOTE_CACHE_KEY)
 	return Array.isArray(list) ? list : []
 }
 
+function readUpvoteCounts(): Record<string, number> {
+	const map = getCache<Record<string, number>>(UPVOTE_COUNT_KEY)
+	return map && typeof map === 'object' ? map : {}
+}
+
 export function useUpvote(plural: 'posts' | 'moments', getName: () => string | undefined) {
 	const upvotedNames = ref<string[]>(readUpvotedNames())
+	const upvoteCounts = ref<Record<string, number>>(readUpvoteCounts())
 
 	/** 判断是否已点赞(可指定 name;缺省用单目标 getName) */
 	function hasUpvoted(name?: string): boolean {
 		const n = name ?? getName()
 		return !!n && upvotedNames.value.includes(n)
+	}
+
+	/** 记录点赞后的计数快照(服务端计数异步落库,刷新拉列表时用它兜底) */
+	function recordUpvoteCount(name: string, count: number) {
+		upvoteCounts.value[name] = count
+		setCache(UPVOTE_COUNT_KEY, upvoteCounts.value)
+	}
+
+	/** 展示用点赞数:已点赞时取服务端值与本地快照的较大者 */
+	function upvoteDisplay(serverCount: number | undefined, name?: string): number {
+		const n = name ?? getName()
+		const server = serverCount || 0
+		if (!n || !hasUpvoted(n))
+			return server
+		return Math.max(server, upvoteCounts.value[n] || 0)
 	}
 
 	/** 按 name 点赞(列表多目标场景;成功后持久化 + 回调) */
@@ -54,6 +76,8 @@ export function useUpvote(plural: 'posts' | 'moments', getName: () => string | u
 	return {
 		upvotedNames,
 		hasUpvoted,
+		upvoteDisplay,
+		recordUpvoteCount,
 		handleDoLikes,
 		likeByName,
 	}

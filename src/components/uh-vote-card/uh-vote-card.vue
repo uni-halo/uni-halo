@@ -46,7 +46,7 @@
 </script>
 
 <template>
-	<view class="uh-global-card-glass uh-shaxis-xs box-border w-full rounded-2xl p-4" @click="handleToDetail">
+	<view class="uh-global-card-glass uh-shadow-xs box-border w-full rounded-2xl p-4" @click="handleToDetail">
 		<!-- 头部:类型/状态/已投票 -->
 		<view class="flex items-center justify-between">
 			<view class="flex flex-wrap items-center gap-1">

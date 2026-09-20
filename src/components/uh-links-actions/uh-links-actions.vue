@@ -31,7 +31,7 @@
 			<view v-if="actions.includes('info')"
 				class="uh-global-card-glass box-border py-2 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-8 shadow-none"
 				@click="emit('info')">
-				<wd-icon name="info" size="32rpx" />
+				<wd-icon name="info-circle" size="32rpx" />
 				<text class="shrink-0 text-xs text-gray-900 font-semibold">友链信息</text>
 			</view>
 		</view>

@@ -41,7 +41,7 @@ interface IProps {
 }
 
 const { isFavorite } = useFavoritesStore()
-const { hasUpvoted } = useUpvote('moments', () => '')
+const { hasUpvoted, upvoteDisplay } = useUpvote('moments', () => '')
 
 /** 头像外观(偏好 avatarShape:square 方形=默认 / circle 圆形;方形 = 文章卡片 image_bottom 同款) */
 const { settings } = storeToRefs(useSettingStore())
@@ -55,6 +55,13 @@ const imagesClass = computed(() => {
   }
   return `grid-cols-${props.moment.images.length}`
 })
+
+/** 展示用昵称 */
+const displayName = computed(() => props.moment.owner?.displayName || props.blogger.nickname || '')
+/** 展示用头像 */
+const avatarUrl = computed(() => checkAvatarUrl(props.moment.owner?.avatar || props.blogger.avatar || ''))
+/** 无头像时显示昵称首字 */
+const avatarChar = computed(() => displayName.value.charAt(0) || '瞬')
 
 /** 格式化瞬间时间 */
 function formatMomentTime(time?: string): string {
@@ -74,9 +81,15 @@ function handlePreview(index: number, list: { url: string }[]) {
     <view class="box-border flex items-center px-3 pt-3">
       <view class="flex flex-1 items-center">
         <image
-          class="avatar h-9 w-9 shrink-0" :class="avatarShapeClass"
-          :src="checkAvatarUrl(moment.owner?.avatar || blogger.avatar)" mode="aspectFill"
+          v-if="avatarUrl" class="avatar h-9 w-9 shrink-0" :class="avatarShapeClass"
+          :src="avatarUrl" mode="aspectFill"
         />
+        <view
+          v-else class="h-9 w-9 shrink-0 flex items-center justify-center bg-secondary text-sm text-primary font-bold"
+          :class="avatarShapeClass"
+        >
+          {{ avatarChar }}
+        </view>
         <view class="ml-2 flex flex-col gap-y-1">
           <view class="text-3xs text-gray-900 font-bold">
             {{ moment.owner?.displayName || blogger.nickname }}
@@ -141,7 +154,7 @@ function handlePreview(index: number, list: { url: string }[]) {
       <view class="flex items-center gap-x-1" @click.stop="emit('like')">
         <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="32rpx" />
         <text class="text-3xs" :class="hasUpvoted(moment.metadata.name) ? 'text-primary' : 'text-gray-600'">
-          点赞 {{ moment.stats.upvote || 0 }}
+          点赞 {{ upvoteDisplay(moment.stats.upvote, moment.metadata.name) }}
         </text>
       </view>
       <view v-if="moment.spec.allowComment" class="flex items-center gap-x-1" @click.stop="emit('comment')">

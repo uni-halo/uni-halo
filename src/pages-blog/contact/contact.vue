@@ -137,13 +137,13 @@ import { storeToRefs } from 'pinia'
 				<view class="text-md text-gray-900">
 					展信安：
 				</view>
-				<view v-if="bloggerInfo.intro" class="text-sm text-gray-900">
+				<view v-if="bloggerInfo.intro" class="text-3xs text-gray-900">
 					<mp-html lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
 						scroll-table selectable :tag-style="markdownConfig.tagStyle"
 						:container-style="markdownConfig.containStyle" :content="bloggerInfo.intro" :markdown="true"
 						:show-line-number="true" :show-language-name="true" copy-by-long-press />
 				</view>
-				<view v-else class="py-4 text-sm text-gray-600">
+				<view v-else class="py-4 text-3xs text-gray-600">
 					祝你早安，午安，晚安。每天都有好心情，生活愉快！
 				</view>
 				<view class="mt-2 w-full flex flex-col items-end gap-y-3">

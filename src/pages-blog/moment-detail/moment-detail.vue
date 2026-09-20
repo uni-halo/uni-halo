@@ -317,7 +317,7 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 正文 -->
-        <view class="content mt-6 px-4 text-2xs text-gray-900">
+        <view class="content mt-6 px-4 text-3 text-gray-900">
           <mp-html
             lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
             scroll-table selectable :tag-style="markdownConfig.tagStyle"

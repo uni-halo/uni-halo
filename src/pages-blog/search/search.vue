@@ -235,7 +235,7 @@ onReachBottom(() => {
       <wd-sticky :offset-top="offsetTop">
         <view class="box-border w-screen px-3 py-2">
           <view
-            class="uh-global-card-glass box-border h-9 flex items-center gap-3 border rounded-full pl-3 pr-3"
+            class="uh-global-card-glass uh-shadow-xs box-border h-9 flex items-center gap-3 border rounded-full pl-3 pr-3"
           >
             <wd-icon name="search-line" size="32rpx" />
             <input

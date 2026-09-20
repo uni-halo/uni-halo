@@ -72,7 +72,7 @@
 		<view class="fixed -left-10 top-36 h-24 w-24 rounded-full bg-[rgba(215,249,76,0.45)]  uh-blur-xl" />
 
 		<view class="relative">
-			<view class="uh-global-card-glass relative flex flex-col items-center rounded-2xl px-6 pb-7 pt-10">
+			<view class="uh-global-card-glass uh-shadow-xs relative flex flex-col items-center rounded-2xl px-6 pb-7 pt-10">
 				<image class="uh-global-card-glass uh-shadow-xs border h-18 w-18 rounded-2xl" :src="appInfo.logo"
 					mode="aspectFill" />
 				<view class="mt-4 text-xl text- font-bold">
@@ -90,7 +90,7 @@
 
 		<uh-section-title class="mb-3 mt-6"> 相关链接 </uh-section-title>
 
-		<view class="box-border uh-global-card-glass flex flex-col gap-y-6 rounded-2xl py-4">
+		<view class="box-border uh-global-card-glass uh-shadow-xs flex flex-col gap-y-6 rounded-2xl py-4">
 			<view v-for="(link) in links" :key="link.title" class="flex items-center gap-3 px-4"
 				@click="copyText(link.copy, link.tip)">
 				<view
