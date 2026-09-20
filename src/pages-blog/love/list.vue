@@ -350,7 +350,7 @@
 			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
 				<view v-for="f in filterConfig" :key="f.key"
 					class="uh-global-card-glass shadow-none mb-3 ml-3 inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
-					:class="[filterValues[f.key] !== f.options[0].value ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500']"
+					:class="[filterValues[f.key] !== f.options[0].value ? 'bg-love text-white font-semibold' : 'text-gray-500']"
 					@click="handleOpenFilter(f)">
 					<text class="truncate text-xs">{{ filterLabels[f.key] }}</text>
 					<template v-if="f.key!=='status'">

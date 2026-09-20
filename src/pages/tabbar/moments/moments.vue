@@ -95,11 +95,6 @@
 	const videoContexts = ref<Record<string, UniApp.VideoContext | undefined>>({})
 	const currentVideoId = ref<string | null>(null)
 
-	function removeTagLinksCompletely(htmlString : string) : string {
-		const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
-		return htmlString.replace(regex, '')
-	}
-
 	const WEEKDAY_TEXT = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 	function splitMomentDate(timeStr ?: string) {
@@ -127,7 +122,7 @@
 				: { displayName: bloggerInfo.value.nickname || '', name: bloggerInfo.value.nickname || '', avatar: bloggerInfo.value.avatar },
 			spec: {
 				...item.spec,
-				newHtml: removeTagLinksCompletely(item.spec.content?.html || ''),
+				newHtml: item.spec.content?.html || '',
 			},
 			images: medium.filter(x => x.type === 'PHOTO').map(x => ({ ...x, url: checkThumbnailUrl(x.url, true) })),
 			videos: medium.filter(x => x.type === 'VIDEO').map(x => ({ ...x, id: generateUUID() })),
@@ -454,8 +449,8 @@
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				min-height="65vh" @refresh="handleGetData" />
 
-			<view v-else class="box-border flex flex-col gap-3 px-3 mt-4">
-				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
+			<view v-else class="box-border flex flex-col gap-3 px-3 mt-4 overflow-hidden">
+				<view v-for="moment in dataList" :key="moment.metadata.name" class="overflow-hidden w-full flex gap-x-2">
 					<view v-if="false" class="shrink-0 flex flex-col gap-y-2 w-13">
 						<view class="shrink-0 flex flex-col items-center font-bold">
 							<text
@@ -468,7 +463,7 @@
 							<view class="w-1 h-full flex-1 bg-primary uh-global-card-glass rounded-full border"></view>
 						</view>
 					</view>
-					<uh-moment-card class="flex-1" :moment="moment" :blogger="bloggerInfo"
+					<uh-moment-card class="w-full flex-1" :moment="moment" :blogger="bloggerInfo"
 						@detail="handleToMomentDetail(moment)" @like="handleMomentLike(moment)"
 						@comment="handleMomentComment(moment)" @favorite="handleToggleMomentFavorite(moment)" />
 				</view>
