@@ -440,10 +440,11 @@ onReachBottom(() => {
               </view>
               <view class="box-border rounded-lg bg-gray-50 p-2 text-gray-900 leading-4">
                 <mp-html
-                  lazy-load :domain="markdownConfig.domain ?? ''"
+                  :content="item.completeRemark"
+                  lazy-load :domain="markdownConfig.domain"
                   :loading-img="markdownConfig.loadingGif" scroll-table selectable
                   :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                  :content="item.completeRemark" :markdown="true" :show-line-number="true"
+                  :markdown="true" :show-line-number="true"
                   :show-language-name="true" copy-by-long-press
                 />
               </view>

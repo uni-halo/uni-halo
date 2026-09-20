@@ -585,10 +585,11 @@ onShareTimeline(() => {
             <!-- 正常渲染 -->
             <template v-else>
               <mp-html
-                lazy-load :domain="markdownConfig.domain ?? ''"
+                :content="result?.content?.raw"
+                lazy-load :domain="markdownConfig.domain"
                 :loading-img="markdownConfig.loadingGif" scroll-table selectable
                 :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                :content="result?.content?.raw || ''" :markdown="true" :show-line-number="true"
+                :markdown="true" :show-line-number="true"
                 :show-language-name="true" copy-by-long-press
               />
             </template>

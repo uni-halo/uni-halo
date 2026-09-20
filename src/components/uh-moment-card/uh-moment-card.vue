@@ -85,7 +85,7 @@ function handlePreview(index: number, list: { url: string }[]) {
           :src="avatarUrl" mode="aspectFill"
         />
         <view
-          v-else class="h-9 w-9 shrink-0 flex items-center justify-center bg-secondary text-sm text-primary font-bold"
+          v-else class="h-9 w-9 flex shrink-0 items-center justify-center bg-secondary text-sm text-primary font-bold"
           :class="avatarShapeClass"
         >
           {{ avatarChar }}
@@ -110,9 +110,11 @@ function handlePreview(index: number, list: { url: string }[]) {
     <view class="box-border px-3 pt-3">
       <view class="relative box-border rounded-lg text-3xs text-gray-900">
         <mp-html
-          lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
-          scroll-table selectable :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-          :content="moment.spec.newHtml || ''" :markdown="true" :show-line-number="true"
+          :content="moment.spec.newHtml"
+          lazy-load :domain="markdownConfig.domain"
+          :loading-img="markdownConfig.loadingGif" scroll-table selectable
+          :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+          :markdown="true" :show-line-number="true"
           :show-language-name="true" copy-by-long-press
         />
       </view>

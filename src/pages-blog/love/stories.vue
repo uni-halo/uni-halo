@@ -445,10 +445,11 @@ onReachBottom(() => {
           <!-- 滚动内部容器 -->
           <view class="w-full text-3xs text-gray-900 leading-6">
             <mp-html
-              lazy-load :domain="markdownConfig.domain ?? ''"
+              :content="currentStory.content"
+              lazy-load :domain="markdownConfig.domain"
               :loading-img="markdownConfig.loadingGif" scroll-table selectable
               :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-              :content="currentStory.content" :markdown="true" :show-line-number="true"
+              :markdown="true" :show-line-number="true"
               :show-language-name="true" copy-by-long-press
             />
           </view>

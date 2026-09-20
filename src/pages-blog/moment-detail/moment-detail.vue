@@ -319,10 +319,12 @@ onShareTimeline(() => ({
         <!-- 正文 -->
         <view class="content mt-6 px-4 text-3 text-gray-900">
           <mp-html
-            lazy-load :domain="markdownConfig.domain ?? ''" :loading-img="markdownConfig.loadingGif"
-            scroll-table selectable :tag-style="markdownConfig.tagStyle"
-            :container-style="markdownConfig.containStyle" :content="moment.spec.newHtml || ''"
-            :markdown="true" :show-line-number="true" :show-language-name="true" copy-by-long-press
+            :content="moment.spec.newHtml"
+            lazy-load :domain="markdownConfig.domain"
+            :loading-img="markdownConfig.loadingGif" scroll-table selectable
+            :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+            :markdown="true" :show-line-number="true"
+            :show-language-name="true" copy-by-long-press
           />
         </view>
 

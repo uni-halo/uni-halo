@@ -279,11 +279,12 @@ onReachBottom(() => {
             </view>
             <view class="w-full text-3xs">
               <mp-html
-                lazy-load :domain="markdownConfig.domain ?? ''"
+                :content="item.description || item.content || ''"
+                lazy-load :domain="markdownConfig.domain"
                 :loading-img="markdownConfig.loadingGif" scroll-table selectable
                 :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                :content="item.description || item.content || ''" :markdown="true"
-                :show-line-number="true" :show-language-name="true" copy-by-long-press
+                :markdown="true" :show-line-number="true"
+                :show-language-name="true" copy-by-long-press
               />
             </view>
           </view>
