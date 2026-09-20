@@ -194,15 +194,13 @@
 						</template>
 
 						<!-- 微信登录 -->
-						<template v-else-if="wechatLoginEnabled">
-							<!-- #ifdef MP-WEIXIN -->
-							<button
-								class="mt-3 uh-button-native w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-sm text-gray-900"
-								:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
-								{{ loading ? '登录中...' : '微信一键登录' }}
-							</button>
-							<!-- #endif -->
-						</template>
+						<!-- #ifdef MP-WEIXIN -->
+						<button v-if="wechatLoginEnabled"
+							class="mt-3 uh-button-native w-full uh-global-card-glass bg-primary w-full !py-2 !rounded-full text-sm text-gray-900"
+							:class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin">
+							{{ loading ? '登录中...' : '微信一键登录' }}
+						</button>
+						<!-- #endif -->
 					</view>
 					<!-- 去注册 -->
 					<view v-if="registrationAllowed" class="mt-4 text-center text-xs text-black/50" @click="goRegister">

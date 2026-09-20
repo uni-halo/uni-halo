@@ -104,7 +104,7 @@
 	/** 个人入口（我的信息 / 个人主页） */
 	const PROFILE_ENTRIES : Array<IProfileEntry> = [
 		{ key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
-		{ key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-blog/my-profile/my-profile' },
+		{ key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile' },
 		{ key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
 	]
 
@@ -159,9 +159,9 @@
 				<uh-section-title>功能入口</uh-section-title>
 				<view class="mt-3 box-border grid grid-cols-3 gap-3">
 					<view v-for="entry in PROFILE_ENTRIES" :key="entry.key"
-						class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-0.5 rounded-xl p-2 shadow-none"
+						class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-1 rounded-xl p-2 shadow-none"
 						@click="handleToPage(entry)">
-						<view class="rounded-lg bg-gray-50 text-gray-900 w-12 py-1 flex items-center justify-center">
+						<view class="rounded-lg bg-gray-100 text-gray-900 w-12 py-1.5 flex items-center justify-center">
 							<wd-icon :name="entry.icon" size="52rpx" />
 						</view>
 						<text class="flex-1 text-xs text-gray-900">{{ entry.label }}</text>
