@@ -14,6 +14,7 @@
 	<a href="https://uni-halo-doc.ialley.cn">官方文档</a>
 	<a href="https://github.com/uni-halo/uni-halo">仓库地址</a>
 	<a href="https://github.com/uni-halo/uni-halo-plugin">插件仓库</a>
+	<a href="https://www.halo.run/store/apps/app-aukgwe3y">插件市场</a>
 </p>
 
 ---
@@ -50,7 +51,7 @@
 
 精心设计的秀恩爱模块：情侣甜蜜相册（支持查看密码，页内解锁，服务端保证安全）、恋爱记录清单、我们的故事。配套插件内置恋爱日记前台模板，站点主题装上插件即可直接展示。
 
-![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/恋爱日记.jpg)
+![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/plugin/v3.x/前台模板.png)
 
 ### 🔐 登录与管理
 
