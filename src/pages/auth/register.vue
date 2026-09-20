@@ -39,19 +39,19 @@
 		})
 	})
 
-	/* ---------- 用户协议/隐私政策(getConfigs 下发 featureConfig.pages.agreement) ---------- */
-	/** 协议弹窗类型(与插件端 agreement 字段名一致) */
+	/* ---------- 用户协议/隐私政策(getConfigs 下发 featureConfig.pages.userAgreement / pages.privacyPolicy) ---------- */
+	/** 协议弹窗类型(与插件端 pages 键名一致) */
 	type AgreementType = 'userAgreement' | 'privacyPolicy'
 	const agreed = ref(false)
 	const agreementPopupVisible = ref(false)
 	const popupType = ref<AgreementType>('userAgreement')
 
-	/** 站点协议内容(富文本 HTML;未配置时弹窗内显示空态) */
+	/** 协议内容 */
 	const agreementContents = computed(() => {
-		const agreement = configs.value.featureConfig?.pages?.agreement
+		const pages = configs.value.featureConfig?.pages
 		return {
-			userAgreement: (agreement?.userAgreement || '').trim(),
-			privacyPolicy: (agreement?.privacyPolicy || '').trim(),
+			userAgreement: (pages?.userAgreement?.content || '').trim(),
+			privacyPolicy: (pages?.privacyPolicy?.content || '').trim(),
 		}
 	})
 

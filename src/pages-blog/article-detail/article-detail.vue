@@ -23,7 +23,7 @@ import type { RestrictReadType } from '@/api/types/uni-halo'
 
 definePage({
   style: {
-    navigationBarTitleText: '内容详情',
+    navigationBarTitleText: '笔记详情',
     enablePullDownRefresh: true,
     navigationStyle: 'custom',
   },
@@ -31,7 +31,7 @@ definePage({
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认；滚动后显示笔记题目） */
-const pageTitle = usePageTitle('postDetail', '内容详情')
+const pageTitle = usePageTitle('postDetail', '笔记详情')
 const appConfigStore = useAppConfigStore()
 const favoritesStore = useFavoritesStore()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
@@ -73,7 +73,7 @@ const commentDetail = ref({
 })
 
 /* ---------------- 计算属性 ---------------- */
-const postDetailConfig = computed(() => haloConfigs.value.featureConfig?.pages?.postDetailConfig)
+const postDetailPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.postDetail)
 
 const bloggerInfo = computed(() => {
   const blogger = haloConfigs.value.featureConfig?.profile?.blogger
@@ -83,10 +83,10 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const calcIsShowComment = computed(() => !!postDetailConfig.value?.showComment)
+const calcIsShowComment = computed(() => !!postDetailPageConfig.value?.showComment)
 /** 是否启用评论（站点开关 + 文章自身开关，文章未配置时视为允许） */
 const calcEnableComment = computed(() =>
-  !!postDetailConfig.value?.enableComment
+  !!postDetailPageConfig.value?.enableComment
   && result.value?.spec.allowComment !== false)
 const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
@@ -602,18 +602,18 @@ onShareTimeline(() => {
 
         <view class="box-border px-3">
           <!-- 版权声明 -->
-          <view v-if="postDetailConfig?.copyrightEnabled" class="mb-3 box-border">
+          <view v-if="postDetailPageConfig?.copyrightEnabled" class="mb-3 box-border">
             <view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
               <uh-section-title>版权声明</uh-section-title>
               <view class="mt-3 flex flex-col gap-y-2 text-3xs text-gray-600">
-                <view v-if="postDetailConfig.copyrightAuthor" class="leading-5">
-                  版权归属：{{ postDetailConfig.copyrightAuthor }}
+                <view v-if="postDetailPageConfig.copyrightAuthor" class="leading-5">
+                  版权归属：{{ postDetailPageConfig.copyrightAuthor }}
                 </view>
-                <view v-if="postDetailConfig.copyrightDesc" class="leading-5">
-                  版权说明：{{ postDetailConfig.copyrightDesc }}
+                <view v-if="postDetailPageConfig.copyrightDesc" class="leading-5">
+                  版权说明：{{ postDetailPageConfig.copyrightDesc }}
                 </view>
-                <view v-if="postDetailConfig.copyrightViolation" class="text-red-400 leading-5">
-                  侵权处理：{{ postDetailConfig.copyrightViolation }}
+                <view v-if="postDetailPageConfig.copyrightViolation" class="text-red-400 leading-5">
+                  侵权处理：{{ postDetailPageConfig.copyrightViolation }}
                 </view>
               </view>
             </view>

@@ -24,10 +24,12 @@ export type PageTitleKey =
 	| 'contact'
 	| 'setting'
 	| 'aboutProject'
-	| 'disclaimers'
+	| 'disclaimer'
 	| 'dataVisual'
 	| 'login'
 	| 'register'
+	| 'userAgreement'
+	| 'privacyPolicy'
 
 /**
  * 页面标题（uh-navbar default-title）：

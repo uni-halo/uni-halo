@@ -6,11 +6,11 @@
 
 	const { configs } = storeToRefs(useAppConfigStore())
 
-	const calcIsShowQuickNavigationEnabled = computed(() => configs.value.featureConfig?.pages?.homeConfig?.useQuickNavigation)
+	const calcIsShowQuickNavigationEnabled = computed(() => configs.value.featureConfig?.pages?.home?.useQuickNavigation)
 
 	/** 快捷导航项(插件端已配置则按配置展示,未配置/为空回退内置默认项;visible=false 隐藏) */
 	const navList = computed(() => {
-		const configured = configs.value.featureConfig?.pages?.homeConfig?.quickNavigation
+		const configured = configs.value.featureConfig?.pages?.home?.quickNavigation
 		return (configured?.length ? configured : DefaultQuickNavigation).filter(item => item.visible !== false)
 	})
 

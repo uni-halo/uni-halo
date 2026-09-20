@@ -13,13 +13,13 @@
 	const categoryList = ref<ICategory[]>([])
 
 	const isEnableCategoryModule = computed(() => {
-		return !!configs.value.featureConfig?.pages?.homeConfig?.useCategory
+		return !!configs.value.featureConfig?.pages?.home?.useCategory
 	})
 
 	async function handleGetCategoryList() {
 		try {
 			loading.value = 'loading'
-			const configured = configs.value.featureConfig?.pages?.homeConfig?.categories
+			const configured = configs.value.featureConfig?.pages?.home?.categories
 			console.log('configured',configured)
 			let categoryListRaw : ICategory[] = []
 			if (configured && configured.length) {

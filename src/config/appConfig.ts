@@ -5,7 +5,7 @@ export const DefaultAppConfigs: IAppConfig = {
   featureConfig: {
     profile: {},
     pages: {
-      homeConfig: {
+      home: {
         useCategory: true,
       },
     },
@@ -29,5 +29,5 @@ export const DefaultQuickNavigation: IQuickNavItem[] = [
   { key: 'contact-blogger', title: '联系博主', subTitle: '博主常用联系方式', color: '#FF9800', bgColor: '#FF980024', iconPrefix: 'uhemoji2-icon', icon: '-wink', path: '/pages-blog/contact/contact', visible: true },
   { key: 'favorites', title: '我的收藏', subTitle: '笔记和瞬间收藏', color: '#FFB300', bgColor: '#FFB30024', iconPrefix: 'uhemoji2-icon', icon: '-smiling', path: '/pages-blog/favorites/favorites', visible: true },
   { key: 'friend-links', title: '友情链接', subTitle: '看看博主朋友们吧', color: '#009688', bgColor: '#00968824', iconPrefix: 'uhemoji2-icon', icon: '-cool', path: '/pages-blog/friend-links/friend-links', visible: true },
-  { key: 'about', title: '关于项目', subTitle: '小莫唐尼的开源项目', color: '#607D8B', bgColor: '#607D8B24', iconPrefix: 'uhemoji2-icon', icon: '-happy-', path: '/pages-blog/about-project/about-project', visible: true },
+  { key: 'aboutProject', title: '关于项目', subTitle: '小莫唐尼的开源项目', color: '#607D8B', bgColor: '#607D8B24', iconPrefix: 'uhemoji2-icon', icon: '-happy-', path: '/pages-blog/about-project/about-project', visible: true },
 ]

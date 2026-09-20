@@ -52,12 +52,12 @@
 	const agreementPopupVisible = ref(false)
 	const agreementTab = ref<AgreementType>('userAgreement')
 
-	/** 协议内容(富文本 HTML;未配置时弹窗内显示空态) */
+	/** 协议内容 */
 	const agreementContents = computed(() => {
-		const agreement = configs.value.featureConfig?.pages?.agreement
+		const pages = configs.value.featureConfig?.pages
 		return {
-			userAgreement: (agreement?.userAgreement || '').trim(),
-			privacyPolicy: (agreement?.privacyPolicy || '').trim(),
+			userAgreement: (pages?.userAgreement?.content || '').trim(),
+			privacyPolicy: (pages?.privacyPolicy?.content || '').trim(),
 		}
 	})
 

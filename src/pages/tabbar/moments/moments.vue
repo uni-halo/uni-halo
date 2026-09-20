@@ -37,9 +37,9 @@
 	/** 瞬间标签随机色（内置开启，插件端不再下发该配置项） */
 	const calcUseTagRandomColor = computed(() => true)
 	/** 瞬间页配置 */
-	const momentPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.momentPageConfig)
-	/** 是否开启评论（评论按钮显隐） */
-	const calcEnableComment = computed(() => !!momentPageConfig.value?.enableComment)
+	const momentConfig = computed(() => haloConfigs.value.featureConfig?.pages?.moment)
+
+	const calcEnableComment = computed(() => !!momentConfig.value?.enableComment)
 
 	const bloggerInfo = computed(() => {
 		const blogger = haloConfigs.value.featureConfig?.profile?.blogger

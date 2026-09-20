@@ -55,7 +55,7 @@ const bloggerInfo = computed(() => {
   }
 })
 
-const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.aboutConfig as
+const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.blogger as
   | { bgImageUrl?: string, waveImageUrl?: string, commonFeaturesMode?: 'grid' | 'list' }
   | undefined)
 
@@ -114,7 +114,7 @@ interface IMyPageEntry {
 }
 
 const configuredFeatures = computed(() => {
-  const mp = haloConfigs.value.featureConfig?.pages?.myPageConfig as
+  const mp = haloConfigs.value.featureConfig?.pages?.mine as
     | { commonFeatures?: IMyPageEntry[], otherFeatures?: IMyPageEntry[] }
     | undefined
   if (!mp || (!mp.commonFeatures?.length && !mp.otherFeatures?.length)) {
@@ -153,7 +153,7 @@ const otherFeatures = computed(() => {
 /* ---------------- 功能导航 ---------------- */
 
 async function handleGetNavList() {
-  // 配置模式：插件端 myPageConfig 两组（常用功能→blog、其他功能→more），
+  // 配置模式：插件端 mine 两组（常用功能→blog、其他功能→more），
   // 未配置/为空时回退本地内置默认（保留原显隐推导）
   const mp = configuredFeatures.value
   if (mp) {

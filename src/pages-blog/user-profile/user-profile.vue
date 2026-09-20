@@ -68,9 +68,9 @@
 		bio: ownerInfo.value.bio || '这个人很懒，什么都没有留下~',
 	}))
 
-	/** 封面图:复用 mine.vue(关于页)的 aboutConfig.bgImageUrl;空时 checkImageUrl 自动回落默认背景图 */
+	/** 封面图:复用 mine.vue(关于页)的 blogger.bgImageUrl;空时 checkImageUrl 自动回落默认背景图 */
 	const profileStyle = computed(() => ({
-		backgroundImage: `url(${checkImageUrl(configs.value.featureConfig?.pages?.aboutConfig?.bgImageUrl)})`,
+		backgroundImage: `url(${checkImageUrl(configs.value.featureConfig?.pages?.blogger?.bgImageUrl)})`,
 	}))
 
 	/** 从列表数据回填他人资料(取第一条带 owner 的记录) */

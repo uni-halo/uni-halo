@@ -38,7 +38,7 @@ export interface ISocialItem {
 	visible?: boolean;
 }
 
-/** 快捷导航/功能入口项（homeConfig.quickNavigation、myPageConfig 两组共用结构） */
+/** 快捷导航/功能入口项（home.quickNavigation、mine 两组共用结构） */
 export interface IQuickNavItem {
 	key?: string;
 	title?: string;
@@ -115,7 +115,7 @@ export interface IPageTitles {
 	contact?: string;
 	setting?: string;
 	aboutProject?: string;
-	disclaimers?: string;
+	disclaimer?: string;
 	dataVisual?: string;
 	// 认证页
 	login?: string;
@@ -136,7 +136,7 @@ export interface IHomeCategoryItem {
 export interface IPageConfig {
 	/** 全站页面标题（插件端「功能设置 → 页面设置 → 页面标题」配置） */
 	titles?: IPageTitles;
-	homeConfig?: {
+	home?: {
 		/** 是否显示首页分类栏（精品笔记分类） */
 		useCategory?: boolean;
 		/** 是否显示快捷导航(首页) */
@@ -147,7 +147,7 @@ export interface IPageConfig {
 		categories?: IHomeCategoryItem[];
 	};
 	/** 博主页（资料卡视觉与功能入口布局） */
-	aboutConfig?: {
+	blogger?: {
 		/** 资料卡背景图 */
 		bgImageUrl?: string;
 		/** 资料卡波浪图 */
@@ -156,23 +156,30 @@ export interface IPageConfig {
 		commonFeaturesMode?: 'grid' | 'list' | string;
 	};
 	/** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构） */
-	myPageConfig?: {
+	mine?: {
 		commonFeatures?: IQuickNavItem[];
 		otherFeatures?: IQuickNavItem[];
 	};
 	/** 免责声明页（按内容非空展示） */
-	disclaimers?: {
+	disclaimer?: {
 		content?: string;
 	};
-	/** 用户协议与隐私政策（注册页勾选行/协议弹窗与独立协议页共用内容；留空 = 站点未配置） */
-	agreement?: {
+	/** 用户协议页（注册页勾选行/协议弹窗与独立协议页共用内容；enabled=false 或留空 = 站点未启用/未配置） */
+	userAgreement?: {
+		/** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
+		enabled?: boolean;
 		/** 用户协议内容(富文本 HTML) */
-		userAgreement?: string;
+		content?: string;
+	};
+	/** 隐私政策页（注册页勾选行/协议弹窗与独立协议页共用内容；enabled=false 或留空 = 站点未启用/未配置） */
+	privacyPolicy?: {
+		/** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
+		enabled?: boolean;
 		/** 隐私政策内容(富文本 HTML) */
-		privacyPolicy?: string;
+		content?: string;
 	};
 	/** 笔记详情页配置（评论开关与版权文案） */
-	postDetailConfig?: {
+	postDetail?: {
 		showComment?: boolean;
 		/** 启用评论（评论按钮显隐；插件端透传官方评论设置） */
 		enableComment?: boolean;
@@ -182,7 +189,7 @@ export interface IPageConfig {
 		copyrightViolation?: string;
 	};
 	/** 瞬间页配置（评论列表显隐与评论开关） */
-	momentPageConfig?: {
+	moment?: {
 		showCommentList?: boolean;
 		enableComment?: boolean;
 	};

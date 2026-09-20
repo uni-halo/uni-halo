@@ -45,11 +45,11 @@ const siteName = computed(() => {
 })
 
 /** 瞬间页配置 */
-const momentPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.momentPageConfig)
+const momentConfig = computed(() => haloConfigs.value.featureConfig?.pages?.moment)
 /** 是否显示评论列表 */
-const calcShowCommentList = computed(() => !!momentPageConfig.value?.showCommentList)
+const calcShowCommentList = computed(() => !!momentConfig.value?.showCommentList)
 /** 是否开启评论（评论按钮显隐） */
-const calcEnableComment = computed(() => !!momentPageConfig.value?.enableComment)
+const calcEnableComment = computed(() => !!momentConfig.value?.enableComment)
 
 /* ---------------- 状态 ---------------- */
 const queryName = ref('')
