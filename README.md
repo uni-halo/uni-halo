@@ -4,9 +4,7 @@
     </a>
 </p>
 
-<p align="center"><b>【uni-halo v3.0】</b> 基于 Halo2.X API 多端项目，值得一试。</p>
-
-<p align="center"><b style="font-size: 20px;color: #10B5FB">正式支持 Halo2.X 版本，免费开源</b></p>
+<p align="center"><b>【UniHalo v3.x】</b> 支持 Halo2.x (不支持专业/商城版完整功能) 移动端多端项目，值得一试。</p>
 
 <br />
 <p align="center">
@@ -130,7 +128,7 @@ pnpm dev:mp-weixin
 - **安全与登录**：验证码防护、移动端登录开关与微信密钥配置
 - **主题扩展**：小程序悬浮窗、平台接入（第三方插件）
 
-下载安装：[插件 Releases](https://github.com/uni-halo/uni-halo-plugin/releases) ｜ [Halo 应用市场](https://www.halo.run/store/apps/app-ryemX)
+下载安装：[插件 Releases](https://github.com/uni-halo/uni-halo-plugin/releases) ｜ [Halo 应用市场](https://www.halo.run/store/apps/app-aukgwe3y)
 
 ## 📚 相关资源
 
@@ -142,7 +140,7 @@ pnpm dev:mp-weixin
 | 官方文档 | https://uni-halo-doc.ialley.cn |
 | 应用仓库 | https://github.com/uni-halo/uni-halo |
 | 插件仓库 | https://github.com/uni-halo/uni-halo-plugin |
-| Halo 应用市场 | https://www.halo.run/store/apps/app-ryemX |
+| Halo 应用市场 | https://www.halo.run/store/apps/app-aukgwe3y |
 
 ## 💬 使用交流
 
