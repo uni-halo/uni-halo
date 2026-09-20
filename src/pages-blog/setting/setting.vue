@@ -162,7 +162,7 @@ async function handleResetAll() {
               @click="handleOpenEnum(row)"
             >
               <view class="row-left flex flex-col gap-1">
-                <text class="text-sm text-gray-900 font-semibold">{{ row.label }}</text>
+                <text class="text-3xs text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
                   <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
                   <view
@@ -189,11 +189,11 @@ async function handleResetAll() {
           <view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
             <view
               v-for="(row) in group.rows" :key="row.key"
-              class="box-border flex items-center justify-between p-3" 
+              class="box-border flex items-center justify-between p-3"
               @click="handleOpenEnum(row)"
             >
               <view class="row-left flex flex-col gap-1">
-                <text class="text-sm text-gray-900 font-semibold">{{ row.label }}</text>
+                <text class="text-3xs text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
                   <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
                   <template v-else>
@@ -230,7 +230,7 @@ async function handleResetAll() {
     <!-- 枚举选择弹层 -->
     <uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" :z-index="999" position="bottom" custom-class="rounded-xl">
       <!-- 弹窗容器 -->
-      <view class="w-full box-border flex flex-col gap-y-3 p-3">
+      <view class="box-border w-full flex flex-col gap-y-3 p-3">
         <!-- 顶部 -->
         <view class="flex items-center justify-between">
           <text class="text-md font-bold">{{ enumSheet.def?.label || '请选择' }}</text>
