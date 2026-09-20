@@ -195,7 +195,7 @@ defineExpose({ openEdit })
           <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录此刻的想法与生活' : '修改这条瞬间' }}</text>
         </view>
-        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass flex items-center justify-center absolute right-0 top-0 h-6 w-6 border rounded-lg shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
@@ -241,7 +241,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
           {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
         </uh-button>
       </view>

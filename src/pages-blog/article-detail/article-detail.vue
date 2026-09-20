@@ -484,7 +484,7 @@ onShareTimeline(() => {
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
-        <view class="box-border flex flex-col gap-3 p-4 pb-2">
+        <view class="box-border flex flex-col gap-3 p-3 pb-2">
           <view class="flex items-center gap-x-2">
             <image
               :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 overflow-hidden"
@@ -515,7 +515,7 @@ onShareTimeline(() => {
             </text>
           </view>
 
-          <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-4">
+          <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-3">
             <view v-if="originalURL" class="flex flex-1 items-center gap-x-2 text-gray-500">
               <text class="text-xs">原文</text>
               <text class="text-xs text-gray-900" @click.stop="handleToOriginal(originalURL)">
@@ -551,7 +551,8 @@ onShareTimeline(() => {
         </view>
 
         <!-- 内容区域 -->
-        <view class="box-border flex flex-col gap-y-4 p-4 pt-2 text-sm text-gray-900 leading-7">
+        <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
+			<view class="box-border text-sm text-gray-900 leading-6 uh-global-card-glass uh-shadow-xs !bg-white/10 rounded-xl p-3">
           <!-- 受限阅读 -->
           <template v-if="checkPostRestrictRead(result!)">
             <view v-if="showContentArr.length === 0">
@@ -591,14 +592,15 @@ onShareTimeline(() => {
               :show-language-name="true" copy-by-long-press
             />
           </template>
+		  </view>
         </view>
 
         <!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
         <uh-article-vote :vote-ids="result?._voteIds || []" />
 
-        <view class="box-border px-4">
+        <view class="box-border px-3">
           <!-- 版权声明 -->
-          <view v-if="postDetailConfig?.copyrightEnabled" class="mb-4 box-border">
+          <view v-if="postDetailConfig?.copyrightEnabled" class="mb-3 box-border">
             <view class="uh-global-card-glass uh-shadow-xs rounded-xl p-3">
               <uh-section-title>版权声明</uh-section-title>
               <view class="mt-3 flex flex-col gap-y-2 text-3xs text-gray-600">
@@ -633,7 +635,7 @@ onShareTimeline(() => {
           class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
         >
           <view
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
             :class="[hasUpvoted() ? 'text-primary' : 'text-gray-900']" @click="handleDoLikesClick"
           >
             <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
@@ -641,14 +643,14 @@ onShareTimeline(() => {
           </view>
           <view
             v-if="calcIsShowComment"
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
             @click="handleToComment()"
           >
             <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
             <text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
           </view>
           <view
-            class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
             @click="handleTogglePostFavorite"
           >
             <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
@@ -697,12 +699,10 @@ onShareTimeline(() => {
 </template>
 
 <style scoped lang="scss">
-	/* 内容区域上移 */
 .uh-content-lift {
   transform: translateY(-3rem);
 }
 
-/* 水平居中定位 */
 .uh-translate-x-center {
   transform: translateX(-50%);
 }

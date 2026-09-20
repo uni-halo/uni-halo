@@ -152,31 +152,31 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <view v-else class="box-border flex flex-col gap-3 px-3 pb-24 pt-3">
       <view
-        v-for="(item, index) in dataList" :key="item.metadata?.name || item.id"
-        class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl"
+        v-for="(item) in dataList" :key="item.metadata?.name || item.id"
+        class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl flex flex-col gap-y-3 box-border p-3"
       >
-        <view class="flex items-start gap-3 p-4">
+        <view class="flex gap-3">
           <image
             v-if="item.spec?.images?.[0]" :src="checkThumbnailUrl(item.spec.images[0], true)"
             mode="aspectFill" class="h-20 w-20 shrink-0 rounded-lg"
           />
-          <view class="min-w-0 flex-1">
-            <view class="text-sm text-gray-900 font-bold">
-              {{ item.spec?.title || '未命名' }}
+          <view class="flex-1 flex flex-col gap-y-1 justify-between">
+            <view class="shrink-0 text-sm text-gray-900 font-semibold">
+              {{ item.spec?.title || '忘写了' }}
+            </view> 
+			<view class="flex-1 line-clamp-2 text-xs text-gray-500 leading-relaxed">
+              {{ (item.spec?.content || '').replace(/<[^>]+>/g, '') || '' }}
             </view>
-            <view class="mt-1 flex items-center gap-2 text-3xs text-gray-500">
-              <view v-if="item.spec?.location" class="flex items-center gap-0.5">
+            <view v-if="item.spec?.location" class="shrink-0 flex items-center gap-2 text-3xs text-gray-500">
+              <view class="flex items-center gap-0.5">
                 <wd-icon name="location" size="22rpx" />
                 <text>{{ item.spec.location }}</text>
               </view>
-            </view>
-            <view class="line-clamp-2 mt-1 text-xs text-gray-500 leading-relaxed">
-              {{ (item.spec?.content || '').replace(/<[^>]+>/g, '') || '' }}
-            </view>
+            </view> 
           </view>
         </view>
         <view
-          class="box-border flex items-center justify-end gap-4 border-t border-gray-100 border-t-solid px-4 py-2.5 text-xs"
+          class="box-border flex items-center justify-end gap-4 text-xs"
         >
           <view class="flex flex-1 items-center gap-x-2">
             <view v-if="item.spec?.date" class="flex items-center gap-x-1 text-3xs text-love font-bold">

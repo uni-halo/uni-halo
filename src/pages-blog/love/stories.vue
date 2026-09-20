@@ -9,6 +9,7 @@
 	import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 	import { checkImageUrl } from '@/utils/url'
 	import { sleep } from '@/utils/common'
+	import { markdownConfig } from '@/config/markdown'
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import type { ILoveStory } from '@/api/types/uni-halo'
@@ -328,13 +329,17 @@
 			<view class="relative box-border flex flex-col gap-y-3">
 				<view v-for="(story, index) in stories" :key="story.key" class="relative flex"
 					:class="index === stories.length - 1 ? '-last' : ''">
-					<view class="shrink-0 box-border pr-2">
-						<view class="flex flex-col items-center">
+					<view class="shrink-0 box-border flex flex-col gap-y-2 pr-3">
+						<view class="shrink-0 flex flex-col items-center">
 							<text class="text-2xl text-love font-bold">
-								{{ story.day }} <text class="text-lg">号</text>
+								{{ story.day }}<text class="text-sm ml-0.5">号</text>
 							</text>
-							<text class=" mt-2 text-sm text-love">{{ story.year }}/{{ story.month }}月</text>
-							<text class=" mt-1 text-xs text-gray-500">{{ story.weekend }}</text>
+							<text class="mt-1 text-sm text-love">{{ story.year }}/{{ story.month }}月</text>
+							<text class="mt-1 text-xs text-gray-500">{{ story.weekend }}</text>
+						</view>
+						<view class="flex-1 flex flex-col items-center">
+							<view class="flex-1 uh-global-card-glass border bg-love w-1 rounded-full" />
+							<view class="shrink-0 uh-global-card-glass bg-love w-3 h-3 rounded-full" />
 						</view>
 					</view>
 					<view class="relative overflow-hidden uh-global-card-glass box-border flex-1 rounded-xl p-3">
@@ -344,7 +349,8 @@
 							<view class="text-md text-gray-900 font-bold truncate">
 								{{ story.title }}
 							</view>
-							<uh-button custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 text-xs !rounded-md"
+							<uh-button
+								custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 text-xs !rounded-md"
 								@click="handleOnStoryClick(story)">详情</uh-button>
 						</view>
 						<view v-if="story.location" class="mt-2 flex items-center text-xs text-gray-600">
@@ -372,11 +378,11 @@
 		</view>
 
 		<!-- 故事详情弹窗 -->
-		<uh-glass-popup v-model="showDetail" :z-index="100" position="bottom" custom-class="rounded-xl">
+		<uh-glass-popup v-model="showDetail" :z-index="100" position="bottom" custom-class="!rounded-xl">
 			<!-- 弹窗容器 -->
-			<view class="w-full box-border flex flex-col gap-y-3 p-3 overflow-hidden rounded-xl bg-white">
+			<view class="w-full box-border flex flex-col gap-y-3 p-3 overflow-hidden rounded-xl">
 				<!-- 顶部 -->
-				<view class="story-detail-header box-border shrink-0">
+				<view class="relative box-border shrink-0">
 					<view class="story-detail-title text-lg text-gray-900 font-bold">
 						{{ currentStory.title }}
 					</view>
@@ -389,39 +395,50 @@
 							<wd-icon name="location"></wd-icon> {{ currentStory.location }}
 						</text>
 					</view>
+					<view
+						class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg flex items-center justify-center shadow-none"
+						@click="showDetail = false">
+						<wd-icon name="close" size="28rpx" class="text-gray-500" />
+					</view>
 				</view>
 				<!-- 故事图片:多图 swiper 轮播 -->
 				<view v-if="currentStory.images.length > 0" class="story-images shrink-0">
-					<swiper v-if="currentStory.images.length > 1" class="h-32 w-full rounded-lg overflow-hidden" circular
-						indicator-dots indicator-color="rgba(255,255,255,0.4)" indicator-active-color="#f83856"
+					<swiper v-if="currentStory.images.length > 1" class="h-32 w-full rounded-lg overflow-hidden"
+						circular indicator-dots indicator-color="rgba(255,255,255,0.4)" indicator-active-color="#f83856"
 						:current="storyImageIndex" @change="handleOnStoryImageChange">
 						<swiper-item v-for="(img, imgIndex) in currentStory.images" :key="imgIndex"
-							class="story-images-item h-full w-full">
+							class="h-full w-full rounded-lg overflow-hidden">
 							<image :src="img" mode="aspectFill" class="h-full w-full"
 								@click="handlePreviewImage(imgIndex)" />
 						</swiper-item>
 					</swiper>
-					<image v-else :src="currentStory.images[0]" mode="aspectFill"
-						class="h-32 w-full" @click="handlePreviewImage(0)" />
+					<image v-else :src="currentStory.images[0]" mode="aspectFill" class="h-32 w-full rounded-lg"
+						@click="handlePreviewImage(0)" />
 				</view>
 				<!-- 滚动区域 -->
 				<scroll-view scroll-y :show-scrollbar="false" class="box-border max-h-[50vh] flex-1">
 					<!-- 滚动内部容器 -->
-					<view class="w-full flex flex-col gap-y-3">
-					<view class="story-html text-sm text-gray-900 leading-7" v-html="currentStory.content" />
+					<view class="w-full text-sm text-gray-900 leading-6">
+						<mp-html lazy-load :domain="markdownConfig.domain ?? ''"
+							:loading-img="markdownConfig.loadingGif" scroll-table selectable
+							:tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+							:content="currentStory.content" :markdown="true" :show-line-number="true"
+							:show-language-name="true" copy-by-long-press />
 					</view>
 				</scroll-view>
 				<!-- 底部固定操作区域 -->
 				<view class="box-border w-full flex items-center">
-					<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white" @click="showDetail = false">关闭</uh-button>
+					<uh-button class="flex-1"
+						custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white"
+						@click="showDetail = false">关闭</uh-button>
 				</view>
 			</view>
 		</uh-glass-popup>
 
 		<!-- 模块级密码解锁弹窗(强制不可关闭,防分享直达) -->
-		<uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled
-			:tip="unlockTip" placeholder="请输入密码" confirm-text="进入" :closeable="false"
-			:request="handleUnlockRequest" @success="handlePageUnlockSuccess" />
+		<uh-unlock-popup v-model:show="unlockModalVisible" title="请解锁" captcha-enabled :tip="unlockTip"
+			placeholder="请输入密码" confirm-text="进入" :closeable="false" :request="handleUnlockRequest"
+			@success="handlePageUnlockSuccess" />
 	</view>
 </template>
 

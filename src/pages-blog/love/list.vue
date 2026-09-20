@@ -10,6 +10,7 @@
 	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
+	import { markdownConfig } from '@/config/markdown'
 	import type { ILoveDailyItem } from '@/api/types/uni-halo'
 
 	definePage({
@@ -348,7 +349,7 @@
 		<wd-sticky :offset-top="offsetTop">
 			<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
 				<view v-for="f in filterConfig" :key="f.key"
-					class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
+					class="uh-global-card-glass shadow-none mb-3 ml-3 inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
 					:class="[filterValues[f.key] !== f.options[0].value ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500']"
 					@click="handleOpenFilter(f)">
 					<text class="truncate text-xs">{{ filterLabels[f.key] }}</text>
@@ -413,12 +414,18 @@
 								{{ item.completeDate || '-' }}
 							</view>
 						</view>
-						<view v-if="item.completeRemark" class="desc mb-3 flex">
-							<view class="desc-label w-16 shrink-0 text-gray-500">
+						<view v-if="item.completeRemark" class="mb-3 flex flex-col gap-y-2">
+							<view class="w-16 shrink-0 text-gray-500">
 								完成感想
 							</view>
-							<view class="desc-value w-0 flex-1 text-gray-900 leading-4">
-								{{ item.completeRemark || '-' }}
+							<view class="box-border bg-gray-50 text-gray-900 leading-4 p-2 rounded-lg">
+								<mp-html
+								  lazy-load :domain="markdownConfig.domain ?? ''"
+								  :loading-img="markdownConfig.loadingGif" scroll-table selectable
+								  :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+								  :content="item.completeRemark" :markdown="true" :show-line-number="true"
+								  :show-language-name="true" copy-by-long-press
+								/>
 							</view>
 						</view>
 						<view v-if="item.images.length > 0" class="desc flex">

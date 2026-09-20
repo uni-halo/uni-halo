@@ -310,7 +310,7 @@
 		<template v-else>
 			<wd-sticky :offset-top="offsetTop">
 				<view class="box-border w-screen px-3 pt-2 pb-1">
-					<view class="uh-global-card-glass uh-shaxis-xs flex h-9 items-center gap-3 rounded-full px-5">
+					<view class="uh-global-card-glass shadow-none flex h-9 items-center gap-3 rounded-full px-5">
 						<wd-icon name="search" size="16px" />
 						<input v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
 							placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
@@ -323,7 +323,7 @@
 					<!-- 筛选栏 -->
 					<view class="box-border flex items-center justify-between mt-1 py-2 gap-x-2">
 						<view v-for="f in filterConfig" :key="f.key"
-							class="uh-global-card-glass uh-shaxis-xs border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
+							class="uh-global-card-glass shadow-none border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
 							:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']"
 							@click="handleOpenFilter(f)">
 							<text class="text-xs truncate">
@@ -338,7 +338,7 @@
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData" />
 
-			<view v-else class="box-border flex flex-col gap-4 p-3">
+			<view v-else class="box-border flex flex-col gap-4 p-3 pt-2">
 				<block v-if="dataList.length !== 0">
 					<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
 					<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />

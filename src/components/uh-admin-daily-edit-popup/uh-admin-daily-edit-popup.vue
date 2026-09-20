@@ -170,7 +170,7 @@ defineExpose({ openEdit })
           <text class="text-md font-bold">{{ formMode === 'create' ? '新增清单' : '编辑清单' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一件想一起完成的事' : '修改清单信息' }}</text>
         </view>
-        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg flex items-center justify-center shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
@@ -275,7 +275,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
           保存
         </uh-button>
       </view>

@@ -1,11 +1,6 @@
 <script lang="ts" setup>
 /**
- * 恋爱故事新增/编辑弹窗：标题/日期(wd-datetime-picker)/地点/内容(官方 editor)/图片
- * 内容编辑使用全局 uh-rich-editor（带基础格式工具条）
- *
- * 用法：
- * - 新增模式：<uh-admin-story-edit-popup :show="visible" @on-close="..." />
- * - 编辑模式：通过 ref.openEdit(story) 传入完整故事资源回填
+ * 恋爱故事新增/编辑弹窗
  */
 import { ref, watch } from 'vue'
 import dayjs from 'dayjs'
@@ -145,7 +140,7 @@ defineExpose({ openEdit })
           <text class="text-md font-bold">{{ formMode === 'create' ? '新增故事' : '编辑故事' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一段属于你们的回忆' : '修改故事信息' }}</text>
         </view>
-        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg flex items-center justify-center shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
@@ -210,7 +205,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love !text-white" :loading="saving" @click="handleSave">
           保存
         </uh-button>
       </view>

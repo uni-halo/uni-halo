@@ -15,6 +15,23 @@
 			styleIsolation: 'apply-shared',
 		},
 	})
+
+	interface IProfileEntry {
+		key : string
+		type : 'switch' | 'navigate'
+		icon : string
+		label : string
+		path : string
+	}
+
+	interface IProps {
+		modelValue : boolean
+	}
+
+	interface IEmits {
+		(e : 'update:modelValue', value : boolean) : void
+	}
+
 	const props = defineProps<IProps>()
 	const emits = defineEmits<IEmits>()
 
@@ -25,14 +42,6 @@
 	const { can } = usePermission()
 
 	const dialog = useDialog('user-popup')
-
-	interface IProps {
-		modelValue : boolean
-	}
-
-	interface IEmits {
-		(e : 'update:modelValue', value : boolean) : void
-	}
 
 	const popupVisible = computed({
 		get: () => props.modelValue,
@@ -74,10 +83,29 @@
 		})
 	}
 
+	function handleToPage(entry : IProfileEntry) {
+		handleClose()
+		if (entry.type === 'switch') {
+			uni.switchTab({
+				url: entry.path,
+				animationType: 'slide-in-right',
+			})
+			return
+		}
+		if (entry.type === 'navigate') {
+			uni.navigateTo({
+				url: entry.path,
+				animationType: 'slide-in-right',
+			})
+			return
+		}
+	}
+
 	/** 个人入口（我的信息 / 个人主页） */
-	const PROFILE_ENTRIES = [
-		{ key: 'my-profile', icon: 'edit', label: '我的资料', url: '/pages-blog/my-profile/my-profile' },
-		{ key: 'user-profile', icon: 'home', label: '个人主页', url: '/pages-blog/user-profile/user-profile' },
+	const PROFILE_ENTRIES : Array<IProfileEntry> = [
+		{ key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
+		{ key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-blog/my-profile/my-profile' },
+		{ key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
 	]
 
 	function handleLogout() {
@@ -108,7 +136,7 @@
 				<view
 					class="uh-global-card-glass h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
 					@click="handleClose()">
-					<wd-icon name="close" size="16px" />
+					<wd-icon name="close" size="28rpx" />
 				</view>
 			</view>
 
@@ -117,7 +145,7 @@
 				<view
 					class="uh-global-card-glass flex items-center gap-x-2 border rounded-xl p-3 shadow-none !bg-white/5">
 					<image :src="checkAvatarUrl(userInfo.avatar)"
-						class="uh-global-card-glass uh-shadow-xs h-12 w-12 rounded-full" />
+						class="uh-global-card-glass uh-shadow-xs h-12 w-12 rounded-full" mode="aspectFill" />
 					<view class="flex flex-col justify-center gap-y-1">
 						<text class="text-2xs text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
 						<text
@@ -132,7 +160,7 @@
 				<view class="mt-3 box-border grid grid-cols-3 gap-3">
 					<view v-for="entry in PROFILE_ENTRIES" :key="entry.key"
 						class="uh-global-card-glass overflow-hidden flex flex-col items-center gap-y-0.5 rounded-xl p-2 shadow-none"
-						@click="handleToAdmin(entry.url)">
+						@click="handleToPage(entry)">
 						<view class="rounded-lg bg-gray-50 text-gray-900 w-12 py-1 flex items-center justify-center">
 							<wd-icon :name="entry.icon" size="52rpx" />
 						</view>
@@ -163,7 +191,7 @@
 				<view v-else
 					class="mt-3 flex-1 flex items-center justify-center box-border w-full uh-global-card-glass bg-white border shadow-none p-4 rounded-xl backdrop-filter-none">
 					<uh-data-loading :loading-status="DataLoadingStatusEnum.Empty" empty-text="您没有任何权限" size="small"
-						min-height="32vh" :use-refresh-button="false"/>
+						min-height="32vh" :use-refresh-button="false" />
 				</view>
 			</view>
 
@@ -178,5 +206,5 @@
 			</view>
 		</view>
 	</uh-glass-popup>
-	<wd-dialog selector="user-popup"/>
+	<wd-dialog selector="user-popup" />
 </template>

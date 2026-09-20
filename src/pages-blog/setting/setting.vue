@@ -151,18 +151,18 @@ async function handleResetAll() {
         </view>
       </view>
 
-      <!-- 布局:按页面分组(首页/笔记列表/笔记归档 × 列表布局/卡片样式) -->
+      <!-- 布局 -->
       <template v-if="activeTab === 'layout'">
         <view v-for="group in layoutGroups" :key="group.key" class="flex flex-col gap-y-3">
           <uh-section-title>{{ group.label }}</uh-section-title>
           <view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
             <view
-              v-for="(row, index) in group.rows" :key="row.key"
-              class="pick-row flex items-center justify-between p-3"
+              v-for="(row) in group.rows" :key="row.key"
+              class="box-border flex items-center justify-between p-3"
               @click="handleOpenEnum(row)"
             >
               <view class="row-left flex flex-col gap-1">
-                <text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
+                <text class="text-sm text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
                   <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
                   <view
@@ -188,13 +188,12 @@ async function handleResetAll() {
           <uh-section-title>{{ group.label }}</uh-section-title>
           <view class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-2xl">
             <view
-              v-for="(row, index) in group.rows" :key="row.key"
-              class="pick-row flex items-center justify-between p-3"
-              :class="index < group.rows.length - 1 ? 'border-b border-black/5' : ''"
+              v-for="(row) in group.rows" :key="row.key"
+              class="box-border flex items-center justify-between p-3" 
               @click="handleOpenEnum(row)"
             >
               <view class="row-left flex flex-col gap-1">
-                <text class="row-label text-sm text-gray-900 font-bold">{{ row.label }}</text>
+                <text class="text-sm text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
                   <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
                   <template v-else>

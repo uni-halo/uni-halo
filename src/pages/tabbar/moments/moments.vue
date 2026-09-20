@@ -446,7 +446,7 @@
 
 		<template v-else>
 			<wd-sticky :offset-top="offsetTop">
-				<view class="box-border w-screen px-3 pt-2">
+				<view class="box-border w-screen px-3 pt-1">
 					<uh-month-calendar v-model="selectedMonth" :show-year="true" @change="handleMonthCalendarChange" />
 				</view>
 			</wd-sticky>
@@ -454,7 +454,7 @@
 			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
 				min-height="65vh" @refresh="handleGetData" />
 
-			<view v-else class="box-border flex flex-col gap-3 px-3 mt-5">
+			<view v-else class="box-border flex flex-col gap-3 px-3 mt-4">
 				<view v-for="moment in dataList" :key="moment.metadata.name" class="flex gap-x-2">
 					<view v-if="false" class="shrink-0 flex flex-col gap-y-2 w-13">
 						<view class="shrink-0 flex flex-col items-center font-bold">
@@ -515,11 +515,12 @@
 				@change="handleYearPickerChange" />
 			<!-- 底部固定操作区域 -->
 			<view class="box-border w-full flex items-center gap-x-3">
-				<uh-button custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+				<uh-button class="flex-1"
+					custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
 					@click="handleYearPickerCancel">
 					取消
 				</uh-button>
-				<uh-button
+				<uh-button class="flex-1"
 					custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
 					@click="handleYearPickerConfirm">
 					确定

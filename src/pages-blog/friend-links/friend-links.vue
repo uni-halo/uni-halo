@@ -376,7 +376,6 @@
 			},
 			fail: (res : unknown) => {
 				console.log('打开小程序失败', res)
-				uni.showToast({ icon: 'none', title: '打开小程序失败' })
 			}
 		}
 		if (miniProgramOpenMode.value === 'halfScreen') {
@@ -556,7 +555,7 @@
 								<uh-button class="flex-1"
 									custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
 									@click="handleCopyLink(detail.data)">
-									提交申请
+									复制信息
 								</uh-button>
 							</view>
 						</view>
@@ -712,8 +711,8 @@
 						<!-- #ifdef MP-WEIXIN -->
 						<!-- 底部固定操作区域 -->
 						<view class="box-border w-full flex items-center">
-							<uh-button class="uh-global-card-glass border !py-2 text-xs"
-								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl text-xs"
+							<uh-button class="flex-1"
+								custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
 								@action-click="handleToMiniProgram(miniDetail.data)">点击访问</uh-button>
 						</view>
 						<!-- #endif -->
