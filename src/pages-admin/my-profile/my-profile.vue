@@ -394,7 +394,7 @@ onShow(() => {
                   focus placeholder="请输入昵称" :disabled="nicknameSaving" :maxlength="20"
                   @confirm="saveNickname"
                 />
-                <view class="flex shrink-0 items-center gap-x-2">
+                <view class="flex shrink-0 items-center gap-x-1">
                   <uh-button
                     custom-class="uh-global-card-glass border !bg-gray-100 !px-2 !text-xs text-gray-gray-600"
                     @click="cancelEditNickname"
@@ -402,7 +402,7 @@ onShow(() => {
                     取消
                   </uh-button>
                   <uh-button
-                    custom-class="uh-global-card-glass shrink-0 !px-2 !text-xs text-gray-900"
+                    custom-class="uh-global-card-glass border shrink-0 !px-2 !text-xs text-gray-900"
                     :class="nicknameSaving ? 'opacity-60' : ''" @click="saveNickname"
                   >
                     {{ nicknameSaving ? '保存中' : '保存' }}

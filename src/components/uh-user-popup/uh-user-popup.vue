@@ -149,15 +149,18 @@ function handleLogout() {
         >
           <image
             :src="checkAvatarUrl(userInfo.avatar)"
-            class="uh-global-card-glass uh-shadow-xs h-12 w-12 rounded-full" mode="aspectFill"
+            class="uh-global-card-glass uh-shadow-xs h-12 w-12 shrink-0 rounded-full" mode="aspectFill"
           />
-          <view class="flex flex-col justify-center gap-y-1">
-            <text class="text-2xs text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
+          <view class="flex-1">
+            <text class="text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
             <text
-              class="uh-global-card-glass border rounded-md bg-secondary px-2 py-0.5 text-10px text-gray-500"
+              class="uh-global-card-glass mt-1 inline-block border rounded-md bg-secondary px-2 py-0.5 text-10px text-gray-500"
             >
               {{ isAdmin ? '超级管理员' : '普通用户' }}
             </text>
+          </view>
+          <view class="flex shrink-0 items-center justify-center">
+            <wd-icon name="edit" size="36rpx" custom-class="text-gray-400" />
           </view>
         </view>
       </view>
