@@ -6,15 +6,16 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import {
   bindMyWechat,
+  getAuthProfile,
   getMyWechatBinding,
   getWxCode,
+  setInitialPassword,
   unbindMyWechat,
 } from '@/api/auth'
 import type { IMyWechatBinding } from '@/api/auth'
 import {
   changeMyPassword,
   getCurrentUserDetail,
-  getUcCurrentUser,
   updateUserProfile,
   uploadUserAvatar,
 } from '@/api/user'
@@ -182,10 +183,12 @@ async function openPasswordSheet() {
   newPassword.value = ''
   confirmPassword.value = ''
   passwordSheet.value = true
-  // 未设置过密码（如微信自动建号）时旧密码可留空
+  // 判定「是否自主设置过密码」：必须用插件 profile 的 passwordSetByUser（注解），
+  // 不能用 UC 的 passwordSet——后者只看密码哈希是否存在，插件代生成的随机/固定
+  // 密码用户注册起就是 true，会被误判为已设置而要求输入无人知晓的旧密码。
   try {
-    const res = await getUcCurrentUser()
-    passwordSet.value = res.data?.passwordSet !== false
+    const res = await getAuthProfile()
+    passwordSet.value = res.data?.user?.passwordSetByUser !== false
   }
   catch {
     passwordSet.value = true
@@ -198,7 +201,7 @@ async function savePassword() {
     uni.showToast({ icon: 'none', title: '请输入原密码' })
     return
   }
-  if (!pwd || pwd.length < 5) {
+  if (!pwd || pwd.length < 6) {
     uni.showToast({ icon: 'none', title: '新密码至少 5 位' })
     return
   }
@@ -208,18 +211,36 @@ async function savePassword() {
   }
   passwordSaving.value = true
   try {
-    await changeMyPassword(passwordSet.value ? oldPassword.value : undefined, pwd)
-    passwordSheet.value = false
-    uni.showToast({ icon: 'none', title: '密码修改成功，请重新登录' })
-    // 修改密码后登录态已失效：退出登录清空 token 与用户信息，返回上一页
-    setTimeout(async () => {
-      await tokenStore.logout()
-      uni.navigateBack()
-    }, 600)
+    if (passwordSet.value) {
+      // 已自主设置过密码：走 Halo UC 端点，需旧密码验证
+      await changeMyPassword(oldPassword.value, pwd)
+      passwordSheet.value = false
+      uni.showToast({ icon: 'none', title: '密码修改成功，请重新登录' })
+      // 修改密码后登录态已失效：退出登录清空 token 与用户信息，返回上一页
+      // setTimeout(async () => {
+      //   await tokenStore.logout()
+      //   uni.navigateBack()
+      // }, 600)
+    }
+    else {
+      // 从未自主设置过密码（微信自动注册的随机密码用户）：走插件端首次设密接口，
+      // 免旧密码；服务端打 password-set-by-user 注解后此通道关闭。
+      // 注意：随机密码用户的 UC passwordSet 也是 true，不能用 UC 端点改密（无旧密码可填）。
+      await setInitialPassword(pwd)
+      passwordSheet.value = false
+      uni.showToast({ icon: 'none', title: '密码设置成功' })
+    }
   }
   catch (error: any) {
-    console.error('密码修改失败:', error)
-    uni.showToast({ icon: 'none', title: errText(error, '密码修改失败') })
+    // 插件端判定已设置过（403 PASSWORD_ALREADY_SET）：切回「已设置」模式，提示补旧密码
+    if (error?.data?.code === 'PASSWORD_ALREADY_SET') {
+      passwordSet.value = true
+      uni.showToast({ icon: 'none', title: '密码已设置，请输入原密码修改' })
+    }
+    else {
+      console.error('密码设置失败:', error)
+      uni.showToast({ icon: 'none', title: errText(error, '密码设置失败') })
+    }
   }
   finally {
     passwordSaving.value = false
@@ -250,8 +271,7 @@ async function fetchBinding() {
 
 /** 一键绑定微信（仅微信小程序环境；身份由 token 携带，code 换微信身份） */
 async function handleBindWechat() {
-  if (bindSubmitting.value)
-    return
+  if (bindSubmitting.value) { return }
   bindSubmitting.value = true
   try {
     const loginRes = await getWxCode()
@@ -526,7 +546,7 @@ onShow(() => {
 
     <!-- 修改密码弹层(底部玻璃弹层,取消/确认) -->
     <uh-glass-popup
-      v-model="passwordSheet" :hide-when-close="false" position="bottom" :z-index="100"
+      v-model="passwordSheet" :hide-when-close="true" position="bottom" :z-index="100"
       custom-class="rounded-xl"
     >
       <!-- 弹窗容器 -->
@@ -542,14 +562,14 @@ onShow(() => {
           />
           <wd-input
             v-model="newPassword" custom-class="uh-profile-input" show-password prefix-icon="lock"
-            no-border placeholder="请输入新密码(至少 5 位)" :disabled="passwordSaving"
+            no-border placeholder="请输入新密码(至少 6 位)" :disabled="passwordSaving"
           />
           <wd-input
             v-model="confirmPassword" custom-class="uh-profile-input" show-password prefix-icon="lock"
             no-border placeholder="请再次输入新密码" :disabled="passwordSaving"
           />
-          <text v-if="!passwordSet" class="text-2xs text-gray-400">
-            当前账号未设置过密码（如微信自动建号），可直接设置新密码
+          <text v-if="!passwordSet" class="text-xs text-gray-600">
+            微信自动注册的账号未自主设置过密码，无需原密码可直接设置，设置后请牢记新密码。
           </text>
         </view>
         <!-- 底部固定操作区域 -->
@@ -575,7 +595,6 @@ onShow(() => {
 </template>
 
 <style scoped lang="scss">
-	/* 微信端头像选择按钮重置原生样式 */
 .avatar-trigger {
   margin: 0;
   padding: 0;

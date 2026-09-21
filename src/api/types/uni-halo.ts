@@ -998,6 +998,8 @@ export interface ILoginUser {
 	displayName?: string;
 	avatar?: string;
 	email?: string;
+	/** 用户是否「自主设置过密码」（插件端注解判定）。插件代生成的随机/固定密码用户为 false，改密弹层据此走免旧密码的首次设密通道 */
+	passwordSetByUser?: boolean;
 }
 
 /** 由角色模板递归展开的 RBAC 规则(插件端 PermissionRule) */

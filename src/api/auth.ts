@@ -256,6 +256,27 @@ export function unbindMyWechat() {
   )
 }
 
+/* ---------- 首次设置密码---------- */
+
+/**
+ * 首次设置密码(需登录 token,免旧密码)
+ *
+ * 仅「从未自主设置过密码」的用户可用(微信自动注册的随机密码用户)；
+ * 服务端以用户注解 password-set-by-user 判定，设置成功后此通道关闭，
+ * 后续改密走 UC 端点 PUT /users/-/password(需旧密码)。
+ * 已设置过时服务端返回 403 { code: 'PASSWORD_ALREADY_SET' }。
+ */
+export function setInitialPassword(newPassword: string) {
+  return http.Post<IResponse<{ success: boolean }>>(
+    `${AUTH_API_BASE}/-/password/set`,
+    { newPassword },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
 /* ---------- 微信扫码绑定(BindTicket) ---------- */
 
 /** 扫码绑定票据状态(插件端 BindTicketService.Status) */

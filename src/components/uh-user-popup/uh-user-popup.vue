@@ -43,6 +43,14 @@ const { can } = usePermission()
 
 const dialog = useDialog('user-popup')
 
+// 获取窗口信息
+const windowInfo = uni.getWindowInfo()
+
+const containerStyle = computed(() => ({
+  paddingTop: `${windowInfo.statusBarHeight}px`,
+  paddingBottom: `${windowInfo.safeAreaInsets.bottom}px`,
+}))
+
 const popupVisible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emits('update:modelValue', value),
@@ -194,10 +202,10 @@ function handleLogout() {
 <template>
   <uh-glass-popup
     v-model="popupVisible" position="left" custom-class="rounded-rt-xl rounded-rb-xl !border"
-    safe-area-inset-bottom :z-index="110" hide-when-close
+    :z-index="110" hide-when-close
   >
-    <view class="box-border h-full w-[70vw] flex flex-col gap-y-6 px-4 pt-safe">
-      <view class="flex shrink-0 items-center justify-between pt-4">
+    <view class="box-border h-full w-[70vw] flex flex-col gap-y-6 overflow-hidden px-4" :style="[containerStyle]">
+      <view class="flex shrink-0 items-center justify-between">
         <text class="text-md font-bold">我的</text>
         <view
           class="uh-global-card-glass h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
@@ -208,7 +216,7 @@ function handleLogout() {
       </view>
 
       <!-- 用户信息卡片 -->
-      <view v-if="hasLogin" class="w-full flex">
+      <view v-if="hasLogin" class="w-full flex shrink-0">
         <view
           class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
         >
@@ -244,9 +252,9 @@ function handleLogout() {
               <!-- 消息通知未读徽标 -->
               <view
                 v-if="entry.key === 'notifications' && unreadNotifyCount > 0"
-                class="absolute h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 px-1 -right-1.5 -top-1.5"
+                class="absolute h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 p-1 -right-1.5 -top-1.5"
               >
-                <text class="text-[20rpx] text-white leading-none">{{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount }}</text>
+                <text class="text-11px text-white leading-none">{{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount }}</text>
               </view>
             </view>
             <text class="flex-1 text-xs text-gray-900">{{ entry.label }}</text>
@@ -285,8 +293,8 @@ function handleLogout() {
           class="uh-global-card-glass mt-3 box-border w-full flex flex-1 items-center justify-center border rounded-xl bg-white p-4 shadow-none backdrop-filter-none"
         >
           <uh-data-loading
-            :loading-status="DataLoadingStatusEnum.Empty" empty-text="您没有任何权限" size="small"
-            min-height="32vh" :use-refresh-button="false"
+            :loading-status="DataLoadingStatusEnum.Empty" empty-text="无权限" empty-sub-text="您没有任何权限"
+            size="small" min-height="32vh" :use-refresh-button="false"
           />
         </view>
       </view>
