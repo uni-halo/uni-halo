@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-	import { ref } from 'vue'
+	import { ref, computed } from 'vue'
 	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 	import { getPostByTagName } from '@/api/halo'
 	import { sleep } from '@/utils/common'
@@ -7,6 +7,8 @@
 	import { usePageScroll } from '@/hooks/usePageScroll'
 	import { usePageTitle } from '@/hooks/usePageTitle'
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
+	import { useSettingStore } from '@/store/setting'
+	import { storeToRefs } from 'pinia'
 	import type { IPost, IPostListReq } from '@/api/types/halo'
 
 	definePage({
@@ -22,6 +24,9 @@
 	const { height: offsetTop } = useNavbarSticky()
 	/** 标签笔记列表页默认标题（插件端可配置，动态标签名加载后覆盖） */
 	const configTitle = usePageTitle('tagArticles', '标签详情')
+	const { settings } = storeToRefs(useSettingStore())
+	/** 列表布局(偏好设置驱动:single=单列 / double=双列) */
+	const listLayout = computed(() => settings.value.tagArticlesListLayout)
 	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 	const queryParams = ref({ size: 10, page: 0 })
 	const name = ref('')
@@ -168,9 +173,9 @@
 		</view>
 
 		<block v-else>
-			<view class="box-border flex flex-col gap-y-3 p-3">
+			<view :class="listLayout === 'double' ? 'grid grid-cols-2 gap-3 p-3' : 'box-border flex flex-col gap-y-3 p-3'">
 				<uh-article-card v-for="(article, index) in dataList" :key="index" :article="article"
-					@on-click="handleToArticleDetail" />
+					:variant="listLayout === 'double' ? 'grid' : 'list'" @on-click="handleToArticleDetail" />
 				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
 			</view>
 		</block>

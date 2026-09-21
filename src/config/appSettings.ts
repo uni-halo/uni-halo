@@ -8,6 +8,12 @@ export interface IAppSettings {
   articlesCardType: string
   archivesListLayout: string
   archivesCardType: string
+  /** 分类笔记页布局偏好（插件端 preferences.categoryArticles*） */
+  categoryArticlesListLayout: string
+  categoryArticlesCardType: string
+  /** 标签笔记页布局偏好（插件端 preferences.tagArticles*） */
+  tagArticlesListLayout: string
+  tagArticlesCardType: string
   /** 友情链接页展示偏好（插件端 preferences.linkPage） */
   linkPage?: {
     /** 小程序打开模式：fullscreen 全屏 / halfScreen 半屏 */
@@ -23,6 +29,10 @@ export const DefaultAppSettings: IAppSettings = {
   articlesCardType: 'image_top',
   archivesListLayout: 'single',
   archivesCardType: 'image_top',
+  categoryArticlesListLayout: 'single',
+  categoryArticlesCardType: 'image_top',
+  tagArticlesListLayout: 'single',
+  tagArticlesCardType: 'image_top',
   linkPage: {
     miniProgramOpenMode: 'fullscreen',
   },

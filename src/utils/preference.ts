@@ -90,6 +90,8 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
     setLayout('homeListLayout', 'homeCardType')
     setLayout('articlesListLayout', 'articlesCardType')
     setLayout('archivesListLayout', 'archivesCardType')
+    setLayout('categoryArticlesListLayout', 'categoryArticlesCardType')
+    setLayout('tagArticlesListLayout', 'tagArticlesCardType')
 
     if (prefs.avatarShape === 'square' || prefs.avatarShape === 'circle') {
       result.avatarShape = prefs.avatarShape

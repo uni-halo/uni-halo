@@ -7,7 +7,7 @@ import { getCache } from '@/utils/storage';
 import type { ILoginForm, IRegisterForm } from '@/api/auth';
 import type { IAuthLoginRes, ISingleTokenRes } from '@/api/types/login';
 import type { ILoginResult } from '@/api/types/uni-halo';
-
+import type { UniHaloError } from '@/http/tools/exception'
 /** 个人令牌存储 key */
 const APP_TOKENS_KEY = 'UH_APP_TOKENS';
 
@@ -157,9 +157,11 @@ export const useTokenStore = defineStore(
 				});
 				return result;
 			} catch (error) {
+				const errorData = error as UniHaloError;
 				console.error('登录失败:', error);
+				let errMsg = errorData?.data?.message || '登录失败，请重试';
 				uni.showToast({
-					title: '登录失败，请重试',
+					title: errMsg,
 					icon: 'none'
 				});
 				throw error;
@@ -178,20 +180,20 @@ export const useTokenStore = defineStore(
 				// 获取微信小程序登录的code
 				const loginRes = await getWxCode();
 				const code = loginRes.code;
-				console.log('微信登录-code: ', code);
 				const res = await _loginByWechat(code);
 				const result = res.data as ILoginResult;
-				console.log('微信登录-res: ', result);
 				await _postLogin(toSingleToken(result), result);
 				uni.showToast({
 					title: '登录成功',
 					icon: 'none'
 				});
 				return result;
-			} catch (error) {
+			} catch (error:any) {
+				const errorData = error as UniHaloError;
 				console.error('微信登录失败:', error);
+				let errMsg = errorData?.data?.message || '登录失败，请重试';
 				uni.showToast({
-					title: '微信登录失败，请重试',
+					title: errMsg,
 					icon: 'none'
 				});
 				throw error;
@@ -217,9 +219,11 @@ export const useTokenStore = defineStore(
 				});
 				return result;
 			} catch (error) {
+				const errorData = error as UniHaloError;
 				console.error('注册失败:', error);
+				let errMsg = errorData?.data?.message || '注册失败，请重试';
 				uni.showToast({
-					title: '注册失败，请重试',
+					title: errMsg,
 					icon: 'none'
 				});
 				throw error;
@@ -238,7 +242,6 @@ export const useTokenStore = defineStore(
 				// 获取微信小程序登录的code
 				const loginRes = await getWxCode();
 				const code = loginRes.code;
-				console.log('微信注册-code: ', code);
 				const res = await _registerByWechat(code);
 				const result = res.data as ILoginResult;
 				await _postLogin(toSingleToken(result), result);
@@ -248,9 +251,11 @@ export const useTokenStore = defineStore(
 				});
 				return result;
 			} catch (error) {
+				const errorData = error as UniHaloError;
 				console.error('微信注册失败:', error);
+				let errMsg = errorData?.data?.message || '注册失败，请重试';
 				uni.showToast({
-					title: '微信注册失败，请重试',
+					title: errMsg,
 					icon: 'none'
 				});
 				throw error;

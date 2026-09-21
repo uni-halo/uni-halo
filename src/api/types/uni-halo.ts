@@ -211,7 +211,7 @@ export interface IAuditDataRef {
 }
 
 export interface IAuditDataResult {
-	/** 审核模式开关(联动设置页 auditModeEnabled) */
+	/** 审核模式开关(AuditDataConfig.spec.enabled) */
 	enabled: boolean;
 	/** 选中的引用快照列表(数组顺序即展示顺序;开关关闭时为空) */
 	spec?: {
@@ -244,7 +244,7 @@ export interface IAuditDataResult {
 /**
  * getConfigs 响应（app 端直读不做归一化）：
  * - featureConfig：功能设置单例 spec 直发（脱敏后）——profile/pages/assets/
- *   preferences/love(脱敏)/linkInfo/auditMode/maintenance
+ *   preferences/love(脱敏)/linkInfo/maintenance（审核模式开关已迁至公开 /audit-data）
  * - safetyConfig：setting.yaml 组原样（captchaConfig）
  * - integrationConfig：setting.yaml 组原样（pluginConfig.toolsPlugin）
  * - themeConfig：setting.yaml 组原样（悬浮窗等主题端配置，app 端暂不消费）
@@ -281,6 +281,12 @@ export interface IAppConfig {
 			articlesCardType?: string;
 			archivesListLayout?: 'single' | 'double' | string;
 			archivesCardType?: string;
+			/** 分类笔记页布局（single/double）与卡片样式（image_*） */
+			categoryArticlesListLayout?: 'single' | 'double' | string;
+			categoryArticlesCardType?: string;
+			/** 标签笔记页布局（single/double）与卡片样式（image_*） */
+			tagArticlesListLayout?: 'single' | 'double' | string;
+			tagArticlesCardType?: string;
 			/** 头像外观：square 方形（默认）/ circle 圆形 */
 			avatarShape?: 'square' | 'circle' | string;
 			/** 友情链接页：小程序打开模式 fullscreen 全屏（默认）/ halfScreen 半屏 */
@@ -292,8 +298,6 @@ export interface IAppConfig {
 		love?: ILoveConfigGroup;
 		/** 友链设置（submissionEnabled/siteInfo/miniInfo） */
 		linkInfo?: ILinkInfoConfig;
-		/** 审核模式开关 */
-		auditMode?: { enabled?: boolean };
 		/** 维护模式原始配置（含 enabled 开关与排期窗口；维护状态以顶层 maintenance 为准） */
 		maintenance?: {
 			enabled?: boolean;

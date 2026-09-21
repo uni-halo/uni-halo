@@ -63,7 +63,7 @@ export function getAppConfigs() {
 }
 
 /**
- * 获取审核模式数据(公开接口;auditModeEnabled=true 时返回选中引用列表,否则 {enabled:false})
+ * 获取审核模式数据(公开接口;enabled=true 时返回选中引用列表,否则 {enabled:false})
  */
 export function getAuditData() {
   return http.Get<IResponse<IAuditDataResult>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/audit-data', {
