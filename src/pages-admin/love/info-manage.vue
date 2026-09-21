@@ -150,14 +150,14 @@ onPageScroll((option: Page.PageScrollOption) => {
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">纪念日标题</text>
             <input
               v-model="form.loveDateTitle"
-              class="uh-global-card-glass h-9 flex-1 border border-gray-200 rounded-lg px-4 text-3xs shadow-none"
+              class="uh-global-card-glass h-9 flex-1 border border-gray-100 rounded-lg px-4 text-3xs shadow-none"
               placeholder="如：我们在一起的那天(留空用默认文案)" :maxlength="30"
             >
           </view>
           <view class="flex items-center gap-x-3">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">恋爱纪念日</text>
             <view
-              class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border border border-gray-200 rounded-lg px-4 text-3xs shadow-none"
+              class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border border border-gray-100 rounded-lg px-4 text-3xs shadow-none"
               @click="openDatePicker"
             >
               <text :class="form.loveDate ? 'text-gray-900' : 'text-gray-400'">
@@ -190,7 +190,7 @@ onPageScroll((option: Page.PageScrollOption) => {
               </view>
               <view
                 v-else-if="boyUploadFailed"
-                class="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/70 text-2xs text-white"
+                class="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/70 text-xs text-white"
               >
                 点击重选
               </view>
@@ -221,7 +221,7 @@ onPageScroll((option: Page.PageScrollOption) => {
               </view>
               <view
                 v-else-if="girlUploadFailed"
-                class="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/70 text-2xs text-white"
+                class="absolute inset-0 flex items-center justify-center rounded-full bg-red-500/70 text-xs text-white"
               >
                 点击重选
               </view>

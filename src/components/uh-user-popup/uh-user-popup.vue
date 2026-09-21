@@ -180,7 +180,7 @@ function handleLogout() {
       <!-- 用户信息卡片 -->
       <view v-if="hasLogin" class="w-full flex">
         <view
-          class="uh-global-card-glass flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
+          class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
         >
           <image
             :src="checkAvatarUrl(userInfo.avatar)"
