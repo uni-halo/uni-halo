@@ -33,7 +33,6 @@ src/types
 src/manifest.json
 src/pages.json
 
-# 2025-10-15 by 菲鸽： lock 文件还是需要加入版本管理，今天又遇到版本不一致导致无法运行的问题了。
 # pnpm-lock.yaml
 # package-lock.json
 
