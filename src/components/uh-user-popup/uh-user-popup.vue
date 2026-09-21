@@ -4,6 +4,7 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { isWechat } from '@/utils/platform'
 import { checkAvatarUrl } from '@/utils/url'
+import { getUnreadNotificationCount } from '@/api/notification'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { usePermission } from '@/hooks/usePermission'
@@ -135,12 +136,40 @@ function handleToPage(entry: IProfileEntry) {
   }
 }
 
-/** 个人入口（我的信息 / 个人主页） */
-const PROFILE_ENTRIES: Array<IProfileEntry> = [
-  { key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
-  { key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile' },
-  { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
-]
+/** 个人入口（我的信息 / 个人主页 / 消息通知） */
+const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
+  const entries: Array<IProfileEntry> = [
+    { key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
+    { key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile' },
+    { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
+  ]
+  // 消息通知需登录（官方通知接口走 PAT）
+  if (hasLogin.value) {
+    entries.push({
+      key: 'notifications',
+      type: 'navigate',
+      icon: 'notification',
+      label: '消息通知',
+      path: '/pages-admin/notifications/notifications',
+    })
+  }
+  return entries
+})
+
+/** 未读通知数（弹窗打开时刷新，用于入口红点徽标） */
+const unreadNotifyCount = ref(0)
+
+watch(popupVisible, (visible) => {
+  if (visible && hasLogin.value) {
+    const username = userInfo.value.username
+    if (!username) {
+      return
+    }
+    getUnreadNotificationCount(username).then((count) => {
+      unreadNotifyCount.value = count
+    })
+  }
+})
 
 function handleLogout() {
   dialog.confirm({
@@ -156,7 +185,7 @@ function handleLogout() {
         title: '已退出登录',
       })
       handleClose()
-      handleToPage(PROFILE_ENTRIES[0])
+      handleToPage(PROFILE_ENTRIES.value[0])
     })
   }).catch(() => { })
 }
@@ -210,8 +239,15 @@ function handleLogout() {
             class="uh-global-card-glass flex flex-col items-center gap-y-1 overflow-hidden rounded-xl p-2 shadow-none"
             @click="handleToPage(entry)"
           >
-            <view class="uh-global-card-glass box-border w-12 flex items-center justify-center border rounded-lg bg-gray-50 py-1.5 text-gray-900 shadow-none">
+            <view class="uh-global-card-glass relative box-border w-12 flex items-center justify-center border rounded-lg bg-gray-50 py-1.5 text-gray-900 shadow-none">
               <wd-icon :name="entry.icon" size="52rpx" />
+              <!-- 消息通知未读徽标 -->
+              <view
+                v-if="entry.key === 'notifications' && unreadNotifyCount > 0"
+                class="absolute h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 px-1 -right-1.5 -top-1.5"
+              >
+                <text class="text-[20rpx] text-white leading-none">{{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount }}</text>
+              </view>
             </view>
             <text class="flex-1 text-xs text-gray-900">{{ entry.label }}</text>
           </view>

@@ -13,6 +13,9 @@ defineOptions({
 // #endif
 
 function handleClick(index: number) {
+  // 添加振动反馈
+  uni.vibrateShort()
+
   // 点击原来的不做操作
   if (index === tabbarStore.curIdx) {
     return

@@ -22,6 +22,7 @@ export const ADMIN_PATH_LIST = [
   '/pages-admin/love/daily-manage',
   '/pages-admin/love/story-manage',
   '/pages-admin/love/album-manage',
+  '/pages-admin/notifications/notifications',
 ]
 
 // 排除在外的列表，白名单策略指白名单列表，黑名单策略指黑名单列表
