@@ -45,6 +45,8 @@ const form = ref({
   passwordEnabled: false,
 })
 const saving = ref(false)
+/** console 详情返回的原始 spec（保存时回传，避免 photos 等字段丢失） */
+const originSpec = ref<Record<string, any>>({})
 
 /** 封面单图上传 */
 const { list: coverList, choose: chooseCover, remove: removeCover, uploading: coverUploading, urls: coverUrls } = useHaloUpload({ maxCount: 1 })
@@ -56,6 +58,7 @@ function handleCoverChange() {
 function handleResetForm() {
   formMode.value = 'create'
   editName.value = ''
+  originSpec.value = {}
   form.value = { displayName: '', description: '', priority: 0, cover: '', password: '', passwordRemoved: false, passwordEnabled: false }
   coverList.value = []
 }
@@ -68,6 +71,7 @@ async function openEdit(album: ILoveAlbum) {
   try {
     const res = await getLoveAlbumAdmin(editName.value)
     const spec = (res.data?.spec || {}) as Record<string, any>
+    originSpec.value = spec
     form.value.displayName = spec.displayName || album.displayName || ''
     form.value.description = spec.description || ''
     form.value.priority = Number(spec.priority ?? 0)
@@ -96,7 +100,9 @@ async function handleSave() {
     return
   }
   handleCoverChange()
+  // 编辑时保留详情原始 spec 字段（photos 等），仅覆盖表单可编辑项
   const spec = {
+    ...originSpec.value,
     displayName: form.value.displayName.trim(),
     description: form.value.description,
     cover: form.value.cover,

@@ -5,7 +5,7 @@
  * 用法：通过 ref.openDetail(album) 打开；增删成功后 emit on-close({ refresh: true }) 由父级刷新列表
  */
 import { computed, ref } from 'vue'
-import { getLoveAlbumAdmin, removeLoveAlbumPhoto, updateLoveAlbumPhotos } from '@/api/uni-admin'
+import { getLoveAlbumAdmin, removeLoveAlbumPhoto, updateLoveAlbum, updateLoveAlbumPhotos } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
@@ -24,6 +24,8 @@ const emit = defineEmits<{
 
 const isShow = ref(false)
 const currentAlbum = ref<ILoveAlbum | null>(null)
+/** console 详情返回的原始 spec（整体更新时回传，避免 cover 等字段丢失） */
+const currentSpec = ref<Record<string, any>>({})
 const currentPhotos = ref<ILovePhoto[]>([])
 const detailLoading = ref(false)
 
@@ -45,6 +47,7 @@ async function openDetail(album: ILoveAlbum) {
     // console API 返回完整资源结构 { metadata, spec: { displayName, photos, ... }, status }
     const res = await getLoveAlbumAdmin(name)
     const data: any = res.data || {}
+    currentSpec.value = data.spec || {}
     currentAlbum.value = {
       ...album,
       ...(data.spec || {}),
@@ -88,10 +91,10 @@ async function commitPhotos() {
 }
 
 async function handleDeletePhoto(photo: ILovePhoto) {
-	console.log('photo',photo)
-  const name = currentAlbum.value?.metadata?.name || currentAlbum.value?.name || ''
-  if (!photo.name) {
-    uni.showToast({ title: '照片缺少标识，请刷新后重试', icon: 'none' })
+  const album = currentAlbum.value
+  const name = album?.metadata?.name || album?.name || ''
+  if (!name) {
+    uni.showToast({ title: '相册缺少标识，请刷新后重试', icon: 'none' })
     return
   }
   try {
@@ -106,9 +109,18 @@ async function handleDeletePhoto(photo: ILovePhoto) {
     return
   }
   try {
-    await removeLoveAlbumPhoto(name, photo.name || '')
-    currentPhotos.value = currentPhotos.value.filter(p => p.name !== photo.name)
-    uni.showToast({ title: '已删除', icon: 'success' })
+    // 照片无服务端 name 时按 url 过滤，整体更新 spec.photos 删除
+	// 可能后续提供
+    const restPhotos = currentPhotos.value.filter(p => (photo.name ? p.name !== photo.name : p.url !== photo.url))
+    if (photo.name) {
+      await removeLoveAlbumPhoto(name, photo.name)
+    }
+    else {
+      await updateLoveAlbum(name, { album: { spec: { ...currentSpec.value, photos: restPhotos } } })
+      currentSpec.value = { ...currentSpec.value, photos: restPhotos }
+    }
+    currentPhotos.value = restPhotos
+    uni.showToast({ title: '已删除', icon: 'none' })
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
