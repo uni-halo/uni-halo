@@ -105,8 +105,7 @@ async function handleSave() {
   saving.value = true
   try {
     await updateLoveInfo({ ...form.value })
-    uni.showToast({ title: '已保存', icon: 'success' })
-    // 清空上传队列，展示源回落到已保存的远程地址
+    uni.showToast({ title: '已保存', icon: 'none' })
     boyUpload.reset()
     girlUpload.reset()
   }
@@ -239,7 +238,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       </view>
 
       <uh-button
-        class="flex-1"
+        class="mt-3 flex-1"
         custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full py-2.5 !text-white !bg-love shadow-none"
         :class="saving ? 'opacity-60' : ''" @click="handleSave"
       >
