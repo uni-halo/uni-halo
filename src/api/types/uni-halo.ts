@@ -164,17 +164,13 @@ export interface IPageConfig {
 	disclaimer?: {
 		content?: string;
 	};
-	/** 用户协议页（注册页勾选行/协议弹窗与独立协议页共用内容；enabled=false 或留空 = 站点未启用/未配置） */
+	/** 用户协议页 */
 	userAgreement?: {
-		/** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
-		enabled?: boolean;
 		/** 用户协议内容(富文本 HTML) */
 		content?: string;
 	};
-	/** 隐私政策页（注册页勾选行/协议弹窗与独立协议页共用内容；enabled=false 或留空 = 站点未启用/未配置） */
+	/** 隐私政策页 */
 	privacyPolicy?: {
-		/** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
-		enabled?: boolean;
 		/** 隐私政策内容(富文本 HTML) */
 		content?: string;
 	};
