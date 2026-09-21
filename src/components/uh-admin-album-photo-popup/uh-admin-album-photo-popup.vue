@@ -79,7 +79,7 @@ async function commitPhotos() {
     // 服务端返回整本相册（照片带生成的 name），以最新列表为准
     currentPhotos.value = (res.data as any)?.spec?.photos?.length ? (res.data as any).spec.photos : merged
     pendingPhotos.value = []
-    uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'success' })
+    uni.showToast({ title: `已添加 ${newUrls.length} 张照片`, icon: 'none' })
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
@@ -88,6 +88,7 @@ async function commitPhotos() {
 }
 
 async function handleDeletePhoto(photo: ILovePhoto) {
+	console.log('photo',photo)
   const name = currentAlbum.value?.metadata?.name || currentAlbum.value?.name || ''
   if (!photo.name) {
     uni.showToast({ title: '照片缺少标识，请刷新后重试', icon: 'none' })
@@ -133,7 +134,7 @@ defineExpose({ openDetail })
 <template>
   <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
-    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+    <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">

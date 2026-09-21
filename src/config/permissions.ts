@@ -25,7 +25,7 @@ export interface IBizPermission {
   /** 权限标识（仅注释用途，便于排查） */
   id: string
   apiGroup: string
-  /** 资源名，如 'moments'、'plugins/uni-halo/love-albums' */
+  /** 资源名，如 'moments'、'love-albums' */
   resource: string
   /** 需要的动词（任一命中即可） */
   verbs: string[]
@@ -65,28 +65,28 @@ export const PERMISSIONS = {
   LOVE_DAILY_MANAGE: {
     id: 'love-daily:manage',
     apiGroup: API_GROUP.UNIHALO_CONSOLE,
-    resource: 'plugins/uni-halo/love-daily-items',
+    resource: 'love-daily-items',
     verbs: ['create', 'update', 'delete'],
   },
   /** 恋爱故事管理 */
   LOVE_STORY_MANAGE: {
     id: 'love-story:manage',
     apiGroup: API_GROUP.UNIHALO_CONSOLE,
-    resource: 'plugins/uni-halo/love-stories',
+    resource: 'love-stories',
     verbs: ['create', 'update', 'delete'],
   },
   /** 恋爱相册管理（含照片增删） */
   LOVE_ALBUM_MANAGE: {
     id: 'love-album:manage',
     apiGroup: API_GROUP.UNIHALO_CONSOLE,
-    resource: 'plugins/uni-halo/love-albums',
+    resource: 'love-albums',
     verbs: ['create', 'update', 'delete'],
   },
   /** 恋爱信息管理（纪念日 + 恋人信息，单例 upsert） */
   LOVE_INFO_MANAGE: {
     id: 'love-info:manage',
     apiGroup: API_GROUP.UNIHALO_CONSOLE,
-    resource: 'plugins/uni-halo/love-info',
+    resource: 'love-info',
     verbs: ['update'],
   },
 } as const satisfies Record<string, IBizPermission>

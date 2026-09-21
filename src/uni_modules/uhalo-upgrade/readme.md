@@ -12,7 +12,7 @@
 检测升级请求地址（后端见 `.docs/app-upgrade-design.md` 第 3.2 节）：
 
 ```
-GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/upgrade/checkVersion
+GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion
     ?appid=xxx&appVersion=1.0.0&wgtVersion=1.0.0&platform=Android&isUniappX=false
 ```
 

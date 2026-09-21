@@ -141,7 +141,7 @@ export const useTokenStore = defineStore(
 		}
 
 		/**
-		 * 用户登录(账号密码,对接插件端 POST /auth/login)
+		 * 用户登录(账号密码,对接插件端 POST /auth/-/login)
 		 * 登录接口直接返回 token + 用户信息 + 权限,无需独立获取用户信息接口
 		 * @param loginForm 登录参数
 		 * @returns 登录结果(插件端 LoginResult)
@@ -203,7 +203,7 @@ export const useTokenStore = defineStore(
 		};
 
 		/**
-		 * 注册并登录(账号密码,对接插件端 POST /auth/register)
+		 * 注册并登录(账号密码,对接插件端 POST /auth/-/register)
 		 * 插件端中转 Halo 注册,成功直接返回 token + 用户信息,实现注册即登录
 		 * @param form 注册表单
 		 * @returns 注册结果(插件端 LoginResult)
@@ -266,7 +266,7 @@ export const useTokenStore = defineStore(
 
 		/**
 		 * 退出登录 并 删除用户信息
-		 * 服务端吊销当前 PAT(auth/logout),无论成功失败都清除本地登录状态
+		 * 服务端吊销当前 PAT(auth/-/logout),无论成功失败都清除本地登录状态
 		 */
 		const logout = async () => {
 			try {

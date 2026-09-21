@@ -156,6 +156,7 @@ function handleLogout() {
         title: '已退出登录',
       })
       handleClose()
+      handleToPage(PROFILE_ENTRIES[0])
     })
   }).catch(() => { })
 }

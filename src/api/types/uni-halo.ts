@@ -646,7 +646,7 @@ export interface ILoveModuleConfig {
 	[key: string]: unknown;
 }
 
-/** 恋爱信息（纪念日 + 恋人信息；独立公开接口 GET /plugins/uni-halo/love-info） */
+/** 恋爱信息（纪念日 + 恋人信息；独立公开接口 GET /love-info） */
 export interface ILoveInfo {
 	/** 纪念日标题（默认「这是我们一起走过的」） */
 	loveDateTitle?: string;
@@ -942,7 +942,7 @@ export interface IMiniProgramLinkGroupOption {
 	displayName?: string;
 }
 
-/** 提交申请表单(公开 POST /submissions,body 为 { spec: {...} }) */
+/** 提交申请表单(公开 POST /-/submissions,body 为 { spec: {...} }) */
 export interface IMiniProgramLinkSubmissionForm {
 	/** 小程序名称(必填) */
 	displayName: string;

@@ -9,8 +9,10 @@ import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
 import type { ILoginResult, IProfileResult } from './types/uni-halo'
 
-/** 认证接口基础路径(插件端 Constants.AUTH_API_BASE_PATH) */
-const AUTH_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/auth'
+/** 认证接口基础路径(插件端 Constants.AUTH_API_BASE_PATH;端点注册在组根路径) */
+const AUTH_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/auth'
+// 两段式 POST（资源/name）会被 Halo 降级为非资源请求致 RBAC 失效，
+// 写操作统一用 "-" 占位符构成 资源/-/动作 三段式（官方模式），与插件端保持一致
 
 /** 登录表单 */
 export interface ILoginForm {
@@ -31,7 +33,7 @@ export interface IRefreshTokenReq {
  */
 export function refreshToken(refreshToken: string) {
   return http.Post<IResponse<{ accessToken: string, refreshToken: string, accessExpiresIn: number, refreshExpiresIn: number }>>(
-    `${AUTH_API_BASE}/refreshToken`,
+    `${AUTH_API_BASE}/-/refreshToken`,
     { refreshToken } satisfies IRefreshTokenReq,
     {
       cacheFor: 0,
@@ -46,7 +48,7 @@ export function refreshToken(refreshToken: string) {
  */
 export function loginByPassword(username: string, password: string) {
   return http.Post<IResponse<ILoginResult>>(
-    `${AUTH_API_BASE}/login`,
+    `${AUTH_API_BASE}/-/login`,
     { username, password },
     {
       cacheFor: 0,
@@ -89,7 +91,7 @@ export function getAuthProfile() {
  */
 export function logout() {
   return http.Post<IResponse<{ success: boolean }>>(
-    `${AUTH_API_BASE}/logout`,
+    `${AUTH_API_BASE}/-/logout`,
     {},
     {
       cacheFor: 0,
@@ -120,7 +122,7 @@ export interface IRegisterForm {
  */
 export function registerByPassword(form: IRegisterForm) {
   return http.Post<IResponse<ILoginResult>>(
-    `${AUTH_API_BASE}/register`,
+    `${AUTH_API_BASE}/-/register`,
     form,
     {
       cacheFor: 0,

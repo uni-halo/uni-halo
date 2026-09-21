@@ -192,19 +192,16 @@ async function handleGetStories() {
         hasNext: !!res.data?.hasNext,
       })
     }
-    else if (items.length > 0) {
+    else {
       // 首屏:按 priority 排序(越大越靠前)
       stories.value = sortStories(items.map(mapStoryCard))
       await sleep(600)
-      updateLoadingStatus(DataLoadingStatusEnum.Success)
+      updateLoadingStatus(items.length===0?DataLoadingStatusEnum.Empty:DataLoadingStatusEnum.Success)
       updateLoadMoreStatus({
         active: false,
         status: res.data?.hasNext ? 'loadMore' : 'noMore',
         hasNext: !!res.data?.hasNext,
       })
-    }
-    else {
-      handleLoadFromLegacy()
     }
   }
   catch (e) {

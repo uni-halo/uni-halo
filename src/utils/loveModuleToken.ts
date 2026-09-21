@@ -1,5 +1,5 @@
 /**
- * 恋爱模块入口解锁 token 管理（插件端 POST /love-modules/unlock 签发，HMAC 30 分钟有效）
+ * 恋爱模块入口解锁 token 管理（插件端 POST /love-modules/-/unlock 签发，HMAC 30 分钟有效）
  * 模块 scope：loveDiary(恋爱日记入口/恋爱页本身) / ourStory(恋爱故事) /
  * lovePhoto(恋爱相册) / loveDaily(恋爱清单)
  */
