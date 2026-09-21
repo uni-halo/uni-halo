@@ -10,7 +10,7 @@ import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
 import type { IAttachment, IMomentResource, IMomentSpec } from './types/uni-admin'
-import type { ILoveAlbum, ILoveDailyItem, ILoveDailyItemSpec, ILovePhoto, ILoveStory, ILoveStorySpec } from './types/uni-halo'
+import type { ILoveAlbum, ILoveDailyItem, ILoveDailyItemSpec, ILoveInfo, ILovePhoto, ILoveStory, ILoveStorySpec } from './types/uni-halo'
 
 /** UC 附件上传端点（存储策略由站点后台「个人中心附件配置」决定） */
 export const UC_ATTACHMENT_UPLOAD_URL = '/apis/uc.api.storage.halo.run/v1alpha1/attachments/-/upload'
@@ -226,4 +226,11 @@ export function updateLoveAlbumPhotos(name: string, photos: ILovePhoto[]) {
 /** 删除单张照片（按服务端生成的照片 name 定位） */
 export function removeLoveAlbumPhoto(name: string, photoName: string) {
   return http.Delete<IResponse<ILoveAlbum>>(`${LOVE_API_BASE}/love-albums/${name}/photos/${photoName}`, undefined, loveAdminMeta())
+}
+
+/* ---------- 恋爱信息 ---------- */
+
+/** 保存恋爱信息（单例 upsert；读取走公开接口 getLoveInfo） */
+export function updateLoveInfo(spec: Partial<ILoveInfo>) {
+  return http.Put<IResponse<ILoveInfo>>(`${LOVE_API_BASE}/love-info`, { spec }, loveAdminMeta())
 }

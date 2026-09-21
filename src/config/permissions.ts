@@ -37,8 +37,8 @@ export const API_GROUP = {
   MOMENT_UC: 'uc.api.moment.halo.run',
   /** 附件 UC API（个人中心附件配置） */
   STORAGE_UC: 'uc.api.storage.halo.run',
-  /** uni-halo 插件 API */
-  UNIHALO: 'api.unihalo.ialley.cn',
+  /** uni-halo 插件管理端 API（管理 CRUD 挂 console 分组，需登录鉴权） */
+  UNIHALO_CONSOLE: 'console.api.unihalo.ialley.cn',
 } as const
 
 /**
@@ -64,23 +64,30 @@ export const PERMISSIONS = {
   /** 恋爱清单管理 */
   LOVE_DAILY_MANAGE: {
     id: 'love-daily:manage',
-    apiGroup: API_GROUP.UNIHALO,
+    apiGroup: API_GROUP.UNIHALO_CONSOLE,
     resource: 'plugins/uni-halo/love-daily-items',
     verbs: ['create', 'update', 'delete'],
   },
   /** 恋爱故事管理 */
   LOVE_STORY_MANAGE: {
     id: 'love-story:manage',
-    apiGroup: API_GROUP.UNIHALO,
+    apiGroup: API_GROUP.UNIHALO_CONSOLE,
     resource: 'plugins/uni-halo/love-stories',
     verbs: ['create', 'update', 'delete'],
   },
   /** 恋爱相册管理（含照片增删） */
   LOVE_ALBUM_MANAGE: {
     id: 'love-album:manage',
-    apiGroup: API_GROUP.UNIHALO,
+    apiGroup: API_GROUP.UNIHALO_CONSOLE,
     resource: 'plugins/uni-halo/love-albums',
     verbs: ['create', 'update', 'delete'],
+  },
+  /** 恋爱信息管理（纪念日 + 恋人信息，单例 upsert） */
+  LOVE_INFO_MANAGE: {
+    id: 'love-info:manage',
+    apiGroup: API_GROUP.UNIHALO_CONSOLE,
+    resource: 'plugins/uni-halo/love-info',
+    verbs: ['update'],
   },
 } as const satisfies Record<string, IBizPermission>
 

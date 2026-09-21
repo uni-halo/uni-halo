@@ -90,7 +90,8 @@ export function usePermission() {
     can('MOMENT_MANAGE')
     || can('LOVE_DAILY_MANAGE')
     || can('LOVE_STORY_MANAGE')
-    || can('LOVE_ALBUM_MANAGE'),
+    || can('LOVE_ALBUM_MANAGE')
+    || can('LOVE_INFO_MANAGE'),
   )
 
   return { roles, rules, isLoggedIn, hasRole, hasPermission, can, isAdmin, canManage }

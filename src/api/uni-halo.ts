@@ -22,6 +22,7 @@ import type {
   ILoveDailyItem,
   ILoveDailyItemListReq,
   ILoveDailyItemListRes,
+  ILoveInfo,
   ILoveStory,
   ILoveStoryListReq,
   ILoveStoryListRes,
@@ -296,6 +297,16 @@ export function getLoveStories(params: ILoveStoryListReq) {
   const token = getLoveModuleToken('ourStory')
   return http.Get<IResponse<ILoveStoryListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-stories', {
     params: { ...params, ...(token ? { token } : {}) },
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/**
+ * 获取恋爱信息(纪念日 + 恋人信息,公开接口)
+ */
+export function getLoveInfo() {
+  return http.Get<IResponse<ILoveInfo>>('/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo/love-info', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })

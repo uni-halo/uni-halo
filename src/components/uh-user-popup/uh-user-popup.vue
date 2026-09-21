@@ -62,6 +62,7 @@ interface IAdminEntry {
 
 const ADMIN_ENTRIES: IAdminEntry[] = [
   { key: 'moment', icon: 'send', label: '瞬间管理', permission: 'MOMENT_MANAGE', url: '/pages-admin/moment-manage/moment-manage' },
+  { key: 'love-info', icon: 'heart-fill', label: '恋爱信息管理', permission: 'LOVE_INFO_MANAGE', url: '/pages-admin/love/info-manage' },
   { key: 'daily', icon: 'subscribed', label: '恋爱清单管理', permission: 'LOVE_DAILY_MANAGE', url: '/pages-admin/love/daily-manage' },
   { key: 'story', icon: 'book', label: '恋爱故事管理', permission: 'LOVE_STORY_MANAGE', url: '/pages-admin/love/story-manage' },
   { key: 'album', icon: 'image', label: '恋爱相册管理', permission: 'LOVE_ALBUM_MANAGE', url: '/pages-admin/love/album-manage' },

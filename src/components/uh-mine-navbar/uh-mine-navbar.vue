@@ -19,11 +19,16 @@ interface IProps {
   scrollY?: number
 }
 
-const maxAlpha = ref(0.75)
+// 获取窗口信息
+const windowInfo = uni.getWindowInfo()
+const statusBarHeight = computed(() => windowInfo.statusBarHeight)
+
+const maxAlpha = ref(0.8)
 const customStyle = computed(() => {
   const alpha = Math.min(props.scrollY / 360, maxAlpha.value)
   return {
-    backdropFilter: 'blur(2rpx)',
+    paddingTop: `${statusBarHeight.value}px`,
+    backdropFilter: 'blur(4rpx)',
     backgroundColor: `rgba(255, 255, 255, ${alpha})`,
   }
 })
@@ -31,7 +36,7 @@ const scrollThreshold = computed(() => {
   return props.scrollY / 360 <= 0.5
 })
 
-const customCalss = computed(() => {
+const customClass = computed(() => {
   const _class = []
   if (scrollThreshold.value) {
     _class.push('text-white')
@@ -78,7 +83,7 @@ function handleScan() {
 </script>
 
 <template>
-  <view class="fixed left-0 top-0 z-100 box-border w-full pt-safe" :class="customCalss" :style="[customStyle]">
+  <view class="fixed left-0 top-0 z-100 box-border w-full" :class="customClass" :style="[customStyle]">
     <view class="box-border h-[46px] w-full flex items-center gap-x-4 px-4">
       <view class="min-w-18 flex shrink-0 items-center">
         <view

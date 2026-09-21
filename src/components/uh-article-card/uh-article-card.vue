@@ -154,9 +154,6 @@ const visitCount = computed(() => {
 })
 
 function handleToArticleDetail() {
-  if (props.auditMode) {
-    return
-  }
   uni.navigateTo({
     url: `/pages-blog/article-detail/article-detail?name=${props.article.metadata.name}`,
     animationType: 'slide-in-right',

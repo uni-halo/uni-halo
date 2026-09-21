@@ -646,6 +646,23 @@ export interface ILoveModuleConfig {
 	[key: string]: unknown;
 }
 
+/** 恋爱信息（纪念日 + 恋人信息；独立公开接口 GET /plugins/uni-halo/love-info） */
+export interface ILoveInfo {
+	/** 纪念日标题（默认「这是我们一起走过的」） */
+	loveDateTitle?: string;
+	/** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
+	loveDate?: string;
+	/** 男生昵称 */
+	boyNickname?: string;
+	/** 男生头像 */
+	boyAvatar?: string;
+	/** 女生昵称 */
+	girlNickname?: string;
+	/** 女生头像 */
+	girlAvatar?: string;
+	[key: string]: unknown;
+}
+
 /** getConfigs featureConfig.love（脱敏 spec 直发；恋爱日记仅密码状态；三模块入口即 app 端入口列表数据） */
 export interface ILoveConfigGroup {
 	/** 恋爱日记入口（恋爱页本身，仅密码状态，无 enabled 开关） */
@@ -656,22 +673,6 @@ export interface ILoveConfigGroup {
 	lovePhoto?: ILoveModuleConfig;
 	/** 恋爱清单模块入口 */
 	loveDaily?: ILoveModuleConfig;
-	/** 恋爱信息（纪念日 + 恋人信息） */
-	loveInfo?: {
-		/** 纪念日标题（默认「这是我们一起走过的」） */
-		loveDateTitle?: string;
-		/** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
-		loveDate?: string;
-		/** 男生昵称 */
-		boyNickname?: string;
-		/** 男生头像 */
-		boyAvatar?: string;
-		/** 女生昵称 */
-		girlNickname?: string;
-		/** 女生头像 */
-		girlAvatar?: string;
-		[key: string]: unknown;
-	};
 	/** 恋爱日记页面设置（页面标题 + 恋爱页背景图，留空客户端内置回退） */
 	diaryPage?: {
 		pageTitle?: string;

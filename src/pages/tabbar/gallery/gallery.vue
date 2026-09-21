@@ -53,7 +53,7 @@ const category = ref<{ activeIndex: number, list: IPhotoGroup[] }>({
 })
 const queryParams = ref({ size: 10, page: 1, group: '' })
 const dataList = ref<IPhoto[]>([])
-const lock = ref(false)
+const visiblePhotoName = ref(true)
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetCategory() {
@@ -232,7 +232,16 @@ onReachBottom(() => {
     <uh-navbar
       :scroll-y="scrollY" :use-back="false" :default-title="pageTitle"
       title-color="text-gray-900"
-    />
+    >
+      <template #left>
+        <uh-button
+          custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 text-xs !rounded-full"
+          @click="visiblePhotoName = !visiblePhotoName"
+        >
+          {{ visiblePhotoName ? '隐藏' : '显示' }}名称
+        </uh-button>
+      </template>
+    </uh-navbar>
 
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
@@ -241,10 +250,10 @@ onReachBottom(() => {
 
     <template v-else>
       <wd-sticky v-if="category.list.length !== 0" :offset-top="offsetTop">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap pt-3">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap pt-2">
           <view
             v-for="(cate, index) in category.list" :key="cate.spec.displayName"
-            class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+            class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
             :class="{ 'bg-primary text-gray-900 font-semibold': index === category.activeIndex }"
             @click="handleGetDataByCategory(index, cate)"
           >
@@ -270,7 +279,7 @@ onReachBottom(() => {
           >
             <image class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load />
             <view
-              v-if="item.spec.displayName"
+              v-if="visiblePhotoName && item.spec.displayName"
               class="absolute bottom-0 z-2 box-border w-full from-white/0 to-black/40 bg-gradient-to-b p-3 pt-6"
             >
               <text class="line-clamp-2 text-xs text-white">{{ item.spec.displayName }}</text>
