@@ -214,7 +214,7 @@ export default {
               console.log('上传成功', data.url)
               uni.showToast({
                 title: '上传成功',
-                icon: 'success'
+                icon: 'none'
               })
             }
           })

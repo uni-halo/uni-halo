@@ -152,7 +152,7 @@ function handleDelete(item: MomentItem) {
       dataList.value = dataList.value.filter(x => x.name !== item.name)
       if (dataList.value.length === 0)
         updateLoadingStatus(DataLoadingStatusEnum.Empty)
-      uni.showToast({ title: '已删除', icon: 'success' })
+      uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
       uni.showToast({ title: err?.message || '删除失败', icon: 'none' })

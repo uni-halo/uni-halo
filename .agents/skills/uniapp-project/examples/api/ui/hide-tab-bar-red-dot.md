@@ -68,7 +68,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '已隐藏',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })

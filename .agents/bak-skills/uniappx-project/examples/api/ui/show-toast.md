@@ -13,7 +13,7 @@
 ```javascript
 uni.showToast({
   title: '操作成功',
-  icon: 'success'
+  icon: 'none'
 })
 ```
 
@@ -24,7 +24,7 @@ uni.showToast({
 ```javascript
 uni.showToast({
   title: '操作成功',
-  icon: 'success',
+  icon: 'none',
   duration: 2000
 })
 ```
@@ -34,7 +34,7 @@ uni.showToast({
 ```javascript
 uni.showToast({
   title: '操作失败',
-  icon: 'error',
+  icon: 'none',
   duration: 2000
 })
 ```
@@ -77,7 +77,7 @@ const toast = {
   success(title, duration = 2000) {
     uni.showToast({
       title: title,
-      icon: 'success',
+      icon: 'none',
       duration: duration
     })
   },
@@ -85,7 +85,7 @@ const toast = {
   error(title, duration = 2000) {
     uni.showToast({
       title: title,
-      icon: 'error',
+      icon: 'none',
       duration: duration
     })
   },
@@ -130,13 +130,13 @@ export default {
     handleSuccess() {
       uni.showToast({
         title: '操作成功',
-        icon: 'success'
+        icon: 'none'
       })
     },
     handleError() {
       uni.showToast({
         title: '操作失败',
-        icon: 'error'
+        icon: 'none'
       })
     },
     handleLoading() {

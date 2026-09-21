@@ -111,7 +111,7 @@ export default {
               clearInterval(interval)
               uni.showToast({
                 title: '上传完成',
-                icon: 'success'
+                icon: 'none'
               })
             }
           }, 200)

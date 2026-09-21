@@ -274,7 +274,7 @@ export default {
       if (!this.emailError && !this.phoneError) {
         uni.showToast({
           title: '提交成功',
-          icon: 'success'
+          icon: 'none'
         })
       }
     }

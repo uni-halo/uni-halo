@@ -89,7 +89,7 @@ uni.request({
     if (res.statusCode === 200 || res.statusCode === 201) {
       uni.showToast({
         title: '创建成功',
-        icon: 'success'
+        icon: 'none'
       })
     }
   }

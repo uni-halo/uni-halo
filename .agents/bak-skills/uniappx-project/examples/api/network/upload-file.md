@@ -45,7 +45,7 @@ uni.chooseImage({
         console.log('上传成功', data.url)
         uni.showToast({
           title: '上传成功',
-          icon: 'success'
+          icon: 'none'
         })
       },
       fail: (err) => {
@@ -79,7 +79,7 @@ uni.chooseImage({
           if (uploadCount === tempFilePaths.length) {
             uni.showToast({
               title: '全部上传成功',
-              icon: 'success'
+              icon: 'none'
             })
           }
         },
@@ -157,7 +157,7 @@ export default {
               this.uploading = false
               uni.showToast({
                 title: '上传成功',
-                icon: 'success'
+                icon: 'none'
               })
             },
             fail: (err) => {

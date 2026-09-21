@@ -120,7 +120,7 @@ function handleDeleteAlbum(album: ILoveAlbum) {
       albumList.value = albumList.value.filter(x => (x.metadata?.name || x.name) !== (album.metadata?.name || album.name))
       if (albumList.value.length === 0)
         updateLoadingStatus(DataLoadingStatusEnum.Empty)
-      uni.showToast({ title: '已删除', icon: 'success' })
+      uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
       uni.showToast({ title: err?.message || '删除失败', icon: 'none' })

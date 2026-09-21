@@ -81,7 +81,7 @@ export default {
         uni.hideLoading()
         uni.showToast({
           title: '加载成功',
-          icon: 'success'
+          icon: 'none'
         })
       }, 2000)
     }
@@ -142,7 +142,7 @@ uni.request({
     uni.hideLoading()
     uni.showToast({
       title: '提交成功',
-      icon: 'success'
+      icon: 'none'
     })
   },
   fail: (err) => {

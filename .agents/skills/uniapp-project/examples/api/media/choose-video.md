@@ -83,7 +83,7 @@ export default {
           this.videoSrc = res.tempFilePath
           uni.showToast({
             title: '选择成功',
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {
@@ -103,7 +103,7 @@ export default {
           this.videoSrc = res.tempFilePath
           uni.showToast({
             title: '拍摄成功',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })
@@ -144,7 +144,7 @@ uni.chooseVideo({
         console.log('上传成功', data.url)
         uni.showToast({
           title: '上传成功',
-          icon: 'success'
+          icon: 'none'
         })
       },
       fail: (err) => {

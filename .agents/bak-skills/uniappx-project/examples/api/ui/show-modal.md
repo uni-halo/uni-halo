@@ -125,7 +125,7 @@ export default {
       // 删除逻辑
       uni.showToast({
         title: '删除成功',
-        icon: 'success'
+        icon: 'none'
       })
     }
   }

@@ -123,7 +123,7 @@ export default {
       uni.setStorageSync('screenBrightness', this.brightness)
       uni.showToast({
         title: '已保存',
-        icon: 'success'
+        icon: 'none'
       })
     },
     restoreBrightness() {
@@ -133,7 +133,7 @@ export default {
       })
       uni.showToast({
         title: '已恢复',
-        icon: 'success'
+        icon: 'none'
       })
     }
   }

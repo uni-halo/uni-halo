@@ -72,7 +72,7 @@ export default {
       })
       uni.showToast({
         title: '已设置徽标',
-        icon: 'success'
+        icon: 'none'
       })
     },
     removeBadge() {
@@ -81,7 +81,7 @@ export default {
       })
       uni.showToast({
         title: '已清除徽标',
-        icon: 'success'
+        icon: 'none'
       })
     }
   }

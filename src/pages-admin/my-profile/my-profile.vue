@@ -124,6 +124,17 @@ function cancelEditNickname() {
   editingNickname.value = false
 }
 
+/** 复制用户名 */
+function copyUsername() {
+  const username = userInfo.value.username || ''
+  if (!username)
+    return
+  uni.setClipboardData({
+    data: username,
+    success: () => uni.showToast({ icon: 'none', title: '用户名已复制' }),
+  })
+}
+
 async function saveNickname() {
   const displayName = nicknameDraft.value.trim()
   if (!displayName) {
@@ -424,12 +435,7 @@ onShow(() => {
             <wd-icon name="user" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">用户名</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-2xs text-gray-500">{{ userInfo.username || '-' }}</text>
-              <text
-                class="uh-global-card-glass border rounded-md bg-white/40 px-1.5 py-0.5 text-20rpx text-gray-400 shadow-none"
-              >
-                不可修改
-              </text>
+              <text class="text-2xs text-gray-500" @click="copyUsername">{{ userInfo.username || '-' }}</text>
             </view>
           </view>
           <!-- 角色 -->

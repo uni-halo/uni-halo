@@ -117,7 +117,7 @@ async function handleOnConfirm() {
         token: (res.data as { token: string }).token,
         photos: (res.data as { photos?: unknown[] }).photos || [],
       })
-      uni.showToast({ title: '解锁成功', icon: 'success' })
+      uni.showToast({ title: '解锁成功', icon: 'none' })
     }
   }
   catch (e) {

@@ -95,7 +95,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '用户数据已清除',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })
@@ -105,7 +105,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '所有数据已清除',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })

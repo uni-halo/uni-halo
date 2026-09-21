@@ -63,7 +63,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '已清除',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })

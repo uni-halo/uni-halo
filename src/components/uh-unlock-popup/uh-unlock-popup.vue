@@ -140,7 +140,7 @@
 				isShow.value = false
 				emit('update:show', false)
 				emit('success', res)
-				uni.showToast({ title: '解锁成功', icon: 'success' })
+				uni.showToast({ title: '解锁成功', icon: 'none' })
 			}
 			else {
 				uni.showToast({ title: '解锁失败，请重试', icon: 'none' })

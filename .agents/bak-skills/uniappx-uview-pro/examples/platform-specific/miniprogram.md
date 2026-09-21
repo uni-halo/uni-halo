@@ -57,7 +57,7 @@ const handleClick = () => {
   // WeChat mini-program specific code
   wx.showToast({
     title: '操作成功',
-    icon: 'success'
+    icon: 'none'
   })
   // #endif
 }

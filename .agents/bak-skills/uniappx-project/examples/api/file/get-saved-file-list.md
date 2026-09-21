@@ -92,7 +92,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '删除成功',
-            icon: 'success'
+            icon: 'none'
           })
           this.getFileList()
         }
@@ -192,7 +192,7 @@ function cleanOldFiles(maxAge = 7 * 24 * 60 * 60 * 1000) {
       setTimeout(() => {
         uni.showToast({
           title: `已清理${deletedCount}个文件`,
-          icon: 'success'
+          icon: 'none'
         })
       }, 1000)
     }

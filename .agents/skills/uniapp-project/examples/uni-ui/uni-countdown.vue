@@ -67,7 +67,7 @@ export default {
       this.timeupText = '倒计时结束！'
       uni.showToast({
         title: '倒计时结束',
-        icon: 'success'
+        icon: 'none'
       })
     },
     pause() {

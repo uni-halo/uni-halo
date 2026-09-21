@@ -73,14 +73,14 @@ export default {
       console.log('上传成功：', e)
       uni.showToast({
         title: '上传成功',
-        icon: 'success'
+        icon: 'none'
       })
     },
     onFail(e) {
       console.log('上传失败：', e)
       uni.showToast({
         title: '上传失败',
-        icon: 'error'
+        icon: 'none'
       })
     }
   }

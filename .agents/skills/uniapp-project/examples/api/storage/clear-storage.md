@@ -28,7 +28,7 @@ uni.clearStorage({
     console.log('所有数据已清除')
     uni.showToast({
       title: '清除成功',
-      icon: 'success'
+      icon: 'none'
     })
   },
   fail: (err) => {
@@ -75,7 +75,7 @@ export default {
               success: () => {
                 uni.showToast({
                   title: '清除成功',
-                  icon: 'success'
+                  icon: 'none'
                 })
                 // 重新加载页面
                 setTimeout(() => {

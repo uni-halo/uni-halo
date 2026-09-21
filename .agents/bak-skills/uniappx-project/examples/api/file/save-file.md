@@ -30,7 +30,7 @@ uni.saveFile({
     console.log('保存成功', res.savedFilePath)
     uni.showToast({
       title: '保存成功',
-      icon: 'success'
+      icon: 'none'
     })
   },
   fail: (err) => {
@@ -73,7 +73,7 @@ uni.chooseImage({
         console.log('图片已保存', saveRes.savedFilePath)
         uni.showToast({
           title: '保存成功',
-          icon: 'success'
+          icon: 'none'
         })
       }
     })
@@ -117,7 +117,7 @@ export default {
                 uni.hideLoading()
                 uni.showToast({
                   title: '保存成功',
-                  icon: 'success'
+                  icon: 'none'
                 })
               },
               fail: (err) => {
@@ -162,7 +162,7 @@ function saveMultipleFiles(tempFilePaths) {
           console.log('所有文件已保存', savedFilePaths)
           uni.showToast({
             title: '全部保存成功',
-            icon: 'success'
+            icon: 'none'
           })
         }
       },

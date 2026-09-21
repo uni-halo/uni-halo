@@ -129,7 +129,7 @@ export function createApp() {
 const handleClick = () => {
   uni.showToast({
     title: '点击成功',
-    icon: 'success'
+    icon: 'none'
   })
 }
 </script>

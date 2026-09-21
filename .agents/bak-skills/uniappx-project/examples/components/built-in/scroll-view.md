@@ -180,7 +180,7 @@ export default {
         this.refreshing = false
         uni.showToast({
           title: '刷新成功',
-          icon: 'success'
+          icon: 'none'
         })
       }, 2000)
     },

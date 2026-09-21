@@ -140,7 +140,7 @@ export default {
     handleClick() {
       uni.showToast({
         title: '按钮被点击了',
-        icon: 'success'
+        icon: 'none'
       })
     }
   },

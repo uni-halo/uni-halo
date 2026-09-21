@@ -128,7 +128,7 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 2000))
         uni.showToast({
           title: '提交成功',
-          icon: 'success'
+          icon: 'none'
         })
       } finally {
         this.isLoading = false

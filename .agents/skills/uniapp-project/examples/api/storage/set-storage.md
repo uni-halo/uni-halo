@@ -45,7 +45,7 @@ uni.setStorage({
   success: () => {
     uni.showToast({
       title: '保存成功',
-      icon: 'success'
+      icon: 'none'
     })
   },
   fail: (err) => {

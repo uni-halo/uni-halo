@@ -277,7 +277,7 @@ export default {
         console.log('表单数据信息：', res)
         uni.showToast({
           title: '校验通过',
-          icon: 'success'
+          icon: 'none'
         })
       }).catch(err => {
         console.log('表单错误信息：', err)

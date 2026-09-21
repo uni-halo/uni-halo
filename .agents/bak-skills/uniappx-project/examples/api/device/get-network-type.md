@@ -119,7 +119,7 @@ uni.onNetworkStatusChange((res) => {
   } else {
     uni.showToast({
       title: '网络已连接',
-      icon: 'success'
+      icon: 'none'
     })
   }
 })

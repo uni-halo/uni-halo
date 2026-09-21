@@ -35,7 +35,7 @@ uni.downloadFile({
         success: () => {
           uni.showToast({
             title: '保存成功',
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {
@@ -67,7 +67,7 @@ uni.chooseImage({
       success: () => {
         uni.showToast({
           title: '保存成功',
-          icon: 'success'
+          icon: 'none'
         })
       },
       fail: (err) => {
@@ -107,7 +107,7 @@ export default {
               success: () => {
                 uni.showToast({
                   title: '保存成功',
-                  icon: 'success'
+                  icon: 'none'
                 })
               },
               fail: (err) => {
@@ -178,7 +178,7 @@ function saveImage(filePath) {
     success: () => {
       uni.showToast({
         title: '保存成功',
-        icon: 'success'
+        icon: 'none'
       })
     }
   })
@@ -227,7 +227,7 @@ export default {
               success: () => {
                 uni.showToast({
                   title: '保存成功',
-                  icon: 'success'
+                  icon: 'none'
                 })
               }
             })

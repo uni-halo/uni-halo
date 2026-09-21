@@ -155,14 +155,14 @@ async function handleSubmit() {
         content: momentContent,
         visible: 'PUBLIC',
       }, editMoment.value?.metadata)
-      uni.showToast({ title: '已保存', icon: 'success' })
+      uni.showToast({ title: '已保存', icon: 'none' })
     }
     else {
       await createMoment({
         content: momentContent,
         visible: 'PUBLIC',
       })
-      uni.showToast({ title: '发布成功', icon: 'success' })
+      uni.showToast({ title: '发布成功', icon: 'none' })
     }
     handleClose(true)
   }

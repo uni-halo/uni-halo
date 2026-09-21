@@ -22,7 +22,7 @@ uni.hideToast()
 // 显示提示
 uni.showToast({
   title: '操作成功',
-  icon: 'success'
+  icon: 'none'
 })
 
 // 提前隐藏

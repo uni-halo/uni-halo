@@ -142,7 +142,7 @@ function clearStorageIfNeeded() {
               })
               uni.showToast({
                 title: '清理完成',
-                icon: 'success'
+                icon: 'none'
               })
             }
           }

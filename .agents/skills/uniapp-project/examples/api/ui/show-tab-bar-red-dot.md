@@ -64,7 +64,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '已显示红点',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })
@@ -75,7 +75,7 @@ export default {
         success: () => {
           uni.showToast({
             title: '已隐藏红点',
-            icon: 'success'
+            icon: 'none'
           })
         }
       })

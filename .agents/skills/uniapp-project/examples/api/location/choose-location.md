@@ -64,7 +64,7 @@ export default {
           this.location = res
           uni.showToast({
             title: '选择成功',
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {

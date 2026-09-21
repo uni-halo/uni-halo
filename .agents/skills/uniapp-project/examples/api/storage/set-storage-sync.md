@@ -85,7 +85,7 @@ export default {
         uni.setStorageSync('userInfo', userInfo)
         uni.showToast({
           title: '保存成功',
-          icon: 'success'
+          icon: 'none'
         })
       } catch (err) {
         uni.showToast({

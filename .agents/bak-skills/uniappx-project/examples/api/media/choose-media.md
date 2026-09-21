@@ -117,7 +117,7 @@ export default {
           this.mediaList = res.tempFiles
           uni.showToast({
             title: `选择了${res.tempFiles.length}个文件`,
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {
@@ -175,7 +175,7 @@ uni.chooseMedia({
           if (uploadCount === files.length) {
             uni.showToast({
               title: '全部上传成功',
-              icon: 'success'
+              icon: 'none'
             })
           }
         },

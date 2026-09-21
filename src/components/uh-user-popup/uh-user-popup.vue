@@ -190,9 +190,9 @@ function handleLogout() {
           <view class="flex-1">
             <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
             <text
-              class="uh-global-card-glass mt-1 inline-block border rounded-md bg-secondary px-2 py-0.5 text-10px text-gray-500"
+              class="mt-1 inline-block text-xs text-gray-500"
             >
-              {{ isAdmin ? '超级管理员' : '普通用户' }}
+              @{{ userInfo.username }}
             </text>
           </view>
           <view class="flex shrink-0 items-center justify-center" @click="handleToPage(PROFILE_ENTRIES[1])">

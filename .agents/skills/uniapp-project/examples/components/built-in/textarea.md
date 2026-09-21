@@ -198,7 +198,7 @@ export default {
       if (!this.error && this.content) {
         uni.showToast({
           title: '提交成功',
-          icon: 'success'
+          icon: 'none'
         })
       }
     }

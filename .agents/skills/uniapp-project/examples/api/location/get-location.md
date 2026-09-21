@@ -87,7 +87,7 @@ export default {
           uni.hideLoading()
           uni.showToast({
             title: '定位成功',
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {

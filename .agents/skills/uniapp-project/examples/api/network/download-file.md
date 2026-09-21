@@ -54,7 +54,7 @@ uni.downloadFile({
         success: () => {
           uni.showToast({
             title: '保存成功',
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {
@@ -115,7 +115,7 @@ export default {
             this.downloading = false
             uni.showToast({
               title: '下载成功',
-              icon: 'success'
+              icon: 'none'
             })
           }
         },

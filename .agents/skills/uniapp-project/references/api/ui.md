@@ -23,7 +23,7 @@
 ```javascript
 uni.showToast({
   title: '操作成功',
-  icon: 'success',
+  icon: 'none',
   duration: 2000
 })
 ```

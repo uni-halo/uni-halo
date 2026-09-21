@@ -133,7 +133,7 @@ export default {
         uni.hideNavigationBarLoading()
         uni.showToast({
           title: '刷新成功',
-          icon: 'success'
+          icon: 'none'
         })
       }, 2000)
     }

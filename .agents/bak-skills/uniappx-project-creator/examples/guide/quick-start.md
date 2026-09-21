@@ -115,7 +115,7 @@ const title = ref<string>('Hello uni-app-x!')
 const handleClick = () => {
   uni.showToast({
     title: '按钮被点击了',
-    icon: 'success'
+    icon: 'none'
   })
 }
 

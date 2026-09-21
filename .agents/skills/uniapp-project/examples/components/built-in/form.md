@@ -118,7 +118,7 @@ export default {
             uni.setStorageSync('token', res.data.token)
             uni.showToast({
               title: '登录成功',
-              icon: 'success'
+              icon: 'none'
             })
             setTimeout(() => {
               uni.switchTab({
@@ -205,7 +205,7 @@ export default {
         console.log('表单数据', formData)
         uni.showToast({
           title: '提交成功',
-          icon: 'success'
+          icon: 'none'
         })
       }
     }

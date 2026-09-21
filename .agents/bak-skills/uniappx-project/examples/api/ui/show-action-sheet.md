@@ -95,7 +95,7 @@ uni.showActionSheet({
           success: () => {
             uni.showToast({
               title: '链接已复制',
-              icon: 'success'
+              icon: 'none'
             })
           }
         })

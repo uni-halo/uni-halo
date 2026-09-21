@@ -87,7 +87,7 @@ export default {
           this.imageList = res.tempFilePaths
           uni.showToast({
             title: `选择了${res.tempFilePaths.length}张图片`,
-            icon: 'success'
+            icon: 'none'
           })
         },
         fail: (err) => {
@@ -143,7 +143,7 @@ uni.chooseImage({
         console.log('上传成功', data.url)
         uni.showToast({
           title: '上传成功',
-          icon: 'success'
+          icon: 'none'
         })
       },
       fail: (err) => {

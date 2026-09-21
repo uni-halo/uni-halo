@@ -15,7 +15,7 @@ Display success/error messages.
 // Success toast
 uni.showToast({
   title: 'Success!',
-  icon: 'success',
+  icon: 'none',
   duration: 2000,
   mask: false
 })
@@ -37,7 +37,7 @@ uni.showToast({
 // Error toast
 uni.showToast({
   title: 'Failed!',
-  icon: 'error'
+  icon: 'none'
 })
 ```
 
@@ -303,10 +303,10 @@ uni.saveImageToPhotosAlbum({
 ```javascript
 const toast = {
   success(message, duration = 2000) {
-    uni.showToast({ title: message, icon: 'success', duration })
+    uni.showToast({ title: message, icon: 'none', duration })
   },
   error(message, duration = 2000) {
-    uni.showToast({ title: message, icon: 'error', duration })
+    uni.showToast({ title: message, icon: 'none', duration })
   },
   loading(message = 'Loading...') {
     uni.showLoading({ title: message, mask: true })
