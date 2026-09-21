@@ -141,23 +141,23 @@ onPageScroll((option: Page.PageScrollOption) => {
       @refresh="fetchLoveInfo"
     />
 
-    <view v-else class="box-border flex flex-col gap-y-4 px-4 pb-28 pt-3">
+    <view v-else class="box-border flex flex-col gap-y-4 px-3 pt-3 pb-safe">
       <!-- 纪念日 -->
       <view class="flex flex-col">
         <uh-section-title>纪念日</uh-section-title>
-        <view class="uh-global-card-glass uh-shadow-xs mt-3 flex flex-col gap-y-3 rounded-2xl p-4">
+        <view class="uh-global-card-glass uh-shadow-xs mt-3 box-border flex flex-col gap-y-3 rounded-2xl p-3">
           <view class="flex items-center gap-x-3">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">纪念日标题</text>
             <input
               v-model="form.loveDateTitle"
-              class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
+              class="uh-global-card-glass h-9 flex-1 border border-gray-200 rounded-lg px-4 text-3xs shadow-none"
               placeholder="如：我们在一起的那天(留空用默认文案)" :maxlength="30"
             >
           </view>
           <view class="flex items-center gap-x-3">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">恋爱纪念日</text>
             <view
-              class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border rounded-xl px-4 text-3xs shadow-none"
+              class="uh-global-card-glass h-9 flex flex-1 items-center justify-between border border border-gray-200 rounded-lg px-4 text-3xs shadow-none"
               @click="openDatePicker"
             >
               <text :class="form.loveDate ? 'text-gray-900' : 'text-gray-400'">
@@ -165,10 +165,6 @@ onPageScroll((option: Page.PageScrollOption) => {
               </text>
               <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
             </view>
-            <wd-datetime-picker
-              v-model="dateTs" v-model:visible="dateShow" :z-index="999" root-portal type="date"
-              title="选择恋爱纪念日" @confirm="handleDateConfirm"
-            />
           </view>
         </view>
       </view>
@@ -176,7 +172,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       <!-- 恋人信息 -->
       <view class="flex flex-col">
         <uh-section-title>恋人信息</uh-section-title>
-        <view class="uh-global-card-glass uh-shadow-xs mt-3 flex flex-col gap-y-4 rounded-2xl p-4">
+        <view class="uh-global-card-glass uh-shadow-xs mt-3 box-border flex flex-col gap-y-4 rounded-2xl p-3">
           <!-- 男生 -->
           <view class="flex items-center gap-x-3">
             <view class="relative h-18 w-18 shrink-0" @click="pickBoyAvatar">
@@ -190,7 +186,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 v-if="boyUploading"
                 class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40"
               >
-                <wd-loading size="40rpx" class="text-white" />
+                <wd-loading size="40rpx" class="text-love" />
               </view>
               <view
                 v-else-if="boyUploadFailed"
@@ -199,11 +195,11 @@ onPageScroll((option: Page.PageScrollOption) => {
                 点击重选
               </view>
             </view>
-            <view class="min-w-0 flex flex-1 flex-col gap-y-1">
+            <view class="min-w-0 flex flex-1 flex-col gap-y-2">
               <text class="text-3xs text-gray-600">男生昵称</text>
               <input
                 v-model="form.boyNickname"
-                class="uh-global-card-glass h-9 border rounded-xl px-4 text-3xs shadow-none"
+                class="uh-global-card-glass h-9 border border-blue-500 rounded-lg px-3 text-3xs shadow-none"
                 placeholder="男生的昵称" :maxlength="20"
               >
             </view>
@@ -221,7 +217,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 v-if="girlUploading"
                 class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40"
               >
-                <wd-loading size="40rpx" class="text-white" />
+                <wd-loading size="40rpx" class="text-love" />
               </view>
               <view
                 v-else-if="girlUploadFailed"
@@ -230,11 +226,11 @@ onPageScroll((option: Page.PageScrollOption) => {
                 点击重选
               </view>
             </view>
-            <view class="min-w-0 flex flex-1 flex-col gap-y-1">
+            <view class="min-w-0 flex flex-1 flex-col gap-y-2">
               <text class="text-3xs text-gray-600">女生昵称</text>
               <input
                 v-model="form.girlNickname"
-                class="uh-global-card-glass h-9 border rounded-xl px-4 text-3xs shadow-none"
+                class="uh-global-card-glass h-9 border border-love rounded-lg px-3 text-3xs shadow-none"
                 placeholder="女生的昵称" :maxlength="20"
               >
             </view>
@@ -244,11 +240,16 @@ onPageScroll((option: Page.PageScrollOption) => {
 
       <uh-button
         class="flex-1"
-        custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border rounded-full py-2.5 !text-white !bg-love shadow-none"
+        custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full py-2.5 !text-white !bg-love shadow-none"
         :class="saving ? 'opacity-60' : ''" @click="handleSave"
       >
         {{ saving ? '保存中' : '保存' }}
       </uh-button>
+
+      <wd-datetime-picker
+        v-model="dateTs" v-model:visible="dateShow" :z-index="999" root-portal type="date"
+        title="选择恋爱纪念日" @confirm="handleDateConfirm"
+      />
     </view>
   </view>
 </template>

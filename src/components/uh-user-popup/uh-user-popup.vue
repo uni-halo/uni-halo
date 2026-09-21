@@ -83,9 +83,19 @@ function isSamePage(url: string) {
 // 优化 navigateTo 跳转
 function safeNavigateTo(options: UniNamespace.NavigateToOptions & NavigateToOptions) {
   const pages = getCurrentPages()
-  const targetIndex = pages.findLastIndex(p => p.route === options.url.replace('/', ''))
-  if (targetIndex !== -1) {
-    const delta = pages.length - 1 - targetIndex
+
+  const targetRoute = options.url.replace('/', '')
+  let existIndex = -1
+  for (let i = pages.length - 1; i >= 0; i--) {
+    const page = pages[i]
+    if (`/${page.route}` === targetRoute) {
+      existIndex = i
+      break
+    }
+  }
+
+  if (existIndex !== -1) {
+    const delta = pages.length - 1 - existIndex
     uni.navigateBack({ delta })
   }
   else {
@@ -168,23 +178,23 @@ function handleLogout() {
       </view>
 
       <!-- 用户信息卡片 -->
-      <view v-if="hasLogin" class="w-full">
+      <view v-if="hasLogin" class="w-full flex">
         <view
-          class="uh-global-card-glass flex items-center gap-x-2 border rounded-xl p-3 shadow-none !bg-white/5"
+          class="uh-global-card-glass flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
         >
           <image
             :src="checkAvatarUrl(userInfo.avatar)"
             class="uh-global-card-glass uh-shadow-xs h-12 w-12 shrink-0 rounded-full" mode="aspectFill"
           />
           <view class="flex-1">
-            <text class="text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
+            <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
             <text
               class="uh-global-card-glass mt-1 inline-block border rounded-md bg-secondary px-2 py-0.5 text-10px text-gray-500"
             >
               {{ isAdmin ? '超级管理员' : '普通用户' }}
             </text>
           </view>
-          <view class="flex shrink-0 items-center justify-center">
+          <view class="flex shrink-0 items-center justify-center" @click="handleToPage(PROFILE_ENTRIES[1])">
             <wd-icon name="edit" size="36rpx" custom-class="text-gray-400" />
           </view>
         </view>
@@ -192,7 +202,7 @@ function handleLogout() {
 
       <!-- 个人入口 -->
       <view class="w-full flex shrink-0 flex-col">
-        <uh-section-title>功能入口</uh-section-title>
+        <uh-section-title>基本功能</uh-section-title>
         <view class="grid grid-cols-3 mt-3 box-border gap-3">
           <view
             v-for="entry in PROFILE_ENTRIES" :key="entry.key"
