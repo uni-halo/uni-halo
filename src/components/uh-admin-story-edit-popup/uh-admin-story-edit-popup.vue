@@ -133,14 +133,14 @@ defineExpose({ openEdit })
 <template>
   <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
-    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+    <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">
           <text class="text-md font-bold">{{ formMode === 'create' ? '新增故事' : '编辑故事' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一段属于你们的回忆' : '修改故事信息' }}</text>
         </view>
-        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg flex items-center justify-center shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>

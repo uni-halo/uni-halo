@@ -7,7 +7,7 @@
  * - 编辑模式：通过 ref.openEdit(album) 传入列表相册项回填（内部走 console 详情拉全量）
  */
 import { ref, watch } from 'vue'
-import { getLoveAlbumAdmin, createLoveAlbum, updateLoveAlbum } from '@/api/uni-admin'
+import { createLoveAlbum, getLoveAlbumAdmin, updateLoveAlbum } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { ILoveAlbum } from '@/api/types/uni-halo'
@@ -143,7 +143,7 @@ defineExpose({ openEdit })
 <template>
   <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
-    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+    <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">
@@ -172,7 +172,7 @@ defineExpose({ openEdit })
           </view>
           <view class="flex items-start">
             <text class="w-[140rpx] shrink-0 pt-1 text-3xs text-gray-600">封面</text>
-            <view class="grid flex-1 grid-cols-4 gap-2">
+            <view class="grid grid-cols-4 flex-1 gap-2">
               <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
                 <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
                 <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click="removeCover(img.tempPath); handleCoverChange()">
@@ -201,7 +201,7 @@ defineExpose({ openEdit })
                 {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
               </text>
               <view v-if="form.passwordEnabled" class="flex items-center gap-1.5" @click="form.passwordRemoved = !form.passwordRemoved">
-                <view class="h-4 w-4 flex items-center justify-center rounded border" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
+                <view class="h-4 w-4 flex items-center justify-center border rounded" :class="form.passwordRemoved ? 'border-orange-400 bg-orange-400 text-white' : 'border-gray-300'">
                   <wd-icon v-if="form.passwordRemoved" name="check" size="20rpx" />
                 </view>
                 <text class="text-3xs text-love">点击清除查看密码</text>

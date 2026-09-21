@@ -9,11 +9,11 @@ import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import type { FavoriteKind, IFavoriteItem } from '@/utils/favorite'
- 
+
 definePage({
   style: {
     navigationBarTitleText: '我的收藏',
-	navigationStyle: 'custom',
+    navigationStyle: 'custom',
   },
 })
 
@@ -50,7 +50,7 @@ watchEffect(() => {
     currentItems.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
   )
 })
- 
+
 /* ---------------- 收藏时间 ---------------- */
 function formatCollectTime(time: string): string {
   return formatTime({ d: time, f: 'yyyy-MM-dd' })
@@ -85,15 +85,15 @@ onPageScroll((option: Page.PageScrollOption) => {
 
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-10">
-	  <!-- 自定义导航 -->
-	<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900"></uh-navbar>
-	  
+    <!-- 自定义导航 -->
+    <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
+
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
     <wd-sticky :offset-top="offsetTop">
       <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
         <view
           v-for="tab in tabList" :key="tab.key"
-          class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
+          class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
           :class="{ 'bg-primary text-gray-900 font-semibold': tab.key === activeKind }"
           @click="handleSwitchTab(tab.key)"
         >
@@ -108,7 +108,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       <!-- 空态(当前 Tab 无收藏):uh-data-loading 统一渲染,视觉与 tabbar 页一致 -->
       <uh-data-loading
         v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
-       :use-refresh-button="false" :empty-text="emptyText" empty-sub-text="快去阅读笔记/瞬间点击收藏吧"
+        :use-refresh-button="false" :empty-text="emptyText" empty-sub-text="快去阅读笔记/瞬间点击收藏吧"
       />
 
       <!-- 成功态:当前 Tab 列表 -->
@@ -128,7 +128,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 <view class="truncate text-sm text-gray-900 font-bold">
                   {{ item.title || '未命名' }}
                 </view>
-                <view v-if="item.content" class="clamp-2 mt-1 text-xs text-gray-500 leading-relaxed">
+                <view v-if="item.content" class="line-clamp-2 mt-1 text-xs text-gray-500 leading-relaxed">
                   {{ item.content }}
                 </view>
               </view>
@@ -158,7 +158,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             class="uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white" @click="handleToDetail(item)"
           >
             <view class="p-4 pb-3">
-              <view class="clamp-3 text-sm text-gray-800 leading-relaxed">
+              <view class="line-clamp-3 text-sm text-gray-800 leading-relaxed">
                 {{ item.content || '(暂无内容)' }}
               </view>
             </view>
@@ -182,20 +182,3 @@ onPageScroll((option: Page.PageScrollOption) => {
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-/* 多行截断(原子类无 line-clamp,scoped 补充) */
-.clamp-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.clamp-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-}
-</style>

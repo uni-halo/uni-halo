@@ -26,7 +26,7 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('articles', '笔记列表')
 const appConfigStore = useAppConfigStore()
-const { auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+const { auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 const settingStore = useSettingStore()
 const { settings } = storeToRefs(settingStore)

@@ -9,7 +9,7 @@ import { getLoveAlbums } from '@/api/uni-halo'
 import { deleteLoveAlbum } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDialog } from '@wot-ui/ui'
-import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { ILoveAlbum } from '@/api/types/uni-halo'
@@ -91,7 +91,7 @@ onReachBottom(() => {
 
 /* ---------------- 新建/编辑相册弹窗（全局组件） ---------------- */
 const albumEditVisible = ref(false)
-const albumEditRef = ref<{ openEdit(album: ILoveAlbum): void } | null>(null)
+const albumEditRef = ref<{ openEdit: (album: ILoveAlbum) => void } | null>(null)
 
 function openCreate() {
   albumEditVisible.value = true
@@ -129,7 +129,7 @@ function handleDeleteAlbum(album: ILoveAlbum) {
 }
 
 /* ---------------- 相册照片管理弹窗（全局组件） ---------------- */
-const photoPopupRef = ref<{ openDetail(album: ILoveAlbum): void } | null>(null)
+const photoPopupRef = ref<{ openDetail: (album: ILoveAlbum) => void } | null>(null)
 
 function openDetail(album: ILoveAlbum) {
   photoPopupRef.value?.openDetail(album)
@@ -151,7 +151,11 @@ onPageScroll((option: Page.PageScrollOption) => {
     <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="恋爱相册管理" title-color="text-gray-900" />
 
     <!-- 相册列表 -->
-    <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" min-height="70vh" @refresh="handleRetry" />
+    <uh-data-loading
+      v-if="loadingStatus !== DataLoadingStatusEnum.Success"
+      :loading-status="loadingStatus"
+      min-height="70vh" theme="love" @refresh="handleRetry"
+    />
 
     <view v-else class="grid grid-cols-2 gap-3 px-3 pb-24 pt-3">
       <view v-for="album in albumList" :key="album.metadata?.name || album.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">

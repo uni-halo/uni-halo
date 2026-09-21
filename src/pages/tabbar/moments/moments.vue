@@ -229,6 +229,7 @@ function refreshByMonth(month = selectedMonth.value) {
   if (lastQueriedMonth.value === month) { return }
   lastQueriedMonth.value = month
   resetLoadMoreStatus()
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   queryParams.value.page = 1
   handleGetData()
 }

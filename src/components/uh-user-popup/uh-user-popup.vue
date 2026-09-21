@@ -24,7 +24,7 @@ interface IProfileEntry {
   type: 'switch' | 'navigate'
   icon: string
   label: string
-  path: string
+  path: NavigateToOptions['url']
 }
 
 interface IProps {
@@ -57,12 +57,12 @@ interface IAdminEntry {
   label: string
   /** 对应业务权限常量 key */
   permission: PermissionKey
-  url: string
+  url: NavigateToOptions['url']
 }
 
 const ADMIN_ENTRIES: IAdminEntry[] = [
   { key: 'moment', icon: 'send', label: '瞬间管理', permission: 'MOMENT_MANAGE', url: '/pages-admin/moment-manage/moment-manage' },
-  { key: 'love-info', icon: 'heart-fill', label: '恋爱信息管理', permission: 'LOVE_INFO_MANAGE', url: '/pages-admin/love/info-manage' },
+  { key: 'love-info', icon: 'heart', label: '恋爱信息管理', permission: 'LOVE_INFO_MANAGE', url: '/pages-admin/love/info-manage' },
   { key: 'daily', icon: 'subscribed', label: '恋爱清单管理', permission: 'LOVE_DAILY_MANAGE', url: '/pages-admin/love/daily-manage' },
   { key: 'story', icon: 'book', label: '恋爱故事管理', permission: 'LOVE_STORY_MANAGE', url: '/pages-admin/love/story-manage' },
   { key: 'album', icon: 'image', label: '恋爱相册管理', permission: 'LOVE_ALBUM_MANAGE', url: '/pages-admin/love/album-manage' },
@@ -75,9 +75,30 @@ function handleClose() {
   emits('update:modelValue', false)
 }
 
-function handleToAdmin(url: string) {
+// 判断当前页面是否与跳转页面一样
+function isSamePage(url: string) {
+  return getCurrentPages()[getCurrentPages().length - 1].route === url.replace('/', '')
+}
+
+// 优化 navigateTo 跳转
+function safeNavigateTo(options: UniNamespace.NavigateToOptions & NavigateToOptions) {
+  const pages = getCurrentPages()
+  const targetIndex = pages.findLastIndex(p => p.route === options.url.replace('/', ''))
+  if (targetIndex !== -1) {
+    const delta = pages.length - 1 - targetIndex
+    uni.navigateBack({ delta })
+  }
+  else {
+    uni.navigateTo(options)
+  }
+}
+
+function handleToAdmin(url: NavigateToOptions['url']) {
   handleClose()
-  uni.navigateTo({
+  if (isSamePage(url)) {
+    return
+  }
+  safeNavigateTo({
     url,
     animationType: 'slide-in-right',
   })
@@ -85,6 +106,9 @@ function handleToAdmin(url: string) {
 
 function handleToPage(entry: IProfileEntry) {
   handleClose()
+  if (isSamePage(entry.path)) {
+    return
+  }
   if (entry.type === 'switch') {
     uni.switchTab({
       url: entry.path,
@@ -93,7 +117,7 @@ function handleToPage(entry: IProfileEntry) {
     return
   }
   if (entry.type === 'navigate') {
-    uni.navigateTo({
+    safeNavigateTo({
       url: entry.path,
       animationType: 'slide-in-right',
     })

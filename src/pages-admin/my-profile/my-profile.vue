@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { onLoad, onPageScroll, onShow } from '@dcloudio/uni-app'
+import { onPageScroll, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
@@ -221,10 +221,6 @@ const bindingLoading = ref(false)
 const bindSubmitting = ref(false)
 
 const isBound = computed(() => binding.value?.bound === true)
-const boundAtText = computed(() => {
-  const at = binding.value?.boundAt
-  return at ? String(at).slice(0, 10) : ''
-})
 
 async function fetchBinding() {
   bindingLoading.value = true

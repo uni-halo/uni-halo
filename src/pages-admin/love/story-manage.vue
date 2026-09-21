@@ -147,32 +147,32 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-      min-height="70vh" @refresh="handleRetry"
+      min-height="70vh" theme="love" @refresh="handleRetry"
     />
 
     <view v-else class="box-border flex flex-col gap-3 px-3 pb-24 pt-3">
       <view
         v-for="(item) in dataList" :key="item.metadata?.name || item.id"
-        class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl flex flex-col gap-y-3 box-border p-3"
+        class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-y-3 overflow-hidden rounded-xl p-3"
       >
         <view class="flex gap-3">
           <image
             v-if="item.spec?.images?.[0]" :src="checkThumbnailUrl(item.spec.images[0], true)"
             mode="aspectFill" class="h-20 w-20 shrink-0 rounded-lg"
           />
-          <view class="flex-1 flex flex-col gap-y-1 justify-between">
+          <view class="flex flex-1 flex-col justify-between gap-y-1">
             <view class="shrink-0 text-sm text-gray-900 font-semibold">
               {{ item.spec?.title || '忘写了' }}
-            </view> 
-			<view class="flex-1 line-clamp-2 text-xs text-gray-500 leading-relaxed">
+            </view>
+            <view class="line-clamp-2 flex-1 text-xs text-gray-500 leading-relaxed">
               {{ (item.spec?.content || '').replace(/<[^>]+>/g, '') || '' }}
             </view>
-            <view v-if="item.spec?.location" class="shrink-0 flex items-center gap-2 text-3xs text-gray-500">
+            <view v-if="item.spec?.location" class="flex shrink-0 items-center gap-2 text-3xs text-gray-500">
               <view class="flex items-center gap-0.5">
                 <wd-icon name="location" size="22rpx" />
                 <text>{{ item.spec.location }}</text>
               </view>
-            </view> 
+            </view>
           </view>
         </view>
         <view

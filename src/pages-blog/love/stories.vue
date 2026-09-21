@@ -320,7 +320,7 @@ onReachBottom(() => {
 
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-      min-height="75vh" empty-text="还没有故事，敬请期待吧~" @refresh="handleGetStories"
+      min-height="75vh" theme="love" empty-text="还没有故事，敬请期待吧~" @refresh="handleGetStories"
     />
 
     <!-- 时间轴 -->

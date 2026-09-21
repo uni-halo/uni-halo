@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { checkUrl } from '@/utils/url'
 import type { DataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 
 interface IProps {
@@ -14,28 +13,27 @@ interface IProps {
   errorSubText?: string
   emptySubText?: string
   useRefreshButton?: boolean
+  theme?: 'love' | 'primary'
 }
 
 const props = withDefaults(defineProps<IProps>(), {
   loadingStatus: 'loading',
   size: 'large',
   minHeight: '80vh',
-  loadingText: '稍等，正在加载中哦~',
+  loadingText: '稍等，正在加载中',
   errorText: '哎呀，加载失败了呢~',
   emptyText: '啊偶，暂时没有数据呢~',
-  loadingSubText: '',
+  loadingSubText: '请稍等哦~',
   errorSubText: '请检查网络连接，或稍后再试',
   emptySubText: '稍后再来看看吧～',
   useRefreshButton: true,
+  theme: 'primary',
 })
 
 const emit = defineEmits<{ (e: 'refresh'): void }>()
 
-const pages = getCurrentPages()
-const currentPage = pages[pages.length - 1]
-
 const customClasses = computed(() => {
-  const isLovePage = currentPage.route.includes('/love/')
+  const isLovePage = props.theme === 'love'
   return {
     text: isLovePage ? 'text-love' : 'text-primary',
     button: isLovePage ? '!bg-love !text-white' : '!bg-primary !text-gray-900',
@@ -73,7 +71,7 @@ const sizeClasses = computed(() => {
 const isLoading = computed(() => props.loadingStatus === 'loading')
 
 const statusScene = computed(() => {
-  const isLovePage = currentPage.route.includes('/love/')
+  const isLovePage = props.theme === 'love'
   switch (props.loadingStatus) {
     case 'error':
       return {
@@ -150,7 +148,7 @@ const statusScene = computed(() => {
 </template>
 
 <style scoped lang="scss">
-	.bubble {
+.bubble {
   animation: bubble-float 2s ease-in-out infinite;
 }
 

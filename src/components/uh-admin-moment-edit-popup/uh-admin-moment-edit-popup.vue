@@ -39,7 +39,7 @@ const { list: images, uploading, choose, retry, remove, urls, reset } = useHaloU
 })
 
 /* ---------------- 富文本编辑器（官方 editor，经 uh-rich-editor 封装，带工具条） ---------------- */
-const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, insertImage(src: string): void, clear(): void } | null>(null)
+const editorRef = ref<{ setHtml: (html: string) => void, getHtml: () => Promise<string>, insertImage: (src: string) => void, clear: () => void } | null>(null)
 /** 内容快照（编辑器 @input 同步；回填时手动写入，供 canSubmit 判断） */
 const editorContent = ref('')
 
@@ -192,14 +192,14 @@ defineExpose({ openEdit })
 <template>
   <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
-    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+    <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">
           <text class="text-md font-bold">{{ formMode === 'create' ? '发布瞬间' : '编辑瞬间' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录此刻的想法与生活' : '修改这条瞬间' }}</text>
         </view>
-        <view class="uh-global-card-glass flex items-center justify-center absolute right-0 top-0 h-6 w-6 border rounded-lg shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
