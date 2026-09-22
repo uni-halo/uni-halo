@@ -215,17 +215,11 @@ async function savePassword() {
       // 已自主设置过密码：走 Halo UC 端点，需旧密码验证
       await changeMyPassword(oldPassword.value, pwd)
       passwordSheet.value = false
-      uni.showToast({ icon: 'none', title: '密码修改成功，请重新登录' })
-      // 修改密码后登录态已失效：退出登录清空 token 与用户信息，返回上一页
-      // setTimeout(async () => {
-      //   await tokenStore.logout()
-      //   uni.navigateBack()
-      // }, 600)
+      uni.showToast({ icon: 'none', title: '密码修改成功' })
     }
     else {
       // 从未自主设置过密码（微信自动注册的随机密码用户）：走插件端首次设密接口，
       // 免旧密码；服务端打 password-set-by-user 注解后此通道关闭。
-      // 注意：随机密码用户的 UC passwordSet 也是 true，不能用 UC 端点改密（无旧密码可填）。
       await setInitialPassword(pwd)
       passwordSheet.value = false
       uni.showToast({ icon: 'none', title: '密码设置成功' })

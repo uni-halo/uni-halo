@@ -38,6 +38,7 @@ const activeTab = ref<NotifyTab>('all')
 /** 状态机（同 articles 页）：首屏/下拉刷新 loading、empty、error；触底加载失败仅底部提示，不切整页错误态 */
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const allItems = ref<INotification[]>([])
+const totalCount = ref(0)
 const queryParams = ref({ page: 1, size: PAGE_SIZE })
 const unreadCount = ref(0)
 
@@ -45,8 +46,9 @@ const unreadCount = ref(0)
 const expandedName = ref('')
 
 const tabList = computed(() => [
-  { key: 'all' as NotifyTab, label: '全部' },
-  { key: 'unread' as NotifyTab, label: '未读', count: unreadCount.value },
+  { key: 'all' as NotifyTab, value: undefined, label: '全部' },
+  { key: 'unread' as NotifyTab, value: 'spec.unread=true', label: '未读', count: unreadCount.value },
+  { key: 'read' as NotifyTab, value: 'spec.unread=false', label: '已读' },
 ])
 
 /* ---------------- 登录守卫（页面内兜底，拦截器不覆盖） ---------------- */
@@ -85,11 +87,14 @@ async function handleGetNotifications() {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
   try {
+    const fieldSelector = tabList.value.find(item => item.key === activeTab.value)?.value
+
     const res = await getUserNotifications(userInfo.value.username, {
       ...queryParams.value,
-      fieldSelector: activeTab.value === 'unread' ? 'spec.unread=true' : undefined,
+      fieldSelector,
       sort: 'metadata.creationTimestamp,desc',
     })
+    totalCount.value = res.data?.total ?? 0
     const items = res.data?.items || []
     // 触底加载追加，重置加载替换
     allItems.value = loadMoreStatus.value.active
@@ -228,8 +233,8 @@ onPullDownRefresh(() => {
 
     <!-- 顶部 Tab(吸顶玻璃胶囊 chip，与我的收藏同款) -->
     <wd-sticky :offset-top="offsetTop">
-      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-        <view class="box-border flex items-center gap-2 px-3 pb-1.5 pt-1">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pt-2">
+        <view class="box-border w-full flex items-center gap-2 px-3 pb-1.5">
           <view
             v-for="tab in tabList" :key="tab.key"
             class="uh-global-card-glass inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs shadow-none"
@@ -237,7 +242,7 @@ onPullDownRefresh(() => {
             @click="handleTabChange(tab.key)"
           >
             {{ tab.label }}
-            <text v-if="tab.key === 'unread' && tab.count > 0">({{ tab.count }})</text>
+            <text v-if="tab.count > 0">({{ tab.count }})</text>
           </view>
           <view class="flex-1" />
           <view
@@ -272,34 +277,37 @@ onPullDownRefresh(() => {
               {{ item.spec.title || '系统通知' }}
             </view>
             <wd-icon
-              name="arrow-down" size="24rpx" custom-class="shrink-0 text-gray-400 transition-transform"
+              name="down" size="28rpx" custom-class="shrink-0 text-gray-400 transition-transform"
               :class="expandedName === item.metadata.name ? 'rotate-180' : ''"
+              :style="{
+                transform: expandedName === item.metadata.name ? 'rotate(180deg)' : 'rotate(0deg)',
+              }"
             />
           </view>
           <!-- 未读时收起态给一行摘要，降低"不知道内容"的门槛 -->
           <text
             v-if="expandedName !== item.metadata.name"
-            class="mt-1 truncate text-[24rpx] text-gray-500 leading-relaxed"
+            class="mt-1.5 truncate text-3xs text-gray-600 leading-relaxed"
           >
             {{ item.spec.rawContent }}
           </text>
-          <text class="mt-2 shrink-0 text-[22rpx] text-gray-500">
+          <text class="mt-2 shrink-0 text-xs text-gray-500">
             {{ handleTime(item.metadata.creationTimestamp) }}
           </text>
 
           <!-- 展开详情：纯文本渲染（保留换行），支持复制 -->
-          <view v-if="expandedName === item.metadata.name" class="mt-2 border-t border-black/5 pt-2">
-            <text class="whitespace-pre-line break-all text-xs text-gray-600 leading-relaxed dark:text-gray-400">
+          <view v-if="expandedName === item.metadata.name" class="mt-2">
+            <text class="whitespace-pre-line break-all text-3xs text-gray-600 leading-relaxed">
               {{ item.spec.rawContent }}
             </text>
             <view class="mt-2 flex items-center justify-between">
-              <text class="text-[20rpx] text-gray-400">仅你本人可见，请注意保管敏感信息</text>
+              <text class="text-xs text-gray-400">仅你本人可见，请注意保管敏感信息</text>
               <view
                 class="uh-global-card-glass flex shrink-0 items-center gap-1 border rounded-lg px-2 py-0.5 shadow-none"
                 @click.stop="handleCopyContent(item)"
               >
                 <wd-icon name="copy" size="22rpx" custom-class="text-gray-500" />
-                <text class="text-[20rpx] text-gray-500">复制</text>
+                <text class="text-xs text-gray-500">复制</text>
               </view>
             </view>
           </view>
