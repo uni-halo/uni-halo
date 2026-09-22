@@ -303,6 +303,8 @@ const commentModal = ref({
 })
 
 function handleMomentComment(moment: MomentCard) {
+  // 不需要在列表评论
+  return
   if (!moment) { return }
   if (!calcEnableComment.value) {
     uni.showToast({ icon: 'none', title: '评论功能未开启！' })
@@ -423,13 +425,13 @@ onReachBottom(() => {
       <template #left>
         <view class="flex items-center gap-x-1">
           <uh-button
-            custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 text-xs !rounded-md"
+            custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 text-xs !rounded-lg"
             @click="handleOpenYearPicker"
           >
             {{ selectedMonth.split('-')[0] }}
           </uh-button>
           <view
-            class="uh-global-card-glass box-border border rounded-md bg-primary px-1.5 py-1 text-xs text-gray-900"
+            class="uh-global-card-glass box-border border rounded-lg bg-primary px-1.5 py-1 text-xs text-gray-900"
             @click="handleBackToThisMonth"
           >
             本月

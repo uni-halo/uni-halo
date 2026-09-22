@@ -183,7 +183,7 @@ onReachBottom(() => {
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900" />
 
-    <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" />
+    <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" min-height="65vh" :loading-status="loadingStatus" />
 
     <block v-else>
       <view class="grid grid-cols-2 mt-3 box-border gap-2.5 p-3 pt-0">

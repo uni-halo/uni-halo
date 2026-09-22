@@ -235,7 +235,7 @@ onReachBottom(() => {
     >
       <template #left>
         <uh-button
-          custom-class="box-border uh-global-card-glass border !inline-flex text-gray-900 !px-1.5 !py-1 text-xs !rounded-md"
+          custom-class="box-border uh-global-card-glass border !inline-flex text-gray-900 !px-1.5 !py-1 text-xs !rounded-lg"
           @click="visiblePhotoName = !visiblePhotoName"
         >
           {{ visiblePhotoName ? '隐藏' : '显示' }}名称
@@ -266,7 +266,7 @@ onReachBottom(() => {
       </wd-sticky>
 
       <uh-data-loading
-        v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success" min-height="65vh" :loading-status="loadingStatus"
         @refresh="handleGetCategory"
       />
 
