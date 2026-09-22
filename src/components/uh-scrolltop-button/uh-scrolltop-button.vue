@@ -23,6 +23,7 @@ const balckList = [
   'pages-blog/love/love',
   'pages-blog/contact/contact',
   'pages-blog/about-project/about-project',
+  'pages/auth/wechat-bind',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

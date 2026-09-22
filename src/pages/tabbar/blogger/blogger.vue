@@ -293,13 +293,13 @@ onPageScroll((option: Page.PageScrollOption) => {
         class="gif-wave absolute bottom-0 left-0 z-90 h-18 w-full" style="mix-blend-mode: screen;"
       />
       <!-- 过渡 -->
-      <view class="absolute bottom-0 left-0 z-100 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
+      <view class="absolute bottom-0 left-0 z-90 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
     </view>
 
     <!-- 站点统计 -->
     <view
       v-if="featureMode === 'list'"
-      class="uh-global-card-glass uh-shadow-xs relative z-100 mx-4 flex border rounded-2xl -mt-16"
+      class="uh-global-card-glass uh-shadow-xs relative z-90 mx-4 flex border rounded-2xl -mt-16"
     >
       <view v-for="item in allStats" :key="item.key" class="flex-1 py-4 text-center">
         <wd-count-to
@@ -314,7 +314,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 功能导航：非分组模式 -->
     <template v-if="featureMode === 'grid'">
-      <view v-if="commonFeatures.length !== 0" class="relative z-100 box-border overflow-hidden p-4 -mt-20">
+      <view v-if="commonFeatures.length !== 0" class="relative z-90 box-border overflow-hidden p-4 -mt-20">
         <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-4 box-border gap-2 border rounded-3xl p-3">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"

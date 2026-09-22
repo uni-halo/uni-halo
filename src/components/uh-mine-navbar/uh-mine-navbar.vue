@@ -72,11 +72,8 @@ function handleScan() {
       console.log('扫码成功', res)
       // todo: 处理其他扫码结果 比如跳转到指定页面
     },
-    fail: () => {
-      uni.showToast({
-        title: '扫码失败',
-        icon: 'none',
-      })
+    fail: (err) => {
+      console.error('扫码失败', err)
     },
   })
 }
@@ -90,7 +87,7 @@ function handleScan() {
           class="uh-global-card-glass uh-shadow-xs h-7 w-7 flex items-center justify-center gap-x-2 border rounded-full text-primary"
           @click="handleScan()"
         >
-          <wd-icon name="scan" size="30rpx" />
+          <wd-icon name="scan" size="28rpx" />
         </view>
       </view>
       <!-- 中间 -->

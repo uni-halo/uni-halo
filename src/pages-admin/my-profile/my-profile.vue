@@ -46,6 +46,28 @@ function errText(error: any, fallback: string) {
   return error?.data?.message || error?.message || fallback
 }
 
+/**
+ * 微信绑定相关业务 code → 可执行提示
+ * 权威定义在插件端 BizErrorCode(uni-halo-plugin),此处只做前端文案映射。
+ * 冲突类(409)必须给出「先解绑」这类可执行引导,不能只报一句「绑定失败」。
+ */
+const WECHAT_BIND_ERROR_TEXT: Record<string, string> = {
+  WECHAT_ALREADY_BOUND: '该微信已绑定其他账号,请先解绑后再试',
+  ACCOUNT_ALREADY_BOUND: '当前账号已绑定其他微信,请先解除绑定',
+  WECHAT_LOGIN_DISABLED: '站点未开启微信登录',
+  WECHAT_NOT_CONFIGURED: '站点未配置微信登录密钥,请联系站长',
+  WECHAT_LOGIN_FAILED: '微信登录失败,请重试',
+  BIND_TICKET_INVALID: '二维码已失效,请重新生成',
+  UNAUTHENTICATED: '登录已失效,请重新登录',
+  INTERNAL_ERROR: '服务异常,请稍后重试',
+}
+
+/** 绑定/解绑报错:优先按业务 code 取文案,其次服务端 message,最后兜底 */
+function bizErrText(error: any, fallback: string) {
+  const code = error?.data?.code as string | undefined
+  return (code ? WECHAT_BIND_ERROR_TEXT[code] : '') || errText(error, fallback)
+}
+
 /* ---------------- 头像 ---------------- */
 const avatarUploading = ref(false)
 
@@ -270,12 +292,13 @@ async function handleBindWechat() {
   try {
     const loginRes = await getWxCode()
     await bindMyWechat(loginRes.code)
-    uni.showToast({ icon: 'none', title: '绑定成功' })
+    // 服务端同时发站内通知,提示里一并说明,避免用户疑惑"消息通知里那条哪来的"
+    uni.showToast({ icon: 'none', title: '绑定成功，已发送站内通知' })
     await fetchBinding()
   }
   catch (error: any) {
     console.error('微信绑定失败:', error)
-    uni.showToast({ icon: 'none', title: errText(error, '微信绑定失败') })
+    uni.showToast({ icon: 'none', title: bizErrText(error, '微信绑定失败') })
   }
   finally {
     bindSubmitting.value = false
@@ -302,11 +325,11 @@ function handleUnbindWechat() {
         providerUserId: null,
         boundAt: null,
       }
-      uni.showToast({ icon: 'none', title: '已解除绑定' })
+      uni.showToast({ icon: 'none', title: '已解除绑定，已发送站内通知' })
     }
     catch (error: any) {
       console.error('解绑失败:', error)
-      uni.showToast({ icon: 'none', title: errText(error, '解绑失败') })
+      uni.showToast({ icon: 'none', title: bizErrText(error, '解绑失败') })
     }
   }).catch(() => { })
 }

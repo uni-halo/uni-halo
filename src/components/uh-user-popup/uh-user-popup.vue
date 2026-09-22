@@ -252,7 +252,7 @@ function handleLogout() {
               <!-- 消息通知未读徽标 -->
               <view
                 v-if="entry.key === 'notifications' && unreadNotifyCount > 0"
-                class="absolute h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 p-1 -right-1.5 -top-1.5"
+                class="absolute box-border h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 p-0.5 -right-1.5 -top-1.5"
               >
                 <text class="text-11px text-white leading-none">{{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount }}</text>
               </view>

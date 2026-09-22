@@ -43,6 +43,20 @@ export function refreshToken(refreshToken: string) {
 }
 
 /**
+ * 验证当前登录 token 是否有效
+ */
+export function verifyTokenExpires() {
+  return http.Post<IResponse<{ valid: boolean, username: string, patName: string, expiresAt: string }>>(
+    `${AUTH_API_BASE}/token-check`,
+    {},
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+    },
+  )
+}
+
+/**
  * 账号密码登录(公开接口)
  * 成功返回 LoginResult(token + user + roles + permissions),失败 401 返回 { code, message }
  */
@@ -280,16 +294,34 @@ export function setInitialPassword(newPassword: string) {
 /* ---------- 微信扫码绑定(BindTicket) ---------- */
 
 /** 扫码绑定票据状态(插件端 BindTicketService.Status) */
-export type IBindTicketStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED'
+/**
+ * 票据状态：PENDING 等待扫码 / SCANNED 已扫码待电脑端确认
+ * / CONFIRMED 已绑定 / FAILED 绑定失败或被拒绝 / EXPIRED 已过期
+ *
+ * FAILED 必须有：确认与绑定分两步，没有失败终态时轮询会把「绑定失败」显示成成功。
+ * SCANNED 是两阶段确认的待确认态：扫码只登记微信身份，必须发起方在电脑端再点
+ * 一次「确认绑定」才真正建立关系。
+ */
+export type IBindTicketStatus = 'PENDING' | 'SCANNED' | 'CONFIRMED' | 'FAILED' | 'EXPIRED'
 
 /** 票据状态查询响应 */
 export interface IBindTicketStatusRes {
   ticket: string
   status: IBindTicketStatus
+  /** 失败原因文案（仅 FAILED 有值，其余为空串） */
+  reason?: string
+  /** 扫码方微信标识的脱敏尾号（仅 SCANNED 有值） */
+  hint?: string
+  /**
+   * 登录态预检：true 二维码归属当前登录账号 / false 归属其他账号 /
+   * null 未登录（匿名扫码是合法主流程，无登录态可比）。
+   * 仅用于提前给出失败提示，真正的归属裁决始终在服务端 confirm 时完成
+   */
+  mine?: boolean | null
 }
 
 /**
- * 查询扫码绑定票据状态(匿名轮询接口)
+ * 查询扫码绑定票据状态(匿名可调;带登录态时服务端额外返回 mine 预检字段)
  * @param ticket 票据号(扫码内容 uh-bindwx-{ticket} 中解析)
  */
 export function getBindTicketStatus(ticket: string) {
@@ -297,14 +329,22 @@ export function getBindTicketStatus(ticket: string) {
     `${AUTH_API_BASE}/bind/wechat/qr/tickets/${ticket}`,
     {
       cacheFor: 0,
-      meta: { requestFrom: RequestFrom.Halo },
+      // needAuthToken 仅在已登录时注入 Authorization(拦截器判空),匿名请求保持无头,
+      // 服务端据此返回 mine: null
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
     },
   )
 }
 
 /**
- * 确认扫码绑定微信(匿名接口,仅微信小程序可用)
- * 身份由 wx.login() 的 code 换取,绑定目标用户名在票据创建时已锁定
+ * 确认扫码绑定微信(第一阶段:登记微信身份,不直接绑定,仅微信小程序可用)
+ *
+ * 真正的绑定要等发起方在电脑端点「确认绑定」后才发生(两阶段确认)。
+ *
+ * **必须携带登录态**:服务端据此判断扫码者是否已登录其他账号——手机登录着 B
+ * 却扫了 A 的码时,绑定会被拒绝(否则微信会被静默绑给 A)。未登录时请求不带
+ * token,服务端按匿名处理,行为与原来一致。
+ *
  * @param ticket 票据号
  * @param code wx.login 一次性凭证
  */
@@ -314,7 +354,7 @@ export function confirmBindTicket(ticket: string, code: string) {
     { code },
     {
       cacheFor: 0,
-      meta: { requestFrom: RequestFrom.Halo },
+      meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
     },
   )
 }

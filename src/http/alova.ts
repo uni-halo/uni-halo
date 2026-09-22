@@ -8,7 +8,7 @@ import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
 import { toLoginPage } from '@/utils/toLoginPage'
 import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum'
-import { saveCommentCookies } from './tools/commentCookies' 
+import { saveCommentCookies } from './tools/commentCookies'
 import { UniHaloError } from './tools/exception'
 
 // 配置动态Tag
@@ -57,7 +57,7 @@ const alovaInstance = createAlova({
     }
 
     const { config } = method
-    
+
     if (config.meta?.personalToken) {
       config.headers.Authorization = `Bearer ${config.meta.personalToken}`
     }

@@ -9,7 +9,7 @@ import { isPageTabbar, tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
 import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE, LOGIN_PAGE_ENABLE_IN_MP } from './config'
 
-export const FG_LOG_ENABLE = false
+export const FG_LOG_ENABLE = true
 
 export function judgeIsExcludePath(path: string) {
   const isDev = import.meta.env.DEV
@@ -59,13 +59,17 @@ export const navigateToInterceptor = {
     // 处理直接进入路由非首页时，tabbarIndex 不正确的问题
     tabbarStore.setAutoCurIdx(path)
 
+    // token
+    const tokenStore = useTokenStore()
+    tokenStore.tryVerifyTokenExpires()
+
     // 小程序里面使用平台自带的登录，则不走下面的逻辑
     if (isMp && !LOGIN_PAGE_ENABLE_IN_MP) {
+      console.log('小程序里面使用平台自带的登录，则不走下面的逻辑')
       return true // 明确表示允许路由继续执行
     }
 
-    const tokenStore = useTokenStore()
-    tokenStore.updateNowTime()
+    // tokenStore.updateNowTime()
     const { hasLogin } = storeToRefs(tokenStore)
     FG_LOG_ENABLE && console.log('hasLogin:', hasLogin.value)
 
