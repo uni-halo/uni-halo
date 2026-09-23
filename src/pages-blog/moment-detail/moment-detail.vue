@@ -10,7 +10,6 @@ import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { generateUUID } from '@/utils/uuid'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
-import { randomTagColor } from '@/utils/random'
 import { markdownConfig } from '@/config/markdown'
 import { handleScrollToSelector } from '@/utils/page'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -35,9 +34,6 @@ const bloggerInfo = computed(() => {
     avatar: checkAvatarUrl(blogger?.avatar),
   }
 })
-
-/** 瞬间标签随机色（内置开启，插件端不再下发该配置项） */
-const calcUseTagRandomColor = computed(() => true)
 
 const siteName = computed(() => {
   const appInfo = haloConfigs.value.featureConfig?.profile?.appInfo
@@ -247,16 +243,6 @@ function handlePreview(index: number, list: { url: string }[]) {
   })
 }
 
-function handleToTopPage(duration = 500) {
-  uni.pageScrollTo({
-    scrollTop: 0,
-    duration,
-    fail: (err) => {
-      console.error('回顶失败', err)
-    },
-  })
-}
-
 /* ---------------- 生命周期 ---------------- */
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
@@ -324,7 +310,7 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 正文 -->
-        <view class="content mt-6 px-4 text-3 text-gray-900">
+        <view class="mt-6 box-border px-4 text-3xs text-gray-900">
           <mp-html
             :content="moment.spec.newHtml"
             lazy-load :domain="markdownConfig.domain"

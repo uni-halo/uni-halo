@@ -80,8 +80,8 @@ const alovaInstance = createAlova({
   }),
   responded: onResponseRefreshToken({
     onSuccess: (response, method) => {
-      console.log('onResponseRefreshToken response===>', response)
-      console.log('onResponseRefreshToken method===>', method)
+      // console.log('onResponseRefreshToken response===>', response)
+      // console.log('onResponseRefreshToken method===>', method)
 
       const { config } = method
       const { requestType } = config
@@ -89,7 +89,7 @@ const alovaInstance = createAlova({
 
       // 验证业务逻辑
       if (config.meta?.needAuthToken && bizVerifyTokenExpired({ url: method.url, statusCode })) {
-        return 
+        return
       }
 
       // 处理特殊请求类型（上传/下载）

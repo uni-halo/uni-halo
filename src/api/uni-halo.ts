@@ -37,7 +37,6 @@ import type {
   IQRCodeInfo,
   IRestrictReadCheckReq,
   IRestrictReadCheckRes,
-  ISubmitLinkForm,
   IUpdateCheckRes,
   IVoteDetail,
   IVoteListReq,

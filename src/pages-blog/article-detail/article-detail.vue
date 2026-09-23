@@ -88,7 +88,6 @@ const calcIsShowComment = computed(() => !!postDetailPageConfig.value?.showComme
 const calcEnableComment = computed(() =>
   !!postDetailPageConfig.value?.enableComment
   && result.value?.spec.allowComment !== false)
-const originalURL = computed(() => result.value?.metadata.annotations?.unihalo_originalURL || '')
 
 const avatarClass = computed(() => {
   if (settings.value.avatarShape === 'circle') {
@@ -397,29 +396,6 @@ function handleToTag(tag: { metadata: { name: string }, spec: { displayName: str
   })
 }
 
-function handleToWebview(data: { title: string, url: string }) {
-  uni.navigateTo({
-    url: `/pages-blog/website/website?data=${JSON.stringify({
-      title: data.title,
-      url: encodeURIComponent(data.url),
-    })}`,
-  })
-}
-
-function handleToOriginal(originalURLValue: string) {
-  handleToWebview({
-    title: result.value?.spec.title || '',
-    url: originalURLValue,
-  })
-}
-
-function handlePreview(index: number, list: { url: string }[]) {
-  uni.previewImage({
-    current: index,
-    urls: list.map(item => item.url),
-  })
-}
-
 /* ---------------- 格式化 ---------------- */
 function formatPublishTime(time?: string): string {
   // yyyy年MM月dd日 星期w
@@ -517,12 +493,6 @@ onShareTimeline(() => {
           </view>
 
           <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-3">
-            <view v-if="originalURL" class="flex flex-1 items-center gap-x-2 text-gray-500">
-              <text class="text-xs">原文</text>
-              <text class="text-xs text-gray-900" @click.stop="handleToOriginal(originalURL)">
-                {{ originalURL }}
-              </text>
-            </view>
             <view class="flex flex-1 items-center gap-x-2 text-gray-500">
               <text class="text-xs">日期</text>
               <text class="text-xs text-gray-900">{{ formatPublishTime(result?.spec.publishTime) }}</text>
