@@ -15,6 +15,7 @@ definePage({
   },
 })
 
+const { bootstrap } = useAppConfigStore()
 const { configs } = storeToRefs(useAppConfigStore())
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('login', '登录')
@@ -122,7 +123,9 @@ async function doWechatLogin() {
 }
 
 /** 登录成功统一处理:返回来源页 */
-function handleLoginSuccess() {
+async function handleLoginSuccess() {
+  // 登录成功需要重新拉取配置
+  await bootstrap({ force: true })
   setTimeout(() => {
     uni.navigateBack()
   }, 600)
