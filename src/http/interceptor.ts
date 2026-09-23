@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store'
 import { getEnvBaseUrl } from '@/utils'
 import { stringifyQuery } from './tools/queryString'
+import { bizVerifyTokenExpired } from './tools/bizVerifyTokenExpired'
 // import qs from 'qs'
 
 // 请求基准地址
@@ -66,7 +67,7 @@ const httpInterceptor = {
     // 需要登录token的请求，添加token到请求头
     // 为什么这么设计？因为有些接口不需要token，加上了token反而会报错
     // 那如果是一些第三方接口，需要token，怎么办？可以直接在请求的时候在请求头自己添加header即可
-    if (options?.meta?.needLoginToken) {
+    if (options?.meta?.needAuthToken) {
       const tokenStore = useTokenStore()
       tokenStore.updateNowTime()
       const { validToken: token } = storeToRefs(tokenStore)
@@ -75,6 +76,13 @@ const httpInterceptor = {
       }
     }
     return options
+  },
+  // 拦截成功触发
+  success(response: any, method: any) {
+    // 验证业务逻辑
+    if (method.meta?.needAuthToken && bizVerifyTokenExpired({ url: method.url, statusCode: response.statusCode })) {
+      return response
+    }
   },
 }
 

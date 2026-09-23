@@ -65,7 +65,7 @@ export function updateUserProfile(user: IHaloUser) {
 
 /**
  * 上传头像（multipart，uni.uploadFile 直传；token 由 uploadFile 拦截器按
- * meta.needLoginToken 携带）。注意：Halo 服务端仅写入头像注解，spec.avatar
+ * meta.needAuthToken 携带）。注意：Halo 服务端仅写入头像注解，spec.avatar
  * 由 User Reconciler 异步回填——响应里的 spec.avatar 是旧值，调用方须轮询
  * profile 刷新，不能直接采信本次响应。
  * @param username 当前登录用户名（metadata.name）
@@ -77,7 +77,7 @@ export function uploadUserAvatar(username: string, filePath: string): Promise<IH
       url: `${CONSOLE_USER_API}/${username}/avatar`,
       filePath,
       name: 'file',
-      meta: { needLoginToken: true },
+      meta: { needAuthToken: true },
       success: (res) => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           reject(new Error(`头像上传失败(${res.statusCode})`))

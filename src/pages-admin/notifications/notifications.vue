@@ -259,7 +259,7 @@ onPullDownRefresh(() => {
 
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-      empty-text="暂无消息通知" empty-sub-text="站内消息会在这里展示" min-height="75vh"
+      empty-text="暂无消息通知" empty-sub-text="站内消息会在这里展示" min-height="65vh"
       @refresh="handleResetAndLoad"
     />
 

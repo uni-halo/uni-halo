@@ -274,6 +274,24 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 清除所有登录信息
+     * 包括token、过期时间、用户信息等
+     * 无论成功失败都清除本地登录状态
+     */
+    const clearAllLoginInfo = () => {
+      console.log('退出登录-清除用户信息')
+      updateNowTime()
+      // 无论成功失败，都需要清除本地token信息
+      // 清除存储的过期时间
+      uni.removeStorageSync('accessTokenExpireTime')
+      uni.removeStorageSync('refreshTokenExpireTime')
+      tokenInfo.value = { ...tokenInfoState }
+      uni.removeStorageSync('token')
+      const userStore = useUserStore()
+      userStore.clearUserInfo()
+    }
+
+    /**
      * 退出登录 并 删除用户信息
      * 服务端吊销当前 PAT(auth/-/logout),无论成功失败都清除本地登录状态
      */
@@ -285,17 +303,7 @@ export const useTokenStore = defineStore(
         console.error('退出登录失败:', error)
       }
       finally {
-        updateNowTime()
-
-        // 无论成功失败，都需要清除本地token信息
-        // 清除存储的过期时间
-        uni.removeStorageSync('accessTokenExpireTime')
-        uni.removeStorageSync('refreshTokenExpireTime')
-        console.log('退出登录-清除用户信息')
-        tokenInfo.value = { ...tokenInfoState }
-        uni.removeStorageSync('token')
-        const userStore = useUserStore()
-        userStore.clearUserInfo()
+        clearAllLoginInfo()
       }
     }
 
@@ -406,6 +414,7 @@ export const useTokenStore = defineStore(
     return {
       // 核心API方法
       tryVerifyTokenExpires,
+      clearAllLoginInfo,
       login,
       wxLogin,
       register,

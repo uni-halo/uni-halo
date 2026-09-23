@@ -26,7 +26,7 @@ onShow((options) => {
   console.log('App.vue onShow', options)
 
   // 尝试验证token过期
-  useTokenStore().tryVerifyTokenExpires()
+  // useTokenStore().tryVerifyTokenExpires()
 
   // 处理直接进入页面路由的情况：如h5直接输入路由、微信小程序分享后进入等
   // https://github.com/unibest-tech/unibest/issues/192

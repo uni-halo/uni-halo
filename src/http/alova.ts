@@ -1,5 +1,3 @@
-import type { uniappRequestAdapter } from '@alova/adapter-uniapp'
-import type { IResponse } from './types'
 import AdapterUniapp from '@alova/adapter-uniapp'
 import { createAlova } from 'alova'
 import { createServerTokenAuthentication } from 'alova/client'
@@ -10,6 +8,9 @@ import { toLoginPage } from '@/utils/toLoginPage'
 import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum'
 import { saveCommentCookies } from './tools/commentCookies'
 import { UniHaloError } from './tools/exception'
+import { bizVerifyTokenExpired } from './tools/bizVerifyTokenExpired'
+import type { uniappRequestAdapter } from '@alova/adapter-uniapp'
+import type { IResponse } from './types'
 
 // 配置动态Tag
 export const API_DOMAINS = {
@@ -79,11 +80,17 @@ const alovaInstance = createAlova({
   }),
   responded: onResponseRefreshToken({
     onSuccess: (response, method) => {
-      // console.log('onResponseRefreshToken response===>', response)
-      // console.log('onResponseRefreshToken method===>', method)
+      console.log('onResponseRefreshToken response===>', response)
+      console.log('onResponseRefreshToken method===>', method)
+
       const { config } = method
       const { requestType } = config
       const { statusCode, data: rawData, header } = response as UniNamespace.RequestSuccessCallbackResult
+
+      // 验证业务逻辑
+      if (config.meta?.needAuthToken && bizVerifyTokenExpired({ url: method.url, statusCode })) {
+        return 
+      }
 
       // 处理特殊请求类型（上传/下载）
       if (requestType === 'upload' || requestType === 'download') {

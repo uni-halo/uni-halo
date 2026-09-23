@@ -95,5 +95,5 @@ export function ShowMessage(status: number | string): string {
     default:
       message = `连接出错(${status})!`
   }
-  return `${message}，请检查网络或联系管理员！`
+  return `${message}！`
 }

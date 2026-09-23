@@ -3,7 +3,7 @@
  * 对应 PRD：docs/PRD-app-publish.md
  *
  * 注意：附件上传走 uni.uploadFile（multipart），token 由
- * http/interceptor.ts 的 uploadFile 拦截器按 meta.needLoginToken 携带；
+ * http/interceptor.ts 的 uploadFile 拦截器按 meta.needAuthToken 携带；
  * 其余写接口走 alova，鉴权经 meta.needAuthToken。
  */
 import { http } from '@/http/alova'
@@ -30,7 +30,7 @@ export function uploadAttachment(
       url: UC_ATTACHMENT_UPLOAD_URL,
       filePath,
       name: 'file',
-      meta: { needLoginToken: true },
+      meta: { needAuthToken: true },
       success: (res) => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           reject(new Error(`上传失败(${res.statusCode})`))

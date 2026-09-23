@@ -158,7 +158,9 @@ async function handleGetNavList() {
   const mp = configuredFeatures.value
   if (mp) {
     const mapEntry = (e: IMyPageEntry, group: 'blog' | 'more'): INavItem | null => {
-      if (!e.key) { return null }
+      if (!e.key) {
+        return null
+      }
       return {
         key: e.key,
         title: e.title || '',
@@ -207,10 +209,14 @@ const {
 
 function handleNavGoTo(data: { path: string }) {
   const { path } = data
-  if (!path) { return }
+  if (!path) {
+    return
+  }
 
   // 命中恋爱模块且锁定 → 弹解锁弹窗,解锁成功后由 hook 自动跳转
-  if (interceptNavigateByPath(path)) { return }
+  if (interceptNavigateByPath(path)) {
+    return
+  }
 
   uni.navigateTo({ url: path })
 }
