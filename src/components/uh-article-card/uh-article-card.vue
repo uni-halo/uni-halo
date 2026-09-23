@@ -48,6 +48,10 @@ const socialMiniAvatarClass = computed(() =>
   settings.value.avatarShape === 'circle' ? '!rounded-full !border-none' : '!rounded-md uh-shadow-xs',
 )
 
+/** 卡片头像形状(跟随偏好 avatarShape,仅影响圆角;社交卡大头像另加大尺寸) */
+const isCircleAvatar = computed(() => settings.value.avatarShape === 'circle')
+const avatarShape = computed(() => (isCircleAvatar.value ? 'round' : 'square'))
+
 const CARD_LAYOUTS = computed(() => ({
   image_top: {
     container: `flex flex-col gap-y-2 ${isGrid.value ? '!p-0' : ''}`,
@@ -56,7 +60,7 @@ const CARD_LAYOUTS = computed(() => ({
     title: `${props.article.spec.cover ? '' : 'mt-2'}`,
     footer: 'flex items-center',
     authorGroup: 'flex-1 items-center justify-start gap-x-1',
-    avatar: socialMiniAvatarClass.value,
+    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: 'flex-1 text-center',
@@ -82,11 +86,11 @@ const CARD_LAYOUTS = computed(() => ({
   image_left: {
     container: 'flex gap-x-3 !p-3',
     cover: 'shrink-0 !w-36 !h-24',
-    contentWrapper: 'w-0 flex-1 justify-between',
+    contentWrapper: 'w-0 flex-1 justify-between gap-y-2',
     title: '',
     footer: 'flex items-center justify-between',
     authorGroup: 'items-center gap-x-1',
-    avatar: socialMiniAvatarClass.value,
+    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: '!hidden',
@@ -97,11 +101,11 @@ const CARD_LAYOUTS = computed(() => ({
   image_right: {
     container: 'flex gap-x-3 !p-3',
     cover: 'order-2 shrink-0 !w-36 !h-24',
-    contentWrapper: 'order-1 w-0 flex-1 justify-between',
+    contentWrapper: 'order-1 w-0 flex-1 justify-between gap-y-2',
     title: '',
     footer: 'flex items-center justify-between',
     authorGroup: 'items-center gap-x-1',
-    avatar: socialMiniAvatarClass.value,
+    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: '!hidden',
@@ -149,6 +153,24 @@ const publishTimeText = computed(() => {
   return time ? formatTime({ d: time, f: 'yyyy/MM/dd' }) : ''
 })
 
+/**
+ * 头像地址(无头像 / 加载失败时由 wd-avatar 回退到首字文本)
+ */
+const avatarSrc = computed(() => checkAvatarUrl(props.article.owner?.avatar || ''))
+
+/**
+ * 头像首字回退:优先昵称,其次用户名
+ */
+const avatarFallbackText = computed(() => {
+  const owner = props.article.owner
+  const raw = (owner?.displayName || owner?.metadata?.name || '').trim()
+  if (!raw) { return '' }
+  const first = [...raw][0]
+  if (first && first.charCodeAt(0) > 0x7F) { return first }
+  const ascii = raw.match(/[A-Z]/i)?.[0]
+  return (ascii || first || '').toUpperCase()
+})
+
 const visitCount = computed(() => {
   return props.article.status?.stats?.visits ?? props.article.stats?.visit ?? 0
 })
@@ -177,10 +199,14 @@ function handleToArticleDetail() {
       v-if="article.spec.cover" class="relative overflow-hidden"
       :class="[isGrid ? 'w-full h-24 rounded-lg' : 'w-full h-36 rounded-lg', cardLayout.cover]"
     >
-      <image
-        class="block h-full w-full" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill"
+      <wd-img
+        width="100%" height="100%" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill"
         lazy-load
-      />
+      >
+        <template #loading>
+          <wd-loading size="64rpx" custom-class="text-primary" />
+        </template>
+      </wd-img>
     </view>
 
     <view class="flex flex-col text-sm" :class="cardLayout.contentWrapper">
@@ -213,9 +239,14 @@ function handleToArticleDetail() {
       </view>
       <view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
         <view class="flex items-center" :class="cardLayout.authorGroup">
-          <image
-            :src="checkAvatarUrl(article.owner?.avatar || '')" class="uh-global-card-glass h-5 w-5"
-            :class="cardLayout.avatar" mode="aspectFill"
+          <wd-avatar
+            :src="avatarSrc"
+            :text="avatarFallbackText"
+            :shape="avatarShape"
+            custom-class="uh-global-card-glass"
+            :class="cardLayout.avatar"
+            mode="aspectFill"
+            lazy-load
           />
           <template v-if="isSocialCard">
             <view :class="cardLayout.infoCol">

@@ -5,67 +5,83 @@
 
 :root,
 page {
-	// 修改按主题色
-	// 注:该变量由本项目 UnoCSS 消费(uno.config theme.primary),@wot-ui/ui 2.x 不再内置此变量
-	--wot-color-theme: #b9e424;
+  // 修改按主题色
+  // 注:该变量由本项目 UnoCSS 消费(uno.config theme.primary),@wot-ui/ui 2.x 不再内置此变量
+  --wot-color-theme: #b9e424;
 
-	// @wot-ui/ui 2.x 主题色阶(1.x 的 --wot-color-theme / --wot-button-primary-bg-color 已更名,原写法不再生效)
-	// 6=主色(按钮默认背景/文字) 7=active 深一档 1/2=plain/soft 浅底
-	--wot-primary-6: #b9e424;
-	--wot-primary-7: #a7cd20;
-	--wot-primary-1: #f4fbe0;
-	--wot-primary-2: #ebfabf;
+  // @wot-ui/ui 2.x 主题色阶(1.x 的 --wot-color-theme / --wot-button-primary-bg-color 已更名,原写法不再生效)
+  // 6=主色(按钮默认背景/文字) 7=active 深一档 1/2=plain/soft 浅底
+  --wot-primary-6: #b9e424;
+  --wot-primary-7: #a7cd20;
+  --wot-primary-1: #f4fbe0;
+  --wot-primary-2: #ebfabf;
 
-	// 修改按钮背景色(2.x 变量名,1.x 为 --wot-button-primary-bg-color)
-	--wot-button-primary-bg: #b9e424;
-	--wot-button-primary-bg-active: #a7cd20;
+  // 修改按钮背景色(2.x 变量名,1.x 为 --wot-button-primary-bg-color)
+  --wot-button-primary-bg: #b9e424;
+  --wot-button-primary-bg-active: #a7cd20;
+
+  // wd-img 加载态/失败态背景改为半透明浅色,避免在玻璃拟态卡片/深色封面上出现整块灰底
+  --wot-img-loading-bg: rgba(0, 0, 0, 0.03);
+  --wot-img-loading-icon-color: rgba(0, 0, 0, 0.22);
+  --wot-img-error-bg: rgba(0, 0, 0, 0.03);
+  --wot-img-error-icon-color: rgba(0, 0, 0, 0.22);
+
+  // wd-avatar 首字回退底色(无头像时显示昵称首字)
+  --wot-avatar-bg: white;
+  --wot-avatar-font-weight: normal;
+  --wot-avatar-font-size: 24rpx;
+  --wot-avatar-color: #b9e424;
 }
 
 .uh-global-page {
 }
 
 .uh-global-card-glass {
-	box-sizing: border-box;
-	background-color: rgb(255 255 255 / 55%);
-	border: 4rpx solid rgb(255 255 255 / 65%);
-	box-shadow: inset 0 1rpx 0 rgb(255 255 255 / 75%), 0 8rpx 32rpx rgb(90 105 200 / 14%);
-	backdrop-filter: blur(24rpx) saturate(160%);
-	-webkit-backdrop-filter: blur(24rpx) saturate(160%);
+  box-sizing: border-box;
+  background-color: rgb(255 255 255 / 55%);
+  border: 4rpx solid rgb(255 255 255 / 65%);
+  box-shadow:
+    inset 0 1rpx 0 rgb(255 255 255 / 75%),
+    0 8rpx 32rpx rgb(90 105 200 / 14%);
+  backdrop-filter: blur(24rpx) saturate(160%);
+  -webkit-backdrop-filter: blur(24rpx) saturate(160%);
 
-	/* 低端安卓 WebView 不支持 backdrop-filter 的兜底:提高不透明度保证可读性 */
-	@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-		background-color: rgb(255 255 255 / 88%);
-	}
+  /* 低端安卓 WebView 不支持 backdrop-filter 的兜底:提高不透明度保证可读性 */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: rgb(255 255 255 / 88%);
+  }
 }
 
 .uh-shadow-xs {
-	box-shadow: inset 0 1rpx 0 rgb(255 255 255 / 75%), 0 8rpx 32rpx rgb(90 105 200 / 7%);
+  box-shadow:
+    inset 0 1rpx 0 rgb(255 255 255 / 75%),
+    0 8rpx 32rpx rgb(90 105 200 / 7%);
 }
 
 .uh-shadow-sm {
-	box-shadow: 0 0 24rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 24rpx rgba(0, 0, 0, 0.1);
 }
 
 .uh-global-love-page {
-	background: linear-gradient(
-		135deg,
-		rgb(247 149 51 / 10%),
-		rgb(243 112 85 / 10%) 15%,
-		rgb(239 78 123 / 10%) 30%,
-		rgb(161 102 171 / 10%) 44%,
-		rgb(80 115 184 / 10%) 58%,
-		rgb(16 152 173 / 10%) 72%,
-		rgb(7 179 155 / 10%) 86%,
-		rgb(109 186 130 / 10%)
-	);
+  background: linear-gradient(
+    135deg,
+    rgb(247 149 51 / 10%),
+    rgb(243 112 85 / 10%) 15%,
+    rgb(239 78 123 / 10%) 30%,
+    rgb(161 102 171 / 10%) 44%,
+    rgb(80 115 184 / 10%) 58%,
+    rgb(16 152 173 / 10%) 72%,
+    rgb(7 179 155 / 10%) 86%,
+    rgb(109 186 130 / 10%)
+  );
 }
 
 .uh-button-native {
-	outline: none !important;
+  outline: none !important;
 
-	&::after {
-		border: none !important;
-	}
+  &::after {
+    border: none !important;
+  }
 }
 /*
 border-t-1
