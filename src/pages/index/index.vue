@@ -82,7 +82,9 @@
 			applySiteDefaults(collectSiteDefaults(configs.value))
 
 			// 拦截:主插件未激活 或 维护模式开启(任一命中)→ 跳转维护页
-			if (await interceptOrContinue()) { return }
+			if (await interceptOrContinue()) { 
+				return
+			}
 			uni.switchTab({ url: homePagePath })
 		}
 		catch (err) {

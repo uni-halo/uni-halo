@@ -42,8 +42,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 const SITE_RE = /^https?:\/\/\S+\.\S+/i
 
 interface ICaptchaConfig {
+  /** 服务端按当前登录态与 audience 计算的验证码开关(新版本插件) */
+  captchaRequired?: boolean
   security?: {
     captcha?: {
+      enable?: boolean
+      audience?: 'ALL' | 'ANONYMOUS' | 'ROLES' | string
+      roles?: string[]
+      includeAnonymous?: boolean
+      /** ALPHANUMERIC/ARITHMETIC 图片验证码;TURNSTILE/ALTCHA 为第三方方案 */
+      type?: 'ALPHANUMERIC' | 'ARITHMETIC' | 'TURNSTILE' | 'ALTCHA' | string
+      /** 旧版本字段:仅匿名评论需要验证码 */
       anonymousCommentCaptcha?: boolean
       [key: string]: unknown
     }
@@ -66,6 +75,7 @@ interface ICommentForm {
 }
 
 const config = ref<ICaptchaConfig>({
+  captchaRequired: false,
   security: {
     captcha: {
       anonymousCommentCaptcha: false,
@@ -111,12 +121,31 @@ function handleResetForm() {
   }
 }
 
-/** 获取评论组件配置(验证码开关;仅匿名评论需要验证码) */
+/** 当前是否需要验证码:优先取服务端按登录态计算的 captchaRequired,旧插件回退到匿名开关 */
+const isCaptchaRequired = computed(() => {
+  const captcha = config.value?.security?.captcha
+  if (typeof config.value?.captchaRequired === 'boolean') {
+    return config.value.captchaRequired
+  }
+  return !isLoggedIn.value && captcha?.anonymousCommentCaptcha === true
+})
+
+/** 图片验证码(ALPHANUMERIC/ARITHMETIC 或旧版匿名开关);TURNSTILE/ALTCHA 暂不支持 */
+const isImageCaptcha = computed(() => {
+  const captcha = config.value?.security?.captcha
+  if (!isCaptchaRequired.value) {
+    return false
+  }
+  const type = captcha?.type
+  return !type || type === 'ALPHANUMERIC' || type === 'ARITHMETIC'
+})
+
+/** 获取评论组件配置(需要验证码时拉取验证码图片) */
 async function handleGetConfig() {
   try {
     const res = await getCommentWidgetConfig()
     config.value = deepMerge(config.value as Record<string, unknown>, res.data as Record<string, unknown>) as ICaptchaConfig
-    if (!isLoggedIn.value && config.value?.security?.captcha?.anonymousCommentCaptcha) {
+    if (isImageCaptcha.value) {
       handleGetCaptchaImage()
     }
   }
@@ -200,10 +229,10 @@ function validateForm(): boolean {
       uni.showToast({ icon: 'none', title: '网站地址需以 http(s):// 开头' })
       return false
     }
-    if (config.value?.security?.captcha?.anonymousCommentCaptcha && !form.value.captchaCode?.trim()) {
-      uni.showToast({ icon: 'none', title: '请填写验证码结果！' })
-      return false
-    }
+  }
+  if (isImageCaptcha.value && !form.value.captchaCode?.trim()) {
+    uni.showToast({ icon: 'none', title: '请填写验证码结果！' })
+    return false
   }
   return true
 }
@@ -220,12 +249,9 @@ function buildOwner() {
   }
 }
 
-/** 验证码仅在「匿名评论验证码」开启且未登录时提交 */
+/** 需要验证码时提交 X-Captcha-Code */
 function buildCaptchaCode() {
-  return !isLoggedIn.value
-    && config.value?.security?.captcha?.anonymousCommentCaptcha
-    ? form.value.captchaCode
-    : undefined
+  return isImageCaptcha.value ? form.value.captchaCode : undefined
 }
 
 async function handleHandle() {
@@ -270,7 +296,7 @@ async function handleHandle() {
   }
   catch (err: any) {
     const error = err as UniHaloError
-    if (!isLoggedIn.value && config.value?.security?.captcha?.anonymousCommentCaptcha) {
+    if (isImageCaptcha.value) {
       captchaData.value.status = 'success'
       form.value.captchaCode = undefined
       if (error?.data?.captcha) {
@@ -391,11 +417,8 @@ watch(() => props.show, (newVal) => {
             </view>
           </template>
 
-          <!-- 匿名评论验证码 -->
-          <view
-            v-if="!isLoggedIn && config?.security?.captcha?.anonymousCommentCaptcha"
-            class="form-item flex items-center"
-          >
+          <!-- 验证码(图片类型;服务端按登录态判定是否需要) -->
+          <view v-if="isImageCaptcha" class="form-item flex items-center">
             <text class="w-16 shrink-0 text-sm text-gray-500">验证码</text>
             <view class="flex flex-1 items-center gap-3">
               <input
