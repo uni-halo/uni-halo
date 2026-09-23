@@ -3,11 +3,12 @@
  * 恋爱故事管理页
  */
 import { ref } from 'vue'
-import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPageScroll, onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import { getLoveStories } from '@/api/uni-halo'
 import { deleteLoveStory } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDialog } from '@wot-ui/ui'
+import { useTokenStore } from '@/store/token'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
@@ -24,6 +25,7 @@ definePage({
   },
 })
 
+const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 
 /* ---------------- 数据加载 ---------------- */
@@ -75,19 +77,18 @@ function handleRetry() {
   handleGetData()
 }
 
-onLoad(() => {
-  handleGetData()
-})
-
-onPullDownRefresh(() => {
+function handleRefresh() {
   resetLoadMoreStatus()
   queryParams.value.page = 1
   handleGetData()
+}
+
+onPullDownRefresh(() => {
+  handleRefresh()
 })
 
 onReachBottom(() => {
-  if (loadMoreStatus.value.active)
-    return
+  if (loadMoreStatus.value.active) { return }
   if (loadMoreStatus.value.hasNext) {
     queryParams.value.page += 1
     updateLoadMoreStatus({ active: true, status: 'loading' })
@@ -137,6 +138,16 @@ function handleDelete(item: ILoveStory) {
 
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
+})
+
+/* ---------------- 登录守卫（页面内兜底，拦截器不覆盖） ---------------- */
+onShow(() => {
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '请先登录' })
+    setTimeout(() => uni.navigateBack(), 600)
+    return
+  }
+  handleRefresh()
 })
 </script>
 

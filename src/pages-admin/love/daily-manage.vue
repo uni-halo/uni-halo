@@ -3,12 +3,13 @@
  * 恋爱清单管理页
  */
 import { ref } from 'vue'
-import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPageScroll, onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { getLoveDailyItems } from '@/api/uni-halo'
 import { deleteLoveDailyItem, updateLoveDailyItem } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDialog } from '@wot-ui/ui'
+import { useTokenStore } from '@/store/token'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
@@ -24,6 +25,7 @@ definePage({
   },
 })
 
+const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 
 const status = reactive([
@@ -80,14 +82,14 @@ function handleRetry() {
   handleGetData()
 }
 
-onLoad(() => {
-  handleGetData()
-})
-
-onPullDownRefresh(() => {
+function handleRefresh() {
   resetLoadMoreStatus()
   queryParams.value.page = 1
   handleGetData()
+}
+
+onPullDownRefresh(() => {
+  handleRefresh()
 })
 
 onReachBottom(() => {
@@ -156,6 +158,16 @@ function handleDelete(item: ILoveDailyItem) {
 
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
+})
+
+/* ---------------- 登录守卫（页面内兜底，拦截器不覆盖） ---------------- */
+onShow(() => {
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '请先登录' })
+    setTimeout(() => uni.navigateBack(), 600)
+    return
+  }
+  handleRefresh()
 })
 </script>
 

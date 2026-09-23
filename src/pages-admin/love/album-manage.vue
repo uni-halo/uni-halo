@@ -4,11 +4,12 @@
  * 新建/编辑相册弹窗为全局组件 uh-admin-album-edit-popup，照片管理弹窗为 uh-admin-album-photo-popup
  */
 import { ref } from 'vue'
-import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPageScroll, onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import { getLoveAlbums } from '@/api/uni-halo'
 import { deleteLoveAlbum } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDialog } from '@wot-ui/ui'
+import { useTokenStore } from '@/store/token'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
@@ -24,6 +25,7 @@ definePage({
   },
 })
 
+const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 
 /* ---------------- 相册列表（分页） ---------------- */
@@ -69,14 +71,14 @@ function handleRetry() {
   handleGetData()
 }
 
-onLoad(() => {
-  handleGetData()
-})
-
-onPullDownRefresh(() => {
+function handleRefresh() {
   resetLoadMoreStatus()
   queryParams.value.page = 1
   handleGetData()
+}
+
+onPullDownRefresh(() => {
+  handleRefresh()
 })
 
 onReachBottom(() => {
@@ -142,6 +144,16 @@ function handlePhotoClose(data: { isSubmit: boolean, refresh: boolean }) {
 
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
+})
+
+/* ---------------- 登录守卫（页面内兜底，拦截器不覆盖） ---------------- */
+onShow(() => {
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '请先登录' })
+    setTimeout(() => uni.navigateBack(), 600)
+    return
+  }
+  handleRefresh()
 })
 </script>
 

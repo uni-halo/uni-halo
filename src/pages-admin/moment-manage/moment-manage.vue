@@ -4,15 +4,16 @@
  * 仅 author/admin 可进入（入口经 uh-permission 控制显隐）
  */
 import { computed, ref } from 'vue'
-import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { onPageScroll, onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { deleteMoment, listMyMoments } from '@/api/uni-admin'
 import { usePermission } from '@/hooks/usePermission'
 import { useDialog } from '@wot-ui/ui'
-import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useTokenStore } from '@/store/token'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import { extractMomentContent, stripHtmlTags } from '@/utils/moment'
+import { extractMomentContent } from '@/utils/moment'
 import { checkThumbnailUrl } from '@/utils/url'
 
 const dialog = useDialog()
@@ -25,6 +26,7 @@ definePage({
   },
 })
 
+const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const { can } = usePermission()
 
@@ -55,8 +57,7 @@ async function handleGetData() {
       const c = extractMomentContent(m.spec?.content)
       return {
         name: m.metadata?.name || '',
-        content: stripHtmlTags(c.raw || c.html),
-        // medium 里的 url 是 /upload/... 相对路径，需拼接站点域名才能显示
+        content: c.raw || c.html,
         images: c.photos.map(url => checkThumbnailUrl(url)),
         releaseTime: m.spec?.releaseTime || '',
         visible: m.spec?.visible || 'PUBLIC',
@@ -91,14 +92,14 @@ async function handleGetData() {
   }
 }
 
-onLoad(() => {
-  handleGetData()
-})
-
-onPullDownRefresh(() => {
+function handleRefresh() {
   resetLoadMoreStatus()
   queryParams.value.page = 1
   handleGetData()
+}
+
+onPullDownRefresh(() => {
+  handleRefresh()
 })
 
 onReachBottom(() => {
@@ -169,6 +170,15 @@ onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
 
+onShow(() => {
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '请先登录' })
+    setTimeout(() => uni.navigateBack(), 600)
+    return
+  }
+  handleRefresh()
+})
+
 const isAdminView = computed(() => can('MOMENT_MANAGE'))
 </script>
 
@@ -177,13 +187,27 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="瞬间管理" title-color="text-gray-900" />
 
-    <!-- 无权限提示（uh-permission 跨端控制显隐） -->
+    <!-- 无权限提示 -->
     <uh-permission roles="admin,author">
-      <view />
+      <uh-data-loading
+        error-text="无权限" error-sub-text="可以联系站长开通"
+        :loading-status="DataLoadingStatusEnum.Error"
+        :use-refresh-button="false"
+        min-height="65vh"
+      >
+        <button open-type="contact" class="uh-button-native uh-global-card-glass uh-shadow-xs border py-2 !rounded-full !text-sm">
+          联系站长
+        </button>
+      </uh-data-loading>
     </uh-permission>
 
     <template v-if="isAdminView">
-      <uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" min-height="70vh" @refresh="handleRetry" />
+      <uh-data-loading
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success"
+        :loading-status="loadingStatus"
+        min-height="65vh"
+        @refresh="handleRetry"
+      />
 
       <view v-else class="box-border flex flex-col gap-3 px-3 pt-3">
         <view v-for="moment in dataList" :key="moment.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">

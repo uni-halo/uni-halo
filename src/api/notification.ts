@@ -94,6 +94,16 @@ export function markNotificationAsRead(username: string, name: string) {
 }
 
 /**
+ * 删除单条通知
+ */
+export function deleteNotification(username: string, name: string) {
+  return http.Delete<IResponse<INotification>>(
+    `${UC_NOTIFICATION_API}/${username}/notifications/${name}`,
+    notificationMeta(),
+  )
+}
+
+/**
  * 批量标记通知已读（「全部已读」：传未读通知 name 列表）
  */
 export function markNotificationsAsRead(username: string, names: string[]) {

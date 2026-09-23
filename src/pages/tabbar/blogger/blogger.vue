@@ -36,9 +36,8 @@ const haloConfigs = computed(() => configs.value)
 /** 登录态(进入页面时刷新过期判断) */
 const hasLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
-/* ---------- 登录配置(getConfigs loginConfig.client,任一登录方式开启才显示登录入口) ---------- */
+/* ---------- 登录配置---------- */
 const loginConfig = computed(() => configs.value.loginConfig?.client)
-/** 登录入口显隐(两开关全关即登录能力不可用,隐藏登录/退出按钮) */
 const loginEntryVisible = computed(() =>
   loginConfig.value?.passwordLoginEnabled !== false
   || loginConfig.value?.wechatLoginEnabled === true)

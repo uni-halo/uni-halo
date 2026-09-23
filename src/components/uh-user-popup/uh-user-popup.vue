@@ -36,8 +36,8 @@ interface IEmits {
   (e: 'update:modelValue', value: boolean): void
 }
 
+const { updateNowTime } = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
-const { hasLogin } = storeToRefs(useTokenStore())
 
 const { can } = usePermission()
 
@@ -152,7 +152,7 @@ const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
     { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
   ]
   // 消息通知需登录（官方通知接口走 PAT）
-  if (hasLogin.value) {
+  if (updateNowTime().hasLogin) {
     entries.push({
       key: 'notifications',
       type: 'navigate',
@@ -168,7 +168,12 @@ const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
 const unreadNotifyCount = ref(0)
 
 watch(popupVisible, (visible) => {
-  if (visible && hasLogin.value) {
+  if (visible && !updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '请先登录' })
+    setTimeout(() => handleClose(), 600)
+  }
+
+  if (visible && updateNowTime().hasLogin) {
     const username = userInfo.value.username
     if (!username) {
       return
@@ -216,7 +221,7 @@ function handleLogout() {
       </view>
 
       <!-- 用户信息卡片 -->
-      <view v-if="hasLogin" class="w-full flex shrink-0">
+      <view v-if="updateNowTime().hasLogin" class="w-full flex shrink-0">
         <view
           class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
         >
@@ -301,7 +306,7 @@ function handleLogout() {
 
       <!-- 底部操作栏 -->
       <view
-        v-if="hasLogin" class="box-border w-full flex shrink-0 items-center"
+        v-if="updateNowTime().hasLogin" class="box-border w-full flex shrink-0 items-center"
         :class="[isWechat ? '' : 'pb-4']"
       >
         <uh-button
