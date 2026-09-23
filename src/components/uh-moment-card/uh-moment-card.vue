@@ -60,10 +60,12 @@ const imagesClass = computed(() => {
   return `grid-cols-${props.moment.images.length}`
 })
 
-/** 展示用昵称 */
-const displayName = computed(() => props.moment.owner?.displayName || props.blogger.nickname || '')
-/** 展示用头像 */
-const avatarUrl = computed(() => checkAvatarUrl(props.moment.owner?.avatar || props.blogger.avatar || ''))
+/** 展示用昵称（有作者时只用作者昵称；作者缺失才用博主兜底） */
+const displayName = computed(() => (props.moment.owner ? props.moment.owner.displayName : props.blogger.nickname) || '')
+/** 展示用头像（有作者时只用作者头像，无头像回退首字；作者缺失才用博主兜底） */
+const avatarUrl = computed(() =>
+  props.moment.owner ? checkAvatarUrl(props.moment.owner.avatar || '') : checkAvatarUrl(props.blogger.avatar || ''),
+)
 /** 无头像时显示昵称首字(wd-avatar 回退) */
 const avatarText = computed(() => getAvatarFallbackText(displayName.value, '瞬'))
 
@@ -94,7 +96,7 @@ function handlePreview(index: number, list: { url: string }[]) {
         />
         <view class="ml-2 flex flex-col gap-y-1">
           <view class="text-3xs text-gray-900 font-bold">
-            {{ moment.owner?.displayName || blogger.nickname }}
+            {{ displayName }}
           </view>
           <view class="text-xs text-gray-400">
             {{ formatMomentTime(moment.spec.releaseTime) }}

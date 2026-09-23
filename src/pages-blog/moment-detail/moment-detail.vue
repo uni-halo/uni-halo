@@ -299,14 +299,14 @@ onShareTimeline(() => ({
           <wd-avatar
             class="!shrink-0"
             custom-class="!h-[80rpx] !w-[80rpx] !text-gray-900 !font-bold"
-            :src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
-            :text="getAvatarFallbackText(moment.owner?.displayName || bloggerInfo.nickname)"
+            :src="checkAvatarUrl(moment.owner?.avatar || '')"
+            :text="getAvatarFallbackText(moment.owner?.displayName || '')"
             shape="round"
             mode="aspectFill"
           />
           <view class="ml-3 flex flex-col">
             <view class="text-md text-gray-600 font-medium">
-              {{ moment.owner?.displayName || bloggerInfo.nickname }}
+              {{ moment.owner?.displayName || '' }}
             </view>
             <view class="mt-0.5 text-xs text-gray-400">
               记录了这美好的一刻
