@@ -192,7 +192,18 @@ onReachBottom(() => {
           class="uh-global-card-glass relative box-border w-full overflow-hidden rounded-xl"
           @click="handleToCategory(item)"
         >
-          <image v-if="item.spec.cover" class="block h-32 w-full" :src="item.spec.cover" mode="aspectFill" />
+          <view class="h-32 w-full">
+            <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+            <wd-img v-if="item.spec.cover" :src="item.spec.cover" class="block h-full w-full" mode="aspectFill" lazy-load>
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="text-primary" />
+              </template>
+            </wd-img>
+            <!-- 无图 -->
+            <view v-else class="h-full w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+              <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+            </view>
+          </view>
           <view
             class="absolute bottom-0 left-0 h-[140rpx] w-full from-black/0 to-black/30 bg-gradient-to-b"
           />

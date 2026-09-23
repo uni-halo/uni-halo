@@ -12,6 +12,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
 import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildPostFavoriteItem } from '@/utils/favorite'
 import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
 import { getDomainOnly } from '@/utils/urlParams'
@@ -89,11 +90,13 @@ const calcEnableComment = computed(() =>
   !!postDetailPageConfig.value?.enableComment
   && result.value?.spec.allowComment !== false)
 
+const avatarShape = computed(() => (settings.value.avatarShape === 'circle' ? 'round' : 'square') as 'round' | 'square')
+
 const avatarClass = computed(() => {
   if (settings.value.avatarShape === 'circle') {
-    return 'rounded-full'
+    return '!rounded-full'
   }
-  return 'rounded-lg'
+  return '!rounded-lg'
 })
 
 /** 从 HTML 提取投票块 id */
@@ -452,7 +455,11 @@ onShareTimeline(() => {
     <view v-else class="box-border pb-4 pt-72">
       <!-- 顶部背景封面区域 -->
       <view class="fixed left-0 top-0 h-72 w-full">
-        <image v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill" />
+        <wd-img v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill">
+          <template #loading>
+            <wd-loading size="64rpx" custom-class="text-primary" />
+          </template>
+        </wd-img>
         <view class="absolute bottom-0 left-0 h-[140rpx] w-full from-white/0 to-page bg-gradient-to-b" />
       </view>
 
@@ -463,9 +470,13 @@ onShareTimeline(() => {
         <!-- 顶部信息 -->
         <view class="box-border flex flex-col gap-3 p-3 pb-2">
           <view class="flex items-center gap-x-2">
-            <image
-              :src="result.owner.avatar" class="uh-global-card-glass block h-6 w-6 overflow-hidden"
-              :class="avatarClass" mode="aspectFill"
+            <wd-avatar
+              :src="checkAvatarUrl(result.owner.avatar)"
+              :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
+              :shape="avatarShape"
+              custom-class="uh-global-card-glass !block !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
+              :class="avatarClass"
+              mode="aspectFill"
             />
             <text class="text-sm text-gray-600">{{ result?.owner?.displayName }}</text>
           </view>

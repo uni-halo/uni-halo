@@ -9,6 +9,7 @@ import { useFavoritesStore } from '@/store/favorites'
 import { useSettingStore } from '@/store/setting'
 import { useUpvote } from '@/hooks/useUpvote'
 import { checkAvatarUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
 import { markdownConfig } from '@/config/markdown'
 import type { IMoment } from '@/api/types/halo'
@@ -47,8 +48,9 @@ const { hasUpvoted, upvoteDisplay } = useUpvote('moments', () => '')
 
 /** 头像外观(偏好 avatarShape:square 方形=默认 / circle 圆形;方形 = 文章卡片 image_bottom 同款) */
 const { settings } = storeToRefs(useSettingStore())
-const avatarShapeClass = computed(() =>
-  settings.value.avatarShape === 'circle' ? 'rounded-full' : 'rounded-xl uh-shadow-xs uh-global-card-glass',
+const avatarShape = computed(() => (settings.value.avatarShape === 'circle' ? 'round' : 'square') as 'round' | 'square')
+const avatarClass = computed(() =>
+  settings.value.avatarShape === 'circle' ? '!rounded-full' : '!rounded-xl uh-shadow-xs uh-global-card-glass',
 )
 
 const imagesClass = computed(() => {
@@ -62,8 +64,8 @@ const imagesClass = computed(() => {
 const displayName = computed(() => props.moment.owner?.displayName || props.blogger.nickname || '')
 /** 展示用头像 */
 const avatarUrl = computed(() => checkAvatarUrl(props.moment.owner?.avatar || props.blogger.avatar || ''))
-/** 无头像时显示昵称首字 */
-const avatarChar = computed(() => displayName.value.charAt(0) || '瞬')
+/** 无头像时显示昵称首字(wd-avatar 回退) */
+const avatarText = computed(() => getAvatarFallbackText(displayName.value, '瞬'))
 
 /** 格式化瞬间时间 */
 function formatMomentTime(time?: string): string {
@@ -82,16 +84,14 @@ function handlePreview(index: number, list: { url: string }[]) {
   <view class="uh-global-card-glass uh-shadow-xs w-full flex-1 overflow-hidden rounded-xl">
     <view class="box-border flex items-center px-3 pt-3">
       <view class="flex flex-1 items-center">
-        <image
-          v-if="avatarUrl" class="avatar h-9 w-9 shrink-0" :class="avatarShapeClass"
-          :src="avatarUrl" mode="aspectFill"
+        <wd-avatar
+          :src="avatarUrl"
+          :text="avatarText"
+          :shape="avatarShape"
+          custom-class="!h-9 !w-9 !shrink-0 !text-primary !font-bold"
+          :class="avatarClass"
+          mode="aspectFill"
         />
-        <view
-          v-else class="h-9 w-9 flex shrink-0 items-center justify-center bg-secondary text-sm text-primary font-bold"
-          :class="avatarShapeClass"
-        >
-          {{ avatarChar }}
-        </view>
         <view class="ml-2 flex flex-col gap-y-1">
           <view class="text-3xs text-gray-900 font-bold">
             {{ moment.owner?.displayName || blogger.nickname }}
@@ -131,10 +131,14 @@ function handlePreview(index: number, list: { url: string }[]) {
         v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
         class="box-border h-24 w-full" :class="[moment.images.length === 1 ? 'h-42' : '']"
       >
-        <image
-          mode="aspectFill" class="h-full w-full rounded-lg" :src="image.url"
+        <wd-img
+          mode="aspectFill" class="h-full w-full" :radius="8" :src="image.url"
           @click="handlePreview(mediumIndex, moment.images || [])"
-        />
+        >
+          <template #loading>
+            <wd-loading size="64rpx" custom-class="text-primary" />
+          </template>
+        </wd-img>
       </view>
     </view>
 

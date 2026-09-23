@@ -102,8 +102,12 @@
 
 			<!-- 内容 -->
 			<view class="w-full">
-				<image v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 rounded-lg mb-2"
-					mode="aspectFill" />
+				<wd-img v-if="notice.cover" :src="checkImageUrl(notice.cover)" class="w-full h-34 mb-2"
+					:radius="8" mode="aspectFill">
+					<template #loading>
+						<wd-loading size="64rpx" custom-class="text-primary" />
+					</template>
+				</wd-img>
 
 				<view class="text-sm font-bold leading-snug text-gray-900">
 					{{ notice.title }}

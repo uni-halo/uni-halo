@@ -367,10 +367,14 @@ onReachBottom(() => {
                 class="h-16 w-full overflow-hidden rounded-lg"
                 @click.stop="handlePreviewStoryImages(story, imgIndex)"
               >
-                <image
+                <wd-img
                   class="timeline-cover-img h-full w-full" :src="img" mode="aspectFill"
                   lazy-load
-                />
+                >
+                  <template #loading>
+                    <wd-loading size="64rpx" custom-class="!text-love" />
+                  </template>
+                </wd-img>
               </view>
               <view
                 v-if="story.images.length > 3"
@@ -426,16 +430,24 @@ onReachBottom(() => {
               v-for="(img, imgIndex) in currentStory.images" :key="imgIndex"
               class="h-full w-full overflow-hidden rounded-lg"
             >
-              <image
+              <wd-img
                 :src="img" mode="aspectFill" class="h-full w-full"
                 @click="handlePreviewImage(imgIndex)"
-              />
+              >
+                <template #loading>
+                  <wd-loading size="64rpx" custom-class="!text-love" />
+                </template>
+              </wd-img>
             </swiper-item>
           </swiper>
-          <image
-            v-else :src="currentStory.images[0]" mode="aspectFill" class="h-32 w-full rounded-lg"
+          <wd-img
+            v-else :src="currentStory.images[0]" mode="aspectFill" class="h-32 w-full" :radius="8"
             @click="handlePreviewImage(0)"
-          />
+          >
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="!text-love" />
+            </template>
+          </wd-img>
         </view>
         <!-- 滚动区域 -->
         <scroll-view scroll-y :show-scrollbar="false" class="box-border max-h-[50vh] flex-1">

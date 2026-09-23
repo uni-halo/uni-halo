@@ -219,14 +219,19 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
             <text class="line-clamp-3">{{ moment.content || '（无文字内容）' }}</text>
           </view>
           <view v-if="moment.images.length" class="flex flex-wrap gap-1 px-3 pt-2">
-            <image
+            <wd-img
               v-for="(img, imgIndex) in moment.images.slice(0, 3)"
               :key="img"
               :src="img"
               mode="aspectFill"
-              class="h-20 w-20 rounded-lg"
+              class="h-20 w-20"
+              :radius="8"
               @click="handlePreview(imgIndex, moment.images)"
-            />
+            >
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="text-primary" />
+              </template>
+            </wd-img>
           </view>
           <view class="mt-2 flex items-center justify-between border-t border-black/5 px-4 py-2.5 text-xs">
             <text class="text-3xs text-gray-400">{{ formatMomentTime(moment.releaseTime) }}</text>

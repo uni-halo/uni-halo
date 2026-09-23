@@ -7,6 +7,7 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { t } from '@/locale'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -275,10 +276,15 @@ onPageScroll((option: Page.PageScrollOption) => {
         :src="checkImageUrl(pageConfig?.bgImageUrl)"
         class="absolute left-0 top-0 z-0 h-full w-full"
         mode="aspectFill"
+        lazy-load
       />
       <view class="relative z-6 h-full flex flex-col items-center justify-center">
-        <image
-          class="uh-global-card-glass h-22 w-22 border-3 rounded-full" :src="bloggerInfo.avatar"
+        <wd-avatar
+          :src="bloggerInfo.avatar"
+          :text="getAvatarFallbackText(bloggerInfo.nickname)"
+          shape="round"
+          custom-class="uh-global-card-glass !h-22 !w-22 !font-bold !text-2xl"
+          class="!border-3 !rounded-full"
           mode="aspectFill"
         />
         <view class="mt-4 text-lg text-white font-bold text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]">

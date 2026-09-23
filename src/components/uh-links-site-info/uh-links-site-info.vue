@@ -3,6 +3,7 @@
 	import { computed, ref, watch } from 'vue'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl } from '@/utils/url'
+	import { getAvatarFallbackText } from '@/utils/avatar'
 
 	defineOptions({
 		options: {
@@ -88,8 +89,13 @@
 				<view class="w-full flex flex-col gap-y-3">
 					<!-- 博客名片 -->
 					<view class="flex items-center">
-					<image class="uh-global-card-glass h-14 w-14 shrink-0 rounded-2xl"
-						:src="checkAvatarUrl(blogDetail.logo)" mode="aspectFill" />
+					<wd-avatar
+						custom-class="uh-global-card-glass !h-14 !w-14 !shrink-0 !text-gray-900 !font-bold"
+						class="!rounded-2xl"
+						:src="checkAvatarUrl(blogDetail.logo)"
+						:text="getAvatarFallbackText(blogDetail.displayName)"
+						mode="aspectFill"
+					/>
 					<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1">
 						<text class="text-md text-gray-900 font-bold">
 							{{ blogDetail.displayName || '未命名博客' }}

@@ -331,7 +331,17 @@ onReachBottom(() => {
         class="uh-global-card-glass box-border overflow-hidden rounded-xl" @click="handleOnAlbumClick(item)"
       >
         <view class="relative h-36 w-full">
-          <image class="h-full w-full" :src="item.image" mode="aspectFill" lazy-load />
+          <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+          <wd-img v-if="item.image" class="h-full w-full" :src="item.image" mode="aspectFill" lazy-load>
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="!text-love" />
+            </template>
+          </wd-img>
+          <!-- 无图 -->
+          <view v-else
+            class="h-full w-full flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400">
+            <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+          </view>
           <view
             v-if="item.locked && !unlockedAlbums[item.name]"
             class="absolute right-0 top-0 flex items-center justify-center gap-1 rounded-lb-md bg-black/30 px-2 py-1"

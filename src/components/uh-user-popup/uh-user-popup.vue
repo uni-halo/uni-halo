@@ -4,6 +4,7 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { isWechat } from '@/utils/platform'
 import { checkAvatarUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { getUnreadNotificationCount } from '@/api/notification'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
@@ -225,9 +226,13 @@ function handleLogout() {
         <view
           class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
         >
-          <image
+          <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
-            class="uh-global-card-glass uh-shadow-xs h-12 w-12 shrink-0 rounded-full" mode="aspectFill"
+            :text="getAvatarFallbackText(userInfo.nickname)"
+            shape="round"
+            custom-class="uh-global-card-glass uh-shadow-xs !h-12 !w-12 !shrink-0 !text-gray-900 !font-bold"
+            class="!rounded-full"
+            mode="aspectFill"
           />
           <view class="flex-1">
             <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>

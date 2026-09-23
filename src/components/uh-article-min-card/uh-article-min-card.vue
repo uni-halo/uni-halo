@@ -33,7 +33,11 @@ function handleClick() {
 <template>
   <view class="uh-article-min-card mx-6 mb-6 flex overflow-hidden rounded-xl bg-white p-2 shadow-sm" @click="handleClick">
     <view class="left">
-      <image class="thumbnail" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" lazy-load />
+      <wd-img class="thumbnail" :src="checkThumbnailUrl(article.spec.cover)" mode="aspectFill" :radius="6" lazy-load>
+        <template #loading>
+          <wd-loading size="64rpx" custom-class="text-primary" />
+        </template>
+      </wd-img>
     </view>
     <view class="right">
       <view class="title text-overflow">

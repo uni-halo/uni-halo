@@ -128,7 +128,17 @@ onPageScroll((option: Page.PageScrollOption) => {
       <view
         class="uh-global-card-glass uh-shadow-xs uh-rotate-3 relative box-border w-22 flex shrink-0 flex-col items-center justify-center gap-y-1 overflow-hidden border p-2"
       >
-        <image class="h-18 w-full" :src="bloggerInfo.avatar" mode="aspectFill" />
+        <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+        <wd-img v-if="bloggerInfo.avatar" class="h-18 w-full" :src="bloggerInfo.avatar" mode="aspectFill">
+          <template #loading>
+            <wd-loading size="64rpx" custom-class="text-primary" />
+          </template>
+        </wd-img>
+        <!-- 无图 -->
+        <view v-else
+          class="h-18 w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+          <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+        </view>
         <text class="truncate text-xs font-normal">{{ bloggerInfo.nickname }}</text>
       </view>
     </view>

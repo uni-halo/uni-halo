@@ -97,8 +97,18 @@
 			<swiper class="w-full h-64" :circular="true" :indicator-dots="false" :autoplay="true" :interval="3000"
 				:duration="1000" @change="handleBannerChange">
 				<swiper-item v-for="(item, index) in bannerList" :key="index" class="relative">
-					<image :src="item.image || item.src" class="h-full w-full" mode="aspectFill"
-						@click.stop="handleOnClick(item)" />
+					<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+					<wd-img v-if="item.image || item.src" :src="item.image || item.src" class="h-full w-full"
+						mode="aspectFill" @click.stop="handleOnClick(item)">
+						<template #loading>
+							<wd-loading size="64rpx" custom-class="text-primary" />
+						</template>
+					</wd-img>
+					<!-- 无图 -->
+					<view v-else
+						class="h-full w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+						<wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+					</view>
 				</swiper-item>
 			</swiper>
 			<view v-if="currentBanner"

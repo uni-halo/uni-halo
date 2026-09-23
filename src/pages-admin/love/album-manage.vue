@@ -172,7 +172,11 @@ onShow(() => {
     <view v-else class="grid grid-cols-2 gap-3 px-3 pb-24 pt-3">
       <view v-for="album in albumList" :key="album.metadata?.name || album.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
         <view class="relative h-32 w-full">
-          <image v-if="album.cover || album.photos?.[0]?.url" :src="checkThumbnailUrl(album.cover || album.photos?.[0]?.url || '', true)" class="h-full w-full" mode="aspectFill" />
+          <wd-img v-if="album.cover || album.photos?.[0]?.url" :src="checkThumbnailUrl(album.cover || album.photos?.[0]?.url || '', true)" class="h-full w-full" mode="aspectFill">
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="!text-love" />
+            </template>
+          </wd-img>
           <view v-else class="h-full w-full flex items-center justify-center bg-gray-100 text-gray-300">
             <wd-icon name="camera" size="60rpx" />
           </view>

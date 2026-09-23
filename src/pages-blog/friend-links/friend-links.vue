@@ -13,6 +13,7 @@
 	import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
 	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+	import { getAvatarFallbackText } from '@/utils/avatar'
 	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 	import type { ILink, ILinkGroup } from '@/api/types/halo'
 	import type { IMiniProgramLink, IMiniProgramLinkGroupVo } from '@/api/types/uni-halo'
@@ -486,8 +487,18 @@
 								<view v-for="link in group.links" :key="link.metadata?.name || link.spec.displayName"
 									class="uh-global-card-glass box-border uh-shadow-xs flex overflow-hidden rounded-xl p-3"
 									@click="handleOnLinkEvent(link)">
-									<image class="h-16 w-16 shrink-0 rounded-lg" :src="link.spec.logo"
-										mode="aspectFill" />
+									<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+									<wd-img v-if="link.spec.logo" class="h-16 w-16 shrink-0" :radius="8" :src="link.spec.logo"
+										mode="aspectFill">
+										<template #loading>
+											<wd-loading size="64rpx" custom-class="text-primary" />
+										</template>
+									</wd-img>
+									<!-- 无图 -->
+									<view v-else
+										class="h-16 w-16 shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+										<wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+									</view>
 									<view class="box-border flex flex-1 flex-col justify-center overflow-hidden pl-4">
 										<view class="flex items-center text-sm text-gray-900 font-bold">
 											<text class="flex-1 truncate">{{ link.spec.displayName }}</text>
@@ -528,8 +539,18 @@
 								<!-- 滚动内部容器 -->
 								<view class="w-full flex flex-col gap-y-3">
 									<view class="flex">
-										<image class="uh-global-card-glass h-20 w-20 shrink-0 rounded-2xl"
-											:src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill" />
+										<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+										<wd-img v-if="detail.data.spec.logo" class="uh-global-card-glass h-20 w-20 shrink-0"
+											:radius="16" :src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill">
+											<template #loading>
+												<wd-loading size="64rpx" custom-class="text-primary" />
+											</template>
+										</wd-img>
+										<!-- 无图 -->
+										<view v-else
+											class="uh-global-card-glass h-20 w-20 shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+											<wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+										</view>
 										<view class="ml-4 flex flex-1 flex-col justify-center gap-y-1.5">
 											<view class="text-md text-gray-900 font-bold">
 												{{ detail.data.spec.displayName }}
@@ -592,8 +613,18 @@
 								<view v-for="link in group.links" :key="link.metadata?.name"
 									class="uh-global-card-glass uh-shadow-xs box-border flex items-center rounded-2xl p-3"
 									@click="handleOnMiniLinkEvent(link)">
-									<image class="h-16 w-16 shrink-0 rounded-lg"
-										:src="checkImageUrl(link.spec?.miniProgramCode)" mode="aspectFill" />
+									<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+									<wd-img v-if="link.spec?.miniProgramCode" class="h-16 w-16 shrink-0" :radius="8"
+										:src="checkImageUrl(link.spec?.miniProgramCode)" mode="aspectFill">
+										<template #loading>
+											<wd-loading size="64rpx" custom-class="text-primary" />
+										</template>
+									</wd-img>
+									<!-- 无图 -->
+									<view v-else
+										class="h-16 w-16 shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+										<wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+									</view>
 									<view class="box-border flex flex-1 flex-col pl-4">
 										<view
 											class="overflow-hidden truncate whitespace-nowrap text-[30rpx] text-gray-900 font-bold">
@@ -639,10 +670,20 @@
 								<view class="flex w-full items-center gap-x-3">
 									<!-- 太阳码大图(点击预览/长按保存) -->
 									<view class="code-area flex flex-col items-center">
-										<image class="h-16 w-16 rounded-full"
+										<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+										<wd-img v-if="miniDetail.data.spec?.miniProgramCode" class="h-16 w-16" :radius="999"
 											:src="checkImageUrl(miniDetail.data.spec?.miniProgramCode)"
 											mode="aspectFill" @click="handlePreviewMiniProgramCode(miniDetail.data)"
-											@longpress="handleSaveMiniProgramCode(miniDetail.data)" />
+											@longpress="handleSaveMiniProgramCode(miniDetail.data)">
+											<template #loading>
+												<wd-loading size="64rpx" custom-class="text-primary" />
+											</template>
+										</wd-img>
+										<!-- 无图 -->
+										<view v-else
+											class="h-16 w-16 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+											<wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+										</view>
 									</view>
 
 									<view class="w-full flex flex-col gap-y-1">
@@ -680,9 +721,13 @@
 								<view v-if="miniDetail.data.spec?.screenshots?.length" class="mini-screenshots">
 									<swiper class="screenshots-swiper h-[360rpx] w-full" indicator-dots circular>
 										<swiper-item v-for="(img, idx) in miniDetail.data.spec.screenshots" :key="idx">
-											<image class="screenshot-img h-full w-full rounded-xl"
+											<wd-img class="screenshot-img h-full w-full" :radius="12"
 												:src="checkImageUrl(img)" mode="aspectFill"
-												@click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: img } } as IMiniProgramLink)" />
+												@click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: img } } as IMiniProgramLink)">
+												<template #loading>
+													<wd-loading size="64rpx" custom-class="text-primary" />
+												</template>
+											</wd-img>
 										</swiper-item>
 									</swiper>
 								</view>
@@ -691,9 +736,13 @@
 								<view
 									v-if="miniDetail.data.spec?.authorName || miniDetail.data.spec?.avatar || miniDetail.data.spec?.website"
 									class="uh-global-card-glass border shadow-none flex items-center rounded-xl p-4">
-									<image v-if="miniDetail.data.spec?.avatar"
-										class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
-										:src="checkAvatarUrl(miniDetail.data.spec.avatar)" mode="aspectFill" />
+									<wd-avatar
+										:src="checkAvatarUrl(miniDetail.data.spec?.avatar)"
+										:text="getAvatarFallbackText(miniDetail.data.spec?.authorName)"
+										custom-class="!h-[72rpx] !w-[72rpx] !shrink-0 !text-gray-900 !font-bold"
+										class="!rounded-full"
+										mode="aspectFill"
+									/>
 									<view class="author-detail ml-4 flex flex-1 flex-col">
 										<text v-if="miniDetail.data.spec?.authorName"
 											class="author-name text-[28rpx] text-gray-900 font-medium">

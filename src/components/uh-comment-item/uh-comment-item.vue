@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-	import { computed, ref, watch } from 'vue'
+	import { computed } from 'vue'
 	import { storeToRefs } from 'pinia'
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
 	import { checkAvatarUrl } from '@/utils/url'
+	import { getAvatarFallbackText } from '@/utils/avatar'
 	import { useSettingStore } from '@/store/setting'
 	import type { ICommentReply } from '@/api/types/halo'
 
@@ -40,31 +41,15 @@
 
 	const avatar = computed(() => checkAvatarUrl(props.comment.spec.owner.avatar))
 
-	/** 用户是否提供了头像(无头像时用昵称首字占位) */
-	const hasAvatar = computed(() => !!props.comment.spec.owner.avatar?.trim())
-
-	/** 昵称首字(头像占位) */
-	const avatarText = computed(() => {
-		const name = props.comment.spec.owner.displayName?.trim()
-		return name ? Array.from(name)[0] : '?'
-	})
-
-	/** 头像加载失败标记(失败后回退首字占位) */
-	const avatarError = ref(false)
-
-	/** 是否渲染图片头像(有头像且未加载失败) */
-	const showImage = computed(() => hasAvatar.value && !avatarError.value)
+	/** 昵称首字(无头像/加载失败时 wd-avatar 回退占位) */
+	const avatarText = computed(() =>
+		getAvatarFallbackText(props.comment.spec.owner.displayName, '?'))
 
 	const avatarClass = computed(() => {
 		if (settings.value.avatarShape === 'circle') {
-			return 'rounded-full'
+			return '!rounded-full'
 		}
-		return 'rounded-xl'
-	})
-
-	/** 头像地址变化时重置加载失败标记(组件复用时) */
-	watch(() => props.comment.spec.owner.avatar, () => {
-		avatarError.value = false
+		return '!rounded-xl'
 	})
 
 	/** 引用回复标识(被引用人在父级已加载回复映射中可查到时显示) */
@@ -87,11 +72,6 @@
 		return time ? `${dayjs(time).fromNow(true)}前` : ''
 	})
 
-	function handleOnImageError() {
-		// 头像加载失败时回退昵称首字占位
-		avatarError.value = true
-	}
-
 	function handleOnCopy() {
 		emit('on-copy', props.comment.spec.raw)
 	}
@@ -110,13 +90,14 @@
 		'pl-10':props.isChild,
 	}">
 		<view class="flex shrink-0">
-			<view
-				class="uh-global-card-glass uh-shadow-xs h-10 w-10 overflow-hidden flex items-center justify-center bg-[#bbe52a6b]"
-				:class="avatarClass">
-				<image v-if="showImage" :src="avatar" class="block w-full h-full" mode="aspectFill"
-					@error="handleOnImageError" />
-				<text v-else class="text-sm font-bold text-gray-900">{{ avatarText }}</text>
-			</view>
+			<wd-avatar
+				:src="avatar"
+				:text="avatarText"
+				:shape="settings.avatarShape === 'circle' ? 'round' : 'square'"
+				custom-class="uh-global-card-glass uh-shadow-xs !bg-[#bbe52a6b] !h-10 !w-10 !text-sm !font-bold !text-gray-900"
+				:class="avatarClass"
+				mode="aspectFill"
+			/>
 		</view>
 		<view class="flex-1 box-border pl-2">
 			<view class="text-sm text-gray-500">

@@ -460,7 +460,11 @@ onReachBottom(() => {
                     class="h-16 w-full overflow-hidden rounded-lg"
                     @click="handlePreviewImages(item.images, imgIndex)"
                   >
-                    <image class="h-full w-full" :src="img" mode="aspectFill" lazy-load />
+                    <wd-img class="h-full w-full" :src="img" mode="aspectFill" lazy-load>
+                      <template #loading>
+                        <wd-loading size="64rpx" custom-class="!text-love" />
+                      </template>
+                    </wd-img>
                   </view>
                 </view>
               </view>

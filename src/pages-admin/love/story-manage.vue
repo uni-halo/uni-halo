@@ -167,10 +167,20 @@ onShow(() => {
         class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-y-3 overflow-hidden rounded-xl p-3"
       >
         <view class="flex gap-3">
-          <image
+          <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+          <wd-img
             v-if="item.spec?.images?.[0]" :src="checkThumbnailUrl(item.spec.images[0], true)"
-            mode="aspectFill" class="h-20 w-20 shrink-0 rounded-lg"
-          />
+            mode="aspectFill" class="h-20 w-20 shrink-0" :radius="8"
+          >
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="!text-love" />
+            </template>
+          </wd-img>
+          <!-- 无图 -->
+          <view v-else
+            class="h-20 w-20 shrink-0 flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400">
+            <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+          </view>
           <view class="flex flex-1 flex-col justify-between gap-y-1">
             <view class="shrink-0 text-sm text-gray-900 font-semibold">
               {{ item.spec?.title || '忘写了' }}

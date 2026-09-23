@@ -3,6 +3,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll } from '@dcloudio/uni-app'
 import { formatTime } from '@/utils/formatTime'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { useFavoritesStore } from '@/store/favorites'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -120,10 +121,20 @@ onPageScroll((option: Page.PageScrollOption) => {
             class="uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white" @click="handleToDetail(item)"
           >
             <view class="flex gap-3 p-4 pb-3">
-              <image
+              <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+              <wd-img
                 v-if="item.cover" :src="item.cover" mode="aspectFill"
-                class="h-[128rpx] w-[176rpx] shrink-0 rounded-lg"
-              />
+                class="h-[128rpx] w-[176rpx] shrink-0" :radius="8"
+              >
+                <template #loading>
+                  <wd-loading size="64rpx" custom-class="text-primary" />
+                </template>
+              </wd-img>
+              <!-- 无图 -->
+              <view v-else
+                class="h-[128rpx] w-[176rpx] shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+                <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+              </view>
               <view class="min-w-0 flex-1">
                 <view class="truncate text-sm text-gray-900 font-bold">
                   {{ item.title || '未命名' }}
@@ -136,9 +147,13 @@ onPageScroll((option: Page.PageScrollOption) => {
             <!-- 元信息 + 底部操作(详情/删除) -->
             <view class="flex items-center justify-between px-4 pb-3">
               <view class="min-w-0 flex flex-1 items-center gap-1.5 text-xs text-gray-400">
-                <image
-                  v-if="item.owner.avatar" :src="item.owner.avatar" mode="aspectFill"
-                  class="h-[36rpx] w-[36rpx] shrink-0 rounded-full"
+                <wd-avatar
+                  :src="item.owner.avatar"
+                  :text="getAvatarFallbackText(item.owner.displayName)"
+                  shape="round"
+                  custom-class="!h-[36rpx] !w-[36rpx] !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
+                  class="!rounded-full"
+                  mode="aspectFill"
                 />
                 <text class="max-w-[220rpx] truncate">{{ item.owner.displayName }}</text>
                 <text class="shrink-0">· 收藏于 {{ formatCollectTime(item.createTime) }}</text>
@@ -164,9 +179,13 @@ onPageScroll((option: Page.PageScrollOption) => {
             </view>
             <view class="flex items-center justify-between px-4 pb-3">
               <view class="min-w-0 flex flex-1 items-center gap-1.5 text-xs text-gray-400">
-                <image
-                  v-if="item.owner.avatar" :src="item.owner.avatar" mode="aspectFill"
-                  class="h-[36rpx] w-[36rpx] shrink-0 rounded-full"
+                <wd-avatar
+                  :src="item.owner.avatar"
+                  :text="getAvatarFallbackText(item.owner.displayName)"
+                  shape="round"
+                  custom-class="!h-[36rpx] !w-[36rpx] !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
+                  class="!rounded-full"
+                  mode="aspectFill"
                 />
                 <text class="max-w-[220rpx] truncate">{{ item.owner.displayName }}</text>
                 <text class="shrink-0">· 收藏于 {{ formatCollectTime(item.createTime) }}</text>

@@ -3,6 +3,7 @@
 	import { storeToRefs } from 'pinia'
 	import { useAppConfigStore } from '@/store/appConfig'
 	import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+	import { getAvatarFallbackText } from '@/utils/avatar'
 
 	defineOptions({
 		options: {
@@ -155,8 +156,12 @@
 				<view class="w-full flex items-center gap-x-3">
 					<!-- 太阳码大图(点击预览) -->
 					<view v-if="miniInfo.miniProgramCode" class="code-area flex flex-col items-center">
-						<image class="code-img h-16 w-16 rounded-full" :src="checkImageUrl(miniInfo.miniProgramCode)"
-							mode="aspectFill" @click="handlePreviewCode" />
+						<wd-img class="code-img h-16 w-16" :radius="999" :src="checkImageUrl(miniInfo.miniProgramCode)"
+							mode="aspectFill" @click="handlePreviewCode">
+							<template #loading>
+								<wd-loading size="64rpx" custom-class="text-primary" />
+							</template>
+						</wd-img>
 					</view>
 
 					<view class="flex-1 flex flex-col gap-y-1">
@@ -213,8 +218,13 @@
 				<!-- 作者信息 -->
 				<view v-if="miniInfo.authorName || miniInfo.avatar || miniInfo.website"
 					class="uh-global-card-glass shadow-none border flex items-center rounded-xl p-4">
-					<image v-if="miniInfo.avatar" class="author-avatar h-[72rpx] w-[72rpx] shrink-0 rounded-full"
-						:src="checkAvatarUrl(miniInfo.avatar)" mode="aspectFill" />
+					<wd-avatar
+						:src="checkAvatarUrl(miniInfo.avatar)"
+						:text="getAvatarFallbackText(miniInfo.authorName)"
+						custom-class="!h-[72rpx] !w-[72rpx] !shrink-0 !text-gray-900 !font-bold"
+						class="!rounded-full"
+						mode="aspectFill"
+					/>
 					<view class="author-detail ml-4 flex flex-1 flex-col">
 						<text v-if="miniInfo.authorName" class="author-name text-[28rpx] text-gray-900 font-medium">
 							{{ miniInfo.authorName }}

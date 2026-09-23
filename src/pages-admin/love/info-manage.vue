@@ -10,6 +10,7 @@ import { updateLoveInfo } from '@/api/uni-admin'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
 import { checkAvatarUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { ILoveInfo } from '@/api/types/uni-halo'
 
@@ -175,7 +176,14 @@ onPageScroll((option: Page.PageScrollOption) => {
           <!-- 男生 -->
           <view class="flex items-center gap-x-3">
             <view class="relative h-18 w-18 shrink-0" @click="pickBoyAvatar">
-              <image :src="boyAvatarSrc" class="uh-global-card-glass h-full w-full rounded-full" mode="aspectFill" />
+              <wd-avatar
+                :src="boyAvatarSrc"
+                :text="getAvatarFallbackText(form.boyNickname)"
+                shape="round"
+                custom-class="uh-global-card-glass !h-full !w-full !text-gray-900 !font-bold"
+                class="!rounded-full"
+                mode="aspectFill"
+              />
               <view
                 class="uh-global-card-glass absolute bottom-0 right-0 h-6 w-6 flex items-center justify-center border rounded-full"
               >
@@ -206,7 +214,14 @@ onPageScroll((option: Page.PageScrollOption) => {
           <!-- 女生 -->
           <view class="flex items-center gap-x-3">
             <view class="relative h-18 w-18 shrink-0" @click="pickGirlAvatar">
-              <image :src="girlAvatarSrc" class="uh-global-card-glass h-full w-full rounded-full" mode="aspectFill" />
+              <wd-avatar
+                :src="girlAvatarSrc"
+                :text="getAvatarFallbackText(form.girlNickname)"
+                shape="round"
+                custom-class="uh-global-card-glass !h-full !w-full !text-gray-900 !font-bold"
+                class="!rounded-full"
+                mode="aspectFill"
+              />
               <view
                 class="uh-global-card-glass absolute bottom-0 right-0 h-6 w-6 flex items-center justify-center border rounded-full"
               >

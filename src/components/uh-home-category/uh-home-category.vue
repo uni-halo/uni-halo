@@ -94,7 +94,18 @@
 			<view v-for="(category,index) in categoryList" :key="category.metadata.name"
 				class="uh-global-card-glass relative w-full h-full overflow-hidden rounded-xl text-center text-white"
 				:class="{'grid-row-span-2':index===0 }" @click="handleToCategoryBy(category)">
-				<image :src="category.spec.cover" class="w-full h-full" mode="aspectFill" lazy-load />
+				<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+				<wd-img v-if="category.spec.cover" :src="category.spec.cover" class="w-full h-full" mode="aspectFill"
+					lazy-load>
+					<template #loading>
+						<wd-loading size="64rpx" custom-class="text-primary" />
+					</template>
+				</wd-img>
+				<!-- 无图 -->
+				<view v-else
+					class="h-full w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+					<wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+				</view>
 				<view class="absolute bottom-0 left-0 h-16 w-full bg-gradient-to-b from-black/0 to-black/30" />
 				<view class="absolute left-2 bottom-2 flex z-2 flex-col text-left">
 					<text class="text-xs font-semibold">

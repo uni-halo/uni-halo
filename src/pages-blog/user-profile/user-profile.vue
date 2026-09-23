@@ -13,6 +13,7 @@
 	import { buildMomentFavoriteItem } from '@/utils/favorite'
 	import { useUpvote } from '@/hooks/useUpvote'
 	import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+	import { getAvatarFallbackText } from '@/utils/avatar'
 	import { sleep } from '@/utils/common'
 	import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
 
@@ -351,9 +352,14 @@
 			<view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
 			<view class="absolute -bottom-6 left-0 z-30 flex items-center justify-center gap-x-4 px-4">
 				<view class="shrink-0">
-					<image :src="checkAvatarUrl(headerUser.avatar)"
-						class="uh-global-card-glass uh-shadow-xs h-20 w-20 rounded-full border-2 border-white/40"
-						mode="aspectFill" />
+					<wd-avatar
+						:src="checkAvatarUrl(headerUser.avatar)"
+						:text="getAvatarFallbackText(headerUser.nickname || headerUser.username)"
+						shape="round"
+						custom-class="uh-global-card-glass uh-shadow-xs !h-20 !w-20 !text-gray-900 !font-bold"
+						class="!rounded-full !border-2 !border-white/40"
+						mode="aspectFill"
+					/>
 				</view>
 				<view class="flex-1 flex flex-col gap-y-1.5">
 					<view class="text-md text-gray-900 font-black drop-shadow">

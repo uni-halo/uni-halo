@@ -118,7 +118,17 @@ onLoad((options) => {
 
     <!-- 正文 -->
     <view v-else class="box-border p-4">
-      <image v-if="cover" class="mb-5 h-[320rpx] w-full rounded-xl" :src="cover" mode="aspectFill" />
+      <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+      <wd-img v-if="cover" class="mb-5 h-[320rpx] w-full" :radius="12" :src="cover" mode="aspectFill">
+        <template #loading>
+          <wd-loading size="64rpx" custom-class="text-primary" />
+        </template>
+      </wd-img>
+      <!-- 无图 -->
+      <view v-else
+        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+        <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+      </view>
       <view class="text-md text-gray-900 font-bold leading-snug">
         {{ title }}
       </view>

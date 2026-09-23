@@ -24,6 +24,7 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { isWechat } from '@/utils/platform'
 import { checkAvatarUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 
 definePage({
@@ -379,9 +380,13 @@ onShow(() => {
           class="avatar-trigger relative h-22 w-22" open-type="chooseAvatar"
           :disabled="avatarUploading" @chooseavatar="onWxAvatarChosen"
         >
-          <image
+          <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
-            class="uh-global-card-glass uh-shadow-xs h-full w-full rounded-full" mode="aspectFill"
+            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)"
+            shape="round"
+            custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
+            class="!rounded-full"
+            mode="aspectFill"
           />
           <view
             class="uh-global-card-glass absolute bottom-1 right-1 h-6 w-6 flex items-center justify-center border rounded-full"
@@ -398,9 +403,13 @@ onShow(() => {
         <!-- #endif -->
         <!-- #ifndef MP-WEIXIN -->
         <view class="relative h-22 w-22" @click="chooseAvatar">
-          <image
+          <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
-            class="uh-global-card-glass uh-shadow-xs h-full w-full rounded-full" mode="aspectFill"
+            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)"
+            shape="round"
+            custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
+            class="!rounded-full"
+            mode="aspectFill"
           />
           <view
             class="uh-global-card-glass absolute bottom-1 right-1 h-6 w-6 flex items-center justify-center border rounded-full"

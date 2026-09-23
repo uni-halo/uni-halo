@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { onLoad, onPageScroll, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getBannerDetail } from '@/api/uni-halo'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
 import { copyToClipboard } from '@/utils/restrictRead'
 import { sleep } from '@/utils/common'
@@ -126,7 +127,17 @@ function handleOpenLink() {
 
     <!-- 正文 -->
     <view v-else-if="detail" class="box-border p-4">
-      <image v-if="coverUrl" class="mb-5 h-[320rpx] w-full rounded-xl" :src="coverUrl" mode="aspectFill" />
+      <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+      <wd-img v-if="coverUrl" class="mb-5 h-[320rpx] w-full" :radius="12" :src="coverUrl" mode="aspectFill">
+        <template #loading>
+          <wd-loading size="64rpx" custom-class="text-primary" />
+        </template>
+      </wd-img>
+      <!-- 无图 -->
+      <view v-else
+        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+        <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+      </view>
 
       <view class="text-md text-gray-900 font-bold leading-snug">
         {{ detail.title }}
@@ -134,8 +145,12 @@ function handleOpenLink() {
 
       <!-- 作者/日期信息 -->
       <view v-if="authorName || dateText" class="mt-3 flex items-center gap-2">
-        <image
-          v-if="authorAvatar" :src="authorAvatar" class="h-[44rpx] w-[44rpx] rounded-full"
+        <wd-avatar
+          :src="authorAvatar"
+          :text="getAvatarFallbackText(authorName)"
+          shape="round"
+          custom-class="!h-[44rpx] !w-[44rpx] !text-[10px] !leading-none !text-gray-900 !font-bold"
+          class="!rounded-full"
           mode="aspectFill"
         />
         <text v-if="authorName" class="text-[24rpx] text-gray-500">{{ authorName }}</text>

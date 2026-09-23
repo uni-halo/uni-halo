@@ -277,7 +277,11 @@ onReachBottom(() => {
             class="uh-global-card-glass relative h-38 w-full overflow-hidden rounded-xl"
             @click="handlePreview(item)"
           >
-            <image class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load />
+            <wd-img class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load>
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="text-primary" />
+              </template>
+            </wd-img>
             <view
               v-if="visiblePhotoName && item.spec.displayName"
               class="absolute bottom-0 z-2 box-border w-full from-white/0 to-black/40 bg-gradient-to-b p-3 pt-6"

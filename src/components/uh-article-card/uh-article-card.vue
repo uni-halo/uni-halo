@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { useSettingStore } from '@/store/setting'
 import { formatTime } from '@/utils/formatTime'
 import type { ICategory, IPost } from '@/api/types/halo'
@@ -60,7 +61,7 @@ const CARD_LAYOUTS = computed(() => ({
     title: `${props.article.spec.cover ? '' : 'mt-2'}`,
     footer: 'flex items-center',
     authorGroup: 'flex-1 items-center justify-start gap-x-1',
-    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
+    avatar: `!h-5 !w-5 !text-[10px] !leading-none ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: 'flex-1 text-center',
@@ -90,7 +91,7 @@ const CARD_LAYOUTS = computed(() => ({
     title: '',
     footer: 'flex items-center justify-between',
     authorGroup: 'items-center gap-x-1',
-    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
+    avatar: `!h-5 !w-5 !text-[10px] !leading-none ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: '!hidden',
@@ -105,7 +106,7 @@ const CARD_LAYOUTS = computed(() => ({
     title: '',
     footer: 'flex items-center justify-between',
     authorGroup: 'items-center gap-x-1',
-    avatar: `!h-5 !w-5 ${socialMiniAvatarClass.value}`,
+    avatar: `!h-5 !w-5 !text-[10px] !leading-none ${socialMiniAvatarClass.value}`,
     nickname: '',
     infoCol: 'items-center gap-x-1',
     time: '!hidden',
@@ -161,15 +162,8 @@ const avatarSrc = computed(() => checkAvatarUrl(props.article.owner?.avatar || '
 /**
  * 头像首字回退:优先昵称,其次用户名
  */
-const avatarFallbackText = computed(() => {
-  const owner = props.article.owner
-  const raw = (owner?.displayName || owner?.metadata?.name || '').trim()
-  if (!raw) { return '' }
-  const first = [...raw][0]
-  if (first && first.charCodeAt(0) > 0x7F) { return first }
-  const ascii = raw.match(/[A-Z]/i)?.[0]
-  return (ascii || first || '').toUpperCase()
-})
+const avatarFallbackText = computed(() =>
+  getAvatarFallbackText(props.article.owner?.displayName || props.article.owner?.metadata?.name))
 
 const visitCount = computed(() => {
   return props.article.status?.stats?.visits ?? props.article.stats?.visit ?? 0
@@ -246,7 +240,6 @@ function handleToArticleDetail() {
             custom-class="uh-global-card-glass"
             :class="cardLayout.avatar"
             mode="aspectFill"
-            lazy-load
           />
           <template v-if="isSocialCard">
             <view :class="cardLayout.infoCol">

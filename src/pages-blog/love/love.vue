@@ -4,6 +4,7 @@ import { onPageScroll, onShareAppMessage, onShareTimeline, onShow } from '@dclou
 import { storeToRefs } from 'pinia'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { getLoveModuleToken } from '@/utils/loveModuleToken'
 import type { LoveModuleKey } from '@/utils/loveModuleToken'
 import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
@@ -15,6 +16,7 @@ definePage({
   style: {
     navigationBarTitleText: '恋爱日记',
     navigationStyle: 'custom',
+    enablePullDownRefresh: true,
   },
 })
 
@@ -114,6 +116,9 @@ async function fetchLoveInfo() {
   catch {
     // 恋爱信息获取失败：顶部区域回退默认文案与占位头像
   }
+  finally {
+    uni.stopPullDownRefresh()
+  }
 }
 
 /** 响应式追踪配置变化（bootstrap/refreshStatic 更新 configs 后自动同步恋爱配置） */
@@ -211,6 +216,16 @@ onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
 
+onPullDownRefresh(async () => {
+  await bootstrap()
+  syncLoveConfigFromStore()
+  fetchLoveInfo()
+  // 恋爱日记入口（love 页本身）设了密码且本地无 token → 弹不可关闭密码框，解锁后才能查看
+  if (isModuleLocked('loveDiary')) {
+    openUnlock('loveDiary')
+  }
+})
+
 onShow(async () => {
   await bootstrap()
   syncLoveConfigFromStore()
@@ -239,35 +254,50 @@ onBeforeUnmount(() => {
     <view class="relative z-10 box-border h-92 w-screen flex flex-col items-center justify-center pt-12">
       <view class="relative z-10 h-full w-full flex items-center justify-center rounded-xl">
         <view class="boy uh-boy-offset flex flex-col items-center justify-center">
-          <image
-            class="uh-global-card-glass box-border h-26 w-26 border-3 border-blue-400 rounded-full"
-            :src="checkAvatarUrl(loveConfig.loveInfo?.boyAvatar)" mode="aspectFill"
+          <wd-avatar
+            :src="checkAvatarUrl(loveConfig.loveInfo?.boyAvatar)"
+            :text="getAvatarFallbackText(loveConfig.loveInfo?.boyNickname)"
+            shape="round"
+            custom-class="uh-global-card-glass !h-26 !w-26 !text-gray-900 !font-bold"
+            class="!border-3 !border-blue-400 !rounded-full"
+            mode="aspectFill"
           />
           <view class="mt-2 rounded-full bg-blue-500 px-2 py-1 text-center text-xs text-white font-bold">
             {{ loveConfig.loveInfo?.boyNickname }}
           </view>
         </view>
         <!-- 心动呼吸动画 -->
-        <view class="heart-beat absolute left-1/2 top-1/2 z-50 -mt-3 flex items-center justify-center">
-          <wd-icon class-prefix="uhlove-icon" name="aixin" size="72rpx" />
+        <view class="heart-beat absolute left-1/2 top-1/2 z-50 flex items-center justify-center -mt-3">
+          <wd-icon class-prefix="uhlove-icon" name="aixin" size="66rpx" />
         </view>
         <view class="girl uh-girl-offset flex flex-col items-center justify-center">
-          <image
-            class="uh-global-card-glass box-border h-26 w-26 border-3 border-love rounded-full"
-            :src="checkAvatarUrl(loveConfig.loveInfo?.girlAvatar)" mode="aspectFill"
+          <wd-avatar
+            :src="checkAvatarUrl(loveConfig.loveInfo?.girlAvatar)"
+            :text="getAvatarFallbackText(loveConfig.loveInfo?.girlNickname)"
+            shape="round"
+            custom-class="uh-global-card-glass !h-26 !w-26 !text-gray-900 !font-bold"
+            class="!border-3 !border-love !rounded-full"
+            mode="aspectFill"
           />
           <view class="mt-2 rounded-full bg-love px-2 py-1 text-center text-xs text-white font-bold">
             {{ loveConfig.loveInfo?.girlNickname }}
           </view>
         </view>
       </view>
-      <image :src="checkImageUrl(loveBgImage)" class="absolute inset-0 z-0 h-full w-full" mode="aspectFill" />
+      <view class="absolute inset-0 z-0 h-full w-full">
+        <!-- 空值不渲染，wd-img 如果加载空的地址 会一直处于loading状态 -->
+        <wd-img v-if="loveBgImage" :src="checkImageUrl(loveBgImage)" class="h-full w-full" mode="aspectFill">
+          <template #loading>
+            <wd-loading size="64rpx" custom-class="!text-love" />
+          </template>
+        </wd-img>
+      </view>
       <view
         class="absolute bottom-0 left-0 z-2 h-36 w-full from-white/0 via-pink-50/50 to-pink-50 bg-gradient-to-b"
       />
     </view>
     <!-- 恋爱记时 -->
-    <view class="love-time-wrap mt-8 w-screen flex flex-col items-center justify-center">
+    <view class="mt-8 w-screen flex flex-col items-center justify-center">
       <view class="title text-xl text-love font-bold">
         {{ loveConfig.loveDateTitle }}
       </view>
@@ -334,7 +364,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="scss">
-	.heart-beat {
+.heart-beat {
   animation: heartBeat 1.2s ease-in-out infinite;
 }
 

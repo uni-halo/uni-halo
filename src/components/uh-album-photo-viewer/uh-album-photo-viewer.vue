@@ -118,13 +118,20 @@ function handlePreview(url?: string) {
           <view v-else class="grid grid-cols-3 box-border gap-2">
             <view
               v-for="photo in photoList" :key="photo.name"
-              class="uh-global-card-glass relative box-border overflow-hidden rounded-xl"
+              class="uh-global-card-glass uh-shadow-xs relative box-border overflow-hidden rounded-xl"
             >
-              <image
-                class="block h-24 w-full" :src="photo.url" mode="aspectFill" lazy-load
-                @click="handlePreview(photo.url)"
-              />
+              <view class="h-24 w-full overflow-hidden">
+                <wd-img
+                  custom-class="h-full w-full" :src="photo.url" mode="aspectFill" lazy-load
+                  @click="handlePreview(photo.url)"
+                >
+                  <template #loading>
+                    <wd-loading size="64rpx" custom-class="!text-love" />
+                  </template>
+                </wd-img>
+              </view>
               <view
+                v-if="photo.title || photo.description || photo.takenDate || photo.location"
                 class="absolute bottom-0 z-2 box-border w-full from-white/0 to-white/60 bg-gradient-to-b p-3 pt-4"
               >
                 <view v-if="photo.title" class="mb-1 text-xs text-love font-bold">

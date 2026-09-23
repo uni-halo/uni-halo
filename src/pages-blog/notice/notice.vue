@@ -230,8 +230,18 @@
 				<view v-for="item in allItems" :key="item.name"
 					class="box-border uh-global-card-glass uh-shadow-xs flex overflow-hidden rounded-xl p-3"
 					@click="handleToDetail(item)">
-					<image v-if="item.cover" class="mr-3 h-18 w-24 shrink-0 rounded-lg" :src="checkImageUrl(item.cover)"
-						mode="aspectFill" />
+					<!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+					<wd-img v-if="item.cover" class="mr-3 h-18 w-24 shrink-0" :radius="8" :src="checkImageUrl(item.cover)"
+						mode="aspectFill">
+						<template #loading>
+							<wd-loading size="64rpx" custom-class="text-primary" />
+						</template>
+					</wd-img>
+					<!-- 无图 -->
+					<view v-else
+						class="mr-3 h-18 w-24 shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+						<wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
+					</view>
 					<view class="min-w-0 flex-1 flex flex-col justify-between">
 						<view class="truncate text-sm text-gray-900 font-bold leading-snug">
 							{{ item.title }}

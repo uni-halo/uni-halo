@@ -7,6 +7,7 @@ import { useUpvote } from '@/hooks/useUpvote'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { generateUUID } from '@/utils/uuid'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
@@ -295,9 +296,13 @@ onShareTimeline(() => ({
 
         <!-- 作者 -->
         <view class="flex items-center px-4 pt-6">
-          <image
-            class="h-[80rpx] w-[80rpx] shrink-0 rounded-full"
-            :src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)" mode="aspectFill"
+          <wd-avatar
+            class="!shrink-0"
+            custom-class="!h-[80rpx] !w-[80rpx] !text-gray-900 !font-bold"
+            :src="checkAvatarUrl(moment.owner?.avatar || bloggerInfo.avatar)"
+            :text="getAvatarFallbackText(moment.owner?.displayName || bloggerInfo.nickname)"
+            shape="round"
+            mode="aspectFill"
           />
           <view class="ml-3 flex flex-col">
             <view class="text-md text-gray-600 font-medium">
@@ -330,10 +335,14 @@ onShareTimeline(() => ({
             v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
             class="box-border h-24 w-full" :class="[moment.images.length === 1 ? 'h-42' : '']"
           >
-            <image
-              mode="aspectFill" class="h-full w-full rounded-lg" :src="image.url"
+            <wd-img
+              mode="aspectFill" class="h-full w-full" :radius="8" :src="image.url"
               @click="handlePreview(mediumIndex, moment.images || [])"
-            />
+            >
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="text-primary" />
+              </template>
+            </wd-img>
           </view>
         </view>
 
