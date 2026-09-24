@@ -396,11 +396,11 @@ function goBack() {
                   prefix-icon="image" no-border placeholder="图形验证码" :disabled="loading"
                 />
                 <image
-                  :src="captchaSrc" class="h-9 w-24 shrink-0 rounded-lg border border-gray-200"
+                  :src="captchaSrc" class="h-9 w-24 shrink-0 border border-gray-200 rounded-lg"
                   mode="widthFix" @click="handleRefreshCaptcha"
                 />
               </view>
-              <view v-if="captchaSrc" class="mt-1 text-center text-2xs text-gray-500">
+              <view v-if="captchaSrc" class="mt-1.5 text-center text-xs text-gray-500">
                 点击图片可刷新图形验证码
               </view>
             </template>
@@ -468,7 +468,7 @@ function goBack() {
 <style lang="scss" scoped>
 :deep(.uh-register-input) {
   box-sizing: border-box;
-  height: 88rpx;
+  height: 76rpx;
   padding: 0 24rpx;
   background-color: rgb(255 255 255 / 65%);
   border-radius: 24rpx;

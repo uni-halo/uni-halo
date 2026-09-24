@@ -15,6 +15,7 @@ import { useTokenStore } from '@/store/token'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { extractMomentContent } from '@/utils/moment'
 import { checkThumbnailUrl } from '@/utils/url'
+import { markdownConfig } from '@/config/markdown'
 
 const dialog = useDialog()
 
@@ -215,8 +216,15 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
             <text v-if="moment.approved === false" class="rounded-full bg-orange-100 px-2 py-0.5 text-3xs text-orange-500">待审核</text>
             <text v-if="moment.visible === 'PRIVATE'" class="rounded-full bg-gray-100 px-2 py-0.5 text-3xs text-gray-500">私密</text>
           </view>
-          <view class="px-4 pt-2 text-3xs text-gray-900 leading-relaxed">
-            <text class="line-clamp-3">{{ moment.content || '（无文字内容）' }}</text>
+          <view class="box-border px-3 pt-2 text-3xs text-gray-900 leading-relaxed">
+            <mp-html
+              :content="moment.content"
+              lazy-load :domain="markdownConfig.domain"
+              :loading-img="markdownConfig.loadingGif" scroll-table selectable
+              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+              :markdown="true" :show-line-number="true"
+              :show-language-name="true" copy-by-long-press
+            />
           </view>
           <view v-if="moment.images.length" class="flex flex-wrap gap-1 px-3 pt-2">
             <wd-img

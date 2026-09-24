@@ -81,6 +81,12 @@ export default defineConfig({
     'border-none!',
     'after:border-none!',
     'uh-shadow-xs!',
+    'text-orange-400',
+    'text-green-400',
+    'text-red-400',
+    'bg-orange-100',
+    'bg-green-100',
+    'bg-red-100',
   ],
   rules: [
     [

@@ -7,6 +7,7 @@ import { useHaloUpload } from '@/hooks/useHaloUpload'
 import { createMoment, getMyMoment, updateMoment } from '@/api/uni-admin'
 import { extractMomentContent } from '@/utils/moment'
 import { checkThumbnailUrl } from '@/utils/url'
+
 import type { IMomentContent } from '@/api/types/uni-admin'
 
 defineOptions({
@@ -218,7 +219,7 @@ defineExpose({ openEdit })
 
           <!-- 图片九宫格 -->
           <view>
-            <text class="mb-2 block text-sm text-gray-500">图片</text>
+            <text class="mb-2 block text-3xs text-gray-500">图片</text>
             <view class="grid grid-cols-4 gap-2">
               <view v-for="img in images" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
                 <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />

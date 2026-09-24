@@ -294,12 +294,12 @@ onReachBottom(() => {
 
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-      empty-text="暂无归档的内容" @refresh="handleGetData"
+      empty-text="暂无归档的内容" min-height="65vh" @refresh="handleGetData"
     />
 
     <!-- 内容区域 -->
     <template v-else>
-      <view class="px-3 pt-3">
+      <view class="box-border px-3 pt-4">
         <view v-for="item in dataList" :key="item.key" class="flex">
           <view class="flex-1 pb-4">
             <view class="mb-3 flex items-center gap-1">

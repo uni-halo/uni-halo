@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 /**
  * 瞬间卡片
- *
  */
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -104,7 +103,7 @@ function handlePreview(index: number, list: { url: string }[]) {
         </view>
       </view>
       <view class="shrink-0">
-        <uh-button custom-class="!py-1.5 bg-secondary text-xs" @click="emit('detail')">
+        <uh-button custom-class="!py-1.5 bg-secondary !text-xs" @click="emit('detail')">
           详情
         </uh-button>
       </view>

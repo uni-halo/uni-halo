@@ -121,6 +121,7 @@ async function handleSave() {
       })
     }
     isShow.value = false
+    uni.showToast({ title: '保存成功', icon: 'none' })
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {

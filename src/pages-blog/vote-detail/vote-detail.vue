@@ -353,7 +353,7 @@ onShareTimeline(() => ({
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
                 class="is-voted-item relative box-border overflow-hidden rounded-xl text-xs"
-                :class="option.checked ? 'bg-primary text-gray-900 font-bold' : 'bg-gray-100'"
+                :class="option.checked ? 'bg-secondary text-gray-900 font-bold' : 'bg-gray-100'"
                 :style="{ '--percent': `${option._uh_percent}%` }"
               >
                 <view class="is-voted-item-content relative z-2 box-border px-4 py-3">
@@ -372,7 +372,7 @@ onShareTimeline(() => ({
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
                 class="vote-select-option box-border rounded-xl bg-gray-100 px-4 py-3 text-xs"
-                :class="option.checked ? 'bg-primary/15 text-gray-900 font-bold' : ''"
+                :class="option.checked ? 'bg-secondary text-gray-900 font-bold' : ''"
                 @click="vote.spec?.type === 'multiple' ? handleSelectCheckboxOption(option) : handleSelectSingleOption(option)"
               >
                 {{ vote.spec?.type === 'pk' ? `选项${optionIndex + 1}：` : '' }}{{ option.title }}

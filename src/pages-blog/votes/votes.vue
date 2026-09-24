@@ -1,364 +1,376 @@
 <script lang="ts" setup>
-	import { computed, ref } from 'vue'
-	import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-	import { getVoteList } from '@/api/uni-halo'
-	import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-	import { usePageScroll } from '@/hooks/usePageScroll'
-	import { usePageTitle } from '@/hooks/usePageTitle'
-	import { useNavbarSticky } from '@/hooks/useNavbarSticky'
-	import { NeedPluginIds } from '@/hooks/usePluginAvailable'
-	import { useAppConfigStore } from '@/store/appConfig'
-	import { debounce } from '@/utils/debounce'
-	import { sleep } from '@/utils/common'
-	import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
-	import type { IVoteItem } from '@/api/types/uni-halo'
+import { computed, ref } from 'vue'
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
+import { getVoteList } from '@/api/uni-halo'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { useNavbarSticky } from '@/hooks/useNavbarSticky'
+import { NeedPluginIds } from '@/hooks/usePluginAvailable'
+import { useAppConfigStore } from '@/store/appConfig'
+import { debounce } from '@/utils/debounce'
+import { sleep } from '@/utils/common'
+import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
+import type { IVoteItem } from '@/api/types/uni-halo'
 
-	definePage({
-		style: {
-			navigationBarTitleText: '投票中心',
-			enablePullDownRefresh: true,
-			navigationStyle: 'custom',
-		},
-	})
+definePage({
+  style: {
+    navigationBarTitleText: '投票中心',
+    enablePullDownRefresh: true,
+    navigationStyle: 'custom',
+  },
+})
 
-	const { scrollY, updatePageScrollValue } = usePageScroll()
-	/** 吸顶偏移 = 自定义导航栏高度(与 notice/articles 等列表页同用法) */
-	const { height: offsetTop } = useNavbarSticky()
-	/** 页面标题（插件端可配置，留空回退内置默认） */
-	const pageTitle = usePageTitle('votes', '投票中心')
-	const appConfigStore = useAppConfigStore()
-	const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
+const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 吸顶偏移 = 自定义导航栏高度(与 notice/articles 等列表页同用法) */
+const { height: offsetTop } = useNavbarSticky()
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('votes', '投票中心')
+const appConfigStore = useAppConfigStore()
+const calcAuditModeEnabled = computed(() => appConfigStore.auditModeEnabled)
 
-	const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
-		pluginId: NeedPluginIds.PluginVote,
-		tips: '啊偶，功能正在维护中...',
-		callback: (isAvailable) => {
-			if (!isAvailable) { return }
-			uni.pageScrollTo({
-				scrollTop: 0,
-				duration: 0,
-			})
-			handleGetData()
-		}
-	})
+const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginVote,
+  tips: '啊偶，功能正在维护中...',
+  callback: (isAvailable) => {
+    if (!isAvailable) { return }
+    uni.pageScrollTo({
+      scrollTop: 0,
+      duration: 0,
+    })
+    handleGetData()
+  },
+})
 
-	/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
-	async function handlePluginRefresh() {
-		if (await checkPluginAvailable()) { handleGetData() }
-	}
+/** 重新检测插件:可用则拉取数据(供 uh-plugin-unavailable 刷新按钮) */
+async function handlePluginRefresh() {
+  if (await checkPluginAvailable()) { handleGetData() }
+}
 
-	/* ---------------- 状态 ---------------- */
-	const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
-	const dataList = ref<IVoteItem[]>([])
-	const filterIsVoted = ref<boolean | undefined>(undefined)
-	const queryParams = ref<Record<string, unknown>>({
-		keyword: '',
-		page: 1,
-		size: 10,
-		sort: undefined,
-		type: undefined,
-		hasEnded: undefined,
-	})
+/* ---------------- 状态 ---------------- */
+const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
+const dataList = ref<IVoteItem[]>([])
+const filterIsVoted = ref<boolean | undefined>(undefined)
+const queryParams = ref<Record<string, unknown>>({
+  keyword: '',
+  page: 1,
+  size: 10,
+  sort: undefined,
+  type: undefined,
+  hasEnded: undefined,
+})
 
-	/* ---------------- 筛选 ---------------- */
-	interface IFilterOption {
-		label : string
-		value : string
-	}
+/* ---------------- 筛选 ---------------- */
+interface IFilterOption {
+  label: string
+  value: string
+}
 
-	interface IFilterItem {
-		key : 'type' | 'hasEnded' | 'sort' | 'isVoted'
-		label : string
-		options : IFilterOption[]
-	}
+interface IFilterItem {
+  key: 'type' | 'hasEnded' | 'sort' | 'isVoted'
+  label: string
+  options: IFilterOption[]
+}
 
-	/** 筛选维度 */
-	const filterConfig : IFilterItem[] = [
-		{
-			key: 'type',
-			label: '类型',
-			options: [
-				{ label: '全部', value: '' },
-				{ label: '单选', value: 'single' },
-				{ label: '多选', value: 'multiple' },
-				{ label: '双选PK', value: 'pk' },
-			],
-		},
-		{
-			key: 'hasEnded',
-			label: '状态',
-			options: [
-				{ label: '全部', value: '' },
-				{ label: '进行中', value: 'false' },
-				{ label: '已结束', value: 'true' },
-			],
-		},
-		{
-			key: 'sort',
-			label: '排序',
-			options: [
-				{ label: '默认排序', value: '' },
-				{ label: '较近创建', value: 'metadata.creationTimestamp,desc' },
-				{ label: '较早创建', value: 'metadata.creationTimestamp,asc' },
-			],
-		},
-		{
-			key: 'isVoted',
-			label: '是否已投',
-			options: [
-				{ label: '全部', value: '' },
-				{ label: '未投票', value: 'false' },
-				{ label: '已投票', value: 'true' },
-			],
-		},
-	]
+/** 筛选维度 */
+const filterConfig: IFilterItem[] = [
+  {
+    key: 'type',
+    label: '类型',
+    options: [
+      { label: '全部', value: '' },
+      { label: '单选', value: 'single' },
+      { label: '多选', value: 'multiple' },
+      { label: '双选PK', value: 'pk' },
+    ],
+  },
+  {
+    key: 'hasEnded',
+    label: '状态',
+    options: [
+      { label: '全部', value: '' },
+      { label: '进行中', value: 'false' },
+      { label: '已结束', value: 'true' },
+    ],
+  },
+  {
+    key: 'sort',
+    label: '排序',
+    options: [
+      { label: '默认排序', value: '' },
+      { label: '较近创建', value: 'metadata.creationTimestamp,desc' },
+      { label: '较早创建', value: 'metadata.creationTimestamp,asc' },
+    ],
+  },
+  {
+    key: 'isVoted',
+    label: '是否已投',
+    options: [
+      { label: '全部', value: '' },
+      { label: '未投票', value: 'false' },
+      { label: '已投票', value: 'true' },
+    ],
+  },
+]
 
-	/** 各维度当前选中值(空串 = 全部) */
-	const filterValues = ref<Record<string, string>>({ type: '', hasEnded: '', sort: '', isVoted: '' })
+/** 各维度当前选中值(空串 = 全部) */
+const filterValues = ref<Record<string, string>>({ type: '', hasEnded: '', sort: '', isVoted: '' })
 
-	/** 当前选中中文标签(用于筛选栏展示) */
-	const filterLabels = computed(() => {
-		const map : Record<string, string> = {}
-		for (const f of filterConfig) {
-			const cur = filterValues.value[f.key]
-			map[f.key] = f.options.find(o => o.value === cur)?.label || '全部'
-		}
-		return map
-	})
+/** 当前选中中文标签(用于筛选栏展示) */
+const filterLabels = computed(() => {
+  const map: Record<string, string> = {}
+  for (const f of filterConfig) {
+    const cur = filterValues.value[f.key]
+    map[f.key] = f.options.find(o => o.value === cur)?.label || '全部'
+  }
+  return map
+})
 
-	/** 筛选弹层 */
-	const filterPopup = ref<{ show : boolean, item : IFilterItem | null }>({ show: false, item: null })
+/** 筛选弹层 */
+const filterPopup = ref<{ show: boolean, item: IFilterItem | null }>({ show: false, item: null })
 
-	function handleOpenFilter(item : IFilterItem) {
-		filterPopup.value = { show: true, item }
-	}
+function handleOpenFilter(item: IFilterItem) {
+  filterPopup.value = { show: true, item }
+}
 
-	function handleSelectFilter(option : IFilterOption) {
-		const item = filterPopup.value.item
-		if (!item) { return }
-		filterValues.value[item.key] = option.value
-		filterPopup.value.show = false
+function handleSelectFilter(option: IFilterOption) {
+  const item = filterPopup.value.item
+  if (!item) { return }
+  filterValues.value[item.key] = option.value
+  filterPopup.value.show = false
 
-		if (item.key === 'isVoted') {
-			filterIsVoted.value = option.value === '' ? undefined : option.value === 'true'
-		}
-		else if (item.key === 'hasEnded') {
-			queryParams.value.hasEnded = option.value === '' ? undefined : option.value === 'true'
-		}
-		else {
-			queryParams.value[item.key] = option.value === '' ? undefined : option.value
-		}
+  if (item.key === 'isVoted') {
+    filterIsVoted.value = option.value === '' ? undefined : option.value === 'true'
+  }
+  else if (item.key === 'hasEnded') {
+    queryParams.value.hasEnded = option.value === '' ? undefined : option.value === 'true'
+  }
+  else {
+    queryParams.value[item.key] = option.value === '' ? undefined : option.value
+  }
 
-		queryParams.value.page = 1
-		resetLoadMoreStatus()
-		handleGetData()
-	}
+  queryParams.value.page = 1
+  resetLoadMoreStatus()
+  handleGetData()
+}
 
-	/* ---------------- 搜索 ---------------- */
-	/** 实时搜索:输入防抖 400ms 后触发 */
-	const handleOnInput = debounce(() => {
-		queryParams.value.page = 1
-		resetLoadMoreStatus()
-		handleGetData()
-	}, 400)
+/* ---------------- 搜索 ---------------- */
+/** 实时搜索:输入防抖 400ms 后触发 */
+const handleOnInput = debounce(() => {
+  queryParams.value.page = 1
+  resetLoadMoreStatus()
+  handleGetData()
+}, 400)
 
-	function handleOnSearch() {
-		queryParams.value.page = 1
-		resetLoadMoreStatus()
-		handleGetData()
-	}
+function handleOnSearch() {
+  queryParams.value.page = 1
+  resetLoadMoreStatus()
+  handleGetData()
+}
 
-	/* ---------------- 数据加载 ---------------- */
-	async function handleGetData() {
-		if (calcAuditModeEnabled.value) {
-			// 审核模式:一次拉取不分页
-			resetLoadMoreStatus()
-			updateLoadingStatus(
-				dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-			)
-			updateLoadMoreStatus({
-				active: false,
-				status: 'noMore',
-				hasNext: false,
-			})
-			uni.stopPullDownRefresh()
-			return
-		}
+/* ---------------- 数据加载 ---------------- */
+async function handleGetData() {
+  if (calcAuditModeEnabled.value) {
+    // 审核模式:一次拉取不分页
+    resetLoadMoreStatus()
+    updateLoadingStatus(
+      dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+    )
+    updateLoadMoreStatus({
+      active: false,
+      status: 'noMore',
+      hasNext: false,
+    })
+    uni.stopPullDownRefresh()
+    return
+  }
 
-		if (!loadMoreStatus.value.active) {
-			updateLoadingStatus(DataLoadingStatusEnum.Loading)
-		}
+  if (!loadMoreStatus.value.active) {
+    updateLoadingStatus(DataLoadingStatusEnum.Loading)
+  }
 
-		try {
-			const res = await getVoteList({ ...queryParams.value })
+  try {
+    const res = await getVoteList({ ...queryParams.value })
 
-			const tempItems = res.data.items.map((item) => {
-				item.spec = item.spec || {}
-				item.spec.disabled = true
-				item.spec.isVoted = voteCacheUtil.has(item.metadata?.name || '')
-				item.spec._uh_state = calcVoteState(item)
-				item.spec._uh_type = VOTE_TYPES[item.spec.type || ''] || item.spec.type
-				return item
-			})
+    const tempItems = res.data.items.map((item) => {
+      item.spec = item.spec || {}
+      item.spec.disabled = true
+      item.spec.isVoted = voteCacheUtil.has(item.metadata?.name || '')
+      item.spec._uh_state = calcVoteState(item)
+      item.spec._uh_type = VOTE_TYPES[item.spec.type || ''] || item.spec.type
+      return item
+    })
 
-			dataList.value = loadMoreStatus.value.active
-				? dataList.value.concat(tempItems)
-				: tempItems
+    dataList.value = loadMoreStatus.value.active
+      ? dataList.value.concat(tempItems)
+      : tempItems
 
-			// 未投优先排序
-			dataList.value = dataList.value.sort((a, b) => {
-				return Number(a.spec?.isVoted) - Number(b.spec?.isVoted)
-			})
+    // 未投优先排序
+    dataList.value = dataList.value.sort((a, b) => {
+      return Number(a.spec?.isVoted) - Number(b.spec?.isVoted)
+    })
 
-			// 是否已投过滤
-			if (filterIsVoted.value !== undefined) {
-				dataList.value = dataList.value.filter(x => x.spec?.isVoted === filterIsVoted.value)
-			}
-			if (!loadMoreStatus.value.active) {
-				await sleep(600)
-				updateLoadingStatus(
-					dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
-				)
-			}
-			updateLoadMoreStatus({
-				active: false,
-				status: res.data.hasNext ? 'loadMore' : 'noMore',
-				hasNext: res.data.hasNext,
-			})
-		}
-		catch (err) {
-			console.error(err)
-			if (loadMoreStatus.value.active) {
-				updateLoadMoreStatus({
-					active: false,
-					status: 'error',
-				})
-			}
-			else {
-				updateLoadingStatus(DataLoadingStatusEnum.Error)
-			}
-		}
-		finally {
-			uni.stopPullDownRefresh()
-		}
-	}
+    // 是否已投过滤
+    if (filterIsVoted.value !== undefined) {
+      dataList.value = dataList.value.filter(x => x.spec?.isVoted === filterIsVoted.value)
+    }
+    if (!loadMoreStatus.value.active) {
+      await sleep(600)
+      updateLoadingStatus(
+        dataList.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success,
+      )
+    }
+    updateLoadMoreStatus({
+      active: false,
+      status: res.data.hasNext ? 'loadMore' : 'noMore',
+      hasNext: res.data.hasNext,
+    })
+  }
+  catch (err) {
+    console.error(err)
+    if (loadMoreStatus.value.active) {
+      updateLoadMoreStatus({
+        active: false,
+        status: 'error',
+      })
+    }
+    else {
+      updateLoadingStatus(DataLoadingStatusEnum.Error)
+    }
+  }
+  finally {
+    uni.stopPullDownRefresh()
+  }
+}
 
-	function handleToTopPage(duration = 500) {
-		uni.pageScrollTo({
-			scrollTop: 0,
-			duration,
-			fail: (err) => {
-				console.error('回顶失败', err)
-			},
-		})
-	}
+function handleToTopPage(duration = 500) {
+  uni.pageScrollTo({
+    scrollTop: 0,
+    duration,
+    fail: (err) => {
+      console.error('回顶失败', err)
+    },
+  })
+}
 
-	/* ---------------- 生命周期 ---------------- */
-	onPageScroll((option : Page.PageScrollOption) => {
-		updatePageScrollValue(option.scrollTop)
-	})
+/* ---------------- 生命周期 ---------------- */
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 
-	onLoad(async () => {
-		await checkPluginAvailable()
-		if (!uniHaloPluginAvailable.value) {
-			uni.stopPullDownRefresh()
-			return
-		}
-		handleGetData()
-	})
+onLoad(async () => {
+  await checkPluginAvailable()
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+    return
+  }
+  handleGetData()
+})
 
-	onPullDownRefresh(() => {
-		if (!uniHaloPluginAvailable.value) {
-			uni.stopPullDownRefresh()
-			return
-		}
-		resetLoadMoreStatus()
-		queryParams.value.page = 1
-		handleGetData()
-	})
+onPullDownRefresh(() => {
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+    return
+  }
+  resetLoadMoreStatus()
+  queryParams.value.page = 1
+  handleGetData()
+})
 
-	onReachBottom(() => {
-		if (!uniHaloPluginAvailable.value)
-			return
-		if (calcAuditModeEnabled.value) {
-			uni.showToast({ icon: 'none', title: '没有更多数据了' })
-			return
-		}
-		// 正在加载时阻止重复请求
-		if (loadMoreStatus.value.active) {
-			return
-		}
-		// 有更多数据时继续加载
-		if (loadMoreStatus.value.hasNext) {
-			queryParams.value.page = Number(queryParams.value.page) + 1
-			updateLoadMoreStatus({
-				active: true,
-				status: 'loading',
-			})
-			handleGetData()
-		}
-	})
+onReachBottom(() => {
+  if (!uniHaloPluginAvailable.value)
+    return
+  if (calcAuditModeEnabled.value) {
+    uni.showToast({ icon: 'none', title: '没有更多数据了' })
+    return
+  }
+  // 正在加载时阻止重复请求
+  if (loadMoreStatus.value.active) {
+    return
+  }
+  // 有更多数据时继续加载
+  if (loadMoreStatus.value.hasNext) {
+    queryParams.value.page = Number(queryParams.value.page) + 1
+    updateLoadMoreStatus({
+      active: true,
+      status: 'loading',
+    })
+    handleGetData()
+  }
+})
 </script>
 
 <template>
-	<view class="app-page min-h-screen w-screen flex flex-col bg-page">
-		<uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
+  <view class="app-page min-h-screen w-screen flex flex-col bg-page">
+    <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
-		<uh-plugin-unavailable v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
-			:error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh" />
+    <uh-plugin-unavailable
+      v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+      :error-text="tips" :checking="checking" @on-refresh="handlePluginRefresh"
+    />
 
-		<template v-else>
-			<wd-sticky :offset-top="offsetTop">
-				<view class="box-border w-screen px-3 pt-2 pb-1">
-					<view class="uh-global-card-glass shadow-none flex h-9 items-center gap-3 rounded-full px-5">
-						<wd-icon name="search" size="16px" />
-						<input v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
-							placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
-							@input="handleOnInput" @confirm="handleOnSearch">
-						<view v-if="queryParams.keyword" class="flex items-center"
-							@click="queryParams.keyword = ''; handleOnSearch()">
-							<wd-icon name="close" size="14px" />
-						</view>
-					</view>
-					<!-- 筛选栏 -->
-					<view class="box-border flex items-center justify-between mt-1 py-2 gap-x-2">
-						<view v-for="f in filterConfig" :key="f.key"
-							class="uh-global-card-glass shadow-none border rounded-full box-border flex flex-1 items-center justify-center gap-1 px-2 py-1 text-gray-500"
-							:class="[filterValues[f.key]?'bg-secondary text-gray-900 font-bold':'bg-white/80 text-gray-600']"
-							@click="handleOpenFilter(f)">
-							<text class="text-xs truncate">
-								{{ filterLabels[f.key] }}
-							</text>
-							<wd-icon name="arrow-down" size="24rpx" />
-						</view>
-					</view>
-				</view>
-			</wd-sticky>
+    <template v-else>
+      <wd-sticky :offset-top="offsetTop">
+        <view class="box-border w-screen px-3 pb-1 pt-2">
+          <view class="uh-global-card-glass h-9 flex items-center gap-3 rounded-full px-5 shadow-none">
+            <wd-icon name="search" size="16px" />
+            <input
+              v-model="queryParams.keyword" class="flex-1 text-[26rpx] text-gray-900"
+              placeholder="搜索投票..." placeholder-class="text-gray-400" confirm-type="search"
+              @input="handleOnInput" @confirm="handleOnSearch"
+            >
+            <view
+              v-if="queryParams.keyword" class="flex items-center"
+              @click="queryParams.keyword = ''; handleOnSearch()"
+            >
+              <wd-icon name="close" size="14px" />
+            </view>
+          </view>
+          <!-- 筛选栏 -->
+          <view class="mt-1 box-border flex items-center justify-between gap-x-2 py-2">
+            <view
+              v-for="f in filterConfig" :key="f.key"
+              class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-1 border rounded-full px-2 py-1 text-gray-500 shadow-none"
+              :class="[filterValues[f.key] ? 'bg-secondary text-gray-900 font-bold' : 'bg-white/80 text-gray-600']"
+              @click="handleOpenFilter(f)"
+            >
+              <text class="truncate text-xs">
+                {{ filterLabels[f.key] }}
+              </text>
+              <wd-icon name="arrow-down" size="24rpx" />
+            </view>
+          </view>
+        </view>
+      </wd-sticky>
 
-			<uh-data-loading v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-				empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData" />
+      <uh-data-loading
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+        empty-text="还没有任何投票哦~" min-height="70vh" @refresh="handleGetData"
+      />
 
-			<view v-else class="box-border flex flex-col gap-4 p-3 pt-2">
-				<uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
-				<uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
-			</view>
-		</template>
+      <view v-else class="box-border flex flex-col gap-4 p-3 pt-2">
+        <uh-vote-card v-for="vote in dataList" :key="vote.metadata?.name" :vote="vote" />
+        <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
+      </view>
+    </template>
 
-		<!-- 筛选弹层 -->
-		<uh-glass-popup v-model="filterPopup.show" :z-index="99" position="bottom" custom-class="rounded-2xl">
-			<view v-if="filterPopup.item" class="box-border p-4">
-				<view class="mb-4 text-center text-md font-bold text-gray-900">
-					{{ filterPopup.item.label }}
-				</view>
-				<view class="flex flex-col gap-2">
-					<view v-for="opt in filterPopup.item.options" :key="opt.label"
-						class="uh-global-card-glass shadow-none border box-border rounded-xl px-5 py-2 text-center text-xs"
-						:class="filterValues[filterPopup.item.key] === opt.value ? 'bg-primary text-gray-900 font-bold' : 'text-gray-700'"
-						@click="handleSelectFilter(opt)">
-						{{ opt.label }}
-					</view>
-				</view>
-			</view>
-		</uh-glass-popup>
-	</view>
+    <!-- 筛选弹层 -->
+    <uh-glass-popup v-model="filterPopup.show" :z-index="99" position="bottom" custom-class="rounded-2xl">
+      <view v-if="filterPopup.item" class="box-border p-4">
+        <view class="text-md mb-4 text-center text-gray-900 font-bold">
+          {{ filterPopup.item.label }}
+        </view>
+        <view class="flex flex-col gap-2">
+          <view
+            v-for="opt in filterPopup.item.options" :key="opt.label"
+            class="uh-global-card-glass box-border border rounded-xl px-5 py-2 text-center text-xs shadow-none"
+            :class="filterValues[filterPopup.item.key] === opt.value ? 'bg-primary text-gray-900 font-bold' : 'text-gray-700'"
+            @click="handleSelectFilter(opt)"
+          >
+            {{ opt.label }}
+          </view>
+        </view>
+      </view>
+    </uh-glass-popup>
+  </view>
 </template>

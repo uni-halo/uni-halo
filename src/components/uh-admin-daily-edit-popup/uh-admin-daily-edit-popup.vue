@@ -33,7 +33,7 @@ const form = ref<ILoveDailyItemSpec>({})
 const { list: imageList, choose: chooseImages, remove: removeImage, retry: imageRetry } = useHaloUpload({ maxCount: 99 })
 
 /* ---------------- 完成感想富文本（官方 editor，经 uh-rich-editor 封装，带工具条） ---------------- */
-const editorRef = ref<{ setHtml(html: string): void, getHtml(): Promise<string>, clear(): void } | null>(null)
+const editorRef = ref<{ setHtml: (html: string) => void, getHtml: () => Promise<string>, clear: () => void } | null>(null)
 
 /** 计划日期选择（wd-datetime-picker 是纯弹层，需自建触发区 + 受控 visible） */
 const planDateShow = ref(false)
@@ -135,6 +135,7 @@ async function handleSave() {
       await updateLoveDailyItem(editName.value, spec)
     }
     isShow.value = false
+    uni.showToast({ title: '保存成功', icon: 'none' })
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
@@ -163,14 +164,14 @@ defineExpose({ openEdit })
 <template>
   <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" :close-on-click-modal="false" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
-    <view class="w-full box-border flex flex-col gap-y-3 p-3">
+    <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">
           <text class="text-md font-bold">{{ formMode === 'create' ? '新增清单' : '编辑清单' }}</text>
           <text class="text-xs text-gray-500">{{ formMode === 'create' ? '记录一件想一起完成的事' : '修改清单信息' }}</text>
         </view>
-        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg flex items-center justify-center shadow-none" @click="handleClose(false)">
+        <view class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none" @click="handleClose(false)">
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
@@ -180,15 +181,19 @@ defineExpose({ openEdit })
         <view class="w-full flex flex-col gap-y-3">
           <view class="flex items-center">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">标题 *</text>
-            <input v-model="form.title"
+            <input
+              v-model="form.title"
               class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
-              placeholder="请输入清单标题">
+              placeholder="请输入清单标题"
+            >
           </view>
           <view class="flex items-start">
             <text class="w-[140rpx] shrink-0 pt-2.5 text-3xs text-gray-600">描述</text>
-            <textarea v-model="form.content"
+            <textarea
+              v-model="form.content"
               class="uh-global-card-glass box-border h-24 flex-1 border rounded-xl p-3 text-3xs shadow-none"
-              placeholder="请输入描述(选填)" :maxlength="500" />
+              placeholder="请输入描述(选填)" :maxlength="500"
+            />
           </view>
           <view class="flex items-center">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">计划时间</text>
@@ -197,12 +202,17 @@ defineExpose({ openEdit })
               @click="openPlanDatePicker"
             >
               <text
-                :class="form.planDate ? 'text-gray-900' : 'text-gray-400'">{{ form.planDate || '如 2024-06-01(选填)' }}</text>
+                :class="form.planDate ? 'text-gray-900' : 'text-gray-400'"
+              >
+                {{ form.planDate || '如 2024-06-01(选填)' }}
+              </text>
               <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
             </view>
           </view>
-          <wd-datetime-picker :z-index="999" v-model="planDateTs" root-portal type="date" title="选择计划日期"
-            v-model:visible="planDateShow" @confirm="handlePlanDateConfirm" />
+          <wd-datetime-picker
+            v-model="planDateTs" v-model:visible="planDateShow" :z-index="999" root-portal type="date"
+            title="选择计划日期" @confirm="handlePlanDateConfirm"
+          />
           <view class="flex items-center">
             <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">完成状态</text>
             <view class="flex flex-1 gap-2">
@@ -210,7 +220,8 @@ defineExpose({ openEdit })
                 v-for="s in [{ v: 'wait', t: '未开始' }, { v: 'doing', t: '进行中' }, { v: 'complete', t: '已完成' }]"
                 :key="s.v" class="rounded-full px-3 py-1 text-xs"
                 :class="form.status === s.v ? 'bg-love text-white' : 'bg-page text-gray-500'"
-                @click="handleStatusChange(s.v as ILoveDailyItemSpec['status'])">
+                @click="handleStatusChange(s.v as ILoveDailyItemSpec['status'])"
+              >
                 {{ s.t }}
               </text>
             </view>
@@ -224,12 +235,17 @@ defineExpose({ openEdit })
                 @click="openDatePicker"
               >
                 <text
-                  :class="form.completeDate ? 'text-gray-900' : 'text-gray-400'">{{ form.completeDate || '如 2024-06-01(必填)' }}</text>
+                  :class="form.completeDate ? 'text-gray-900' : 'text-gray-400'"
+                >
+                  {{ form.completeDate || '如 2024-06-01(必填)' }}
+                </text>
                 <wd-icon name="calendar" size="28rpx" class="text-gray-400" />
               </view>
             </view>
-            <wd-datetime-picker v-model="dateTs" :z-index="999" root-portal type="date" title="选择完成日期"
-              v-model:visible="dateShow" @confirm="handleDateConfirm" />
+            <wd-datetime-picker
+              v-model="dateTs" v-model:visible="dateShow" :z-index="999" root-portal type="date"
+              title="选择完成日期" @confirm="handleDateConfirm"
+            />
             <view>
               <text class="mb-2 block text-3xs text-gray-600">完成感想</text>
               <view class="uh-global-card-glass box-border w-full rounded-xl shadow-none">
@@ -240,32 +256,42 @@ defineExpose({ openEdit })
           <view>
             <text class="mb-2 block text-3xs text-gray-600">回忆照片</text>
             <view class="grid grid-cols-4 gap-2">
-              <view v-for="img in imageList" :key="img.tempPath"
-                class="relative aspect-square overflow-hidden rounded-lg">
+              <view
+                v-for="img in imageList" :key="img.tempPath"
+                class="relative aspect-square overflow-hidden rounded-lg"
+              >
                 <image :src="img.tempPath" class="h-full w-full" mode="aspectFill" />
                 <view
                   class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white"
-                  @click="removeImage(img.tempPath)">
+                  @click="removeImage(img.tempPath)"
+                >
                   <wd-icon name="close" size="22rpx" />
                 </view>
-                <view v-if="img.status === 'uploading'"
-                  class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
+                <view
+                  v-if="img.status === 'uploading'"
+                  class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white"
+                >
                   {{ img.progress }}%
                 </view>
-                <view v-else-if="img.status === 'error'"
+                <view
+                  v-else-if="img.status === 'error'"
                   class="absolute inset-0 flex flex-col items-center justify-center bg-red-500/60 text-xs text-white"
-                  @click="imageRetry(img.tempPath)">
+                  @click="imageRetry(img.tempPath)"
+                >
                   <text>失败</text>
                   <text>点击重试</text>
                 </view>
-                <view v-else-if="img.status === 'success'"
-                  class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white">
+                <view
+                  v-else-if="img.status === 'success'"
+                  class="absolute bottom-1 right-1 h-5 w-5 flex items-center justify-center rounded-full bg-green-500 text-white"
+                >
                   <wd-icon name="check" size="22rpx" />
                 </view>
               </view>
               <view
                 class="aspect-square flex items-center justify-center border-2 border-gray-300 rounded-lg border-dashed text-gray-400"
-                @click="chooseImages">
+                @click="chooseImages"
+              >
                 <wd-icon name="camera" size="36rpx" />
               </view>
             </view>

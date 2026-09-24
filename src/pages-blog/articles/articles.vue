@@ -261,7 +261,7 @@ onReachBottom(() => {
 
     <uh-data-loading
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
-      empty-text="啊偶，还没有任何内容哦~" min-height="75vh" @refresh="handleGetArticleList"
+      empty-text="啊偶，还没有任何内容哦~" min-height="65vh" @refresh="handleGetArticleList"
     />
 
     <view v-else class="box-border flex flex-col gap-4 p-3">

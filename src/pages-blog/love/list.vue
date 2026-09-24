@@ -435,7 +435,7 @@ onReachBottom(() => {
               </view>
             </view>
             <view v-if="item.completeRemark" class="mb-3 flex flex-col gap-y-2">
-              <view class="w-16 shrink-0 text-gray-500">
+              <view class="shrink-0 text-gray-500">
                 完成感想
               </view>
               <view class="box-border rounded-lg bg-gray-50 p-2 text-gray-900 leading-4">
@@ -449,11 +449,11 @@ onReachBottom(() => {
                 />
               </view>
             </view>
-            <view v-if="item.images.length > 0" class="desc flex">
-              <view class="desc-label w-16 shrink-0 text-gray-500">
+            <view v-if="item.images.length > 0" class="flex flex-col gap-y-2">
+              <view class="shrink-0 text-gray-500">
                 回忆图片
               </view>
-              <view class="desc-value w-0 flex-1 text-gray-900 leading-4">
+              <view class="flex-1 text-gray-900 leading-4">
                 <view class="grid grid-cols-3 gap-2">
                   <view
                     v-for="(img, imgIndex) in item.images" :key="imgIndex"

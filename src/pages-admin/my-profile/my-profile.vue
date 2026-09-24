@@ -462,6 +462,10 @@ function handleLogout() {
   }).catch(() => { })
 }
 
+function isExampleEMail(email: string) {
+  return email?.trim().endsWith('@example.com')
+}
+
 /* ---------------- 生命周期 ---------------- */
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
@@ -635,10 +639,10 @@ onShow(() => {
           >
             <wd-icon name="message" size="46rpx" class="text-primary" />
           </view>
-          <view class="min-w-0 flex flex-1 flex-col gap-y-0.5">
+          <view class="min-w-0 flex flex-1 flex-col gap-y-1">
             <view class="flex items-center gap-x-1.5">
               <view class="h-2 w-2 rounded-full" :class="isBound ? 'bg-primary' : 'bg-gray-300'" />
-              <text class="text-2xs text-gray-900 font-bold">
+              <text class="text-3xs text-gray-900 font-bold">
                 {{ bindingLoading ? '查询中...' : isBound ? '已绑定微信' : '未绑定微信' }}
               </text>
             </view>
@@ -656,7 +660,7 @@ onShow(() => {
             </uh-button>
             <uh-button
               v-else-if="isWechat"
-              custom-class="!rounded-full !bg-green-500 px-4 py-1.5 text-xs text-white"
+              custom-class="!rounded-full !bg-green-500 px-4 py-1.5 !text-xs text-white"
               :class="bindSubmitting ? 'opacity-60' : ''" @action-click="handleBindWechat"
             >
               {{ bindSubmitting ? '绑定中' : '一键绑定' }}
@@ -673,7 +677,7 @@ onShow(() => {
             <wd-icon name="lock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">修改密码</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-2xs text-gray-400">{{ passwordSet ? '已设置密码' : '未设置密码' }}</text>
+              <text class="text-3xs text-gray-400">{{ passwordSet ? '已设置密码' : '未设置密码' }}</text>
               <wd-icon name="edit" size="28rpx" custom-class="text-gray-400" />
             </view>
           </view>
@@ -683,7 +687,7 @@ onShow(() => {
       <!-- 退出登录 -->
       <view class="mt-2 box-border w-full pb-6">
         <uh-button
-          custom-class="uh-global-card-glass w-full border border-red-400/30 bg-red-400/80 py-2.5 text-2xs text-white !rounded-full"
+          custom-class="uh-global-card-glass w-full border border-red-400/30 bg-red-400/80 py-2.5 text-white !rounded-full"
           @action-click="handleLogout()"
         >
           退出登录
@@ -753,7 +757,7 @@ onShow(() => {
             v-model="emailDraft" custom-class="uh-profile-input !rounded-lg" prefix-icon="email"
             no-border placeholder="请输入新邮箱" clearable :disabled="emailSubmitting || emailCodeSending"
           />
-          <text class="text-xs text-gray-600">
+          <text v-if="isExampleEMail(emailDraft)" class="text-xs text-gray-600">
             说明：@example.com 是示例邮箱，请更换自己的邮箱。
           </text>
           <view class="flex items-center gap-x-2">
