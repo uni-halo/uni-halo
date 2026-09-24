@@ -53,7 +53,7 @@ export function getPostList(params: IPostListReq) {
 
 /**
  * UC「我的笔记」列表(服务端强制 owner=当前登录用户)。
- * 个人主页兜底:公开接口 fieldSelector=spec.owner 实测查不到内容,见 PRD 5.4。
+ * 个人主页走 UC 接口:公开接口 fieldSelector=spec.owner 实测查不到内容。
  * 固定 publishPhase=PUBLISHED 仅返回已发布,与站点可见性保持一致。
  * 响应为 UC ListedPost 结构(post 包裹 + 顶层 owner/stats),调用方需 mapUcListedPost 映射。
  * RBAC 前提:登录默认角色需聚合 uc.api.content.halo.run posts 的 list 权限。

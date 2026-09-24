@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import { onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useTokenStore } from '@/store/token'
 import { sendRegisterEmailCode } from '@/api/auth'
+import { getPluginCaptcha } from '@/api/uni-halo'
+import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 import { isValidEmail } from '@/utils/validate'
 
 /**
- * 微信补邮箱注册弹层(第二段)
- *
- * 站点开启「注册必须验证邮箱」后，微信一键注册/一键登录遇到新微信时会被服务端
- * 以 WECHAT_EMAIL_REQUIRED 拦下并下发注册票据(30 分钟)，页面拦截该业务码后
- * 打开本弹层：邮箱 → 发送验证码(60s 倒计时) → 提交完成注册并登录。
+ * 微信补邮箱注册弹层(第二段):一键注册/登录遇到新微信被 WECHAT_EMAIL_REQUIRED
+ * 拦下并下发注册票据(30 分钟)后打开本弹层:邮箱 → 发送验证码(60s 倒计时) → 提交完成注册并登录。
  * 注册成功 emit('success')，页面自行决定后续跳转；发码走 Halo 匿名端点。
  */
 const props = defineProps<{
@@ -33,15 +32,65 @@ const codeCountdown = ref(0)
 const submitting = ref(false)
 let codeTimer: ReturnType<typeof setInterval> | null = null
 
+/* 防刷图形验证码(服务端 403 附新码时启用展示;一次性,发码成功后作废) */
+const captchaImage = ref('')
+const captchaId = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+
+const captchaSrc = computed(() => {
+  if (!captchaImage.value)
+    return ''
+  return captchaImage.value.startsWith('data:')
+    ? captchaImage.value
+    : `data:image/png;base64,${captchaImage.value}`
+})
+
+function resetCaptcha() {
+  captchaImage.value = ''
+  captchaId.value = ''
+  captchaCode.value = ''
+}
+
+function applyCaptcha(captcha: IPluginCaptcha) {
+  captchaImage.value = captcha.imageBase64
+  captchaId.value = captcha.id
+  captchaCode.value = ''
+}
+
+async function handleRefreshCaptcha() {
+  if (captchaLoading.value)
+    return
+  captchaLoading.value = true
+  try {
+    const res = await getPluginCaptcha()
+    if (res.data)
+      applyCaptcha(res.data)
+  }
+  catch (error) {
+    console.error('获取验证码失败:', error)
+  }
+  finally {
+    captchaLoading.value = false
+  }
+}
+
+function buildCaptcha(): ICaptchaQuery | undefined {
+  return captchaImage.value
+    ? { captchaId: captchaId.value, captchaCode: captchaCode.value }
+    : undefined
+}
+
 /** 弹层每次打开时重置验证码与倒计时(邮箱保留,便于重试时不必重填) */
 watch(() => props.modelValue, (visible) => {
   if (visible) {
     emailCode.value = ''
+    resetCaptcha()
     stopCountdown()
   }
 })
 
-/** 发送验证码到新邮箱(Halo 匿名端点,按 IP 限流,429 = 发送过于频繁) */
+/** 发送验证码到新邮箱(服务端三层防护:验证码→限流→CSRF 代理,429 = 过于频繁) */
 async function sendCode() {
   const value = email.value.trim()
   if (!value) {
@@ -56,16 +105,25 @@ async function sendCode() {
     return
   codeSending.value = true
   try {
-    await sendRegisterEmailCode(value)
+    await sendRegisterEmailCode(value, buildCaptcha())
     uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱' })
+    resetCaptcha()
     startCountdown()
   }
   catch (error) {
-    const code = (error as { code?: number })?.code
-    uni.showToast({
-      icon: 'none',
-      title: code === 429 ? '发送过于频繁，请稍后再试' : '验证码发送失败，请稍后重试',
-    })
+    const err = error as { code?: number, data?: { message?: string, captcha?: IPluginCaptcha } }
+    if (err.code === 403 && err.data?.captcha) {
+      // 需要/校验失败图形验证码:服务端附新码(一次性),展示并要求重试
+      applyCaptcha(err.data.captcha)
+      uni.showToast({ icon: 'none', title: '请完成图形验证码后重新发送' })
+    }
+    else {
+      const code = (error as { code?: number })?.code
+      uni.showToast({
+        icon: 'none',
+        title: code === 429 ? '发送过于频繁，请稍后再试' : '验证码发送失败，请稍后重试',
+      })
+    }
   }
   finally {
     codeSending.value = false
@@ -153,6 +211,19 @@ function close() {
           >
             {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : (codeSending ? '发送中' : '发送验证码') }}
           </uh-button>
+        </view>
+        <view v-if="captchaSrc" class="flex items-center gap-x-2">
+          <wd-input
+            v-model="captchaCode" custom-class="uh-profile-input flex-1 !rounded-lg" prefix-icon="shield"
+            no-border placeholder="图形验证码" clearable :disabled="submitting || codeSending"
+          />
+          <image
+            :src="captchaSrc" class="h-9 w-24 shrink-0 rounded-lg border border-gray-200"
+            mode="widthFix" @click="handleRefreshCaptcha"
+          />
+        </view>
+        <view v-if="captchaSrc" class="text-xs text-gray-500">
+          点击图片可刷新图形验证码
         </view>
         <text class="text-xs text-gray-600">
           已开启验证邮箱，请补充邮箱完成注册，验证码将发送到所填邮箱，10 分钟内有效。

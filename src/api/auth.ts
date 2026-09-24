@@ -8,6 +8,8 @@ import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
 import type { ILoginResult, IProfileResult } from './types/uni-halo'
+import { buildCaptchaQuery } from './uni-halo'
+import type { ICaptchaQuery } from './uni-halo'
 
 /** 认证接口基础路径(插件端 Constants.AUTH_API_BASE_PATH;端点注册在组根路径) */
 const AUTH_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/auth'
@@ -196,17 +198,21 @@ export interface IGlobalInfo {
 }
 
 /**
- * 发送注册邮箱验证码(Halo 匿名端点 POST /signup/send-email-code,2.20+)
+ * 发送注册邮箱验证码(插件代理端点 POST /auth/-/send-register-email-code,匿名可用)
  *
- * 请求体 { email },成功返回 202 Accepted(无响应体,由 http 层归一化 code=202),
- * 服务端按客户端 IP 限流(resilience4j send-email-verification-code 配置),429 表示发送过于频繁。
+ * 请求体 { email },成功返回 202 Accepted(无响应体,由 http 层归一化 code=202)。
+ * 服务端三层防护:图形验证码(safetyConfig.captchaConfig.scope.registerEmailCode 开启时
+ * 必携,缺省/校验失败 403 返回 {message, captcha})→ 限流(429)→ CSRF 握手转发官方端点。
  * 验证码随注册表单(email + emailCode)经插件端 /auth/register 中转,由 Halo signUp 校验(邮箱须与发码时一致)。
+ * @param email 收码邮箱
+ * @param captcha 图形验证码(服务端 403 附新码后必带;站点关闭验证码时不传)
  */
-export function sendRegisterEmailCode(email: string) {
+export function sendRegisterEmailCode(email: string, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<null>>(
-    '/signup/send-email-code',
+    `${AUTH_API_BASE}/-/send-register-email-code`,
     { email },
     {
+      params: { ...buildCaptchaQuery(captcha) },
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },

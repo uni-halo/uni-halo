@@ -6,6 +6,8 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { getGlobalInfo, sendRegisterEmailCode } from '@/api/auth'
+import { getPluginCaptcha } from '@/api/uni-halo'
+import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 import { isValidEmail } from '@/utils/validate'
 import { LOGIN_PAGE } from '@/router/config'
 import { sleep } from '@/utils/common'
@@ -77,12 +79,60 @@ const codeSending = ref(false)
 const codeCountdown = ref(0)
 let codeTimer: ReturnType<typeof setInterval> | null = null
 
+/* 防刷图形验证码(服务端 403 附新码时启用展示;一次性,发码成功后作废) */
+const captchaImage = ref('')
+const captchaId = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+const captchaSrc = computed(() => {
+  if (!captchaImage.value)
+    return ''
+  return captchaImage.value.startsWith('data:')
+    ? captchaImage.value
+    : `data:image/png;base64,${captchaImage.value}`
+})
+
+function resetCaptcha() {
+  captchaImage.value = ''
+  captchaId.value = ''
+  captchaCode.value = ''
+}
+
+function applyCaptcha(captcha: IPluginCaptcha) {
+  captchaImage.value = captcha.imageBase64
+  captchaId.value = captcha.id
+  captchaCode.value = ''
+}
+
+async function handleRefreshCaptcha() {
+  if (captchaLoading.value)
+    return
+  captchaLoading.value = true
+  try {
+    const res = await getPluginCaptcha()
+    if (res.data)
+      applyCaptcha(res.data)
+  }
+  catch (error) {
+    console.error('获取验证码失败:', error)
+  }
+  finally {
+    captchaLoading.value = false
+  }
+}
+
+function buildCaptcha(): ICaptchaQuery | undefined {
+  return captchaImage.value
+    ? { captchaId: captchaId.value, captchaCode: captchaCode.value }
+    : undefined
+}
+
 /** 邮箱输入提示:必填 */
 const emailPlaceholder = '请输入邮箱'
 
 /**
- * 发送注册邮箱验证码(Halo 匿名端点 /signup/send-email-code)
- * 服务端按客户端 IP 限流,429 = 发送过于频繁
+ * 发送注册邮箱验证码(插件代理端点,服务端三层防护:图形验证码→限流→CSRF 代理)
+ * 429 = 发送过于频繁;403 附新码 = 需完成图形验证码
  */
 async function sendEmailCode() {
   const value = email.value.trim()
@@ -98,17 +148,25 @@ async function sendEmailCode() {
     return
   codeSending.value = true
   try {
-    await sendRegisterEmailCode(value)
+    await sendRegisterEmailCode(value, buildCaptcha())
     uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱' })
+    resetCaptcha()
     startCodeCountdown()
   }
   catch (error) {
-    // 429 限流单独提示,其余按通用失败
-    const code = (error as { code?: number })?.code
-    uni.showToast({
-      icon: 'none',
-      title: code === 429 ? '发送过于频繁，请稍后再试' : '验证码发送失败，请稍后重试',
-    })
+    const err = error as { code?: number, data?: { message?: string, captcha?: IPluginCaptcha } }
+    if (err.code === 403 && err.data?.captcha) {
+      // 需要/校验失败图形验证码:服务端附新码(一次性),展示并要求重试
+      applyCaptcha(err.data.captcha)
+      uni.showToast({ icon: 'none', title: '请完成图形验证码后重新发送' })
+    }
+    else {
+      const code = (error as { code?: number })?.code
+      uni.showToast({
+        icon: 'none',
+        title: code === 429 ? '发送过于频繁，请稍后再试' : '验证码发送失败，请稍后重试',
+      })
+    }
   }
   finally {
     codeSending.value = false
@@ -203,7 +261,7 @@ async function doWechatRegister() {
     handleRegisterSuccess()
   }
   catch (error) {
-    // 站点开启注册邮箱验证时,新微信被服务端拦下要求补邮箱,弹层继续完成注册
+    // 新微信被 WECHAT_EMAIL_REQUIRED 拦下要求补邮箱,弹层继续完成注册
     if (!handleWechatEmailRequired(error)) {
       console.error('微信注册失败:', error)
     }
@@ -214,7 +272,7 @@ async function doWechatRegister() {
   // #endif
 }
 
-/* ---------- 微信补邮箱注册(站点开启注册邮箱验证时,一键注册被拦后的第二段) ---------- */
+/* ---------- 微信补邮箱注册(一键注册被拦后的第二段) ---------- */
 const wxEmailSheet = ref(false)
 const wxTicket = ref('')
 
@@ -330,6 +388,19 @@ function goBack() {
                   {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : (codeSending ? '发送中...' : '发送验证码') }}
                 </button>
               </view>
+              <view v-if="captchaSrc" class="mt-3 flex items-center gap-x-2">
+                <wd-input
+                  v-model="captchaCode" custom-class="uh-register-input flex-1"
+                  prefix-icon="shield" no-border placeholder="图形验证码" :disabled="loading"
+                />
+                <image
+                  :src="captchaSrc" class="h-9 w-24 shrink-0 rounded-lg border border-gray-200"
+                  mode="widthFix" @click="handleRefreshCaptcha"
+                />
+              </view>
+              <view v-if="captchaSrc" class="mt-1 text-center text-2xs text-gray-500">
+                点击图片可刷新图形验证码
+              </view>
             </template>
 
             <!-- 用户协议/隐私政策(始终展示勾选行;点击协议名弹出查看,未配置内容时弹窗内显示空态) -->
@@ -387,7 +458,7 @@ function goBack() {
       show-agree-button @agree="agreeInPopup"
     />
 
-    <!-- 微信补邮箱注册弹层(站点开启注册邮箱验证时,一键注册被拦后的第二段) -->
+    <!-- 微信补邮箱注册弹层(一键注册被拦后的第二段) -->
     <uh-wx-email-verify-sheet v-model="wxEmailSheet" :ticket="wxTicket" @success="handleRegisterSuccess" />
   </view>
 </template>

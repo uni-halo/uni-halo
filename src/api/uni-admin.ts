@@ -1,6 +1,5 @@
 /**
  * 管理模块 API（发布瞬间、附件上传、恋爱模块管理）
- * 对应 PRD：docs/PRD-app-publish.md
  *
  * 注意：附件上传走 uni.uploadFile（multipart），token 由
  * http/interceptor.ts 的 uploadFile 拦截器按 meta.needAuthToken 携带；

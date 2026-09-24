@@ -125,7 +125,7 @@ const configuredFeatures = computed(() => {
 
 const navList = ref<INavItem[]>([])
 /**
- * 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页 → 常用功能显示方式」配置;缺省网格,与旧版行为一致;
+ * 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页」配置,缺省网格;
  * 切为列表时常用/其他功能均为分组列表,并恢复站点统计卡片展示)
  */
 const featureMode = computed<'grid' | 'list'>(() =>

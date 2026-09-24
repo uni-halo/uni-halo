@@ -53,7 +53,7 @@ function errText(error: any, fallback: string) {
 /**
  * 微信绑定相关业务 code → 可执行提示
  * 权威定义在插件端 BizErrorCode(uni-halo-plugin),此处只做前端文案映射。
- * 冲突类(409)必须给出「先解绑」这类可执行引导,不能只报一句「绑定失败」。
+ * 冲突类(409)提示「先解绑」等可执行引导,便于用户自行恢复。
  */
 const WECHAT_BIND_ERROR_TEXT: Record<string, string> = {
   WECHAT_ALREADY_BOUND: '该微信已绑定其他账号,请先解绑后再试',

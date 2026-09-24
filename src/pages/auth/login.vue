@@ -114,7 +114,7 @@ async function doWechatLogin() {
     handleLoginSuccess()
   }
   catch (error) {
-    // 站点开启注册邮箱验证时,新微信被服务端拦下要求补邮箱,弹层继续完成注册
+    // 新微信被 WECHAT_EMAIL_REQUIRED 拦下要求补邮箱,弹层继续完成注册
     if (!handleWechatEmailRequired(error)) {
       console.error('微信登录失败:', error)
     }
@@ -125,7 +125,7 @@ async function doWechatLogin() {
   // #endif
 }
 
-/* ---------- 微信补邮箱注册(站点开启注册邮箱验证时,新微信一键登录被拦后的第二段) ---------- */
+/* ---------- 微信补邮箱注册(一键登录被拦后的第二段) ---------- */
 const wxEmailSheet = ref(false)
 const wxTicket = ref('')
 
@@ -280,7 +280,7 @@ async function handleLoginSuccess() {
       :initial-tab="agreementTab"
     />
 
-    <!-- 微信补邮箱注册弹层(站点开启注册邮箱验证时,新微信一键登录被拦后的第二段) -->
+    <!-- 微信补邮箱注册弹层(新微信一键登录被拦后的第二段) -->
     <uh-wx-email-verify-sheet v-model="wxEmailSheet" :ticket="wxTicket" @success="handleLoginSuccess" />
   </view>
 </template>
