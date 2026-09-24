@@ -40,7 +40,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen bg-page p-3 pt-2">
+  <view class="box-border min-h-screen bg-page p-3 pt-2 pb-safe">
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-data-loading
