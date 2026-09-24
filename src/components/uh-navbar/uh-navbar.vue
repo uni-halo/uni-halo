@@ -72,7 +72,7 @@ const visibleTitle = computed(() => {
   return props.scrollTitle
 })
 
-// 如果是从分享进来的，我们需要处理为返回 home页面
+// 如果是从分享进来的，我们需要处理为返回首页
 const homePage = 'pages/index/index'
 
 const allEntryPages = computed<string[]>(() => {
@@ -117,7 +117,7 @@ function handleBack() {
             <wd-icon v-if="checkIsShare()" name="home" size="30rpx" />
             <wd-icon v-else name="arrow-left" size="30rpx" />
             <view class="h-4 w-[1px] bg-white/60" />
-            <text class="text-[26rpx] font-bold">{{ checkIsShare() ? '返回' : '首页' }}</text>
+            <text class="text-3xs font-bold">{{ checkIsShare() ? '首页' : '返回' }}</text>
           </view>
         </slot>
       </view>

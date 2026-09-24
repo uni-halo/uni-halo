@@ -131,7 +131,7 @@ function handlePreview(index: number, list: { url: string }[]) {
     >
       <view
         v-for="(image, mediumIndex) in moment.images" :key="mediumIndex"
-        class="box-border h-24 w-full" :class="[moment.images.length === 1 ? 'h-42' : '']"
+        class="box-border w-full" :class="[moment.images.length === 1 ? 'h-42' : 'h-24']"
       >
         <wd-img
           mode="aspectFill" class="h-full w-full" :radius="8" :src="image.url"
