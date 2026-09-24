@@ -252,7 +252,7 @@ onBeforeUnmount(() => {
 
     <!-- 情侣信息 -->
     <view class="relative z-10 box-border h-92 w-screen flex flex-col items-center justify-center pt-12">
-      <view class="relative z-10 h-full w-full flex items-center justify-center rounded-xl">
+      <view class="relative z-10 box-border h-full w-full flex items-center justify-center rounded-xl pt-6">
         <view class="boy uh-boy-offset flex flex-col items-center justify-center">
           <wd-avatar
             :src="checkAvatarUrl(loveConfig.loveInfo?.boyAvatar)"
