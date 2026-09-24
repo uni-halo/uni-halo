@@ -425,7 +425,7 @@ onReachBottom(() => {
       <template #left>
         <view class="flex items-center gap-x-1">
           <uh-button
-            custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 text-xs !rounded-lg"
+            custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
             @click="handleOpenYearPicker"
           >
             {{ selectedMonth.split('-')[0] }}

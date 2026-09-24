@@ -235,7 +235,7 @@ onReachBottom(() => {
     >
       <template #left>
         <uh-button
-          custom-class="box-border uh-global-card-glass border !inline-flex text-gray-900 !px-1.5 !py-1 text-xs !rounded-lg"
+          custom-class="box-border uh-global-card-glass border !inline-flex text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
           @click="visiblePhotoName = !visiblePhotoName"
         >
           {{ visiblePhotoName ? '隐藏' : '显示' }}名称
