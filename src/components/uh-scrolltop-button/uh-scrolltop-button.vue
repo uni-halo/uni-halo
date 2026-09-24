@@ -16,6 +16,7 @@ function handleScrollTop() {
 // 黑名单模式
 const balckList = [
   'pages/auth/login',
+  'pages/auth/register',
   'pages/index/index',
   'pages/tabbar/blogger/blogger',
   'pages/maintenance/maintenance',
@@ -24,6 +25,7 @@ const balckList = [
   'pages-blog/contact/contact',
   'pages-blog/about-project/about-project',
   'pages/auth/wechat-bind',
+  'pages-admin/my-profile/my-profile',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

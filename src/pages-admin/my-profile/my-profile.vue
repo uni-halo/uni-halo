@@ -503,9 +503,9 @@ onShow(() => {
             mode="aspectFill"
           />
           <view
-            class="uh-translate-center absolute bottom-1/2 right-1/2 h-6 w-6 flex items-center justify-center"
+            class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center"
           >
-            <wd-icon name="camera" size="32rpx" custom-class="text-gray-500" />
+            <wd-icon name="camera" size="32rpx" custom-class="text-white" />
           </view>
           <view
             v-if="avatarUploading"
@@ -526,9 +526,9 @@ onShow(() => {
             mode="aspectFill"
           />
           <view
-            class="uh-translate-center absolute bottom-1/2 right-1/2 h-6 w-6 flex items-center justify-center"
+            class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center"
           >
-            <wd-icon name="camera" size="32rpx" custom-class="text-gray-500" />
+            <wd-icon name="camera" size="32rpx" custom-class="text-white" />
           </view>
           <view
             v-if="avatarUploading"
@@ -674,7 +674,7 @@ onShow(() => {
             <text class="shrink-0 text-sm text-gray-900">修改密码</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
               <text class="text-2xs text-gray-400">{{ passwordSet ? '已设置密码' : '未设置密码' }}</text>
-              <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
+              <wd-icon name="edit" size="28rpx" custom-class="text-gray-400" />
             </view>
           </view>
         </view>
@@ -691,10 +691,10 @@ onShow(() => {
       </view>
     </view>
 
-    <!-- 修改密码弹层 -->
+    <!-- 修改密码弹层(输入中途误触遮罩不应丢弃已填内容,禁用遮罩关闭) -->
     <uh-glass-popup
       v-model="passwordSheet" :hide-when-close="true" position="bottom" :z-index="100"
-      custom-class="rounded-xl"
+      :close-on-click-modal="false" custom-class="rounded-xl"
     >
       <!-- 弹窗容器 -->
       <view class="box-border w-full flex flex-col gap-y-3 p-3">
@@ -742,7 +742,7 @@ onShow(() => {
     <!-- 邮箱验证弹层(新邮箱 → 验证码 + 当前密码,验证通过后服务端写入 spec.email) -->
     <uh-glass-popup
       v-model="emailSheet" :hide-when-close="true" position="bottom" :z-index="100"
-      custom-class="rounded-xl"
+      :close-on-click-modal="false" custom-class="rounded-xl"
     >
       <view class="box-border w-full flex flex-col gap-y-3 p-3">
         <view class="flex items-center justify-between">

@@ -7,6 +7,7 @@
 import { computed, ref } from 'vue'
 import { getLoveAlbumAdmin, removeLoveAlbumPhoto, updateLoveAlbum, updateLoveAlbumPhotos } from '@/api/uni-admin'
 import { useHaloUpload } from '@/hooks/useHaloUpload'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { checkThumbnailUrl } from '@/utils/url'
@@ -27,7 +28,7 @@ const currentAlbum = ref<ILoveAlbum | null>(null)
 /** console 详情返回的原始 spec（整体更新时回传，避免 cover 等字段丢失） */
 const currentSpec = ref<Record<string, any>>({})
 const currentPhotos = ref<ILovePhoto[]>([])
-const detailLoading = ref(false)
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 /** 批量选图并上传，成功后一次性整体提交到相册（PUT /photos，避免逐张 POST 的并发写冲突） */
 const { list: pendingPhotos, choose: choosePhotos, remove: removePending, uploading, urls: photoUrls } = useHaloUpload({ maxCount: 18 })
@@ -41,7 +42,7 @@ const pendingCount = computed(() => pendingPhotos.value.filter(i => i.status !==
 async function openDetail(album: ILoveAlbum) {
   const name = album.metadata?.name || album.name || ''
   isShow.value = true
-  detailLoading.value = true
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   currentAlbum.value = album
   try {
     // console API 返回完整资源结构 { metadata, spec: { displayName, photos, ... }, status }
@@ -55,13 +56,11 @@ async function openDetail(album: ILoveAlbum) {
       photos: data.spec?.photos || [],
     }
     currentPhotos.value = data.spec?.photos || []
+    updateLoadingStatus(currentPhotos.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
   }
   catch (err: any) {
     uni.showToast({ title: err?.message || '加载相册失败', icon: 'none' })
     isShow.value = false
-  }
-  finally {
-    detailLoading.value = false
   }
 }
 
@@ -110,7 +109,7 @@ async function handleDeletePhoto(photo: ILovePhoto) {
   }
   try {
     // 照片无服务端 name 时按 url 过滤，整体更新 spec.photos 删除
-	// 可能后续提供
+    // 可能后续提供
     const restPhotos = currentPhotos.value.filter(p => (photo.name ? p.name !== photo.name : p.url !== photo.url))
     if (photo.name) {
       await removeLoveAlbumPhoto(name, photo.name)
@@ -144,7 +143,7 @@ defineExpose({ openDetail })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-xl" @close="handleClose(false)">
+  <uh-glass-popup v-model="isShow" :z-index="100" position="bottom" :close-on-click-modal="false" custom-class="!border rounded-xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
@@ -161,10 +160,13 @@ defineExpose({ openDetail })
       <scroll-view :scroll-y="true" :show-scrollbar="false" class="box-border max-h-[60vh]">
         <!-- 滚动内部容器 -->
         <view class="w-full flex flex-col gap-y-3">
-          <view v-if="detailLoading" class="mt-10 text-center text-sm text-gray-400">
-            加载中…
-          </view>
-          <view v-else class="grid grid-cols-3 gap-2">
+          <!-- 加载/空态：空相册时提示后仍显示选图入口 -->
+          <uh-data-loading
+            v-if="loadingStatus !== DataLoadingStatusEnum.Success" :use-refresh-button="false" theme="love"
+            :loading-status="loadingStatus" empty-text="这个相册还没有照片，点击下方相机图标添加吧~"
+            min-height="24vh"
+          />
+          <view v-if="loadingStatus !== DataLoadingStatusEnum.Loading" class="grid grid-cols-3 gap-2">
             <view v-for="(photo, index) in currentPhotos" :key="photo.url" class="relative aspect-square overflow-hidden rounded-lg">
               <image :src="checkThumbnailUrl(photo.url || '', true)" class="h-full w-full" mode="aspectFill" @click="handlePreviewPhoto(index)" />
               <view class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50 text-white" @click.stop="handleDeletePhoto(photo)">

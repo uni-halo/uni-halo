@@ -81,12 +81,12 @@ function buildCaptcha(): ICaptchaQuery | undefined {
     : undefined
 }
 
-/** 弹层每次打开时重置验证码与倒计时(邮箱保留,便于重试时不必重填) */
+/** 弹层每次打开时重置验证码(邮箱保留,便于重试时不必重填);
+ * 倒计时刻意不清零:关闭重开不能绕过 60s 重发间隔 */
 watch(() => props.modelValue, (visible) => {
   if (visible) {
     emailCode.value = ''
     resetCaptcha()
-    stopCountdown()
   }
 })
 
@@ -187,7 +187,8 @@ function close() {
 <template>
   <uh-glass-popup
     :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="100"
-    custom-class="rounded-xl" @update:model-value="value => emit('update:modelValue', value)"
+    :close-on-click-modal="false" custom-class="rounded-xl"
+    @update:model-value="value => emit('update:modelValue', value)"
   >
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <view class="flex items-center justify-between">
@@ -205,7 +206,7 @@ function close() {
           />
           <uh-button
             class="shrink-0"
-            custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900"
+            custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900 min-w-24"
             :class="codeCountdown > 0 || codeSending ? 'opacity-60' : ''"
             @action-click="sendCode"
           >
@@ -214,7 +215,7 @@ function close() {
         </view>
         <view v-if="captchaSrc" class="flex items-center gap-x-2">
           <wd-input
-            v-model="captchaCode" custom-class="uh-profile-input flex-1 !rounded-lg" prefix-icon="shield"
+            v-model="captchaCode" custom-class="uh-profile-input flex-1 !rounded-lg" prefix-icon="image"
             no-border placeholder="图形验证码" clearable :disabled="submitting || codeSending"
           />
           <image

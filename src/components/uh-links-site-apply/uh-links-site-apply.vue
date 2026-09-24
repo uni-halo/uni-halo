@@ -112,7 +112,7 @@ watch(() => props.show, (val) => {
 
 <template>
   <uh-glass-popup
-    v-model="isShow" :z-index="100" position="bottom" custom-class="!border rounded-2xl"
+    v-model="isShow" :z-index="100" position="bottom" :close-on-click-modal="false" custom-class="!border rounded-2xl"
     @close="handleClose(false)"
   >
     <!-- 弹窗容器 -->

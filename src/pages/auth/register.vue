@@ -381,17 +381,19 @@ function goBack() {
                   prefix-icon="message" no-border placeholder="请输入邮箱验证码" :disabled="loading"
                   @confirm="doRegister"
                 />
-                <button
-                  class="send-code-btn shrink-0"
-                  :disabled="codeSending || codeCountdown > 0 || loading" @click="sendEmailCode"
+                <uh-button
+                  class="shrink-0"
+                  custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900"
+                  :class="codeCountdown > 0 || codeSending ? 'opacity-60' : ''"
+                  @action-click="sendEmailCode"
                 >
-                  {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : (codeSending ? '发送中...' : '发送验证码') }}
-                </button>
+                  {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : (codeSending ? '发送中' : '发送验证码') }}
+                </uh-button>
               </view>
               <view v-if="captchaSrc" class="mt-3 flex items-center gap-x-2">
                 <wd-input
                   v-model="captchaCode" custom-class="uh-register-input flex-1"
-                  prefix-icon="shield" no-border placeholder="图形验证码" :disabled="loading"
+                  prefix-icon="image" no-border placeholder="图形验证码" :disabled="loading"
                 />
                 <image
                   :src="captchaSrc" class="h-9 w-24 shrink-0 rounded-lg border border-gray-200"
@@ -470,26 +472,6 @@ function goBack() {
   padding: 0 24rpx;
   background-color: rgb(255 255 255 / 65%);
   border-radius: 24rpx;
-}
-
-.send-code-btn {
-  height: 88rpx;
-  padding: 0 28rpx;
-  font-size: 26rpx;
-  line-height: 84rpx;
-  color: rgb(31 41 55 / 85%);
-  background-color: rgb(255 255 255 / 65%);
-  border: 2rpx solid rgb(0 0 0 / 12%);
-  border-radius: 24rpx;
-
-  &::after {
-    border: none;
-  }
-
-  &[disabled] {
-    color: rgb(0 0 0 / 35%);
-    background-color: rgb(255 255 255 / 45%);
-  }
 }
 
 /* 协议勾选圆圈(玻璃拟态配色,选中填充主题色) */

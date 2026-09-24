@@ -11,6 +11,8 @@ import {
 } from '@/api/notification'
 import type { INotification } from '@/api/notification'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { useDialog } from '@wot-ui/ui'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { useTokenStore } from '@/store/token'
@@ -30,6 +32,7 @@ const { height: offsetTop } = useNavbarSticky()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const tokenStore = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
+const dialog = useDialog()
 const PAGE_SIZE = 20
 
 /** Tab：全部 / 未读（未读走服务端 fieldSelector 过滤） */
@@ -205,6 +208,18 @@ async function handleBatchDelete() {
     return
   }
   try {
+    await dialog.confirm({
+      title: '批量删除通知',
+      msg: `删除后不可恢复，确定删除选中的 ${names.length} 条通知吗？`,
+      zIndex: 9999,
+      confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+      cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+    })
+  }
+  catch {
+    return
+  }
+  try {
     await Promise.all(names.map(name => deleteNotification(userInfo.value.username, name)))
     uni.showToast({ icon: 'none', title: `已删除 ${names.length} 条` })
     selectedNames.value = []
@@ -220,33 +235,35 @@ async function handleBatchDelete() {
 }
 
 /** 单条删除（带确认） */
-function handleDeleteOne(item: INotification) {
-  uni.showModal({
-    title: '删除通知',
-    content: '删除后不可恢复，确定删除该条通知吗？',
-    confirmColor: '#ef4444',
-    success: async (res) => {
-      if (!res.confirm) {
-        return
-      }
-      try {
-        await deleteNotification(userInfo.value.username, item.metadata.name)
-        allItems.value = allItems.value.filter(x => x.metadata.name !== item.metadata.name)
-        totalCount.value = Math.max(0, totalCount.value - 1)
-        if (item.spec.unread) {
-          unreadCount.value = Math.max(0, unreadCount.value - 1)
-        }
-        if (allItems.value.length === 0) {
-          updateLoadingStatus(DataLoadingStatusEnum.Empty)
-        }
-        uni.showToast({ icon: 'none', title: '已删除' })
-      }
-      catch (error: any) {
-        console.error('删除通知失败:', error)
-        uni.showToast({ icon: 'none', title: error?.data?.message || error?.message || '删除失败，请稍后再试' })
-      }
-    },
-  })
+async function handleDeleteOne(item: INotification) {
+  try {
+    await dialog.confirm({
+      title: '删除通知',
+      msg: '删除后不可恢复，确定删除该条通知吗？',
+      zIndex: 9999,
+      confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+      cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+    })
+  }
+  catch {
+    return
+  }
+  try {
+    await deleteNotification(userInfo.value.username, item.metadata.name)
+    allItems.value = allItems.value.filter(x => x.metadata.name !== item.metadata.name)
+    totalCount.value = Math.max(0, totalCount.value - 1)
+    if (item.spec.unread) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    }
+    if (allItems.value.length === 0) {
+      updateLoadingStatus(DataLoadingStatusEnum.Empty)
+    }
+    uni.showToast({ icon: 'none', title: '已删除' })
+  }
+  catch (error: any) {
+    console.error('删除通知失败:', error)
+    uni.showToast({ icon: 'none', title: error?.data?.message || error?.message || '删除失败，请稍后再试' })
+  }
 }
 
 /* ---------------- 已读交互 ---------------- */
@@ -505,6 +522,7 @@ onPullDownRefresh(() => {
       </view>
     </view>
   </view>
+  <wd-dialog />
 </template>
 
 <style scoped lang="scss">

@@ -95,10 +95,13 @@ export function markNotificationAsRead(username: string, name: string) {
 
 /**
  * 删除单条通知
+ * 注意:alova 的 Delete 签名是 (url, data, config),config 必须作第三参,
+ * 误作第二参会变成请求体导致 needAuthToken 丢失、token 不携带(403)
  */
 export function deleteNotification(username: string, name: string) {
   return http.Delete<IResponse<INotification>>(
     `${UC_NOTIFICATION_API}/${username}/notifications/${name}`,
+    undefined,
     notificationMeta(),
   )
 }

@@ -27,6 +27,8 @@ interface IProfileEntry {
   icon: string
   label: string
   path: NavigateToOptions['url']
+  /** 入口显隐开关（false 时整体过滤，用于暂时下线某入口） */
+  visible?: boolean
 }
 
 interface IProps {
@@ -150,7 +152,8 @@ const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
   const entries: Array<IProfileEntry> = [
     { key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
     { key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile' },
-    { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile' },
+    // 暂时隐藏个人主页入口（visible: false 即整体过滤下线）
+    { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile', visible: false },
   ]
   // 消息通知需登录（官方通知接口走 PAT）
   if (updateNowTime().hasLogin) {
@@ -162,7 +165,7 @@ const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
       path: '/pages-admin/notifications/notifications',
     })
   }
-  return entries
+  return entries.filter(entry => entry.visible !== false)
 })
 
 /** 未读通知数（弹窗打开时刷新，用于入口红点徽标） */
