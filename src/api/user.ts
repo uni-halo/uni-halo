@@ -3,7 +3,11 @@
  *
  * 走 Halo Console 自定义端点（api.console.halo.run），需登录 token：
  * - PUT /users/- 仅更新 displayName/bio/phone（服务端不处理 avatar/password）；
- * - 头像必须走专用 multipart 端点 POST /users/{name}/avatar（服务端处理附件与头像注解）。
+ * - 头像必须走专用 multipart 端点 POST /users/-/avatar（"-" = 当前登录用户，
+ *   服务端处理附件与头像注解）；
+ * - 邮箱验证走官方端点 POST /users/-/send-email-verification-code（新邮箱暂存
+ *   EMAIL_TO_VERIFY 注解）与 POST /users/-/verify-email（当前密码 + 验证码确认，
+ *   成功后才写入 spec.email 并置 emailVerified=true）。
  *
  * 注意（图片地址规范）：接口返回的 avatar 为服务端原始地址（允许相对路径），
  * 一律原样写入 store，渲染时经 checkAvatarUrl() 补全，保证博客迁移后仍可访问。
@@ -29,6 +33,8 @@ export interface IHaloUser {
     displayName?: string
     avatar?: string
     email?: string
+    /** 邮箱是否已通过验证（官方 verify-email 成功后置 true） */
+    emailVerified?: boolean
     bio?: string
     phone?: string
     [key: string]: unknown
@@ -64,17 +70,44 @@ export function updateUserProfile(user: IHaloUser) {
 }
 
 /**
+ * 发送邮箱验证码（官方端点，验证码发往新邮箱，10 分钟有效、最多 5 次尝试）
+ * 服务端把新邮箱暂存到 User 的 EMAIL_TO_VERIFY 注解，验证通过后才真正替换 spec.email；
+ * 若新邮箱与当前已验证邮箱相同会报 "Email already verified."
+ */
+export function sendEmailVerificationCode(email: string) {
+  return http.Post<IResponse<null>>(
+    `${CONSOLE_USER_API}/-/send-email-verification-code`,
+    { email },
+    userMeta(),
+  )
+}
+
+/**
+ * 验证新邮箱（官方端点）：当前密码 + 验证码双重确认；
+ * 成功后服务端把 EMAIL_TO_VERIFY 注解中的邮箱写入 spec.email 并置 emailVerified=true。
+ * 未自主设置过密码的账号（微信自动注册随机密码）无法通过密码校验，需先「修改密码」。
+ */
+export function verifyEmail(password: string, code: string) {
+  return http.Post<IResponse<null>>(
+    `${CONSOLE_USER_API}/-/verify-email`,
+    { password, code },
+    userMeta(),
+  )
+}
+
+/**
  * 上传头像（multipart，uni.uploadFile 直传；token 由 uploadFile 拦截器按
  * meta.needAuthToken 携带）。注意：Halo 服务端仅写入头像注解，spec.avatar
  * 由 User Reconciler 异步回填——响应里的 spec.avatar 是旧值，调用方须轮询
  * profile 刷新，不能直接采信本次响应。
- * @param username 当前登录用户名（metadata.name）
- * @param filePath 本地临时文件路径
+ * 路径固定 users/-/avatar（"-" = 当前登录用户）：内置自权规则
+ * role-template-own-user-info 对 users/avatar 的 resourceNames 是字面量 "-"，
+ * 传真实用户名会因匹配不上而 403，传 "-" 与规则及服务端 getUserOrSelf 语义一致。
  */
-export function uploadUserAvatar(username: string, filePath: string): Promise<IHaloUser> {
+export function uploadUserAvatar(filePath: string): Promise<IHaloUser> {
   return new Promise((resolve, reject) => {
     uni.uploadFile({
-      url: `${CONSOLE_USER_API}/${username}/avatar`,
+      url: `${CONSOLE_USER_API}/-/avatar`,
       filePath,
       name: 'file',
       meta: { needAuthToken: true },

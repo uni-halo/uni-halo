@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { onPageScroll, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useDialog } from '@wot-ui/ui'
@@ -16,8 +16,10 @@ import type { IMyWechatBinding } from '@/api/auth'
 import {
   changeMyPassword,
   getCurrentUserDetail,
+  sendEmailVerificationCode,
   updateUserProfile,
   uploadUserAvatar,
+  verifyEmail,
 } from '@/api/user'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useTokenStore } from '@/store/token'
@@ -26,6 +28,7 @@ import { isWechat } from '@/utils/platform'
 import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
+import { isValidEmail } from '@/utils/validate'
 
 definePage({
   style: {
@@ -42,9 +45,9 @@ const { userInfo } = storeToRefs(userStore)
 
 const isAdmin = computed(() => userInfo.value.roles?.includes('super-role'))
 
-/** 统一提取报错文案(插件端错误体在 error.data.message) */
+/** 统一提取报错文案(插件端错误体在 error.data.detail) */
 function errText(error: any, fallback: string) {
-  return error?.data?.message || error?.message || fallback
+  return error?.data?.detail || error?.data?.message || error?.message || fallback
 }
 
 /**
@@ -81,20 +84,26 @@ function onAvatarPicked(filePath: string) {
 /** 微信端:open-type="chooseAvatar" 原生选择回调(微信头像/相册/拍照) */
 function onWxAvatarChosen(e: { detail: { avatarUrl: string } }) {
   const url = e.detail?.avatarUrl
-  if (url) { onAvatarPicked(url) }
+  if (url) {
+    onAvatarPicked(url)
+  }
 }
 // #endif
 
 // #ifndef MP-WEIXIN
 /** 非微信端:相册/相机二选一 */
 function chooseAvatar() {
-  if (avatarUploading.value) { return }
+  if (avatarUploading.value) {
+    return
+  }
   uni.chooseImage({
     count: 1,
     sourceType: ['album', 'camera'],
     success: (res) => {
       const path = res.tempFilePaths?.[0]
-      if (path) { onAvatarPicked(path) }
+      if (path) {
+        onAvatarPicked(path)
+      }
     },
   })
 }
@@ -111,7 +120,7 @@ async function doUploadAvatar(filePath: string) {
   avatarUploading.value = true
   const prevAvatar = userInfo.value.avatar || ''
   try {
-    await uploadUserAvatar(userInfo.value.username, filePath)
+    await uploadUserAvatar(filePath)
     // 轮询 profile 等待 Reconciler 回填 spec.avatar(最多 ~3s)
     let refreshed = false
     for (let i = 0; i < 5; i++) {
@@ -264,6 +273,109 @@ async function savePassword() {
   }
 }
 
+/* ---------------- 邮箱验证/换绑 ---------------- */
+/* 官方链路：POST users/-/send-email-verification-code 把新邮箱暂存 EMAIL_TO_VERIFY
+ * 注解并把验证码发往新邮箱；POST users/-/verify-email 以「当前密码 + 验证码」
+ * 双重确认，成功后服务端才把新邮箱写入 spec.email 并置 emailVerified=true。 */
+const emailSheet = ref(false)
+const emailInfo = ref({ email: '', verified: false })
+const emailDraft = ref('')
+const emailCode = ref('')
+const emailPassword = ref('')
+const emailSubmitting = ref(false)
+const emailCodeSending = ref(false)
+const emailCodeCountdown = ref(0)
+let emailCodeTimer: ReturnType<typeof setInterval> | null = null
+
+async function fetchEmailInfo() {
+  try {
+    const res = await getCurrentUserDetail()
+    emailInfo.value = {
+      email: res.data?.user?.spec?.email || '',
+      verified: res.data?.user?.spec?.emailVerified === true,
+    }
+  }
+  catch (error) {
+    console.error('获取邮箱信息失败:', error)
+  }
+}
+
+function openEmailSheet() {
+  emailDraft.value = emailInfo.value.email || userInfo.value.email || ''
+  emailCode.value = ''
+  emailPassword.value = ''
+  emailSheet.value = true
+}
+
+/** 发送验证码到新邮箱 */
+async function sendEmailCode() {
+  const value = emailDraft.value.trim()
+  if (!value || !isValidEmail(value)) {
+    uni.showToast({ icon: 'none', title: '请填写正确的邮箱' })
+    return
+  }
+  if (emailCodeSending.value || emailCodeCountdown.value > 0) {
+    return
+  }
+  emailCodeSending.value = true
+  try {
+    await sendEmailVerificationCode(value)
+    uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱' })
+    emailCodeCountdown.value = 60
+    emailCodeTimer = setInterval(() => {
+      emailCodeCountdown.value--
+      if (emailCodeCountdown.value <= 0) {
+        clearInterval(emailCodeTimer!)
+        emailCodeTimer = null
+      }
+    }, 1000)
+  }
+  catch (error: any) {
+    console.error('发送邮箱验证码失败:', error)
+    uni.showToast({ icon: 'none', title: errText(error, '验证码发送失败，请稍后重试') })
+  }
+  finally {
+    emailCodeSending.value = false
+  }
+}
+
+/** 验证新邮箱（当前密码 + 验证码双重确认） */
+async function submitEmailVerify() {
+  const value = emailDraft.value.trim()
+  if (!value || !isValidEmail(value)) {
+    uni.showToast({ icon: 'none', title: '请填写正确的邮箱' })
+    return
+  }
+  if (!emailCode.value.trim()) {
+    uni.showToast({ icon: 'none', title: '请输入邮箱验证码' })
+    return
+  }
+  if (!emailPassword.value) {
+    uni.showToast({ icon: 'none', title: '请输入当前密码' })
+    return
+  }
+  emailSubmitting.value = true
+  try {
+    await verifyEmail(emailPassword.value, emailCode.value.trim())
+    emailSheet.value = false
+    uni.showToast({ icon: 'none', title: '邮箱验证成功' })
+    await Promise.all([fetchEmailInfo(), userStore.fetchUserInfo()])
+  }
+  catch (error: any) {
+    console.error('邮箱验证失败:', error?.data?.detail)
+    uni.showToast({ icon: 'none', title: errText(error, '邮箱验证失败') })
+  }
+  finally {
+    emailSubmitting.value = false
+  }
+}
+
+onUnmounted(() => {
+  if (emailCodeTimer) {
+    clearInterval(emailCodeTimer)
+  }
+})
+
 /* ---------------- 微信绑定 ---------------- */
 const binding = ref<IMyWechatBinding | null>(null)
 const bindingLoading = ref(false)
@@ -364,6 +476,8 @@ onShow(() => {
   // 拉最新 profile 回显（头像/昵称存原始地址，渲染时 checkAvatarUrl 补全）
   userStore.fetchUserInfo().catch(() => { })
   fetchBinding()
+  // 邮箱与验证状态（store 摘要不含 emailVerified，走 console users/- 补齐）
+  fetchEmailInfo()
 })
 </script>
 
@@ -389,9 +503,9 @@ onShow(() => {
             mode="aspectFill"
           />
           <view
-            class="uh-global-card-glass absolute bottom-1 right-1 h-6 w-6 flex items-center justify-center border rounded-full"
+            class="uh-translate-center absolute bottom-1/2 right-1/2 h-6 w-6 flex items-center justify-center"
           >
-            <wd-icon name="camera" size="24rpx" custom-class="text-gray-500" />
+            <wd-icon name="camera" size="32rpx" custom-class="text-gray-500" />
           </view>
           <view
             v-if="avatarUploading"
@@ -412,9 +526,9 @@ onShow(() => {
             mode="aspectFill"
           />
           <view
-            class="uh-global-card-glass absolute bottom-1 right-1 h-6 w-6 flex items-center justify-center border rounded-full"
+            class="uh-translate-center absolute bottom-1/2 right-1/2 h-6 w-6 flex items-center justify-center"
           >
-            <wd-icon name="camera" size="24rpx" custom-class="text-gray-500" />
+            <wd-icon name="camera" size="32rpx" custom-class="text-gray-500" />
           </view>
           <view
             v-if="avatarUploading"
@@ -494,12 +608,19 @@ onShow(() => {
               </text>
             </view>
           </view>
-          <!-- 邮箱 -->
-          <view class="flex items-center gap-x-3 px-4 py-3">
+          <!-- 邮箱(点击打开验证/换绑弹层;验证状态来自 console users/- 的 emailVerified) -->
+          <view class="flex items-center gap-x-3 px-4 py-3" @click="openEmailSheet">
             <wd-icon name="email" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">邮箱</text>
-            <view class="flex flex-1 items-center justify-end">
-              <text class="truncate text-2xs text-gray-500">{{ userInfo.email || '-' }}</text>
+            <view class="min-w-0 flex flex-1 items-center justify-end gap-x-2">
+              <text
+                class="shrink-0 rounded-full px-2 py-0.5 text-20rpx"
+                :class="emailInfo.verified ? 'bg-secondary text-[#4d7c0f]' : 'bg-orange-400/10 text-orange-500'"
+              >
+                {{ emailInfo.verified ? '已验证' : '未验证' }}
+              </text>
+              <text class="truncate text-2xs text-gray-500">{{ emailInfo.email || userInfo.email || '-' }}</text>
+              <wd-icon name="edit" size="28rpx" custom-class="shrink-0 text-gray-400" />
             </view>
           </view>
         </view>
@@ -570,7 +691,7 @@ onShow(() => {
       </view>
     </view>
 
-    <!-- 修改密码弹层(底部玻璃弹层,取消/确认) -->
+    <!-- 修改密码弹层 -->
     <uh-glass-popup
       v-model="passwordSheet" :hide-when-close="true" position="bottom" :z-index="100"
       custom-class="rounded-xl"
@@ -583,16 +704,16 @@ onShow(() => {
         </view>
         <view class="flex flex-col gap-y-3">
           <wd-input
-            v-if="passwordSet" v-model="oldPassword" custom-class="uh-profile-input" show-password
-            prefix-icon="lock" no-border placeholder="请输入原密码" :disabled="passwordSaving"
+            v-if="passwordSet" v-model="oldPassword" custom-class="uh-profile-input !rounded-lg" show-password
+            prefix-icon="lock" no-border placeholder="请输入原密码" clearable :disabled="passwordSaving"
           />
           <wd-input
-            v-model="newPassword" custom-class="uh-profile-input" show-password prefix-icon="lock"
-            no-border placeholder="请输入新密码(至少 6 位)" :disabled="passwordSaving"
+            v-model="newPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
+            no-border placeholder="请输入新密码(至少 6 位)" clearable :disabled="passwordSaving"
           />
           <wd-input
-            v-model="confirmPassword" custom-class="uh-profile-input" show-password prefix-icon="lock"
-            no-border placeholder="请再次输入新密码" :disabled="passwordSaving"
+            v-model="confirmPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
+            no-border placeholder="请再次输入新密码" clearable :disabled="passwordSaving"
           />
           <text v-if="!passwordSet" class="text-xs text-gray-600">
             微信自动注册的账号未自主设置过密码，无需原密码可直接设置，设置后请牢记新密码。
@@ -613,6 +734,64 @@ onShow(() => {
             :class="passwordSaving ? 'opacity-60' : ''" @action-click="savePassword"
           >
             {{ passwordSaving ? '保存中' : '确定' }}
+          </uh-button>
+        </view>
+      </view>
+    </uh-glass-popup>
+
+    <!-- 邮箱验证弹层(新邮箱 → 验证码 + 当前密码,验证通过后服务端写入 spec.email) -->
+    <uh-glass-popup
+      v-model="emailSheet" :hide-when-close="true" position="bottom" :z-index="100"
+      custom-class="rounded-xl"
+    >
+      <view class="box-border w-full flex flex-col gap-y-3 p-3">
+        <view class="flex items-center justify-between">
+          <text class="text-md font-bold">{{ emailInfo.verified ? '修改邮箱' : '验证邮箱' }}</text>
+        </view>
+        <view class="flex flex-col gap-y-3">
+          <wd-input
+            v-model="emailDraft" custom-class="uh-profile-input !rounded-lg" prefix-icon="email"
+            no-border placeholder="请输入新邮箱" clearable :disabled="emailSubmitting || emailCodeSending"
+          />
+          <text class="text-xs text-gray-600">
+            说明：@example.com 是示例邮箱，请更换自己的邮箱。
+          </text>
+          <view class="flex items-center gap-x-2">
+            <wd-input
+              v-model="emailCode" custom-class="uh-profile-input flex-1 !rounded-lg" prefix-icon="message"
+              no-border placeholder="请输入邮箱验证码" clearable :disabled="emailSubmitting"
+            />
+            <uh-button
+              class="shrink-0"
+              custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900"
+              :class="emailCodeCountdown > 0 || emailCodeSending ? 'opacity-60' : ''"
+              @action-click="sendEmailCode"
+            >
+              {{ emailCodeCountdown > 0 ? `${emailCodeCountdown}s 后重发` : (emailCodeSending ? '发送中' : '发送验证码') }}
+            </uh-button>
+          </view>
+          <wd-input
+            v-model="emailPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
+            no-border placeholder="请输入当前密码" clearable :disabled="emailSubmitting"
+          />
+          <text class="text-xs text-gray-600">
+            验证码将发送到新邮箱，10 分钟内有效；验证需当前密码确认身份，未设置过密码的账号请先在「修改密码」中设置。
+          </text>
+        </view>
+        <view class="box-border w-full flex items-center justify-center gap-x-3">
+          <uh-button
+            class="flex-1"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+            @click="emailSheet = false"
+          >
+            取消
+          </uh-button>
+          <uh-button
+            class="flex-1"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
+            :class="emailSubmitting ? 'opacity-60' : ''" @action-click="submitEmailVerify"
+          >
+            {{ emailSubmitting ? '验证中' : '确定' }}
           </uh-button>
         </view>
       </view>

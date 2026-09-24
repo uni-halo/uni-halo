@@ -38,12 +38,12 @@ const archivesListLayout = computed(() => settings.value.archivesListLayout)
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   path: '/pages-blog/archives/archives',
 }))
 
 onShareTimeline(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   query: '',
 }))
 

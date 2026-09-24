@@ -171,12 +171,12 @@ function handlePreview(data: IPhoto) {
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   path: '/pages/tabbar/gallery/gallery',
 }))
 
 onShareTimeline(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   query: '',
 }))
 

@@ -1,32 +1,34 @@
 <script setup lang="ts">
-	defineOptions({
-		options: {
-			styleIsolation: 'apply-shared'
-		}
-	})
+defineOptions({
+  options: {
+    styleIsolation: 'apply-shared',
+  },
+})
 
-	interface IProps {
-		customClass ?: string | Array<string>;
-	}
+const props = defineProps<IProps>()
 
-	interface IEmits {
-		(e : 'click') : void;
-		(e : 'action-click') : void;
-	}
+const emits = defineEmits<IEmits>()
 
-	const props = defineProps<IProps>();
-	const emits = defineEmits<IEmits>();
+interface IProps {
+  customClass?: string | Array<string>
+}
 
-	function handleClick() {
-		emits('action-click');
-		emits('click');
-	}
+interface IEmits {
+  (e: 'click'): void
+  (e: 'action-click'): void
+}
+
+function handleClick() {
+  emits('action-click')
+  emits('click')
+}
 </script>
 
 <template>
-	<view
-		class="box-border bg-primary uh-shadow-xs text-black flex items-center justify-center text-sm px-4 py-1.5 rounded-lg"
-		:class="props.customClass" @click="handleClick">
-		<slot />
-	</view>
+  <view
+    class="uh-shadow-xs box-border flex items-center justify-center rounded-lg bg-primary px-4 py-1.5 text-sm text-black"
+    :class="props.customClass" @click="handleClick"
+  >
+    <slot />
+  </view>
 </template>

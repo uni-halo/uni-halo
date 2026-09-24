@@ -39,12 +39,12 @@ const articlesListLayout = computed(() => settings.value.articlesListLayout)
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   path: '/pages-blog/articles/articles',
 }))
 
 onShareTimeline(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   query: '',
 }))
 

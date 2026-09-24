@@ -8,7 +8,6 @@ import { checkThumbnailUrl } from '@/utils/url'
 import { sleep } from '@/utils/common'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { ICategory } from '@/api/types/halo'
 
@@ -34,12 +33,12 @@ const siteName = computed(() => haloConfigs.value.featureConfig?.profile?.appInf
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   path: '/pages/tabbar/category/category',
 }))
 
 onShareTimeline(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   query: '',
 }))
 
@@ -193,7 +192,6 @@ onReachBottom(() => {
           @click="handleToCategory(item)"
         >
           <view class="h-32 w-full">
-            <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
             <wd-img v-if="item.spec.cover" :src="item.spec.cover" class="block h-full w-full" mode="aspectFill" lazy-load>
               <template #loading>
                 <wd-loading size="64rpx" custom-class="text-primary" />

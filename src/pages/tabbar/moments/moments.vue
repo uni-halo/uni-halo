@@ -361,12 +361,12 @@ function handleToTopPage(duration = 500) {
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   path: '/pages/tabbar/moments/moments',
 }))
 
 onShareTimeline(() => ({
-  title: `${siteName.value}·${pageTitle.value}`,
+  title: `${pageTitle.value} - ${siteName.value}`,
   query: '',
 }))
 

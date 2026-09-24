@@ -161,6 +161,34 @@ export function registerByWechat(code: string) {
   )
 }
 
+/**
+ * 微信补邮箱注册(第二段,公开接口,仅微信小程序可用)
+ *
+ * 站点开启「注册必须验证邮箱」后,微信一键注册被服务端以 WECHAT_EMAIL_REQUIRED
+ * 拦下并下发票据(30 分钟 HMAC 票据),客户端补齐邮箱与验证码后凭票据完成注册,
+ * 返回结构与登录接口一致(注册即登录)。
+ *
+ * @param form.ticket    一键注册被拦时下发的注册票据
+ * @param form.email     用户填写的邮箱(验证码在提交前经 /signup/send-email-code 发往该邮箱)
+ * @param form.emailCode 邮箱验证码
+ * @param form.code      重新获取的 wx.login 一次性凭证(服务端二次校验微信身份,防票据冒用)
+ */
+export function registerByWechatEmail(form: {
+  ticket: string
+  email: string
+  emailCode: string
+  code: string
+}) {
+  return http.Post<IResponse<ILoginResult>>(
+    `${AUTH_API_BASE}/-/register/wechat-email`,
+    form,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
 /** 站点全局信息(Halo /actuator/globalinfo,匿名可访问) */
 export interface IGlobalInfo {
   allowRegistration?: boolean

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, refreshToken as _refreshToken, registerByPassword as _registerByPassword, registerByWechat as _registerByWechat, getWxCode, verifyTokenExpires } from '@/api/auth'
+import { loginByPassword as _loginByPassword, loginByWechat as _loginByWechat, logout as _logoutApi, refreshToken as _refreshToken, registerByPassword as _registerByPassword, registerByWechat as _registerByWechat, registerByWechatEmail as _registerByWechatEmail, getWxCode, verifyTokenExpires } from '@/api/auth'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { useUserStore } from './user'
 import { getCache } from '@/utils/storage'
@@ -195,11 +195,14 @@ export const useTokenStore = defineStore(
       catch (error: any) {
         const errorData = error as UniHaloError
         console.error('微信登录失败:', error)
-        const errMsg = errorData?.data?.message || '登录失败，请重试'
-        uni.showToast({
-          title: errMsg,
-          icon: 'none',
-        })
+        // 站点开启注册邮箱验证：新微信需补邮箱完成注册，页面拦截该业务码弹出
+        // 补充邮箱弹层，此处不再弹通用错误提示
+        if (errorData?.data?.code !== 'WECHAT_EMAIL_REQUIRED') {
+          uni.showToast({
+            title: errorData?.data?.message || '登录失败，请重试',
+            icon: 'none',
+          })
+        }
         throw error
       }
       finally {
@@ -258,10 +261,53 @@ export const useTokenStore = defineStore(
         })
         return result
       }
-      catch (error) {
+      catch (error: any) {
         const errorData = error as UniHaloError
         console.error('微信注册失败:', error)
-        const errMsg = errorData?.data?.message || '注册失败，请重试'
+        // 站点开启注册邮箱验证：新微信需补邮箱完成注册，页面拦截该业务码弹出
+        // 补充邮箱弹层，此处不再弹通用错误提示
+        if (errorData?.data?.code !== 'WECHAT_EMAIL_REQUIRED') {
+          uni.showToast({
+            title: errorData?.data?.message || '注册失败，请重试',
+            icon: 'none',
+          })
+        }
+        throw error
+      }
+      finally {
+        updateNowTime()
+      }
+    }
+
+    /**
+     * 微信补邮箱注册(第二段):站点开启注册邮箱验证时,一键注册被服务端以
+     * WECHAT_EMAIL_REQUIRED 拦下并下发票据,凭票据 + 邮箱 + 验证码完成注册并登录。
+     * code 由本方法内部重新获取(服务端二次校验微信身份,防票据冒用)
+     * @param ticket    一键注册被拦时下发的注册票据
+     * @param email     用户填写的邮箱
+     * @param emailCode 发往该邮箱的验证码
+     */
+    const wxRegisterByEmail = async (ticket: string, email: string, emailCode: string) => {
+      try {
+        const loginRes = await getWxCode()
+        const res = await _registerByWechatEmail({
+          ticket,
+          email,
+          emailCode,
+          code: loginRes.code,
+        })
+        const result = res.data as ILoginResult
+        await _postLogin(toSingleToken(result), result)
+        uni.showToast({
+          title: '注册成功',
+          icon: 'none',
+        })
+        return result
+      }
+      catch (error) {
+        const errorData = error as UniHaloError
+        console.error('微信补邮箱注册失败:', error)
+        const errMsg = errorData?.data?.detail || '注册失败，请重试'
         uni.showToast({
           title: errMsg,
           icon: 'none',
@@ -419,6 +465,7 @@ export const useTokenStore = defineStore(
       wxLogin,
       register,
       wxRegister,
+      wxRegisterByEmail,
       logout,
 
       // 认证状态判断（最常用的）

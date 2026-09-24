@@ -192,13 +192,11 @@ init()
 onShareAppMessage(() => ({
   title: `${appInfo.value.name}`,
   path: '/pages/index/index',
-  imageUrl: appInfo.value.logo,
 }))
 
 onShareTimeline(() => ({
   title: `${appInfo.value.name}`,
   query: '',
-  imageUrl: appInfo.value.logo,
 }))
 
 /* ---------------- 生命周期 ---------------- */

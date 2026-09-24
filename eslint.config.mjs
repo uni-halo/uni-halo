@@ -40,9 +40,8 @@ export default uniHelper({
     'jsdoc/check-param-names': 'off',
     'jsdoc/require-returns-description': 'off',
     'ts/no-empty-object-type': 'off',
+    'style/max-statements-per-line': 'off',
     'no-extend-native': 'off',
-    // uni-app 中 view 组件用 v-html 渲染服务端富文本(评论/免责声明/故事)是常规需求,关闭该规则
-    'vue/no-v-text-v-html-on-component': 'off',
     // uni 条件编译注释可能包裹 import，自动排序会破坏平台条件边界
     'perfectionist/sort-imports': 'off',
     'vue/singleline-html-element-content-newline': [
