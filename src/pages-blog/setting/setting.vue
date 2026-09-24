@@ -221,7 +221,7 @@ async function handleResetAll() {
       </template>
       <!-- 底部操作栏 -->
       <view class="box-border w-full">
-        <uh-button custom-class="uh-global-card-glass py-2 !rounded-xl" @click="handleResetAll">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass !py-2 !rounded-full" @click="handleResetAll">
           恢复默认
         </uh-button>
       </view>

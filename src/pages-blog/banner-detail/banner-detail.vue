@@ -16,6 +16,7 @@ definePage({
   style: {
     navigationBarTitleText: '轮播详情',
     navigationStyle: 'custom',
+    enablePullDownRefresh: true,
   },
 })
 
@@ -81,10 +82,17 @@ async function loadDetail() {
     const code = (err as { code?: number }).code
     updateLoadingStatus(code === 404 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Error)
   }
+  finally {
+    uni.stopPullDownRefresh()
+  }
 }
 
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
+})
+
+onPullDownRefresh(() => {
+  loadDetail()
 })
 
 onLoad((options) => {
@@ -134,8 +142,10 @@ function handleOpenLink() {
         </template>
       </wd-img>
       <!-- 无图 -->
-      <view v-else
-        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+      <view
+        v-else
+        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400"
+      >
         <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
       </view>
 
@@ -169,14 +179,14 @@ function handleOpenLink() {
       </view>
 
       <!-- 外链(平台差异,条件编译):非 APP 复制 / APP 访问 -->
-      <view v-if="hasLink" class="fixed bottom-4 left-0 right-0 box-border px-4 pb-safe">
+      <view v-if="hasLink" class="fixed bottom-0 left-0 right-0 box-border px-4 pb-safe">
         <!-- #ifndef APP-PLUS -->
-        <uh-button custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleCopyLink">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleCopyLink">
           复制原文地址
         </uh-button>
         <!-- #endif -->
         <!-- #ifdef APP-PLUS -->
-        <uh-button custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleOpenLink">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleOpenLink">
           访问链接
         </uh-button>
         <!-- #endif -->

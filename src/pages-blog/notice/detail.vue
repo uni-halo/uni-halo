@@ -15,6 +15,7 @@ definePage({
   style: {
     navigationBarTitleText: '公告详情',
     navigationStyle: 'custom',
+    enablePullDownRefresh: true,
   },
 })
 
@@ -93,10 +94,17 @@ async function loadDetail() {
     const code = (err as { code?: number }).code
     updateLoadingStatus(code === 404 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Error)
   }
+  finally {
+    uni.stopPullDownRefresh()
+  }
 }
 
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
+})
+
+onPullDownRefresh(() => {
+  loadDetail()
 })
 
 onLoad((options) => {
@@ -125,8 +133,10 @@ onLoad((options) => {
         </template>
       </wd-img>
       <!-- 无图 -->
-      <view v-else
-        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+      <view
+        v-else
+        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400"
+      >
         <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
       </view>
       <view class="text-md text-gray-900 font-bold leading-snug">
@@ -157,7 +167,7 @@ onLoad((options) => {
         />
       </view>
 
-      <view v-if="hasLink" class="fixed bottom-4 left-0 right-0 box-border px-4 pb-safe">
+      <view v-if="hasLink" class="fixed bottom-0 left-0 right-0 box-border px-4 pb-safe">
         <uh-button
           class="flex-1"
           custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium"
