@@ -15,10 +15,9 @@ export const DefaultAppConfigs: IAppConfig = {
     linkInfo: {},
   },
   safetyConfig: {},
+  /** 平台接入（当前暂无插件，保留结构供后续接入） */
   integrationConfig: {
-    pluginConfig: {
-      toolsPlugin: {},
-    },
+    pluginConfig: {},
   },
   themeConfig: {},
 }

@@ -4,9 +4,7 @@
 import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
-import { useAppConfigStore } from '@/store/appConfig'
 import { getLoveModuleToken } from '@/utils/loveModuleToken'
-import { getNologinEmail, getOpenid } from '@/utils/auth'
 import { getPersonalToken } from '@/store/token'
 import type {
   IAppConfig,
@@ -34,14 +32,11 @@ import type {
   INoticeListRes,
   INoticeListVo,
   INoticeTypeListRes,
-  IRestrictReadCheckReq,
-  IRestrictReadCheckRes,
   IUpdateCheckRes,
   IVoteDetail,
   IVoteListReq,
   IVoteListRes,
   IVoteSubmitReq,
-  RestrictReadType,
 } from './types/uni-halo'
 
 /** 评论验证码 cookie key */
@@ -360,45 +355,6 @@ export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissio
   )
 }
 
-/* ==================== 受限阅读(tools.muyin.site) ==================== */
-
-/**
- * 受限阅读检查(密码/验证码/登录/付费/评论)
- */
-export function requestRestrictReadCheck(restrictType: RestrictReadType, code: string, keyId: string) {
-  const data: IRestrictReadCheckReq = {
-    code,
-    templateType: 'post',
-    restrictType,
-    keyId,
-  }
-  return http.Post<IResponse<IRestrictReadCheckRes>>('/apis/tools.muyin.site/v1alpha1/restrict-read/check', data, {
-    headers: {
-      'Authorization': getToolsAuthorization(),
-      'Wechat-Session-Id': getOpenid(),
-      'nologin-email': getNologinEmail(),
-    },
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 创建验证码(受限阅读)
- */
-export function createVerificationCode() {
-  return http.Get<IResponse<string>>('/apis/tools.muyin.site/v1alpha1/restrict-read/create', {
-    headers: {
-      'Authorization': getToolsAuthorization(),
-      'Wechat-Session-Id': getOpenid(),
-    },
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/* ==================== 友链提交(linkssubmit.muyin.site) ==================== */
-
 /* ==================== 投票(api.vote.kunkunyu.com) ==================== */
 
 /**
@@ -520,20 +476,6 @@ export function getUptimeKumaStatus() {
 }
 
 /* ==================== 内部辅助 ==================== */
-
-/**
- * 工具类插件授权头(源自应用配置 pluginConfig.toolsPlugin.Authorization)
- */
-function getToolsAuthorization(): string {
-  return getAppConfigFromStore().integrationConfig?.pluginConfig?.toolsPlugin?.Authorization || ''
-}
-
-/**
- * 读取应用配置(Pinia store 为单一数据源;persist 恢复与 fetchConfigs 均覆盖)
- */
-function getAppConfigFromStore(): IAppConfig {
-  return useAppConfigStore().configs
-}
 
 /** 评论验证码 cookie key(供拦截器/页面使用) */
 export { COMMENT_WIDGET_CAPTCHA_COOKIES }

@@ -6,7 +6,6 @@ import { getPostByName, getPostCommentReplyList, postTrackersCounter } from '@/a
 import { useUpvote } from '@/hooks/useUpvote'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { createVerificationCode, requestRestrictReadCheck } from '@/api/uni-halo'
 import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
@@ -14,13 +13,11 @@ import { useSettingStore } from '@/store/setting'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildPostFavoriteItem } from '@/utils/favorite'
-import { checkPostRestrictRead, copyToClipboard, getRestrictReadTypeName, getShowableContent } from '@/utils/restrictRead'
 import { getDomainOnly } from '@/utils/urlParams'
 import { handleScrollToSelector } from '@/utils/page'
 import { markdownConfig } from '@/config/markdown'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IComment, IPost } from '@/api/types/halo'
-import type { RestrictReadType } from '@/api/types/uni-halo'
 
 definePage({
   style: {
@@ -49,15 +46,6 @@ const result = ref<IPost & {
   stats?: { visit?: number, upvote?: number, comment?: number }
 } | null>(null)
 
-const showContentArr = ref<string[]>([])
-const restrictReadInputCode = ref('')
-
-const passwordModal = ref({ show: false })
-const verificationCodeModal = ref({
-  show: false,
-  type: '',
-  imgUrl: '',
-})
 const commentModal = ref({
   show: false,
   isComment: false,
@@ -157,14 +145,6 @@ async function handleGetData() {
       if (openid === '' || openid === null) {
         handleGetOpenid()
       }
-
-      // 受限阅读:拆分可展示内容
-      if (checkPostRestrictRead(res.data)) {
-        showContentArr.value = getShowableContent(res.data)
-      }
-      else {
-        showContentArr.value = []
-      }
     }
     result.value = tempResult
     uni.setNavigationBarTitle({ title: '笔记详情' })
@@ -232,86 +212,6 @@ function handleTogglePostFavorite() {
   uni.showToast({ icon: 'none', title: favorited ? '收藏成功' : '已取消收藏' })
 }
 
-/* ---------------- 受限阅读 ---------------- */
-function readMore() {
-  const annotations = result.value?.metadata?.annotations
-  const restrictReadEnable = annotations?.restrictReadEnable
-  if (restrictReadEnable === 'password') {
-    passwordModal.value.show = true
-  }
-  else if (restrictReadEnable === 'code') {
-    verificationCodeModal.value.show = true
-    verificationCodeModal.value.type = 'scan'
-    verificationCodeModal.value.imgUrl = checkImageUrl(haloConfigs.value.integrationConfig?.pluginConfig?.toolsPlugin?.scanCodeUrl)
-  }
-  else if (restrictReadEnable === 'comment') {
-    handleToComment()
-  }
-  else if (restrictReadEnable === 'login') {
-    uni.showToast({ title: '前往web端登录后访问', icon: 'none' })
-  }
-  else if (restrictReadEnable === 'pay') {
-    uni.showToast({ title: '前往web端支付后访问', icon: 'none' })
-  }
-  // 两秒后复制原文链接
-  setTimeout(() => {
-    if (result.value?.status?.permalink) {
-      copyToClipboard(import.meta.env.VITE_SERVER_BASEURL + result.value.status.permalink)
-    }
-  }, 2000)
-}
-
-/** 校验密码/验证码 */
-async function restrictReadCheck() {
-  if (!result.value) {
-    return
-  }
-  if (!restrictReadInputCode.value) {
-    uni.showToast({ title: '请输入内容', icon: 'none' })
-    return
-  }
-  try {
-    const res = await requestRestrictReadCheck(
-      (result.value.metadata.annotations?.restrictReadEnable || 'password') as RestrictReadType,
-      restrictReadInputCode.value,
-      result.value.metadata.name,
-    )
-    if (res.code === 200) {
-      passwordModal.value.show = false
-      verificationCodeModal.value.show = false
-      handleGetData()
-    }
-    else {
-      uni.showToast({ title: '密码错误', icon: 'none' })
-    }
-  }
-  catch (err) {
-    console.error(err)
-  }
-}
-
-/** 获取验证码(受限阅读 code 模式) */
-async function getVerificationCode() {
-  uni.showLoading({ title: '正在获取...' })
-  try {
-    const res = await createVerificationCode()
-    if (res.code === 200) {
-      verificationCodeModal.value.show = false
-      restrictReadInputCode.value = res.data as string || ''
-      restrictReadCheck()
-    }
-    else {
-      uni.showToast({ icon: 'none', title: '操作失败，请重试！' })
-    }
-  }
-  catch (err) {
-    uni.showToast({ icon: 'none', title: (err as Error).message || '操作失败' })
-  }
-  finally {
-    uni.hideLoading()
-  }
-}
-
 /* ---------------- 评论 ---------------- */
 /** 底部悬浮评论按钮:滚动到评论区并弹出评论窗 */
 function handleToComment() {
@@ -343,9 +243,6 @@ function handleOnComment(data: { isComment: boolean, postName: string, title: st
 }
 
 function handleOnCommentModalClose(data: { refresh: boolean, isSubmit: boolean, replyTo?: string }) {
-  if (result.value?.metadata.annotations?.restrictReadEnable === 'comment') {
-    handleGetData()
-  }
   if (data.refresh && data.isSubmit) {
     // 评论成功后刷新(通过 uni.$emit 广播给 comment-list);回复时自动展开对应回复区
     uni.$emit('comment_list_refresh', data.replyTo ? { expandCommentName: data.replyTo } : undefined)
@@ -535,46 +432,14 @@ onShareTimeline(() => {
         <!-- 内容区域 -->
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
-            <!-- 受限阅读 -->
-            <template v-if="checkPostRestrictRead(result!)">
-              <view v-if="showContentArr.length === 0">
-                <uh-restrict-read-skeleton
-                  :loading="true" :lines="3"
-                  :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                  :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-                  @refresh="readMore"
-                />
-              </view>
-              <template v-else>
-                <view v-for="(showContent, showContentIndex) in showContentArr" :key="showContentIndex">
-                  <mp-html
-                    lazy-load :domain="markdownConfig.domain ?? ''"
-                    :loading-img="markdownConfig.loadingGif" scroll-table selectable
-                    :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                    :content="showContent" :markdown="true" :show-line-number="true"
-                    :show-language-name="true" copy-by-long-press
-                  />
-                  <uh-restrict-read-skeleton
-                    :loading="true" :lines="3"
-                    :tip-text="`此处内容已隐藏，「${getRestrictReadTypeName(result!)}可见」`"
-                    :button-text="getRestrictReadTypeName(result!)" button-color="#1890ff"
-                    @refresh="readMore"
-                  />
-                </view>
-              </template>
-            </template>
-
-            <!-- 正常渲染 -->
-            <template v-else>
-              <mp-html
-                :content="result?.content?.raw"
-                lazy-load :domain="markdownConfig.domain"
-                :loading-img="markdownConfig.loadingGif" scroll-table selectable
-                :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-                :markdown="true" :show-line-number="true"
-                :show-language-name="true" copy-by-long-press
-              />
-            </template>
+            <mp-html
+              :content="result?.content?.raw"
+              lazy-load :domain="markdownConfig.domain"
+              :loading-img="markdownConfig.loadingGif" scroll-table selectable
+              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
+              :markdown="true" :show-line-number="true"
+              :show-language-name="true" copy-by-long-press
+            />
           </view>
         </view>
 
@@ -647,30 +512,6 @@ onShareTimeline(() => {
         </view>
       </view>
     </view>
-
-    <!-- 密码弹窗 -->
-    <wd-dialog
-      v-model="passwordModal.show" title="验证提示" :show-cancel="true" show-confirm-button confirm-text="确定"
-      @confirm="restrictReadCheck"
-    >
-      <view class="modal-body py-4">
-        <wd-input v-model="restrictReadInputCode" placeholder="请输入密码" />
-      </view>
-    </wd-dialog>
-
-    <!-- 验证码弹窗 -->
-    <wd-dialog
-      v-model="verificationCodeModal.show" title="验证提示" :show-cancel="true" confirm-text="确定"
-      @confirm="restrictReadCheck"
-    >
-      <view class="modal-body py-4">
-        <image
-          v-if="verificationCodeModal.imgUrl" :src="verificationCodeModal.imgUrl"
-          class="modal-code-img mb-4 h-[200rpx] w-full" mode="aspectFit"
-        />
-        <wd-input v-model="restrictReadInputCode" placeholder="请输入验证码" class="mt-2" />
-      </view>
-    </wd-dialog>
 
     <!-- 评论弹窗 -->
     <uh-comment-modal
