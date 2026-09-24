@@ -362,13 +362,13 @@ defineExpose({ refresh: handleGetData })
         </text>
         <view class="flex items-center gap-2">
           <text class="text-xs text-gray-400">{{ voteData.stats?.voteCount || 0 }} 人已参与</text>
-          <text v-if="isVoted.value" class="rounded bg-secondary px-1 py-0.5 text-xs text-gray-500">已投票</text>
+          <text v-if="isVoted" class="rounded bg-secondary px-1 py-0.5 text-xs text-gray-500">已投票</text>
         </view>
       </view>
 
       <!-- 提交按钮(选择后才出现状态机;uh-button 与投票详情页同款) -->
       <view v-if="submitForm.voteData.length !== 0" class="mt-3">
-        <uh-button v-if="isVoted.value" custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full">
+        <uh-button v-if="isVoted" custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full">
           您已参与投票
         </uh-button>
         <uh-button

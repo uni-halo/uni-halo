@@ -29,7 +29,7 @@ const _customClass = computed(() => {
 </script>
 
 <template>
-  <view class="box-border flex flex-col items-center justify-center overflow-hidden rounded-full px-3 py-0.5" :class="_customClass">
+  <view class="box-border flex flex-col items-center justify-center overflow-hidden rounded-full px-3" :class="_customClass">
     <template v-if="item.iconType === 'uiLib'">
       <view class="text-primary">
         <wd-icon :name="item.icon" size="56rpx" />

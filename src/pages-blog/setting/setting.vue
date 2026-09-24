@@ -264,7 +264,7 @@ async function handleResetAll() {
 </template>
 
 <style scoped lang="scss">
-	:deep(.uh-picker-view) {
+:deep(.uh-picker-view) {
   .wd-picker-view__mask {
     background: transparent !important;
   }

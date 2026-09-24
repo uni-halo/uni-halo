@@ -126,16 +126,6 @@ function sortStories(list: IStoryCard[]): IStoryCard[] {
   return [...list].sort((a, b) => (b.priority || 0) - (a.priority || 0))
 }
 
-/** 切换日期排序:重置分页并重新请求 */
-function handleSelectSortDir(dir: 'asc' | 'desc') {
-  sortDir.value = sortDir.value === dir ? '' : dir
-  resetLoadMoreStatus()
-  queryParams.value.page = 1
-  if (loadingStatus.value === DataLoadingStatusEnum.Success) {
-    handleGetStories()
-  }
-}
-
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const queryParams = ref({ page: 1, size: 10 })
@@ -196,7 +186,7 @@ async function handleGetStories() {
       // 首屏:按 priority 排序(越大越靠前)
       stories.value = sortStories(items.map(mapStoryCard))
       await sleep(600)
-      updateLoadingStatus(items.length===0?DataLoadingStatusEnum.Empty:DataLoadingStatusEnum.Success)
+      updateLoadingStatus(items.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
       updateLoadMoreStatus({
         active: false,
         status: res.data?.hasNext ? 'loadMore' : 'noMore',
@@ -222,6 +212,16 @@ async function handleGetStories() {
   }
   finally {
     uni.stopPullDownRefresh()
+  }
+}
+
+/** 切换日期排序:重置分页并重新请求 */
+function handleSelectSortDir(dir: 'asc' | 'desc') {
+  sortDir.value = sortDir.value === dir ? '' : dir
+  resetLoadMoreStatus()
+  queryParams.value.page = 1
+  if (loadingStatus.value === DataLoadingStatusEnum.Success) {
+    handleGetStories()
   }
 }
 
@@ -486,7 +486,7 @@ onReachBottom(() => {
 </template>
 
 <style scoped>
-	.app-page {
+.app-page {
   background: linear-gradient(
     -45deg,
     rgb(247 149 51 / 10%),

@@ -246,7 +246,7 @@ onBeforeUnmount(() => {
 <template>
   <view class="min-h-screen w-screen bg-pink-50">
     <uh-navbar
-      :scroll-y="scrollY" default-title="恋爱日记" :need-placeholder="false" back-class="text-love"
+      :scroll-y="scrollY" default-title="恋爱日记" :bg-blur="2" :need-placeholder="false" back-class="text-love"
       title-color="!text-love"
     />
 

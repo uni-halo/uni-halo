@@ -26,7 +26,7 @@ function handleClick() {
 
 <template>
   <view
-    class="uh-shadow-xs box-border flex items-center justify-center rounded-lg bg-primary px-4 py-1.5 text-sm text-black"
+    class="uh-shadow-xs box-border flex items-center justify-center rounded-lg bg-primary px-4 text-sm text-black"
     :class="props.customClass" @click="handleClick"
   >
     <slot />

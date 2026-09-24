@@ -11,6 +11,8 @@ defineOptions({
 const props = withDefaults(defineProps<IProps>(), {
   useBack: true,
   useTitle: true,
+  bgBlur: 4,
+  maxAlpha: 0.80,
   needPlaceholder: true,
   backClass: 'text-gray-900',
 })
@@ -25,18 +27,19 @@ interface IProps {
   backClass?: string
   backStyle?: string
   scrollY?: number
+  bgBlur?: number
+  maxAlpha?: number
 }
 
 // 获取窗口信息
 const windowInfo = uni.getWindowInfo()
 const statusBarHeight = computed(() => windowInfo.statusBarHeight)
 
-const maxAlpha = ref(0.80)
 const customStyle = computed(() => {
-  const alpha = Math.min(props.scrollY / 360, maxAlpha.value)
+  const alpha = Math.min(props.scrollY / 360, props.maxAlpha)
   return {
     paddingTop: `${statusBarHeight.value}px`,
-    backdropFilter: 'blur(4rpx)',
+    backdropFilter: `blur(${props.bgBlur}rpx)`,
     backgroundColor: `rgba(255, 255, 255, ${alpha})`,
   }
 })
@@ -80,9 +83,17 @@ const allEntryPages = computed<string[]>(() => {
   ] as string[]
 })
 
-function handleBack() {
+function checkIsShare() {
   const currentPage = getCurrentPages()[0]
-  if (!allEntryPages.value.some(pagePath => pagePath == currentPage.route)) {
+  return !allEntryPages.value.includes(currentPage.route)
+}
+
+onMounted(() => {
+  checkIsShare()
+})
+
+function handleBack() {
+  if (checkIsShare()) {
     uni.reLaunch({
       url: `/${homePage}`,
     })
@@ -103,9 +114,10 @@ function handleBack() {
             class="uh-global-card-glass uh-shadow-xs h-8 flex items-center gap-x-2 border rounded-full px-3 text-sm"
             :class="props.backClass" :style="[props.backStyle]" @click="handleBack()"
           >
-            <wd-icon name="arrow-left" size="30rpx" />
+            <wd-icon v-if="checkIsShare()" name="home" size="30rpx" />
+            <wd-icon v-else name="arrow-left" size="30rpx" />
             <view class="h-4 w-[1px] bg-white/60" />
-            <text class="text-[26rpx] font-bold">返回</text>
+            <text class="text-[26rpx] font-bold">{{ checkIsShare() ? '返回' : '首页' }}</text>
           </view>
         </slot>
       </view>

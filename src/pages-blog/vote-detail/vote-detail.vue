@@ -6,7 +6,7 @@ import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoad
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useDialog } from '@wot-ui/ui'
-import { DIALOG_CONFIRM_BUTTON_PROPS, DIALOG_CANCEL_BUTTON_PROPS } from '@/config/dialog'
+import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
@@ -332,12 +332,12 @@ onShareTimeline(() => ({
               {{ vote.spec?.maxVotes }} 项）
             </text>
           </view>
-          <view class="options flex flex-col gap-3 w-full">
+          <view class="options w-full flex flex-col gap-3">
             <!-- PK 对抗条 -->
             <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border w-full flex">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
-                class="flex-1 radio-item" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
+                class="radio-item flex-1" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
                 :style="{ width: `${option._uh_percent}%` }"
               >
                 <view
@@ -432,7 +432,6 @@ onShareTimeline(() => ({
 </template>
 
 <style scoped lang="scss">
-  /* 已投票结果项:百分比进度条(此前嵌套在 .vote-card 下导致失效,现顶层定义) */
 .is-voted-item {
   &::before {
     content: '';
