@@ -34,7 +34,6 @@ import type {
   INoticeListRes,
   INoticeListVo,
   INoticeTypeListRes,
-  IQRCodeInfo,
   IRestrictReadCheckReq,
   IRestrictReadCheckRes,
   IUpdateCheckRes,
@@ -118,16 +117,6 @@ export function getCommentWidgetConfig() {
 export function checkVersion(baseUrl: string) {
   return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion', {
     params: { baseUrl },
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 获取二维码信息
- */
-export function getQRCodeInfo(key: string) {
-  return http.Get<IResponse<IQRCodeInfo>>(`/apis/api.unihalo.ialley.cn/v1alpha1/getQRCodeInfo/${key}`, {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })

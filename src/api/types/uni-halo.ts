@@ -370,11 +370,7 @@ export interface IHaloGlobalConfig {
 	[key: string]: unknown;
 }
 
-/* ---------- uni-halo 二维码 / 检查更新 ---------- */
-
-export interface IQRCodeInfo {
-	[key: string]: unknown;
-}
+/* ---------- uni-halo 检查更新 ---------- */
 
 /** 检查更新结果(uhalo-upgrade 对接) */
 export interface IUpdateCheckRes {
