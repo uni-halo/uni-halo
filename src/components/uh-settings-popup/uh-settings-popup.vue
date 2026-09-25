@@ -104,7 +104,7 @@ function handleClose() {
 
 <template>
   <uh-glass-popup
-    v-model="popupVisible" position="bottom" custom-class="rounded-xl !border"
+    v-model="popupVisible" position="bottom" custom-class="!rounded-2xl !border"
     :z-index="110" hide-when-close
   >
     <!-- 弹窗容器 -->

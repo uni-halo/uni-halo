@@ -698,7 +698,7 @@ onShow(() => {
     <!-- 修改密码弹层(输入中途误触遮罩不应丢弃已填内容,禁用遮罩关闭) -->
     <uh-glass-popup
       v-model="passwordSheet" :hide-when-close="true" position="bottom" :z-index="100"
-      :close-on-click-modal="false" custom-class="rounded-xl"
+      :close-on-click-modal="false" custom-class="!rounded-2xl"
     >
       <!-- 弹窗容器 -->
       <view class="box-border w-full flex flex-col gap-y-3 p-3">
@@ -746,7 +746,7 @@ onShow(() => {
     <!-- 邮箱验证弹层(新邮箱 → 验证码 + 当前密码,验证通过后服务端写入 spec.email) -->
     <uh-glass-popup
       v-model="emailSheet" :hide-when-close="true" position="bottom" :z-index="100"
-      :close-on-click-modal="false" custom-class="rounded-xl"
+      :close-on-click-modal="false" custom-class="!rounded-2xl"
     >
       <view class="box-border w-full flex flex-col gap-y-3 p-3">
         <view class="flex items-center justify-between">

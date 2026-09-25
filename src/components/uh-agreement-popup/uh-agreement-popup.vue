@@ -57,7 +57,7 @@ function handleClose() {
 </script>
 
 <template>
-  <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="rounded-2xl">
+  <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="!rounded-2xl">
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->

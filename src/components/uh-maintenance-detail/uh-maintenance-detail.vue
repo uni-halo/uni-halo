@@ -35,7 +35,7 @@ function close() {
 <template>
   <uh-glass-popup
     v-model="show" position="bottom" :z-index="100"
-    custom-class="rounded-xl"
+    custom-class="!rounded-2xl"
   >
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">

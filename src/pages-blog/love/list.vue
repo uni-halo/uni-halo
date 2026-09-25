@@ -476,7 +476,7 @@ onReachBottom(() => {
     </view>
 
     <!-- 筛选弹层(状态/排序;排序附方向选择) -->
-    <uh-glass-popup v-model="filterPopup.show" :z-index="99" position="bottom" custom-class="rounded-2xl">
+    <uh-glass-popup v-model="filterPopup.show" :z-index="99" position="bottom" custom-class="!rounded-2xl">
       <view v-if="filterPopup.item" class="box-border p-4">
         <view class="text-md mb-4 text-center text-gray-900 font-bold">
           {{ filterPopup.item.label }}

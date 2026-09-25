@@ -353,7 +353,7 @@ watch(() => props.show, (newVal) => {
 
 <template>
   <uh-glass-popup
-    v-model="isShow" position="bottom" custom-class="!border rounded-2xl" :z-index="150"
+    v-model="isShow" position="bottom" custom-class="!border !rounded-2xl" :z-index="150"
     :close-on-click-modal="false"
     @close="handleOnChange(false)"
   >

@@ -219,7 +219,7 @@ watch(() => props.show, (newVal) => {
 
 <template>
   <uh-glass-popup
-    v-model="isShow" :z-index="100" position="bottom" :close-on-click-modal="false" custom-class="!border rounded-xl"
+    v-model="isShow" :z-index="100" position="bottom" :close-on-click-modal="false" custom-class="!border !rounded-2xl"
     @close="handleClose(false)"
   >
     <!-- 弹窗容器 -->
@@ -231,7 +231,7 @@ watch(() => props.show, (newVal) => {
           <text class="text-xs text-gray-500">提交后审核通过后展示在「小程序」列表中</text>
         </view>
         <view
-          class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 border rounded-lg text-center shadow-none"
+          class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
           @click="handleClose(false)"
         >
           <wd-icon name="close" size="28rpx" class="text-gray-500" />

@@ -393,7 +393,7 @@ onReachBottom(() => {
     </view>
 
     <!-- 故事详情弹窗 -->
-    <uh-glass-popup v-model="showDetail" :z-index="100" position="bottom" custom-class="!rounded-xl">
+    <uh-glass-popup v-model="showDetail" :z-index="100" position="bottom" custom-class="!rounded-2xl">
       <!-- 弹窗容器 -->
       <view class="box-border w-full flex flex-col gap-y-3 overflow-hidden rounded-xl p-3">
         <!-- 顶部 -->

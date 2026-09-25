@@ -228,7 +228,7 @@ async function handleResetAll() {
     </view>
 
     <!-- 枚举选择弹层 -->
-    <uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" :z-index="999" position="bottom" custom-class="rounded-xl">
+    <uh-glass-popup v-model="enumSheet.show" :hide-when-close="true" :z-index="999" position="bottom" custom-class="!rounded-2xl">
       <!-- 弹窗容器 -->
       <view class="box-border w-full flex flex-col gap-y-3 p-3">
         <!-- 顶部 -->

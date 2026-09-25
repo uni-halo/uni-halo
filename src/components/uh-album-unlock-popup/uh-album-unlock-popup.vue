@@ -143,7 +143,7 @@ async function handleOnConfirm() {
 
 <template>
   <uh-glass-popup
-    :model-value="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
+    :model-value="isShow" position="bottom" :z-index="100" custom-class="!border !rounded-2xl"
     @update:model-value="handleOnPopupClose"
   >
     <!-- 弹窗容器 -->

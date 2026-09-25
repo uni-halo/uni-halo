@@ -534,7 +534,7 @@ onReachBottom(() => {
           <!-- 详情弹窗 -->
           <uh-glass-popup
             v-model="detail.show" position="bottom" :z-index="999"
-            custom-class="rounded-xl !border"
+            custom-class="!rounded-2xl !border"
           >
             <!-- 弹窗容器 -->
             <view class="box-border w-full flex flex-col gap-y-3 p-3">
@@ -688,7 +688,7 @@ onReachBottom(() => {
         <!-- 小程序详情弹窗 -->
         <uh-glass-popup
           v-model="miniDetail.show" :z-index="999" position="bottom"
-          custom-class="!rounded-xl !border"
+          custom-class="!rounded-2xl !border"
         >
           <!-- 弹窗容器 -->
           <view class="box-border w-full flex flex-col gap-y-3 p-3">

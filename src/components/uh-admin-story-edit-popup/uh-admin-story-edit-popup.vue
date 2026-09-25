@@ -132,7 +132,7 @@ defineExpose({ openEdit })
 </script>
 
 <template>
-  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" :close-on-click-modal="false" custom-class="!border rounded-xl" @close="handleClose(false)">
+  <uh-glass-popup v-model="isShow" :z-index="999" position="bottom" :close-on-click-modal="false" custom-class="!border !rounded-2xl" @close="handleClose(false)">
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->

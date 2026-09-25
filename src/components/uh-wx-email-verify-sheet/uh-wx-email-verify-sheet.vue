@@ -187,7 +187,7 @@ function close() {
 <template>
   <uh-glass-popup
     :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="100"
-    :close-on-click-modal="false" custom-class="rounded-xl"
+    :close-on-click-modal="false" custom-class="!rounded-2xl"
     @update:model-value="value => emit('update:modelValue', value)"
   >
     <view class="box-border w-full flex flex-col gap-y-3 p-3">

@@ -89,7 +89,7 @@ function handlePreview(url?: string) {
 
 <template>
   <uh-glass-popup
-    v-model="isShow" position="bottom" :z-index="100" custom-class="!border rounded-2xl"
+    v-model="isShow" position="bottom" :z-index="100" custom-class="!border !rounded-2xl"
     @close="handleClose"
   >
     <!-- 弹窗容器 -->

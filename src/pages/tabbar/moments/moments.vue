@@ -513,7 +513,7 @@ onReachBottom(() => {
   <!-- 年份选择器 -->
   <uh-glass-popup
     v-model="yearSheet.show" :z-index="999" :hide-when-close="true" position="bottom"
-    custom-class="rounded-xl"
+    custom-class="!rounded-2xl"
   >
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
