@@ -122,9 +122,13 @@ function handleToSearch() {
         class="pointer-events-none absolute inset-0 z-10 box-border flex flex-col items-center justify-center gap-y-2 bg-white/5 pt-safe"
       >
         <view
-          class="mt-3 box-border max-w-[60vw] flex items-center justify-center truncate rounded-full bg-secondary px-3 py-1.5"
+          class="mt-3 box-border max-w-[45vw] flex items-center justify-center truncate border rounded-full px-3 py-1.5"
+          :style="{
+            backdropFilter: 'blur(2rpx)',
+            backgroundColor: 'rgba(215, 249, 76, 0.9)',
+          }"
         >
-          <text class="text-xs text-gray-900 font-semibold">
+          <text class="truncate text-xs text-gray-900 font-semibold">
             {{ currentBanner.title }}
           </text>
         </view>

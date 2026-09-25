@@ -17,28 +17,26 @@ const props = withDefaults(defineProps<{
   chartData: () => [],
 })
 
+/** 点击年份按钮:通知页面打开年份选择弹窗 */
+const emits = defineEmits<{
+  (e: 'year-click'): void
+}>()
+
+/** 当前年份(双向绑定,年份选择弹窗由页面层控制) */
+const currentYear = defineModel<number>('year', { required: true })
+
 const weeks = ['一', '二', '三', '四', '五', '六', '日']
-const currentYear = ref(new Date().getFullYear())
-const currentMonth = ref(new Date().getMonth() + 1)
 
 /** 颜色分级(主题色系黄绿渐变,由浅到深) */
 const intensityColors = ['#ebedf0', '#f4fad8', '#e9f79f', '#d7ee52', '#b9e424']
 
-const yearOptions = computed(() => {
-  const years = new Set<number>()
-  props.chartData.forEach((item) => {
-    years.add(dayjs(item.date).year())
-  })
-  years.add(new Date().getFullYear())
-  return [...years].sort((a, b) => b - a)
-})
-
-/** 当前年份数据 key(date -> count) */
+/** 当前年份数据 key(YYYY-MM-DD -> count,date 归一化以兼容带时间的格式) */
 const yearDataMap = computed(() => {
   const map: Record<string, number> = {}
   props.chartData.forEach((item) => {
-    if (dayjs(item.date).year() === currentYear.value) {
-      map[item.date] = item.count
+    const date = dayjs(item.date).format('YYYY-MM-DD')
+    if (dayjs(date).year() === currentYear.value) {
+      map[date] = (map[date] || 0) + item.count
     }
   })
   return map
@@ -134,10 +132,6 @@ const totalCount = computed(() => props.chartData.reduce((sum, item) => sum + it
 
 /** 本年总数 */
 const currentYearCount = computed(() => Object.values(yearDataMap.value).reduce((sum, n) => sum + n, 0))
-
-function changeYear(value: number) {
-  currentYear.value = value
-}
 </script>
 
 <template>
@@ -146,24 +140,19 @@ function changeYear(value: number) {
       <view class="title text-[28rpx] text-[#303133] font-bold">
         {{ currentYear }}年 笔记发布趋势
       </view>
-      <view class="controls flex gap-3">
-        <view
-          v-for="year in yearOptions"
-          :key="year"
-          class="year-btn rounded-lg px-4 py-0.5 text-[24rpx] text-[#999]"
-          :class="{ active: year === currentYear }"
-          @click="changeYear(year)"
-        >
-          {{ year }}
-        </view>
-      </view>
+      <uh-button
+        custom-class="uh-global-card-glass uh-shadow-xs border !bg-primary !px-3 !py-0.5 !rounded-lg !text-xs !text-gray-900"
+        @click="emits('year-click')"
+      >
+        {{ currentYear }}年
+      </uh-button>
     </view>
 
     <view class="heatmap-container flex gap-2">
       <!-- 周标签列(固定,不随横向滚动) -->
       <view class="weeks flex shrink-0 flex-col gap-1">
         <view class="h-6 shrink-0" />
-        <view v-for="(week, index) in weeks" :key="index" class="week-label h-6 text-[16rpx] text-[#999] leading-6">
+        <view v-for="(week, index) in weeks" :key="index" class="week-label h-6 text-xs text-gray-400 leading-6">
           {{ week }}
         </view>
       </view>
@@ -172,11 +161,13 @@ function changeYear(value: number) {
         <view class="inline-flex flex-col">
           <view class="flex gap-1">
             <view v-for="(column, ci) in weekColumns" :key="ci" class="flex shrink-0 flex-col">
-              <view class="month-label h-6 w-6 whitespace-nowrap text-center text-[16rpx] text-[#999] leading-6">
+              <view class="month-label h-6 w-6 whitespace-nowrap text-center text-xs text-gray-400 leading-6">
                 {{ columnMonths[ci] }}
               </view>
-              <view v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
-                :style="{ backgroundColor: getDayColor(day) }" @click="handleDayClick(day)" />
+              <view
+                v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
+                :style="{ backgroundColor: getDayColor(day) }" @click="handleDayClick(day)"
+              />
             </view>
           </view>
         </view>
@@ -202,16 +193,3 @@ function changeYear(value: number) {
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.uh-heatmap {
-  .year-btn {
-    background-color: #f5f5f5;
-
-    &.active {
-      color: #303133;
-      background-color: #b9e424;
-    }
-  }
-}
-</style>

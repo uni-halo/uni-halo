@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
+import { checkAvatarUrl } from '@/utils/url'
+import { getAvatarFallbackText } from '@/utils/avatar'
 
 interface IProps {
   containerClass?: string
@@ -18,6 +21,7 @@ const emits = defineEmits<{
 }>()
 
 const { hasLogin } = storeToRefs(useTokenStore())
+const { userInfo } = storeToRefs(useUserStore())
 
 // 黑名单模式(入口页/维护页等过渡页不展示)
 const blackList = [
@@ -36,6 +40,9 @@ const _customClass = computed(() => {
   return `${props.customClass} ${colorClass}`
 })
 
+const avatarSrc = computed(() => checkAvatarUrl(userInfo.value.avatar || ''))
+const avatarText = computed(() => getAvatarFallbackText(userInfo.value.nickname || userInfo.value.username))
+
 function handleClick() {
   emits('action-click')
 }
@@ -46,11 +53,13 @@ function handleClick() {
     v-if="visible" :class="[props.fixed ? 'fixed bottom-22 right-3 z-50 pb-safe' : '', props.containerClass]"
     @click="handleClick"
   >
-    <view
-      class="uh-global-card-glass h-11 w-11 flex items-center justify-center border rounded-full"
+    <wd-avatar
+      :src="avatarSrc"
+      :text="avatarText"
+      shape="round"
+      custom-class="uh-global-card-glass h-11 w-11 border"
       :class="_customClass"
-    >
-      <wd-icon name="user" size="42rpx" />
-    </view>
+      mode="aspectFill"
+    />
   </view>
 </template>
