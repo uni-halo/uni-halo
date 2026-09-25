@@ -424,7 +424,7 @@ function goBack() {
 
             <uh-button
               class="w-full"
-              custom-class="mt-6 uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none"
+              custom-class="mt-6 uh-global-card-glass bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
               :class="loading ? 'opacity-60' : ''" @click="doRegister"
             >
               {{ loading ? '注册中...' : '立即注册' }}

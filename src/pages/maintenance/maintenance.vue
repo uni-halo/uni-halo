@@ -286,7 +286,7 @@ onUnload(() => {
       </text>
       <view class="mt-10">
         <uh-button
-          custom-class="uh-global-card-glass border flex-1 py-2 !px-8 !rounded-full font-semibold"
+          custom-class="uh-global-card-glass border flex-1 !py-2.5 !px-8 !rounded-full font-semibold !text-3xs"
           @click="load(true)"
         >
           刷新试试
@@ -429,14 +429,14 @@ onUnload(() => {
           <!-- 操作 -->
           <view class="mt-2 box-border w-full flex flex-col gap-4 px-12">
             <uh-button
-              custom-class="uh-global-card-glass w-full border flex-1 py-2.5 !rounded-full"
+              custom-class="uh-global-card-glass w-full border flex-1 py-2.5 !rounded-full !text-3xs"
               @click="handleRefresh"
             >
               {{ spinning ? '请稍等...' : '刷新试试' }}
             </uh-button>
             <view
               v-if="detailHtml"
-              class="uh-global-card-glass uh-shadow-xs w-full flex flex-1 items-center justify-center rounded-full bg-white py-2 text-sm text-primary"
+              class="uh-global-card-glass uh-shadow-xs w-full flex flex-1 items-center justify-center rounded-full bg-white py-2.5 text-3xs text-primary"
               @click="showDetail = true"
             >
               维护详情

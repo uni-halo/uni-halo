@@ -215,14 +215,14 @@ async function handleOnConfirm() {
       <view class="box-border w-full flex items-center gap-4">
         <uh-button
           v-if="closeable" class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl bg-white/90"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border !py-2.5 !rounded-xl bg-white/90"
           @click="handleOnCancel"
         >
           取消
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border py-2 !rounded-xl !bg-love/90 text-white"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border !py-2.5 !rounded-xl !bg-love/90 text-white"
           @click="handleOnConfirm"
         >
           {{ loading ? '解锁中...' : confirmText }}

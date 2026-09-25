@@ -467,7 +467,7 @@ onReachBottom(() => {
         <view class="box-border w-full flex items-center">
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love/90 text-white"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love/90 text-white !text-3xs"
             @click="showDetail = false"
           >
             关闭

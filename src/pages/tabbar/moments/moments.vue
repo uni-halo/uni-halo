@@ -425,13 +425,13 @@ onReachBottom(() => {
       <template #left>
         <view class="flex items-center gap-x-1">
           <uh-button
-            custom-class="box-border uh-global-card-glass border text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
+            custom-class="box-border uh-global-card-glass border !bg-primary text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
             @click="handleOpenYearPicker"
           >
             {{ selectedMonth.split('-')[0] }}
           </uh-button>
           <view
-            class="uh-global-card-glass box-border border rounded-lg bg-primary px-1.5 py-1 text-xs text-gray-900"
+            class="uh-global-card-glass box-border border rounded-lg px-1.5 py-1 text-xs text-gray-900 !bg-primary"
             @click="handleBackToThisMonth"
           >
             本月
@@ -536,14 +536,14 @@ onReachBottom(() => {
       <view class="box-border w-full flex items-center gap-x-3">
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
           @click="handleYearPickerCancel"
         >
           取消
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
           @click="handleYearPickerConfirm"
         >
           确定

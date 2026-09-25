@@ -301,7 +301,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :loading="saving" @click="handleSave">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love text-white !text-3xs" :loading="saving" @click="handleSave">
           保存
         </uh-button>
       </view>

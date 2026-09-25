@@ -687,7 +687,7 @@ onShow(() => {
       <!-- 退出登录 -->
       <view class="mt-2 box-border w-full pb-6">
         <uh-button
-          custom-class="uh-global-card-glass w-full border border-red-400/30 bg-red-400/80 py-2.5 text-white !rounded-full"
+          custom-class="uh-global-card-glass w-full border border-red-400/30 bg-red-400/80 py-2.5 text-white !rounded-full !text-3xs"
           @action-click="handleLogout()"
         >
           退出登录
@@ -727,14 +727,14 @@ onShow(() => {
         <view class="box-border w-full flex items-center justify-center gap-x-3">
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
             @click="passwordSheet = false"
           >
             取消
           </uh-button>
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
             :class="passwordSaving ? 'opacity-60' : ''" @action-click="savePassword"
           >
             {{ passwordSaving ? '保存中' : '确定' }}
@@ -785,14 +785,14 @@ onShow(() => {
         <view class="box-border w-full flex items-center justify-center gap-x-3">
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white/90"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
             @click="emailSheet = false"
           >
             取消
           </uh-button>
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-primary text-gray-900"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
             :class="emailSubmitting ? 'opacity-60' : ''" @action-click="submitEmailVerify"
           >
             {{ emailSubmitting ? '验证中' : '确定' }}

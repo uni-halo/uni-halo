@@ -254,7 +254,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
       <uh-button
         class="mt-3 flex-1"
-        custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full py-2.5 !text-white !bg-love shadow-none"
+        custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full py-2.5 !text-white !bg-love shadow-none !text-3xs"
         :class="saving ? 'opacity-60' : ''" @click="handleSave"
       >
         {{ saving ? '保存中' : '保存' }}

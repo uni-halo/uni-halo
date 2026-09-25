@@ -181,12 +181,12 @@ function handleOpenLink() {
       <!-- 外链(平台差异,条件编译):非 APP 复制 / APP 访问 -->
       <view v-if="hasLink" class="fixed bottom-0 left-0 right-0 box-border px-4 pb-safe">
         <!-- #ifndef APP-PLUS -->
-        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleCopyLink">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium !text-3xs" @click="handleCopyLink">
           复制原文地址
         </uh-button>
         <!-- #endif -->
         <!-- #ifdef APP-PLUS -->
-        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium" @click="handleOpenLink">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium !text-3xs" @click="handleOpenLink">
           访问链接
         </uh-button>
         <!-- #endif -->

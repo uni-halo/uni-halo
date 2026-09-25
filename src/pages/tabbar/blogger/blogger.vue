@@ -414,7 +414,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 登录入口(任一登录方式开启才显示) -->
     <view v-if="loginEntryVisible" class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
-      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full py-2 ${hasLogin ? 'bg-red-400 text-white' : ''}`">
+      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full !py-2.5 !text-3xs ${hasLogin ? 'bg-red-400 text-white' : '!bg-primary'}`">
         {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>
     </view>

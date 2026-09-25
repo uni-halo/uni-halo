@@ -43,7 +43,7 @@ function handleRefresh() {
     </view>
 
     <view class="w-full flex flex-col gap-y-4">
-      <uh-button custom-class="!rounded-full text-xs py-2 !uh-shadow-xs" @click="handleRefresh()">
+      <uh-button custom-class="!rounded-full text-xs py-2 !uh-shadow-xs !bg-primary" @click="handleRefresh()">
         {{ props.checking ? '正在刷新' : '刷新试试' }}
       </uh-button>
       <!-- #ifdef MP-WEIXIN -->

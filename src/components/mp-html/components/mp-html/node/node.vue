@@ -127,7 +127,6 @@ function getTop(e) {
   return top - 30
 }
 
-import node from './node'
 export default {
   name: 'node',
   options: {
@@ -156,12 +155,6 @@ export default {
     },
     childs: Array,
     opts: Array
-  },
-  components: {
-
-    // #ifndef H5 && VUE3
-    node
-    // #endif
   },
   mounted () {
     this.$nextTick(() => {

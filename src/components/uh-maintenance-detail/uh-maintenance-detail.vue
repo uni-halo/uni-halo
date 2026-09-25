@@ -59,7 +59,7 @@ function close() {
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button class="w-full flex-1" custom-class="w-full flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl bg-white text-primary" @click="close()">
+        <uh-button class="w-full flex-1" custom-class="w-full flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl bg-white text-primary !text-3xs" @click="close()">
           关闭
         </uh-button>
       </view>

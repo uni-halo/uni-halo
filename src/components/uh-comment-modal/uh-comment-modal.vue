@@ -430,13 +430,13 @@ watch(() => props.show, (newVal) => {
               <view class="h-10 w-29 flex shrink-0 items-center justify-center">
                 <uh-button
                   v-if="captchaData.status === 'loading'"
-                  class="uh-global-card-glass w-full border py-2.5 text-xs text-gray-900 shadow-none !rounded-xl"
+                  class="uh-global-card-glass w-full border py-2.5 text-xs text-gray-900 shadow-none !rounded-xl !bg-primary"
                 >
                   获取中...
                 </uh-button>
                 <uh-button
                   v-else-if="captchaData.status === 'fail'"
-                  class="uh-global-card-glass w-full border py-2.5 text-xs text-red-400 shadow-none !rounded-xl"
+                  class="uh-global-card-glass w-full border py-2.5 text-xs text-red-400 shadow-none !rounded-xl !bg-primary"
                   @click="handleGetCaptchaImage()"
                 >
                   请重试
@@ -453,7 +453,7 @@ watch(() => props.show, (newVal) => {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
           @click="handleHandle"
         >
           提交评论

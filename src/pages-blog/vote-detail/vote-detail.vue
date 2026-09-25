@@ -395,34 +395,34 @@ onShareTimeline(() => ({
         <view
           class="uh-global-card-glass mb-2 w-full flex items-center justify-center gap-x-2 border rounded-full"
         >
-          <uh-button v-if="isVoted" class="flex-1" custom-class="flex-1 py-2 !rounded-full">
+          <uh-button v-if="isVoted" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs">
             您已参与投票
           </uh-button>
           <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '未开始'" class="flex-1" custom-class="flex-1 py-2 !rounded-full"
+            v-else-if="vote.spec?._uh_state?.state === '未开始'" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs"
             @click="handleSubmitTip('投票未开始')"
           >
             投票未开始
           </uh-button>
           <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '已结束'" class="flex-1" custom-class="flex-1 py-2 !rounded-full"
+            v-else-if="vote.spec?._uh_state?.state === '已结束'" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs"
             @click="handleSubmitTip('投票已结束')"
           >
             投票已结束
           </uh-button>
           <uh-button
-            v-else-if="!vote.spec?.canAnonymously" class="flex-1" custom-class="flex-1 py-2 !rounded-full"
+            v-else-if="!vote.spec?.canAnonymously" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs"
             @click="handleSubmit()"
           >
             不支持匿名投票
           </uh-button>
           <uh-button
-            v-else-if="submitForm.voteData.length === 0" class="flex-1" custom-class="flex-1 py-2 !rounded-full"
+            v-else-if="submitForm.voteData.length === 0" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs"
             @click="handleSubmitTip('请选择选项')"
           >
             提交投票（请选择选项）
           </uh-button>
-          <uh-button v-else class="flex-1" custom-class="flex-1 py-2 !rounded-full" @click="handleSubmit()">
+          <uh-button v-else class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs" @click="handleSubmit()">
             提交投票
           </uh-button>
         </view>

@@ -170,7 +170,7 @@ onLoad((options) => {
       <view v-if="hasLink" class="fixed bottom-0 left-0 right-0 box-border px-4 pb-safe">
         <uh-button
           class="flex-1"
-          custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium"
+          custom-class="uh-global-card-glass border w-full !rounded-full py-2.5 font-medium !text-3xs"
           @click="handleCopy"
         >
           复制原文地址

@@ -246,7 +246,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs" :loading="saving" :disabled="!canSubmit" @click="handleSubmit">
           {{ formMode === 'create' ? '发布瞬间' : '保存瞬间' }}
         </uh-button>
       </view>

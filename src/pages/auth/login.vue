@@ -230,7 +230,7 @@ async function handleLoginSuccess() {
               />
               <uh-button
                 class="w-full"
-                custom-class="mt-6 uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none"
+                custom-class="mt-6 uh-global-card-glass bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
                 :class="loading ? 'opacity-60' : ''" @click="doPasswordLogin"
               >
                 {{ loading ? '登录中...' : '登 录' }}

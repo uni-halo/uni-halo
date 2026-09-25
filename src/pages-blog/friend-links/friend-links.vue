@@ -599,7 +599,7 @@ onReachBottom(() => {
               <view class="box-border w-full flex items-center">
                 <uh-button
                   class="flex-1"
-                  custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+                  custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
                   @click="handleCopyLink(detail.data)"
                 >
                   复制信息
@@ -823,7 +823,7 @@ onReachBottom(() => {
             <view class="box-border w-full flex items-center">
               <uh-button
                 class="flex-1"
-                custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl"
+                custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
                 @action-click="handleToMiniProgram(miniDetail.data)"
               >
                 点击访问

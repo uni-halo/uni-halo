@@ -101,7 +101,7 @@ function handleClose() {
       <view v-if="showAgreeButton" class="box-border w-full flex items-center">
         <uh-button
           class="w-full"
-          custom-class="uh-global-card-glass bg-primary !py-2 uh-shadow-xs border w-full !rounded-full text-gray-900"
+          custom-class="uh-global-card-glass bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 !text-3xs"
           @click="handleAgree"
         >
           同意并继续

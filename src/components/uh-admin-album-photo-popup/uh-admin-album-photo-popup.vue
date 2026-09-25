@@ -199,7 +199,7 @@ defineExpose({ openDetail })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view v-if="pendingPhotos.length" class="box-border w-full flex items-center">
-        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border py-2 !rounded-xl !bg-love text-white" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love text-white !text-3xs" :disabled="uploading || pendingCount > 0" @click="!(uploading || pendingCount > 0) && commitPhotos()">
           {{ uploading ? '照片上传中…' : pendingCount > 0 ? `待上传 ${pendingCount} 张` : `保存 ${pendingPhotos.length} 张照片` }}
         </uh-button>
       </view>

@@ -210,7 +210,7 @@ function handleDone() {
           </view>
           <uh-button
             class="w-full flex-1"
-            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-primary !py-2 !text-gray-900"
+            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-primary !py-2.5 !text-gray-900 !text-3xs"
             @click="handleDone"
           >
             完 成
@@ -230,7 +230,7 @@ function handleDone() {
           </view>
           <uh-button
             class="w-full flex-1"
-            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-white !py-2 !text-gray-900"
+            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-white !py-2.5 !text-gray-900 !text-3xs"
             @click="handleDone"
           >
             关闭页面
@@ -263,7 +263,7 @@ function handleDone() {
           </view>
           <uh-button
             class="w-full flex-1"
-            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-primary !py-2 !text-gray-900"
+            custom-class="uh-global-card-glass uh-shadow-xs mt-8 box-border w-full border !rounded-full !bg-primary !py-2.5 !text-gray-900 !text-3xs"
             :class="submitting ? 'opacity-60' : ''"
             :disabled="submitting"
             @click="doConfirm"

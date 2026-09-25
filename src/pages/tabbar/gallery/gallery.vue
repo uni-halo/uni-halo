@@ -235,7 +235,7 @@ onReachBottom(() => {
     >
       <template #left>
         <uh-button
-          custom-class="box-border uh-global-card-glass border !inline-flex text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
+          custom-class="box-border uh-global-card-glass border !bg-primary !inline-flex text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
           @click="visiblePhotoName = !visiblePhotoName"
         >
           {{ visiblePhotoName ? '隐藏' : '显示' }}名称
@@ -254,7 +254,7 @@ onReachBottom(() => {
           <view
             v-for="(cate, index) in category.list" :key="cate.spec.displayName"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-            :class="{ 'bg-primary text-gray-900 font-semibold': index === category.activeIndex }"
+            :class="{ '!bg-primary text-gray-900 font-semibold': index === category.activeIndex }"
             @click="handleGetDataByCategory(index, cate)"
           >
             {{ cate.spec.displayName }}
