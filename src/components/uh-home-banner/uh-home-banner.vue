@@ -128,7 +128,7 @@ function handleToSearch() {
             backgroundColor: 'rgba(215, 249, 76, 0.9)',
           }"
         >
-          <text class="truncate text-xs text-gray-900 font-semibold">
+          <text class="truncate text-3xs text-gray-900 font-semibold">
             {{ currentBanner.title }}
           </text>
         </view>

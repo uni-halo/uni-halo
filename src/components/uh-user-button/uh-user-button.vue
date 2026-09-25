@@ -36,7 +36,7 @@ const visible = computed(() => {
 })
 
 const _customClass = computed(() => {
-  const colorClass = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
+  const colorClass = currentPage.route.includes('/love/') ? '!text-love' : '!text-primary'
   return `${props.customClass} ${colorClass}`
 })
 
@@ -53,13 +53,19 @@ function handleClick() {
     v-if="visible" :class="[props.fixed ? 'fixed bottom-22 right-3 z-50 pb-safe' : '', props.containerClass]"
     @click="handleClick"
   >
-    <wd-avatar
-      :src="avatarSrc"
-      :text="avatarText"
-      shape="round"
-      custom-class="uh-global-card-glass h-11 w-11 border"
-      :class="_customClass"
-      mode="aspectFill"
-    />
+    <view
+      class="uh-global-card-glass h-11 w-11 flex items-center justify-center rounded-full"
+    >
+      <wd-avatar
+        :src="avatarSrc"
+        :text="avatarText"
+        shape="round"
+        bg-color="transparent"
+        custom-style="font-size:32rpx"
+        mode="aspectFill"
+        custom-class="!w-full !h-full"
+        :class="_customClass"
+      />
+    </view>
   </view>
 </template>

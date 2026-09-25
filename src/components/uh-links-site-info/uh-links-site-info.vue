@@ -91,7 +91,7 @@ watch(() => props.show, (val) => {
           <!-- 博客名片 -->
           <view class="flex items-center">
             <wd-avatar
-              custom-class="uh-global-card-glass !h-14 !w-14 !shrink-0 !text-gray-900 !font-bold"
+              custom-class="uh-global-card-glass shadow-none !text-xl !h-14 !w-14 !shrink-0 !text-primary !font-semibold"
               class="!rounded-2xl"
               :src="checkAvatarUrl(blogDetail.logo)"
               :text="getAvatarFallbackText(blogDetail.displayName)"

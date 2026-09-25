@@ -516,14 +516,14 @@ onReachBottom(() => {
                       <text class="flex-1 truncate">{{ link.spec.displayName }}</text>
                     </view>
                     <view
-                      class="mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
-                    >
-                      站点地址：{{ link.spec.url }}
-                    </view>
-                    <view
                       class="mt-2 overflow-hidden truncate whitespace-nowrap text-xs text-gray-600"
                     >
                       博客简介：{{ link.spec.description || '这个博主很懒，没写简介~' }}
+                    </view>
+                    <view
+                      class="mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
+                    >
+                      站点地址：{{ link.spec.url }}
                     </view>
                   </view>
                 </view>
@@ -545,7 +545,7 @@ onReachBottom(() => {
                 </view>
                 <view
                   class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
-                  @click="miniDetail.show = false"
+                  @click="detail.show = false"
                 >
                   <wd-icon name="close" size="28rpx" />
                 </view>
@@ -560,7 +560,7 @@ onReachBottom(() => {
                   <view class="flex">
                     <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
                     <wd-img
-                      v-if="detail.data.spec.logo" class="uh-global-card-glass h-20 w-20 shrink-0"
+                      v-if="detail.data.spec.logo" class="uh-global-card-glass h-20 w-20 shrink-0 shadow-none"
                       :radius="16" :src="checkImageUrl(detail.data.spec.logo)" mode="aspectFill"
                     >
                       <template #loading>
@@ -575,7 +575,7 @@ onReachBottom(() => {
                       <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
                     </view>
                     <view class="ml-4 flex flex-1 flex-col justify-center gap-y-1.5">
-                      <view class="text-md text-gray-900 font-bold">
+                      <view class="text-sm text-gray-900 font-semibold">
                         {{ detail.data.spec.displayName }}
                       </view>
                       <view class="flex items-center gap-x-2">
@@ -633,7 +633,7 @@ onReachBottom(() => {
             <view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-4">
               <view class="mb-3 flex items-center">
                 <text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />
-                <text class="text-sm text-gray-900 font-bold">
+                <text class="text-sm text-gray-900 font-semibold">
                   {{ group.displayName || '未分组' }}
                 </text>
                 <text class="ml-1 text-xs text-gray-400">（{{ group.links.length }}）</text>
@@ -662,20 +662,20 @@ onReachBottom(() => {
                   </view>
                   <view class="box-border flex flex-1 flex-col pl-4">
                     <view
-                      class="overflow-hidden truncate whitespace-nowrap text-[30rpx] text-gray-900 font-bold"
+                      class="overflow-hidden truncate whitespace-nowrap text-sm text-gray-900 font-bold"
                     >
                       {{ link.spec?.displayName }}
+                    </view>
+                    <view
+                      class="mini-desc mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500"
+                    >
+                      {{ link.spec?.description || '暂无简介~' }}
                     </view>
                     <view
                       v-if="link.spec?.authorName"
                       class="mini-author mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
                     >
                       {{ link.spec.authorName }}
-                    </view>
-                    <view
-                      class="mini-desc mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500"
-                    >
-                      {{ link.spec?.description || '暂无简介~' }}
                     </view>
                   </view>
                   <wd-icon name="arrow-right" size="36rpx" class="text-primary" />
@@ -712,9 +712,7 @@ onReachBottom(() => {
               <!-- 滚动内部容器 -->
               <view class="w-full flex flex-col gap-y-3">
                 <view class="w-full flex items-center gap-x-3">
-                  <!-- 太阳码大图(点击预览/长按保存) -->
                   <view class="code-area flex flex-col items-center">
-                    <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
                     <wd-img
                       v-if="miniDetail.data.spec?.miniProgramCode" class="h-16 w-16" :radius="999"
                       :src="checkImageUrl(miniDetail.data.spec?.miniProgramCode)"
@@ -736,35 +734,33 @@ onReachBottom(() => {
 
                   <view class="w-full flex flex-col gap-y-1">
                     <!-- 名称与分组 -->
-                    <text class="text-lg text-gray-900 font-semibold">
+                    <text class="text-sm text-gray-900 font-semibold">
                       {{ miniDetail.data.spec?.displayName }}
                     </text>
 
                     <!-- 描述 -->
                     <view
-                      v-if="miniDetail.data.spec?.description"
-                      class="mini-desc text-2xs text-gray-600 leading-[1.6]"
+                      class="mini-desc text-3xs text-gray-600 leading-5"
                     >
-                      {{ miniDetail.data.spec.description }}
+                      {{ miniDetail.data.spec.description || '暂无简介~' }}
                     </view>
                   </view>
                 </view>
                 <view class="code-tip flex items-center">
-                  <text class="text-xs text-gray-400">提示：点击预览，长按保存太阳码</text>
+                  <text class="text-xs text-gray-500">提示：点击预览，长按保存太阳码</text>
                 </view>
 
                 <!-- 小程序地址 -->
                 <view
-                  v-if="miniDetail.data.spec?.link"
                   class="mini-link flex items-center justify-between rounded-xl bg-secondary p-4"
                 >
                   <view
-                    class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]"
+                    class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-gray-900"
                   >
-                    {{ miniDetail.data.spec.link }}
+                    {{ miniDetail.data.spec.link || '暂无小程序地址~' }}
                   </view>
                   <text
-                    class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold"
+                    class="ml-3 shrink-0 text-3xs text-gray-600 font-semibold"
                     @click="handleCopyMiniProgramCode(miniDetail.data)"
                   >
                     复制
@@ -791,7 +787,7 @@ onReachBottom(() => {
                 <!-- 作者信息 -->
                 <view
                   v-if="miniDetail.data.spec?.authorName || miniDetail.data.spec?.avatar || miniDetail.data.spec?.website"
-                  class="uh-global-card-glass flex items-center border rounded-xl p-4 shadow-none"
+                  class="flex items-center border rounded-xl bg-white/90 p-3"
                 >
                   <wd-avatar
                     :src="checkAvatarUrl(miniDetail.data.spec?.avatar)"
@@ -803,13 +799,13 @@ onReachBottom(() => {
                   <view class="author-detail ml-4 flex flex-1 flex-col">
                     <text
                       v-if="miniDetail.data.spec?.authorName"
-                      class="author-name text-[28rpx] text-gray-900 font-medium"
+                      class="text-sm text-gray-900 font-medium"
                     >
                       {{ miniDetail.data.spec.authorName }}
                     </text>
                     <text
                       v-if="miniDetail.data.spec?.website"
-                      class="author-website mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
+                      class="overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
                       @click="handleCopyMiniProgramCode(miniDetail.data)"
                     >
                       网站：{{ miniDetail.data.spec.website }}
