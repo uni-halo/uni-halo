@@ -399,7 +399,7 @@ init()
         <view class="flex items-center justify-between">
           <text class="text-md font-bold">选择年份</text>
           <view
-            class="uh-global-card-glass h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
+            class="uh-global-card-glass box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
             @click="handleYearPickerCancel"
           >
             <wd-icon name="close" size="28rpx" />

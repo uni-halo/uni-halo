@@ -217,7 +217,7 @@ function handleLogout() {
       <view class="flex shrink-0 items-center justify-between">
         <text class="text-md font-bold">我的</text>
         <view
-          class="uh-global-card-glass h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
+          class="uh-global-card-glass box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
           @click="handleClose()"
         >
           <wd-icon name="close" size="28rpx" />
@@ -260,7 +260,7 @@ function handleLogout() {
             class="uh-global-card-glass flex flex-col items-center gap-y-1 overflow-hidden rounded-xl p-2 shadow-none"
             @click="handleToPage(entry)"
           >
-            <view class="uh-global-card-glass relative box-border w-12 flex items-center justify-center border rounded-lg bg-gray-50 py-1.5 text-gray-900 shadow-none">
+            <view class="uh-global-card-glass relative box-border w-12 flex items-center justify-center border rounded-lg text-gray-900 shadow-none">
               <wd-icon :name="entry.icon" size="52rpx" />
               <!-- 消息通知未读徽标 -->
               <view
@@ -288,14 +288,14 @@ function handleLogout() {
               :permission="entry.permission"
             >
               <view
-                class="uh-global-card-glass flex items-center gap-x-3 rounded-xl px-3 py-2.5 shadow-none"
+                class="uh-global-card-glass flex items-center gap-x-2 rounded-xl px-3 py-2.5 shadow-none"
                 @click="handleToAdmin(entry.url)"
               >
                 <wd-icon
-                  :name="entry.icon" size="36rpx"
+                  :name="entry.icon" size="32rpx"
                   custom-class="text-gray-900 dark:text-gray-100"
                 />
-                <text class="flex-1 text-2xs text-gray-900 dark:text-gray-100">{{ entry.label }}</text>
+                <text class="flex-1 text-3xs text-gray-900 dark:text-gray-100">{{ entry.label }}</text>
                 <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
               </view>
             </uh-permission>

@@ -181,7 +181,7 @@ async function handleOnConfirm() {
         </view>
         <view
           v-if="closeable"
-          class="uh-global-card-glass uh-shadow-xs h-6 w-6 flex items-center justify-center border rounded-lg"
+          class="uh-global-card-glass uh-shadow-xs box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500"
           @click="handleOnCancel"
         >
           <wd-icon name="close" size="28rpx" />
@@ -212,7 +212,7 @@ async function handleOnConfirm() {
       </view>
 
       <!-- 底部固定操作区域 -->
-      <view class="box-border w-full flex items-center gap-4">
+      <view class="box-border w-full flex items-center gap-x-3">
         <uh-button
           v-if="closeable" class="flex-1"
           custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border !py-2.5 !rounded-xl !bg-white/90"

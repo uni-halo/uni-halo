@@ -100,7 +100,7 @@ function handlePreview(url?: string) {
           {{ albumName }}
         </view>
         <view
-          class="uh-global-card-glass uh-shadow-xs h-6 w-6 flex items-center justify-center border rounded-lg"
+          class="uh-global-card-glass uh-shadow-xs box-border h-6 w-6 flex items-center justify-center border rounded-lg"
           @click="handleClose"
         >
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
