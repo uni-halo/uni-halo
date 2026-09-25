@@ -368,28 +368,28 @@ defineExpose({ refresh: handleGetData })
 
       <!-- 提交按钮(选择后才出现状态机;uh-button 与投票详情页同款) -->
       <view v-if="submitForm.voteData.length !== 0" class="mt-3">
-        <uh-button v-if="isVoted" custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full">
+        <uh-button v-if="isVoted" custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full !bg-primary">
           您已参与投票
         </uh-button>
         <uh-button
-          v-else-if="voteState?.state === '未开始'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
+          v-else-if="voteState?.state === '未开始'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full !bg-primary"
           @click="handleSubmitTip('投票未开始')"
         >
           投票未开始
         </uh-button>
         <uh-button
-          v-else-if="voteState?.state === '已结束'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
+          v-else-if="voteState?.state === '已结束'" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full !bg-primary"
           @click="handleSubmitTip('投票已结束')"
         >
           投票已结束
         </uh-button>
         <uh-button
-          v-else-if="!voteData.spec?.canAnonymously" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full"
+          v-else-if="!voteData.spec?.canAnonymously" custom-class="uh-global-card-glass uh-shadow-xs border text-xs w-full py-2 !rounded-full !bg-primary"
           @click="handleSubmit()"
         >
           不支持匿名投票
         </uh-button>
-        <uh-button v-else custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full" @click="handleSubmit()">
+        <uh-button v-else custom-class="uh-global-card-glass uh-shadow-xs border w-full py-2 text-xs !rounded-full !bg-primary" @click="handleSubmit()">
           {{ isSubmit ? '正在提交...' : '提交投票' }}
         </uh-button>
       </view>

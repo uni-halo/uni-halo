@@ -161,7 +161,7 @@ onShareTimeline(() => ({
       <view class="box-border w-screen flex items-center gap-2 px-3 py-2">
         <view
           v-for="opt in sortOptions" :key="opt.key" class="uh-global-card-glass uh-shadow-xs box-border border rounded-full px-3 py-1 text-xs"
-          :class="activeSort === opt.key ? 'bg-secondary font-bold' : 'text-gray-500'"
+          :class="activeSort === opt.key ? '!bg-secondary font-bold' : 'text-gray-500'"
           @click="handleSortChange(opt.key)"
         >
           {{ opt.label }}

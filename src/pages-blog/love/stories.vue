@@ -300,14 +300,14 @@ onReachBottom(() => {
       <view class="box-border w-screen flex items-center gap-x-2 overflow-hidden px-3 py-2">
         <view
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-full px-4 py-1.5 text-xs shadow-none"
-          :class="sortDir === 'desc' ? 'bg-love/90 text-white font-bold' : 'text-gray-600'"
+          :class="sortDir === 'desc' ? '!bg-love/90 text-white font-bold' : 'text-gray-600'"
           @click="handleSelectSortDir('desc')"
         >
           最新在前
         </view>
         <view
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-full px-4 py-1.5 text-xs shadow-none"
-          :class="sortDir === 'asc' ? 'bg-love/90 text-white font-bold' : 'text-gray-600'"
+          :class="sortDir === 'asc' ? '!bg-love/90 text-white font-bold' : 'text-gray-600'"
           @click="handleSelectSortDir('asc')"
         >
           最早在前

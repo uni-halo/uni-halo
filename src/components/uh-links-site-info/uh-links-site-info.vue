@@ -116,7 +116,7 @@ watch(() => props.show, (val) => {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
           @click="handleCopyLink"
         >
           复制友链交换信息

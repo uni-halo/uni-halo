@@ -158,7 +158,7 @@ function handlePreview(url?: string) {
       <view class="box-border w-full flex shrink-0 items-center gap-x-2">
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-3xs border !py-2.5 !rounded-xl bg-white/90"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-3xs border !py-2.5 !rounded-xl !bg-white/90"
           @click="handleClose"
         >
           关闭

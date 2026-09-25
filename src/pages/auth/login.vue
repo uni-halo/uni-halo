@@ -230,7 +230,7 @@ async function handleLoginSuccess() {
               />
               <uh-button
                 class="w-full"
-                custom-class="mt-6 uh-global-card-glass bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
+                custom-class="mt-6 uh-global-card-glass !bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
                 :class="loading ? 'opacity-60' : ''" @click="doPasswordLogin"
               >
                 {{ loading ? '登录中...' : '登 录' }}
@@ -241,7 +241,7 @@ async function handleLoginSuccess() {
             <!-- #ifdef MP-WEIXIN -->
             <button
               v-if="wechatLoginEnabled"
-              class="uh-button-native uh-global-card-glass mt-3 w-full w-full bg-primary text-sm text-gray-900 !rounded-full !py-2"
+              class="uh-button-native uh-global-card-glass mt-3 w-full w-full text-sm text-gray-900 !rounded-full !bg-primary !py-2"
               :class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin"
             >
               {{ loading ? '登录中...' : '微信一键登录' }}
@@ -269,7 +269,7 @@ async function handleLoginSuccess() {
         </view>
       </view>
       <!-- 页脚 -->
-      <view class="box-borderpt-4 relative z-10 mb-4 w-full shrink-0 pb-safe">
+      <view class="relative z-10 mb-4 box-border w-full shrink-0 pt-4 pb-safe">
         <uh-page-copyright />
       </view>
     </view>

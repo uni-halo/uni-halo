@@ -262,7 +262,7 @@ handleGetData()
           >
             <uh-button
               v-if="props.allowComment && loadingStatus === DataLoadingStatusEnum.Empty"
-              custom-class="uh-global-card-glass border uh-shadow-xs mt-4 text-black text-xs px-4 py-1.5 !rounded-full"
+              custom-class="uh-global-card-glass border uh-shadow-xs mt-4 text-black text-xs px-4 py-1.5 !rounded-full !bg-primary"
               @click="handleToComment()"
             >
               抢沙发

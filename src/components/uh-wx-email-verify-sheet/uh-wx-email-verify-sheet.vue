@@ -206,7 +206,7 @@ function close() {
           />
           <uh-button
             class="shrink-0"
-            custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900 min-w-24"
+            custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 !py-2.5 !text-xs text-gray-900 min-w-24 !bg-primary"
             :class="codeCountdown > 0 || codeSending ? 'opacity-60' : ''"
             @action-click="sendCode"
           >
@@ -233,14 +233,14 @@ function close() {
       <view class="box-border w-full flex items-center justify-center gap-x-3">
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-white/90"
           @click="close"
         >
           取消
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary text-gray-900"
           :class="submitting ? 'opacity-60' : ''" @action-click="submit"
         >
           {{ submitting ? '注册中' : '完成注册' }}

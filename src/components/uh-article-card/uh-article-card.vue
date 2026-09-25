@@ -217,7 +217,7 @@ function handleToArticleDetail() {
         <template v-if="article.categories && article.categories.length !== 0">
           <text
             v-for="cate in article.categories.slice(0, 2)" :key="cate.metadata.name"
-            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl bg-secondary px-2 py-0.5 text-xs"
+            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
           >
             {{ cate.spec.displayName }}
           </text>
@@ -225,7 +225,7 @@ function handleToArticleDetail() {
         <template v-if="article.tags && article.tags.length !== 0">
           <text
             v-for="tag in article.tags.slice(0, 2)" :key="tag.metadata.name"
-            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl bg-secondary px-2 py-0.5 text-xs"
+            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
           >
             # {{ tag.spec.displayName }}
           </text>

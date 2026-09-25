@@ -458,7 +458,7 @@ onReachBottom(() => {
         <view
           v-for="(tab, index) in friendLinkTabs" :key="tab.key"
           class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-          :class="{ 'bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
+          :class="{ '!bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
           @click="handleOnTabChange({ index })"
         >
           {{ tab.label }}
@@ -599,7 +599,7 @@ onReachBottom(() => {
               <view class="box-border w-full flex items-center">
                 <uh-button
                   class="flex-1"
-                  custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+                  custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
                   @click="handleCopyLink(detail.data)"
                 >
                   复制信息
@@ -823,7 +823,7 @@ onReachBottom(() => {
             <view class="box-border w-full flex items-center">
               <uh-button
                 class="flex-1"
-                custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+                custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
                 @action-click="handleToMiniProgram(miniDetail.data)"
               >
                 点击访问

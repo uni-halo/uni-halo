@@ -331,7 +331,7 @@ onReachBottom(() => {
             <view
               v-for="f in filterConfig" :key="f.key"
               class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-1 border rounded-full px-2 py-1 text-gray-500 shadow-none"
-              :class="[filterValues[f.key] ? 'bg-secondary text-gray-900 font-bold' : 'bg-white/80 text-gray-600']"
+              :class="[filterValues[f.key] ? '!bg-secondary text-gray-900 font-bold' : 'bg-white/80 text-gray-600']"
               @click="handleOpenFilter(f)"
             >
               <text class="truncate text-xs">

@@ -24,7 +24,7 @@ const {
 export default defineManifestConfig({
   'name': VITE_APP_TITLE,
   'appid': VITE_UNI_APPID,
-  'description': '',
+  'description': 'UniHalo v3.x，你的跨端Halo博客。',
   'versionName': '3.0.0',
   'versionCode': '300',
   'transformPx': false,

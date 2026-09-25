@@ -383,7 +383,7 @@ function goBack() {
                 />
                 <uh-button
                   class="shrink-0"
-                  custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900"
+                  custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 !py-2.5 !text-xs text-gray-900 !bg-primary"
                   :class="codeCountdown > 0 || codeSending ? 'opacity-60' : ''"
                   @action-click="sendEmailCode"
                 >
@@ -424,7 +424,7 @@ function goBack() {
 
             <uh-button
               class="w-full"
-              custom-class="mt-6 uh-global-card-glass bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
+              custom-class="mt-6 uh-global-card-glass !bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"
               :class="loading ? 'opacity-60' : ''" @click="doRegister"
             >
               {{ loading ? '注册中...' : '立即注册' }}
@@ -433,7 +433,7 @@ function goBack() {
             <!-- #ifdef MP-WEIXIN -->
             <button
               v-if="wechatLoginEnabled"
-              class="uh-button-native uh-global-card-glass mt-3 w-full bg-primary text-sm text-gray-900 !rounded-full !py-2"
+              class="uh-button-native uh-global-card-glass mt-3 w-full text-sm text-gray-900 !rounded-full !bg-primary !bg-primary !py-2"
               :class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatRegister"
             >
               微信一键注册

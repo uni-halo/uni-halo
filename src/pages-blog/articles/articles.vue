@@ -238,7 +238,7 @@ onReachBottom(() => {
           <view
             v-for="cate in categoryOptions" :key="cate.value"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-            :class="{ 'bg-primary text-gray-900 font-semibold': filterValues.category === cate.value }"
+            :class="{ '!bg-primary text-gray-900 font-semibold': filterValues.category === cate.value }"
             @click="handleSelectFilter('category', cate.value)"
           >
             {{ cate.label }}
@@ -249,7 +249,7 @@ onReachBottom(() => {
             <view
               v-for="opt in sortOptions" :key="opt.value"
               class="uh-global-card-glass inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-              :class="{ 'bg-primary text-gray-900 font-semibold': filterValues.sort === opt.value, 'text-gray-500': filterValues.sort !== opt.value }"
+              :class="{ '!bg-primary text-gray-900 font-semibold': filterValues.sort === opt.value, 'text-gray-500': filterValues.sort !== opt.value }"
               @click="handleSelectFilter('sort', opt.value)"
             >
               {{ opt.label }}

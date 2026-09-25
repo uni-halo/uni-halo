@@ -359,7 +359,7 @@ onPullDownRefresh(() => {
         <view
           v-for="tab in tabList" :key="tab.key"
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-          :class="activeTab === tab.key ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+          :class="activeTab === tab.key ? '!bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
           @click="handleTabChange(tab.key)"
         >
           {{ tab.label }}

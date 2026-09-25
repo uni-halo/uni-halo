@@ -38,7 +38,10 @@ onLoad(async () => {
       uni.switchTab({ url: DEV_TO_PATH })
     }
     else {
-      uni.navigateTo({ url: DEV_TO_PATH })
+      uni.navigateTo({
+        animationType: 'fade-in',
+        url: DEV_TO_PATH,
+      })
     }
     return
   }

@@ -319,7 +319,7 @@ function handleLogout() {
       >
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-full bg-red-400 text-white !text-3xs"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-full !bg-red-400 text-white !text-3xs"
           @action-click="handleLogout()"
         >
           退出登录

@@ -284,7 +284,7 @@ onReachBottom(() => {
         <view
           v-for="(tab, index) in archiveTabs" :key="tab.key"
           class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-          :class="{ 'bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
+          :class="{ '!bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
           @click="handleOnTabChange({ index })"
         >
           {{ tab.label }}

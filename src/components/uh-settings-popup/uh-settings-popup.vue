@@ -253,13 +253,13 @@ function handleClose() {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center gap-x-2">
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs bg-white/90 border !py-2.5 !rounded-xl !text-3xs"
+          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs !bg-white/90 border !py-2.5 !rounded-xl !text-3xs"
           @click="handleClose()"
         >
           关闭
         </uh-button>
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
           @click="handleResetAll"
         >
           恢复默认

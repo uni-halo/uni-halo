@@ -536,14 +536,14 @@ onReachBottom(() => {
       <view class="box-border w-full flex items-center gap-x-3">
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-white/90"
           @click="handleYearPickerCancel"
         >
           取消
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary text-gray-900"
           @click="handleYearPickerConfirm"
         >
           确定

@@ -221,7 +221,7 @@ async function handleResetAll() {
       </template>
       <!-- 底部操作栏 -->
       <view class="box-border w-full">
-        <uh-button class="flex-1" custom-class="uh-global-card-glass !py-2.5 !rounded-full !text-3xs" @click="handleResetAll">
+        <uh-button class="flex-1" custom-class="uh-global-card-glass !py-2.5 !rounded-full !text-3xs !bg-primary" @click="handleResetAll">
           恢复默认
         </uh-button>
       </view>
@@ -245,14 +245,14 @@ async function handleResetAll() {
         <view class="box-border w-full flex items-center justify-center gap-x-3">
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-white/90"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-white/90"
             @click="handlePickerCancel"
           >
             取消
           </uh-button>
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs bg-primary text-gray-900"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary text-gray-900"
             @click="handlePickerConfirm"
           >
             确定

@@ -196,13 +196,13 @@
 				<scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
 					<view
 						class="uh-global-card-glass shadow-none mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs"
-						:class="activeType === '' ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+						:class="activeType === '' ? '!bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
 						@click="handleTypeChange('')">
 						全部
 					</view>
 					<view v-for="(type) in noticeTypes" :key="type.metadata?.name"
 						class="mb-2 ml-3 box-border uh-global-card-glass shadow-none inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs"
-						:class="activeType === type.metadata?.name ? 'bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+						:class="activeType === type.metadata?.name ? '!bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
 						@click="handleTypeChange(type.metadata?.name || '')">
 						<view v-if="type.spec?.color" class="shrink-0 h-2 w-2 rounded-full"
 							:style="{ backgroundColor: type.spec.color }" />
@@ -213,7 +213,7 @@
 					<view class="box-border flex gap-2 px-3 pb-1.5">
 						<view v-for="opt in SORT_OPTIONS" :key="opt.id"
 							class="uh-global-card-glass shadow-none inline-flex border rounded-2xl px-4 py-1.5 text-xs"
-							:class="{ 'bg-primary text-gray-900': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
+							:class="{ '!bg-primary text-gray-900': sortKey === opt.id, 'text-gray-500': sortKey !== opt.id }"
 							@click="handleSortChange(opt.id)">
 							{{ opt.label }}
 						</view>

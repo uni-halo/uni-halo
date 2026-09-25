@@ -131,7 +131,7 @@ onMounted(() => {
           今日不再提醒
         </view>
         <uh-button
-          custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 flex items-center justify-center gap-x-1 !rounded-lg"
+          custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 flex items-center justify-center gap-x-1 !rounded-lg !bg-primary"
           @click="handleViewAll()"
         >
           查看全文 <wd-icon name="arrow-right" size="24rpx" />
