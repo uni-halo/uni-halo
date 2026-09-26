@@ -28,7 +28,7 @@ export const VOTE_STATES: { NOT_VOTED: VoteState, VOTING: VoteState, VOTED: Vote
 /** 投票展示状态(中文 + unocss 文字/背景色类) */
 export const VOTE_STATE_LABELS: Record<string, { state: string, color: string, bgColor: string }> = {
   未开始: { state: '未开始', color: 'text-orange-400', bgColor: 'bg-orange-100' },
-  进行中: { state: '进行中', color: 'text-green-400', bgColor: 'bg-green-100' },
+  进行中: { state: '进行中', color: 'text-white', bgColor: 'bg-green-500' },
   已结束: { state: '已结束', color: 'text-red-400', bgColor: 'bg-red-100' },
 }
 

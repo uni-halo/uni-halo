@@ -217,7 +217,7 @@ function handleLogout() {
       <view class="flex shrink-0 items-center justify-between">
         <text class="text-md font-bold">我的</text>
         <view
-          class="uh-global-card-glass box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
+          class="uh-global-card-glass box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 !bg-white/5 !shadow-none"
           @click="handleClose()"
         >
           <wd-icon name="close" size="28rpx" />
@@ -227,7 +227,7 @@ function handleLogout() {
       <!-- 用户信息卡片 -->
       <view v-if="updateNowTime().hasLogin" class="w-full flex shrink-0">
         <view
-          class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 shadow-none !bg-white/5"
+          class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 !bg-white/5 !shadow-none"
         >
           <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
@@ -257,12 +257,11 @@ function handleLogout() {
         <view class="grid grid-cols-3 mt-3 box-border gap-3">
           <view
             v-for="entry in PROFILE_ENTRIES" :key="entry.key"
-            class="uh-global-card-glass flex flex-col items-center gap-y-1 overflow-hidden rounded-xl p-2 shadow-none"
+            class="uh-global-card-glass flex flex-col items-center gap-y-1 overflow-hidden rounded-xl p-2 !shadow-none"
             @click="handleToPage(entry)"
           >
-            <view class="uh-global-card-glass relative box-border w-12 flex items-center justify-center border rounded-lg text-gray-900 shadow-none">
+            <view class="relative box-border w-full flex items-center justify-center text-gray-900">
               <wd-icon :name="entry.icon" size="52rpx" />
-              <!-- 消息通知未读徽标 -->
               <view
                 v-if="entry.key === 'notifications' && unreadNotifyCount > 0"
                 class="absolute box-border h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 p-0.5 -right-1.5 -top-1.5"
@@ -288,7 +287,7 @@ function handleLogout() {
               :permission="entry.permission"
             >
               <view
-                class="uh-global-card-glass flex items-center gap-x-2 rounded-xl px-3 py-2.5 shadow-none"
+                class="uh-global-card-glass flex items-center gap-x-2 rounded-xl px-3 py-2.5 !shadow-none"
                 @click="handleToAdmin(entry.url)"
               >
                 <wd-icon
@@ -303,7 +302,7 @@ function handleLogout() {
         </scroll-view>
         <view
           v-else
-          class="uh-global-card-glass mt-3 box-border w-full flex flex-1 items-center justify-center border rounded-xl bg-white p-4 shadow-none backdrop-filter-none"
+          class="uh-global-card-glass mt-3 box-border w-full flex flex-1 items-center justify-center border rounded-xl bg-white p-4 backdrop-filter-none !shadow-none"
         >
           <uh-data-loading
             :loading-status="DataLoadingStatusEnum.Empty" empty-text="无权限" empty-sub-text="您没有任何权限"

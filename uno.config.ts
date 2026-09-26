@@ -87,6 +87,8 @@ export default defineConfig({
     'bg-orange-100',
     'bg-green-100',
     'bg-red-100',
+    'bg-green-500',
+    'text-white',
   ],
   rules: [
     [
