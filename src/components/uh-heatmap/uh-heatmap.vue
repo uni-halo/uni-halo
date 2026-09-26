@@ -157,38 +157,40 @@ const currentYearCount = computed(() => Object.values(yearDataMap.value).reduce(
         </view>
       </view>
       <!-- 主体:每列顶部带月份标签,整列横向排列(不换行),整体横向滚动 -->
-      <scroll-view scroll-x :show-scrollbar="false" class="heatmap-content flex-1">
-        <view class="inline-flex flex-col">
-          <view class="flex gap-1">
-            <view v-for="(column, ci) in weekColumns" :key="ci" class="flex shrink-0 flex-col">
-              <view class="month-label h-6 w-6 whitespace-nowrap text-center text-xs text-gray-400 leading-6">
-                {{ columnMonths[ci] }}
+      <view class="flex-1 overflow-hidden">
+        <scroll-view scroll-x :show-scrollbar="false" class="heatmap-content">
+          <view class="inline-flex flex-col">
+            <view class="flex gap-1">
+              <view v-for="(column, ci) in weekColumns" :key="ci" class="flex shrink-0 flex-col">
+                <view class="month-label h-6 w-6 whitespace-nowrap text-center text-xs text-gray-400 leading-6">
+                  {{ columnMonths[ci] }}
+                </view>
+                <view
+                  v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
+                  :style="{ backgroundColor: getDayColor(day) }" @click="handleDayClick(day)"
+                />
               </view>
-              <view
-                v-for="(day, di) in column" :key="di" class="day-cell mt-1 box-border h-6 w-6 rounded"
-                :style="{ backgroundColor: getDayColor(day) }" @click="handleDayClick(day)"
-              />
             </view>
           </view>
-        </view>
-      </scroll-view>
+        </scroll-view>
+      </view>
     </view>
 
     <view class="footer mt-6 flex items-center justify-between">
-      <view class="releases-count text-[24rpx] text-[#666]">
+      <view class="releases-count text-xs text-gray-600">
         <text>累计 {{ totalCount }} 篇</text>
         <text class="divider mx-2">丨</text>
         <text>本年 {{ currentYearCount }} 篇</text>
       </view>
       <view class="legend flex items-center gap-1">
-        <text class="legend-text text-[20rpx] text-[#999]">少</text>
+        <text class="legend-text text-xs text-gray-400">少</text>
         <view
           v-for="(color, index) in intensityColors"
           :key="index"
           class="day-cell legend-day-cell h-5 w-5"
           :style="{ backgroundColor: color }"
         />
-        <text class="legend-text text-[20rpx] text-[#999]">多</text>
+        <text class="legend-text text-xs text-gray-400">多</text>
       </view>
     </view>
   </view>

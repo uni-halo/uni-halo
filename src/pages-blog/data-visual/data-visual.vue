@@ -151,7 +151,7 @@ function columnOpts(categoriesCount: number) {
       formatter: (item: string) =>
         item.length > COLUMN_LABEL_MAX_LENGTH ? `${item.slice(0, COLUMN_LABEL_MAX_LENGTH)}…` : item,
     },
-    yAxis: { gridType: 'dash', dashLength: 4 },
+    yAxis: { gridType: 'dash', dashLength: 4, tofix: 0 },
     extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: [themeColor] } },
   }
 }
@@ -315,7 +315,7 @@ init()
           </uh-section-title>
           <view v-show="top10ArticlesChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
+              type="column" :canvas2d="true" :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, top10ArticlesChart)"
             />
           </view>
@@ -337,7 +337,7 @@ init()
           </uh-section-title>
           <view v-show="userCommentsChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
+              type="column" :canvas2d="true" :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, userCommentsChart)"
             />
           </view>
@@ -359,7 +359,7 @@ init()
           </uh-section-title>
           <view v-show="categoryChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
+              type="column" :canvas2d="true" :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, categoryChart)"
             />
           </view>

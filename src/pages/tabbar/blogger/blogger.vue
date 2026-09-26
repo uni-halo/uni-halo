@@ -54,7 +54,7 @@ const bloggerInfo = computed(() => {
     description: blogger?.description || '',
   }
 })
-
+const showComment = computed(() => haloConfigs.value.featureConfig?.pages?.postDetail?.showComment)
 const pageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.blogger as
   | { bgImageUrl?: string, waveImageUrl?: string, commonFeaturesMode?: 'grid' | 'list' }
   | undefined)
@@ -80,12 +80,12 @@ const statistics = ref<IBlogStats>({ post: 0, comment: 0, category: 0, visit: 0,
 
 /** 主行统计 */
 const allStats = computed(() => [
-  { key: 'post', label: '内容', value: statistics.value.post },
-  { key: 'visit', label: '访客', value: statistics.value.visit },
-  { key: 'category', label: '分类', value: statistics.value.category },
-  { key: 'comment', label: '评论', value: statistics.value.comment },
-  { key: 'upvote', label: '点赞', value: statistics.value.upvote },
-])
+  { key: 'post', label: '内容', value: statistics.value.post, visible: true },
+  { key: 'visit', label: '访客', value: statistics.value.visit, visible: true },
+  { key: 'category', label: '分类', value: statistics.value.category, visible: true },
+  { key: 'comment', label: '评论', value: statistics.value.comment, visible: showComment.value },
+  { key: 'upvote', label: '点赞', value: statistics.value.upvote, visible: true },
+].filter(item => item.visible))
 
 interface INavItem {
   key: string
@@ -385,7 +385,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             {{ group.title }}
           </uh-section-title>
         </view>
-        <view class="uh-global-card-glass mx-4 overflow-hidden rounded-2xl">
+        <view class="uh-global-card-glass uh-shadow-xs mx-4 overflow-hidden rounded-2xl">
           <view
             v-for="(nav, index) in group.items" :key="nav.key"
             class="nav-item flex items-center justify-between px-4"
