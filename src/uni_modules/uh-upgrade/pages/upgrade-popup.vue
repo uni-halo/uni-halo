@@ -3,7 +3,7 @@
 		<view class="content botton-radius">
 			<view class="content-top">
 				<text class="content-top-text">{{ title }}</text>
-				<image class="content-top" style="top: 0" width="100%" height="100%" src="/uni_modules/uhalo-upgrade/static/app/bg_top.png"></image>
+				<image class="content-top" style="top: 0" width="100%" height="100%" src="/uni_modules/uh-upgrade/static/app/bg_top.png"></image>
 			</view>
 			<view class="content-header"></view>
 			<view class="content-body">
@@ -66,7 +66,7 @@
 				</view>
 			</view>
 
-			<image v-if="!is_mandatory" class="close-img" src="/uni_modules/uhalo-upgrade/static/app/app_update_close.png" @click.stop="closeUpdate"></image>
+			<image v-if="!is_mandatory" class="close-img" src="/uni_modules/uh-upgrade/static/app/app_update_close.png" @click.stop="closeUpdate"></image>
 		</view>
 	</view>
 </template>
@@ -75,7 +75,7 @@
 // #ifdef APP-PLUS
 import { createNotificationProgress, cancelNotificationProgress, finishNotificationProgress } from '@/uni_modules/uts-progressNotification';
 // #endif
-import { compare, platform_iOS, platform_Android, platform_Harmony } from '../utils/utils'
+import { compare, platform_iOS, platform_Android, platform_Harmony, createUpgradeDownloadTask } from '../utils'
 const localFilePathKey = 'UNI_ADMIN_UPGRADE_CENTER_LOCAL_FILE_PATH';
 
 let downloadTask = null;
@@ -301,7 +301,7 @@ export default {
 		downloadPackage() {
 			this.downloading = true;
 			//下载包
-			downloadTask = uni.downloadFile({
+			downloadTask = createUpgradeDownloadTask({
 				url: this.url,
 				success: (res) => {
 					if (res.statusCode == 200) {

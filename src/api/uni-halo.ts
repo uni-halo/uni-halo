@@ -107,7 +107,7 @@ export function getCommentWidgetConfig() {
 }
 
 /**
- * 检查更新(uhalo-upgrade 插件对接,插件本体引入后业务侧入口)
+ * 检查更新(uh-upgrade 插件对接,插件本体引入后业务侧入口)
  */
 export function checkVersion(baseUrl: string) {
   return http.Get<IResponse<IUpdateCheckRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion', {

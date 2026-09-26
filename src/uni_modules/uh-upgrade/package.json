@@ -1,5 +1,5 @@
 {
-  "id": "uhalo-upgrade",
+  "id": "uh-upgrade",
   "displayName": "uhalo 升级中心 - App",
   "version": "1.0.0",
   "description": "uhalo 升级中心 - 客户端检查更新（uni-upgrade-center-app 适配版，对接 Halo 插件 uni-halo 的 checkVersion 接口）",

@@ -44,3 +44,7 @@ export function compare(v_1: string = '0', v_2: string = '0') {
 
 	return result;
 }
+
+export { probeFileSize } from './download'
+
+export { createUpgradeDownloadTask } from './download'

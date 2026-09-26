@@ -1,5 +1,5 @@
 ## 1.0.0（2026-08-30）
-- 适配 uhalo：基于 uni-upgrade-center-app 0.9.12 复制改造，模块更名为 uhalo-upgrade
+- 适配 uhalo：基于 uni-upgrade-center-app 0.9.12 复制改造，模块更名为 uh-upgrade
 - 移除 uniCloud 依赖：checkVersion 由云函数调用改为 HTTP GET 请求 Halo 插件 uni-halo 公开接口
 - 新增 baseUrl 参数：callCheckVersion(baseUrl) / checkUpdate(baseUrl) 需由调用方传入 Halo 站点地址（如 HaloTokenConfig.BASE_API）
 - 安装包地址为 Halo 附件直链，移除 cloud:// 临时链接处理逻辑

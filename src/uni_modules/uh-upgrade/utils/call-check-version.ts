@@ -65,7 +65,7 @@ function normalizePlatform(platform : string) : string {
 }
 
 /**
- * 检测升级（uhalo 版）
+ * 检测升级（uh 版）
  * 原 uni-upgrade-center-app 通过 uniCloud.callFunction 调用云函数，
  * 本插件改为 HTTP GET 请求 Halo 插件的 checkVersion 接口。
  * uni_modules 插件无法直接读取项目配置文件，因此 baseUrl 必须由调用方传入。
@@ -75,7 +75,7 @@ export default function (baseUrl : string) : Promise<UniUpgradeCenterResult> {
 	// #ifdef APP
 	return new Promise<UniUpgradeCenterResult>((resolve, reject) => {
 		if (!baseUrl) {
-			reject('【uhalo-upgrade】未传入 baseUrl，无法检测升级。请调用 checkUpdate(baseUrl) 时传入 Halo 站点地址')
+			reject('【uh-upgrade】未传入 baseUrl，无法检测升级。请调用 checkUpdate(baseUrl) 时传入 Halo 站点地址')
 			return
 		}
 		const systemInfo = uni.getSystemInfoSync()

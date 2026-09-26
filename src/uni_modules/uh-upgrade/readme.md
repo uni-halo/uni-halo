@@ -1,4 +1,4 @@
-# uhalo-upgrade
+# uh-upgrade
 
 基于 DCloud 官方 `uni-upgrade-center-app`（v0.9.12）复制改造的 App 升级检测模块，适配 uni-halo 项目：
 
@@ -26,7 +26,7 @@ GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion
 
 ```json
 {
-  "path": "uni_modules/uhalo-upgrade/pages/upgrade-popup",
+  "path": "uni_modules/uh-upgrade/pages/upgrade-popup",
   "style": {
     "disableScroll": true,
     "app-plus": {
@@ -41,27 +41,28 @@ GET {baseUrl}/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion
 ### 2. 检测升级（推荐在 App.vue 中调用）
 
 ```js
-import HaloTokenConfig from '@/config/uhalo.config.js'
-import CheckAppUpdate from '@/uni_modules/uhalo-upgrade/utils/check-update'
+import CheckAppUpdate from '@/uni_modules/uh-upgrade/utils/check-update'
 
-// baseUrl 即 Halo 站点地址（config/uhalo.config.js 中的 BASE_API，域名后不带斜杠）
-CheckAppUpdate(HaloTokenConfig.BASE_API)
+// baseUrl 即 Halo 站点地址（域名后不带斜杠）
+CheckAppUpdate({ baseUrl: import.meta.env.VITE_SERVER_BASEURL })
 ```
 
-> HarmonyOS Next 平台需要传递弹窗组件（vue3 组件），`check-update.ts` 中为 `checkUpdate(component, baseUrl)`：
->
-> ```js
-> CheckAppUpdate(upgradePopupComponentRef, HaloTokenConfig.BASE_API)
-> ```
+参数为对象 `CheckUpdateOptions`：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| baseUrl | string | 是 | Halo 站点地址（域名后不带斜杠） |
+| component | any | Harmony 必填 | HarmonyOS Next 平台弹窗组件 |
+| useModal | boolean | 否 | true 时用 uni.showModal 提示升级，默认走升级弹窗页面 |
 
 若未传入 baseUrl，模块会 reject 并提示「未传入 baseUrl，无法检测升级」。
 
 ### 3. nvue 页面
 
-nvue 工程使用 `@/uni_modules/uhalo-upgrade/utils/check-update-nvue.js`，用法相同：
+nvue 工程使用 `@/uni_modules/uh-upgrade/utils/check-update-nvue.js`，用法相同：
 
 ```js
-import CheckAppUpdate from '@/uni_modules/uhalo-upgrade/utils/check-update-nvue'
+import CheckAppUpdate from '@/uni_modules/uh-upgrade/utils/check-update-nvue'
 CheckAppUpdate(HaloTokenConfig.BASE_API)
 ```
 
@@ -73,12 +74,12 @@ CheckAppUpdate(HaloTokenConfig.BASE_API)
 
 ## 与 uni-upgrade-center-app 的差异
 
-| 项 | uni-upgrade-center-app | uhalo-upgrade |
+| 项 | uni-upgrade-center-app | uh-upgrade |
 |---|---|---|
 | 检测方式 | `uniCloud.callFunction('uni-upgrade-center')` | HTTP GET `checkVersion`（Halo 插件） |
 | baseUrl | 云函数自动获取 | 调用方传入（如 `HaloTokenConfig.BASE_API`） |
 | 安装包地址 | `cloud://` 云存储临时链接 | Halo 附件直链（`/upload/...`），无需换临时链接 |
-| 模块名/路径 | `uni_modules/uni-upgrade-center-app/` | `uni_modules/uhalo-upgrade/` |
+| 模块名/路径 | `uni_modules/uni-upgrade-center-app/` | `uni_modules/uh-upgrade/` |
 | 数据库 | uniCloud 集合 | Halo 插件自定义扩展（AppInfo / AppVersion） |
 
 ## 完整升级链路

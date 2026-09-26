@@ -358,7 +358,7 @@ export interface IHaloGlobalConfig {
 
 /* ---------- uni-halo 检查更新 ---------- */
 
-/** 检查更新结果(uhalo-upgrade 对接) */
+/** 检查更新结果(uh-upgrade 对接) */
 export interface IUpdateCheckRes {
   code: number
   message: string

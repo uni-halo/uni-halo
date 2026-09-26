@@ -2,7 +2,7 @@ function callCheckVersion(baseUrl) {
 	// #ifdef APP-PLUS
 	return new Promise((resolve, reject) => {
 		if (!baseUrl) {
-			reject('【uhalo-upgrade】未传入 baseUrl，无法检测升级。请调用 checkUpdate(baseUrl) 时传入 Halo 站点地址')
+			reject('【uh-upgrade】未传入 baseUrl，无法检测升级。请调用 checkUpdate(baseUrl) 时传入 Halo 站点地址')
 			return
 		}
 		const checkUrl = baseUrl.replace(/\/+$/, '') + '/apis/api.unihalo.ialley.cn/v1alpha1/upgrade/checkVersion'
@@ -47,7 +47,7 @@ export default function(baseUrl) {
 				type // 安装包类型
 			} = result;
 
-			// uhalo 版：url 为 Halo 附件直链，无需获取临时链接
+			// uh 版：url 为 Halo 附件直链，无需获取临时链接
 			// 此处逻辑仅为实例，可自行编写
 			if (code > 0) {
 				resolve(result)
@@ -80,7 +80,7 @@ export default function(baseUrl) {
 				 */
 				uni.setStorageSync(PACKAGE_INFO_KEY, result)
 				uni.navigateTo({
-					url: `/uni_modules/uhalo-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}`,
+					url: `/uni_modules/uh-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}`,
 					fail: (err) => {
 						console.error('更新弹框跳转失败', err)
 						uni.removeStorageSync(PACKAGE_INFO_KEY)

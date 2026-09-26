@@ -28,5 +28,17 @@ export default defineUniPages({
     root: 'pages-blog',
     pages: [],
   }],
+  // 升级弹窗页（uni_modules 不会被 vite-plugin-uni-pages 扫描，需手动注册，App 端使用）
+  pages: [{
+    path: 'uni_modules/uh-upgrade/pages/upgrade-popup',
+    style: {
+      disableScroll: true,
+      'app-plus': {
+        backgroundColor: 'rgba(0,0,0,0)',
+        animationType: 'fade-in',
+        animationDuration: 200,
+      },
+    },
+  }],
   tabBar: tabBar as any,
 })

@@ -157,6 +157,7 @@
     "@dcloudio/uni-automator": "3.0.0-4070620250821001",
     "@dcloudio/uni-cli-shared": "3.0.0-4070620250821001",
     "@dcloudio/uni-stacktracey": "3.0.0-4070620250821001",
+    "@dcloudio/uni-uts-v1": "3.0.0-4070620250821001",
     "@dcloudio/vite-plugin-uni": "3.0.0-4070620250821001",
     "@iconify-json/carbon": "^1.2.4",
     "@iconify/utils": "^3.0.2",
