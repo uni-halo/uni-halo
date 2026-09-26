@@ -380,7 +380,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 功能导航：分组模式 -->
     <template v-else-if="featureMode === 'list'">
       <template v-for="group in calcNavGroups" :key="group.key">
-        <view class="box-border px-4 mb-3 mt-3">
+        <view class="mb-3 mt-3 box-border px-4">
           <uh-section-title>
             {{ group.title }}
           </uh-section-title>
@@ -414,7 +414,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 登录入口(任一登录方式开启才显示) -->
     <view v-if="loginEntryVisible" class="box-border flex justify-center px-4 pt-6" @click="handleLoginEntry">
-      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full !py-2.5 !text-3xs ${hasLogin ? '!bg-red-400 text-white' : '!bg-primary'}`">
+      <uh-button class="w-full flex-1" :custom-class="`uh-global-card-glass uh-shadow-xs !rounded-full !py-2 !text-sm ${hasLogin ? '!bg-red-400 text-white' : '!bg-primary'}`">
         {{ hasLogin ? `退出登录${userStore.userInfo.nickname ? `(${userStore.userInfo.nickname})` : ''}` : '登录' }}
       </uh-button>
     </view>

@@ -241,7 +241,7 @@ async function handleLoginSuccess() {
             <!-- #ifdef MP-WEIXIN -->
             <button
               v-if="wechatLoginEnabled"
-              class="uh-button-native uh-global-card-glass mt-3 w-full w-full text-sm text-gray-900 !rounded-full !bg-primary !py-2"
+              class="uh-button-native uh-global-card-glass mt-3 w-full text-3xs text-gray-900 !rounded-full !bg-primary !py-2.5"
               :class="loading ? 'opacity-60' : ''" :disabled="loading" @click="doWechatLogin"
             >
               {{ loading ? '登录中...' : '微信一键登录' }}

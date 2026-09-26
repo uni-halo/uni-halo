@@ -687,7 +687,7 @@ onShow(() => {
       <!-- 退出登录 -->
       <view class="mt-2 box-border w-full pb-6">
         <uh-button
-          custom-class="uh-global-card-glass w-full border border-red-400/30 !bg-red-400/80 py-2.5 text-white !rounded-full !text-3xs"
+          custom-class="uh-global-card-glass w-full border border-red-400/30 !bg-red-400/80 !py-2 text-white !rounded-full !text-sm"
           @action-click="handleLogout()"
         >
           退出登录
