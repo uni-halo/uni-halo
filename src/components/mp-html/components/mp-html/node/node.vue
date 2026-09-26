@@ -127,8 +127,16 @@ function getTop(e) {
   return top - 30
 }
 
+// #ifdef MP
+import node from './node'
+// #endif
 export default {
   name: 'node',
+  // #ifdef MP
+  components: {
+    node
+  },
+  // #endif
   options: {
     // #ifdef MP-WEIXIN
     virtualHost: true,

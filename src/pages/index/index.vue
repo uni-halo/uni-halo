@@ -7,11 +7,10 @@ import { collectSiteDefaults } from '@/utils/preference'
 import { useMaintenanceIntercept } from '@/hooks/useMaintenanceIntercept'
 
 definePage({
-  // 使用 type: "home" 属性设置首页，其他页面不需要设置，默认为page
   type: 'home',
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '初始页面',
+    navigationBarTitleText: '正在初始化...',
   },
 })
 
