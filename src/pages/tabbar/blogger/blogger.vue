@@ -1,11 +1,13 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { onPullDownRefresh, onShareAppMessage, onShareTimeline, onShow } from '@dcloudio/uni-app'
 import { getBlogStatistics } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useLoveModuleUnlock } from '@/hooks/useLoveModuleUnlock'
+import { checkUpdates } from '@/utils/checkUpdate'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { t } from '@/locale'
@@ -14,7 +16,6 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import type { IBlogStats } from '@/api/types/halo'
-import { storeToRefs } from 'pinia'
 
 const dialog = useDialog()
 
@@ -123,6 +124,29 @@ const configuredFeatures = computed(() => {
   return mp
 })
 
+
+/** 当前应用版本号 */
+function getAppVersion() {
+  return `检查更新 v${uni.getAppBaseInfo().appVersion || ''}`
+}
+
+/** 应用版本固定项(点击检查更新) */
+const appVersionItem: INavItem = {
+  key: 'app-version',
+  title: '应用版本',
+  icon: 'info-circle',
+  color: '#b9e424',
+  bgColor: '#b9e42461',
+  subTitle: getAppVersion(),
+  path: null,
+  show: true,
+  group: 'more',
+}
+
+function handleAppVersion() {
+  checkUpdates()
+}
+
 const navList = ref<INavItem[]>([])
 /**
  * 常用功能显示方式(插件端「功能设置 → 页面设置 → 关于页」配置,缺省网格;
@@ -131,9 +155,10 @@ const navList = ref<INavItem[]>([])
 const featureMode = computed<'grid' | 'list'>(() =>
   pageConfig.value?.commonFeaturesMode === 'list' ? 'list' : 'grid',
 )
+
 /** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
 const calcNavGroups = computed(() => {
-  const visible = navList.value.filter(n => n.show)
+  const visible = [...navList.value.filter(n => n.show), appVersionItem]
   const groupDefs: { key: 'blog' | 'more', title: string }[] = [
     { key: 'blog', title: '常用功能' },
     { key: 'more', title: '其他功能' },
@@ -141,13 +166,14 @@ const calcNavGroups = computed(() => {
   return groupDefs
     .map(def => ({ ...def, items: visible.filter(n => n.group === def.key) }))
     .filter(group => group.items.length > 0)
+    .map(group => group.key === 'more' ? { ...group, items: [...group.items].sort(n => n.key === 'app-version' ? 1 : -1) } : group)
 })
 
 const commonFeatures = computed(() => {
   return navList.value.filter(f => f.show && f.group === 'blog')
 })
 const otherFeatures = computed(() => {
-  return navList.value.filter(f => f.show && f.group === 'more')
+  return [...navList.value.filter(f => f.show && f.group === 'more'),appVersionItem]
 })
 
 /* ---------------- 功能导航 ---------------- */
@@ -189,7 +215,6 @@ async function handleGetData() {
     statistics.value = res.data
   }
   catch (err) {
-    console.error('获取统计失败', err)
     uni.showToast({ icon: 'none', title: t('common.loadFailedRetry') })
   }
   finally {
@@ -330,7 +355,7 @@ onPageScroll((option: Page.PageScrollOption) => {
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
             class="uh-global-card-glass uh-shadow-xs flex flex-col items-center justify-between rounded-2xl p-2"
-            @click="handleNavGoTo(nav)"
+            @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
             <view
               class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
@@ -390,7 +415,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             v-for="(nav, index) in group.items" :key="nav.key"
             class="nav-item flex items-center justify-between px-4"
             :class="index < group.items.length - 1 ? 'border-b border-b-solid border-black/5' : ''"
-            @click="handleNavGoTo(nav)"
+            @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
             <view class="nav-left flex items-center gap-3 py-3">
               <view
