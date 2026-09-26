@@ -380,8 +380,8 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 功能导航：分组模式 -->
     <template v-else-if="featureMode === 'list'">
       <template v-for="group in calcNavGroups" :key="group.key">
-        <view class="box-border px-4">
-          <uh-section-title class="mb-3 mt-8">
+        <view class="box-border px-4 mb-3 mt-3">
+          <uh-section-title>
             {{ group.title }}
           </uh-section-title>
         </view>
