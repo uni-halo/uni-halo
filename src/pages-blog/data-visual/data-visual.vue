@@ -139,6 +139,7 @@ const COLUMN_LABEL_MAX_LENGTH = 4
 /** 柱状图通用配置(超过每屏数量才显示滚动条;label 超长省略) */
 function columnOpts(categoriesCount: number) {
   return {
+    background: '#f6f3ee',
     color: chartColors,
     padding: [20, 15, 10, 15],
     legend: { show: false },
@@ -315,7 +316,7 @@ init()
           </uh-section-title>
           <view v-show="top10ArticlesChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, top10ArticlesChart)"
             />
           </view>
@@ -337,7 +338,7 @@ init()
           </uh-section-title>
           <view v-show="userCommentsChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, userCommentsChart)"
             />
           </view>
@@ -359,7 +360,7 @@ init()
           </uh-section-title>
           <view v-show="categoryChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, categoryChart)"
             />
           </view>
