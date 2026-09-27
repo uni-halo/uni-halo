@@ -20,28 +20,28 @@
 				</view>
 				<view class="footer flex-center">
 					<template v-if="isApplicationStore">
-						<button class="content-button" style="border: none; color: #fff" plain @click="jumpToApplicationStore">
+						<button class="content-button" style="border: none; color: #18181b" plain @click="jumpToApplicationStore">
 							{{ downLoadBtnTextiOS }}
 						</button>
 					</template>
 					<template v-else>
 						<template v-if="!downloadSuccess">
 							<view class="progress-box flex-column" v-if="downloading">
-								<progress class="progress" :percent="downLoadPercent" activeColor="#3DA7FF" show-info stroke-width="10" />
+								<progress class="progress" :percent="downLoadPercent" activeColor="var(--wot-color-theme, #B9E424)" show-info stroke-width="10" />
 								<view style="width: 100%; font-size: 28rpx; display: flex; justify-content: space-around">
 									<text>{{ downLoadingText }}</text>
 									<text>({{ downloadedSize }}/{{ packageFileSize }}M)</text>
 								</view>
 							</view>
 
-							<button v-else class="content-button" style="border: none; color: #fff" plain @click="updateApp">
+							<button v-else class="content-button" style="border: none; color: #18181b" plain @click="updateApp">
 								{{ downLoadBtnText }}
 							</button>
 						</template>
 						<button
 							v-else-if="downloadSuccess && !installed"
 							class="content-button"
-							style="border: none; color: #fff"
+							style="border: none; color: #18181b"
 							plain
 							:loading="installing"
 							:disabled="installing"
@@ -52,7 +52,7 @@
 						<button
 							v-else-if="installed && !isWGT"
 							class="content-button"
-							style="border: none; color: #fff"
+							style="border: none; color: #18181b"
 							plain
 							:loading="installing"
 							:disabled="installing"
@@ -61,7 +61,7 @@
 							安装未完成，点击安装
 						</button>
 
-						<button v-else-if="installed && isWGT" class="content-button" style="border: none; color: #fff" plain @click="restart">安装完毕，点击重启</button>
+						<button v-else-if="installed && isWGT" class="content-button" style="border: none; color: #18181b" plain @click="restart">安装完毕，点击重启</button>
 					</template>
 				</view>
 			</view>
@@ -607,7 +607,7 @@ page {
 .title {
 	font-size: 33rpx;
 	font-weight: bold;
-	color: #3da7ff;
+	color: var(--wot-color-theme, #b9e424);
 	line-height: 38px;
 }
 
@@ -617,12 +617,12 @@ page {
 
 .content-body-version {
 	padding-left: 20rpx;
-	color: #fff;
+	color: #18181b;
 	font-size: 20rpx;
 	margin-left: 10rpx;
 	padding: 4rpx 8rpx;
 	border-radius: 20rpx;
-	background: #50aefd;
+	background: var(--wot-color-theme, #b9e424);
 }
 
 .footer {
@@ -669,14 +669,14 @@ page {
 	flex: 1;
 	font-size: 30rpx;
 	font-weight: 400;
-	color: #ffffff;
+	color: #18181b;
 	border-radius: 40rpx;
 	margin: 0 18rpx;
 
 	height: 80rpx;
 	line-height: 80rpx;
 
-	background: linear-gradient(to right, #1785ff, #3da7ff);
+	background: linear-gradient(to right, var(--wot-color-theme, #b9e424), var(--wot-color-secondary, #d7f94c));
 }
 
 .flex-column {

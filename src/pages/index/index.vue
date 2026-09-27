@@ -124,14 +124,12 @@ onLoad(async () => {
       </text>
     </view>
 
-    <button
-      class="mt-10 h-20 w-64 flex items-center justify-center border-none rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-r text-base text-gray-900 font-bold"
-      :disabled="entering"
-      :loading="entering"
+    <uh-button
+      custom-class="mt-10 !rounded-full text-sm !px-6 !border !py-2 !bg-primary !text-gray-900 uh-shadow-xs"
       @click="enterApp"
     >
       进入应用
-    </button>
+    </uh-button>
   </view>
 </template>
 
