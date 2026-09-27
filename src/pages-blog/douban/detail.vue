@@ -207,14 +207,14 @@ function handleCopyInfo() {
     <view v-if="douban" class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
       <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
         <view
-          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full !px-4 shadow-none"
           @click="handleOpenDoubanLink()"
         >
           <wd-icon name="link" size="36rpx" />
           <text class="shrink-0 text-xs text-gray-900 font-semibold">豆瓣地址</text>
         </view>
         <view
-          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full !px-4 shadow-none"
           @click="handleCopyInfo()"
         >
           <wd-icon name="copy" size="36rpx" />

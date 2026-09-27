@@ -139,13 +139,15 @@ function handleOpenLink(url: string | undefined, label: string) {
       </view>
 
       <view
-        class="uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none"
+        class="-mt-8 uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
         <view class="box-border flex flex-col gap-3 p-3 pb-2">
           <view class="flex items-center gap-2">
-            <text class="text-base text-gray-900 font-semibold">{{ project.title }}</text>
+            <view class="font-semibold">
+              {{ project.title }}
+            </view>
             <view
               v-if="project.featured"
               class="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-10px text-gray-900"
@@ -154,10 +156,10 @@ function handleOpenLink(url: string | undefined, label: string) {
             </view>
           </view>
           <text v-if="project.summary" class="text-xs text-gray-500">{{ project.summary }}</text>
-          <view v-if="project.techStacks?.length" class="flex flex-wrap gap-2">
+          <view v-if="project.techStacks?.length" class="box-border flex flex-wrap items-center gap-2 text-xs">
             <text
               v-for="tech in project.techStacks" :key="tech"
-              class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
+              class="uh-global-card-glass uh-shadow-xs box-border border rounded-full px-2 py-1"
             >
               {{ tech }}
             </text>
@@ -185,8 +187,8 @@ function handleOpenLink(url: string | undefined, label: string) {
         </view>
 
         <!-- 内容区域 -->
-        <view v-if="project.content" class="box-border p-3 pt-2">
-          <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3">
+        <view v-if="project.content" class="box-border flex flex-col gap-y-4 p-3 pt-2">
+          <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
             <mp-html
               :content="project.content" lazy-load :domain="markdownConfig.domain"
               :loading-img="markdownConfig.loadingGif" scroll-table selectable
@@ -206,10 +208,10 @@ function handleOpenLink(url: string | undefined, label: string) {
         <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
           <view
             v-for="btn in linkButtons" :key="btn.label"
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full !px-6 shadow-none"
             @click="handleOpenLink(btn.url, btn.label)"
           >
-            <wd-icon name="link" size="36rpx" />
+            <wd-icon name="link" size="32rpx" />
             <text class="shrink-0 text-xs text-gray-900 font-semibold">{{ btn.label }}</text>
           </view>
         </view>
