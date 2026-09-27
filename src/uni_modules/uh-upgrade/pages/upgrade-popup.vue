@@ -1,72 +1,96 @@
 <template>
-	<view class="mask flex-center" v-if="shown">
-		<view class="content botton-radius">
-			<view class="content-top">
-				<text class="content-top-text">{{ title }}</text>
-				<image class="content-top" style="top: 0" width="100%" height="100%" src="/uni_modules/uh-upgrade/static/app/bg_top.png"></image>
-			</view>
-			<view class="content-header"></view>
-			<view class="content-body">
-				<view class="title">
-					<text>{{ subTitle }}</text>
-					<text class="content-body-version">{{ version }}</text>
+	<view class="overlay" v-if="shown">
+		<view class="dialog-wrap">
+			<view class="dialog">
+				<!-- 顶部品牌区：Logo 内嵌 + 柔光晕 -->
+				<view class="hero">
+					<view class="bubble b1"></view>
+					<view class="bubble b2"></view>
+					<view class="halo"></view>
+					<view class="logo-wrap">
+						<image class="logo-image" :src="logoUrl" mode="aspectFill"></image>
+					</view>
 				</view>
-				<view class="body">
-					<scroll-view class="box-des-scroll" scroll-y="true">
-						<text class="box-des">
-							{{ contents }}
-						</text>
-					</scroll-view>
-				</view>
-				<view class="footer flex-center">
-					<template v-if="isApplicationStore">
-						<button class="content-button" style="border: none; color: #18181b" plain @click="jumpToApplicationStore">
-							{{ downLoadBtnTextiOS }}
-						</button>
-					</template>
-					<template v-else>
-						<template v-if="!downloadSuccess">
-							<view class="progress-box flex-column" v-if="downloading">
-								<progress class="progress" :percent="downLoadPercent" activeColor="var(--wot-color-theme, #B9E424)" show-info stroke-width="10" />
-								<view style="width: 100%; font-size: 28rpx; display: flex; justify-content: space-around">
-									<text>{{ downLoadingText }}</text>
-									<text>({{ downloadedSize }}/{{ packageFileSize }}M)</text>
-								</view>
-							</view>
 
-							<button v-else class="content-button" style="border: none; color: #18181b" plain @click="updateApp">
-								{{ downLoadBtnText }}
+				<!-- 内容区 -->
+				<view class="body">
+					<view class="title-row">
+						<text class="title">{{ subTitle }}</text>
+						<text class="ver">{{ version }}</text>
+					</view>
+					<view class="meta">
+						<!-- 包体积仅在实际下载开始后才有值，为 0 时只显示下载建议 -->
+						<text v-if="packageFileSize > 0">安装包 {{ packageFileSize }} MB</text>
+						<view v-if="packageFileSize > 0" class="dot"></view>
+						<text>建议 Wi-Fi 环境下载</text>
+					</view>
+
+					<!-- 更新日志卡片（rich-text 渲染后台文本） -->
+					<view class="notes">
+						<view class="notes-head">
+							<text>{{ title }}</text>
+						</view>
+						<scroll-view class="notes-scroll" scroll-y="true" :show-scrollbar="false">
+							<rich-text class="box-des" :nodes="contents" />
+						</scroll-view>
+					</view>
+
+					<!-- 底部操作区：按钮与进度条同位切换，进度条在上 -->
+					<view class="footer">
+						<template v-if="isApplicationStore">
+							<button class="btn-primary" hover-class="btn-primary-hover" @click="jumpToApplicationStore">
+								<text class="btn-label">{{ downLoadBtnTextiOS }}</text>
 							</button>
 						</template>
-						<button
-							v-else-if="downloadSuccess && !installed"
-							class="content-button"
-							style="border: none; color: #18181b"
-							plain
-							:loading="installing"
-							:disabled="installing"
-							@click="installPackage"
-						>
-							{{ installing ? '正在安装……' : '下载完成，立即安装' }}
-						</button>
-						<button
-							v-else-if="installed && !isWGT"
-							class="content-button"
-							style="border: none; color: #18181b"
-							plain
-							:loading="installing"
-							:disabled="installing"
-							@click="installPackage"
-						>
-							安装未完成，点击安装
-						</button>
+						<template v-else>
+							<template v-if="!downloadSuccess">
+								<view class="progress-box flex-column" v-if="downloading">
+									<progress class="progress" :percent="downLoadPercent" activeColor="#4CB813" show-info stroke-width="10" />
+									<view class="progress-meta">
+										<text>{{ downLoadingText }}</text>
+										<text>({{ downloadedSize }}/{{ packageFileSize }}M)</text>
+									</view>
+								</view>
+								<button v-else class="btn-primary" hover-class="btn-primary-hover" @click="updateApp">
+									<text class="btn-label">{{ downLoadBtnText }}</text>
+								</button>
+							</template>
+							<button
+								v-else-if="downloadSuccess && !installed"
+								class="btn-primary"
+								:class="{ 'btn-done': installing }"
+								hover-class="btn-primary-hover"
+								:loading="installing"
+								:disabled="installing"
+								@click="installPackage"
+							>
+								<view class="btn-label">
+									<view v-if="installing" class="ico-done-check"></view>
+									<text>{{ installing ? '正在安装……' : '下载完成，立即安装' }}</text>
+								</view>
+							</button>
+							<button
+								v-else-if="installed && !isWGT"
+								class="btn-primary"
+								hover-class="btn-primary-hover"
+								:loading="installing"
+								:disabled="installing"
+								@click="installPackage"
+							>
+								<text class="btn-label">安装未完成，点击安装</text>
+							</button>
 
-						<button v-else-if="installed && isWGT" class="content-button" style="border: none; color: #18181b" plain @click="restart">安装完毕，点击重启</button>
-					</template>
+							<button v-else-if="installed && isWGT" class="btn-primary btn-done" hover-class="btn-primary-hover" @click="restart">
+								<text class="btn-label">安装完毕，点击重启</text>
+							</button>
+						</template>
+					</view>
+					<view v-if="!is_mandatory" class="btn-ghost" @click="closeUpdate">暂不更新</view>
 				</view>
 			</view>
 
-			<image v-if="!is_mandatory" class="close-img" src="/uni_modules/uh-upgrade/static/app/app_update_close.png" @click.stop="closeUpdate"></image>
+			<!-- 底部悬浮关闭（沿用原关闭图片） -->
+			<image v-if="!is_mandatory" class="close-fab" src="/uni_modules/uh-upgrade/static/app/app_update_close.png" mode="aspectFit" @click.stop="closeUpdate"></image>
 		</view>
 	</view>
 </template>
@@ -77,6 +101,10 @@ import { createNotificationProgress, cancelNotificationProgress, finishNotificat
 // #endif
 import { compare, platform_iOS, platform_Android, platform_Harmony, createUpgradeDownloadTask } from '../utils'
 const localFilePathKey = 'UNI_ADMIN_UPGRADE_CENTER_LOCAL_FILE_PATH';
+/** 应用 logo 兜底图（uni-halo-static 仓库 logo/logo-200.png 的 CDN 地址） */
+const FALLBACK_LOGO = 'https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static@main/logo/logo-200.png';
+/** Halo 插件公开的 getConfigs 接口路径（由 base_url 拼接） */
+const GET_CONFIGS_API = '/apis/api.unihalo.ialley.cn/v1alpha1/getConfigs';
 
 let downloadTask = null;
 let openSchemePromise;
@@ -117,6 +145,9 @@ export default {
 			downLoadBtnText: '立即下载更新',
 			downLoadingText: '安装包下载中，请稍后',
 
+			// 应用 logo（初始为 uni-halo-static 兜底图,getConfigs 成功后替换为后台配置的应用信息 logo）
+			logoUrl: FALLBACK_LOGO,
+
 			// #ifdef APP-PLUS
 			shown: true,
 			// #endif
@@ -125,7 +156,7 @@ export default {
 			// #endif
 		};
 	},
-	onLoad({ local_storage_key }) {
+	onLoad({ local_storage_key, base_url }) {
 		if (!local_storage_key) {
 			console.error('local_storage_key为空，请检查后重试');
 			uni.navigateBack();
@@ -140,6 +171,7 @@ export default {
 		}
 
 		this.setLocalPackageInfo(localPackageInfo)
+		this.fetchAppLogo(base_url)
 	},
 	onBackPress() {
 		// 强制更新不允许返回
@@ -182,6 +214,24 @@ export default {
 		}
 	},
 	methods: {
+		// 应用信息 logo:请求 getConfigs 取 featureConfig.profile.appInfo.logo,相对路径按站点地址补全;失败或为空保持兜底图
+		fetchAppLogo(baseUrl) {
+			if (!baseUrl) return;
+			const site = String(baseUrl).replace(/\/+$/, '');
+			uni.request({
+				url: site + GET_CONFIGS_API,
+				method: 'GET',
+				success: (res) => {
+					const data = res.data || {};
+					const profile = data.featureConfig && data.featureConfig.profile ? data.featureConfig.profile : {};
+					const appInfo = profile.appInfo || {};
+					const logo = appInfo.logo;
+					if (!logo) return;
+					this.logoUrl = /^https?:\/\//i.test(logo) ? logo : site + logo;
+				},
+				fail: () => {}
+			});
+		},
 		show(shown, localPackageInfo) {
 			// #ifdef APP-HARMONY
 			this.$emit('show')
@@ -541,147 +591,402 @@ page {
 	background: transparent;
 }
 
-.flex-center {
-	/* #ifndef APP-NVUE */
-	display: flex;
-	/* #endif */
-	justify-content: center;
-	align-items: center;
-}
-
-.mask {
+/* ===== 遮罩层 ===== */
+.overlay {
 	position: fixed;
-	left: 0;
 	top: 0;
 	right: 0;
 	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.65);
-}
-
-.botton-radius {
-	border-bottom-left-radius: 30rpx;
-	border-bottom-right-radius: 30rpx;
-}
-
-.content {
-	position: relative;
-	top: 0;
-	width: 600rpx;
-	background-color: #fff;
-	box-sizing: border-box;
-	padding: 0 50rpx;
-	font-family: Source Han Sans CN;
-}
-
-.text {
-	/* #ifndef APP-NVUE */
-	display: block;
-	/* #endif */
-	line-height: 200px;
-	text-align: center;
-	color: #ffffff;
-}
-
-.content-top {
-	position: absolute;
-	top: -195rpx;
 	left: 0;
-	width: 600rpx;
-	height: 270rpx;
+	z-index: 1000;
+	display: flex;
+	padding: 64rpx 40rpx calc(56rpx + env(safe-area-inset-bottom));
+	background: rgba(13, 17, 9, 0.55);
+	backdrop-filter: blur(16rpx);
+	animation: fadeIn 0.3s ease both;
+	overflow: auto;
 }
 
-.content-top-text {
-	font-size: 45rpx;
-	font-weight: bold;
-	color: #f8f8fa;
+.dialog-wrap {
+	margin: auto;
+	width: 672rpx;
+	max-width: 88vw;
+}
+
+/* ===== 弹窗卡片 ===== */
+.dialog {
+	position: relative;
+	background: #fff;
+	border-radius: 52rpx;
+	box-shadow:
+		0 64rpx 160rpx -36rpx rgba(0, 0, 0, 0.15),
+		0 12rpx 44rpx rgba(0, 0, 0, 0.18);
+	animation: popIn 0.55s cubic-bezier(0.22, 1.35, 0.36, 1) both;
+}
+
+/* ===== 顶部品牌区 ===== */
+.hero {
+	position: relative;
+	padding: 60rpx 40rpx 16rpx;
+	text-align: center;
+	border-radius: 52rpx 52rpx 0 0;
+	background: linear-gradient(180deg, #e8f7d4 0%, #f4fce9 62%, #ffffff 100%);
+	overflow: hidden;
+}
+
+.halo {
 	position: absolute;
-	top: 120rpx;
-	left: 50rpx;
-	z-index: 1;
+	left: 50%;
+	top: 24rpx;
+	transform: translateX(-50%);
+	width: 300rpx;
+	height: 300rpx;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 68%);
 }
 
-.content-header {
-	height: 70rpx;
+.bubble {
+	position: absolute;
+	border-radius: 50%;
+}
+
+.b1 {
+	width: 260rpx;
+	height: 260rpx;
+	left: -104rpx;
+	top: -112rpx;
+	background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%);
+}
+
+.b2 {
+	width: 160rpx;
+	height: 160rpx;
+	right: -48rpx;
+	top: -60rpx;
+	background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 70%);
+}
+
+.logo-wrap {
+	position: relative;
+	z-index: 2;
+	width: 132rpx;
+	height: 132rpx;
+	margin: 0 auto;
+	border-radius: 50%;
+	overflow: hidden;
+	box-sizing: border-box;
+	border: 6rpx solid #fff;
+	background: linear-gradient(160deg, #95e44a 0%, #4cb813 58%, #33990a 100%);
+	box-shadow:
+		0 16rpx 36rpx -12rpx rgba(64, 148, 24, 0.35),
+		inset 0 4rpx 10rpx rgba(255, 255, 255, 0.45),
+		inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.08);
+	animation:
+		logoIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.12s both,
+		floatY 3.4s ease-in-out 0.9s infinite;
+}
+
+.logo-image {
+	width: 100%;
+	height: 100%;
+}
+
+/* ===== 内容区 ===== */
+.body {
+	padding: 28rpx 44rpx 44rpx;
+	text-align: center;
+}
+
+.title-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	animation: itemIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
 }
 
 .title {
-	font-size: 33rpx;
-	font-weight: bold;
-	color: var(--wot-color-theme, #b9e424);
-	line-height: 38px;
+	font-size: 36rpx;
+	font-weight: 800;
+	letter-spacing: 1rpx;
+	color: #22301b;
 }
 
-.content-body {
-  width: 100%;
+.ver {
+	margin-left: 16rpx;
+	padding: 6rpx 20rpx;
+	border-radius: 999rpx;
+	font-size: 22rpx;
+	font-weight: 700;
+	letter-spacing: 1rpx;
+	color: #fff;
+	background: linear-gradient(135deg, #93e23e, #3fb411);
+	box-shadow: 0 8rpx 20rpx rgba(88, 180, 40, 0.35);
 }
 
-.content-body-version {
-	padding-left: 20rpx;
-	color: #18181b;
-	font-size: 20rpx;
-	margin-left: 10rpx;
-	padding: 4rpx 8rpx;
-	border-radius: 20rpx;
-	background: var(--wot-color-theme, #b9e424);
-}
-
-.footer {
-	height: 150rpx;
+.meta {
+	margin-top: 14rpx;
+	font-size: 24rpx;
+	color: #98a392;
 	display: flex;
+	justify-content: center;
 	align-items: center;
-	justify-content: space-around;
+	animation: itemIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
-.box-des-scroll {
+.dot {
+	margin: 0 12rpx;
+	width: 6rpx;
+	height: 6rpx;
+	border-radius: 50%;
+	background: #c4cdbb;
+}
+
+/* 更新日志卡片 */
+.notes {
+	margin-top: 28rpx;
+	padding: 24rpx 28rpx 26rpx;
+	text-align: left;
+	background: #f5faee;
+	border: 2rpx solid #eaf3dc;
+	border-radius: 32rpx;
+}
+
+.notes-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 23rpx;
+	color: #8d9a82;
+	letter-spacing: 2rpx;
+	margin-bottom: 16rpx;
+	animation: itemIn 0.5s ease 0.14s both;
+}
+
+/* rich-text 滚动区（后台文本可能较长，限高滚动） */
+.notes-scroll {
 	box-sizing: border-box;
-	padding: 0 40rpx;
-	height: 200rpx;
+	max-height: 320rpx;
 	text-align: left;
 }
 
 .box-des {
 	font-size: 26rpx;
-	color: #000000;
-	line-height: 50rpx;
+	line-height: 1.55;
+	color: #6e9057;
+}
+
+/* ===== 底部操作区（按钮/进度条同位切换，进度条在上） ===== */
+.flex-column {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.footer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+/* ===== 原生 button 重置（统一用 <button>，清掉 uni-app 默认边框/内边距/行高） ===== */
+button {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 0;
+	line-height: normal;
+	font-weight: normal;
+}
+
+button::after {
+	border: none;
+}
+
+.uni-progress-info {
+	font-size: 24rpx;
+}
+
+.uni-progress-bar {
+	border-radius: 24rpx;
+	overflow: hidden;
+}
+
+/* ===== 主按钮 ===== */
+.btn-primary {
+	position: relative;
+	width: 100%;
+	height: 76rpx;
+	margin-top: 32rpx;
+	border-radius: 999rpx;
+	overflow: hidden;
+	color: #fff;
+	font-size: 28rpx;
+	font-weight: 700;
+	letter-spacing: 2rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, #93e23e 0%, #3fb411 55%, #2f9505 100%);
+	box-shadow:
+		0 6rpx 44rpx -12rpx rgba(76, 183, 26, 0.55),
+		inset 0 2rpx 0 rgba(255, 255, 255, 0.35);
+	transition:
+		transform 0.15s ease,
+		filter 0.2s ease;
+	animation: itemIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s both;
+}
+
+/* 按压态（对应 :active） */
+.btn-primary-hover {
+	transform: scale(0.965);
+}
+
+.btn-label {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* 流光扫过 */
+.btn-primary::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -70%;
+	width: 45%;
+	height: 100%;
+	background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+	transform: skewX(-22deg);
+	animation: shine 3s ease-in-out infinite;
+	border: none;
+	outline: none;
+}
+
+/* 完成态：关闭流光 */
+.btn-done::after {
+	display: none;
+}
+
+.btn-done {
+	background: linear-gradient(135deg, #57cb1e, #2f9505);
+	letter-spacing: 0;
+}
+
+.ico-done-check {
+	margin-right: 16rpx;
+	width: 32rpx;
+	height: 32rpx;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") center / 32rpx 32rpx no-repeat;
+}
+
+.btn-ghost {
+	margin: 20rpx auto 0;
+	padding: 16rpx 28rpx;
+	color: #9ba695;
+	font-size: 26rpx;
+	text-align: center;
+	transition: color 0.2s;
+	animation: itemIn 0.5s ease 0.52s both;
+}
+
+/* ===== 底部悬浮关闭（沿用原关闭图片） ===== */
+.close-fab {
+	display: block;
+	margin: 40rpx auto 0;
+	width: 70rpx;
+	height: 70rpx;
 }
 
 .progress-box {
 	width: 100%;
+	margin-top: 24rpx;
 }
 
 .progress {
 	width: 90%;
 	height: 40rpx;
-	/* border-radius: 35px; */
 }
 
-.close-img {
-	width: 70rpx;
-	height: 70rpx;
-	z-index: 1000;
-	position: absolute;
-	bottom: -120rpx;
-	left: calc(50% - 70rpx / 2);
-}
-
-.content-button {
-	text-align: center;
-	flex: 1;
-	font-size: 30rpx;
-	font-weight: 400;
-	color: #18181b;
-	border-radius: 40rpx;
-	margin: 0 18rpx;
-
-	height: 80rpx;
-	line-height: 80rpx;
-
-	background: linear-gradient(to right, var(--wot-color-theme, #b9e424), var(--wot-color-secondary, #d7f94c));
-}
-
-.flex-column {
+/* 状态文本行：占满宽度、两端留空分布 */
+.progress-meta {
+	width: 100%;
+	margin-top: 8rpx;
 	display: flex;
-	flex-direction: column;
-	align-items: center;
+	justify-content: space-around;
+	font-size: 24rpx;
+	color: #5b6753;
+}
+
+/* ===== 动画 ===== */
+@keyframes popIn {
+	from {
+		transform: scale(0.72) translateY(52rpx);
+		opacity: 0;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes itemIn {
+	from {
+		opacity: 0;
+		transform: translateY(20rpx);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes logoIn {
+	from {
+		transform: scale(0.4);
+		opacity: 0;
+	}
+
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes floatY {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-8rpx);
+	}
+}
+
+@keyframes shine {
+	0%,
+	55% {
+		left: -70%;
+	}
+
+	100% {
+		left: 130%;
+	}
 }
 </style>

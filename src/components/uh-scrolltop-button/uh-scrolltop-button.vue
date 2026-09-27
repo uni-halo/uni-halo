@@ -26,6 +26,7 @@ const balckList = [
   'pages-blog/about-project/about-project',
   'pages/auth/wechat-bind',
   'pages-admin/my-profile/my-profile',
+  'uni_modules/uh-upgrade/pages/upgrade-popup'
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

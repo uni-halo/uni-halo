@@ -1,4 +1,5 @@
 import checkAppUpdate from '@/uni_modules/uh-upgrade/utils/check-update'
+import { getEnvBaseUrl } from '@/utils'
 
 /**
  * 检查微信小程序更新
@@ -50,7 +51,7 @@ export function checkUpdates(manual = false) {
   checkWxUpdate()
   // #endif
   // #ifdef APP-PLUS
-  pendingUpgrade = checkAppUpdate({ baseUrl: import.meta.env.VITE_SERVER_BASEURL })
+  pendingUpgrade = checkAppUpdate({ baseUrl: getEnvBaseUrl() })
     .then((res) => {
       if (manual && res && res.code === 0) {
         uni.showToast({ title: '当前已是最新版本', icon: 'none' })

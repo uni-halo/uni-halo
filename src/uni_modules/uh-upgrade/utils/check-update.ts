@@ -87,7 +87,7 @@ function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterR
           uni.$on('uh-upgrade:closed', done)
           uni.$on('uh-upgrade:busy', onBusy)
           uni.navigateTo({
-            url: `/uni_modules/uh-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}`,
+            url: `/uni_modules/uh-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}&base_url=${encodeURIComponent(baseUrl)}`,
             fail: (err) => {
               console.error('更新弹框跳转失败', err)
               uni.removeStorageSync(PACKAGE_INFO_KEY)
