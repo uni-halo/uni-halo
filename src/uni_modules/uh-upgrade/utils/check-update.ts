@@ -3,6 +3,8 @@ import { compare, platform_iOS } from './index'
 
 // 推荐在App.vue中使用
 const PACKAGE_INFO_KEY = '__package_info__'
+// 升级弹窗等待超时(关闭事件丢失时兜底放行)
+const UPGRADE_WAIT_TIMEOUT = 60000
 
 export type CheckUpdateOptions = {
   /** Halo 站点地址（域名后不带斜杠） */
@@ -20,13 +22,14 @@ export type CheckUpdateOptions = {
 function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterResult> {
   const { baseUrl, component, useModal } = options
   return new Promise<UniUpgradeCenterResult>((resolve, reject) => {
-    callCheckVersion(baseUrl).then((uniUpgradeCenterResult) => {
+    callCheckVersion(baseUrl).then(async (uniUpgradeCenterResult): Promise<void> => {
       // NOTE uni-app x 3.96 解构有问题
       const code = uniUpgradeCenterResult.code
       const message = uniUpgradeCenterResult.message
       // 客户端兜底：服务端判定有更新时，本地复核版本号确实大于当前版本才弹窗
       if (code > 0 && !verifyUpgrade(uniUpgradeCenterResult)) {
-        return resolve({ ...uniUpgradeCenterResult, code: 0, message: '当前版本已经是最新的，不需要更新' })
+        resolve({ ...uniUpgradeCenterResult, code: 0, message: '当前版本已经是最新的，不需要更新' })
+        return
       }
       if (code > 0) {
 
@@ -35,7 +38,9 @@ function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterR
          * 使用 uni.showModal
          */
         if (useModal) {
-          return updateUseModal(uniUpgradeCenterResult)
+          updateUseModal(uniUpgradeCenterResult)
+          resolve(uniUpgradeCenterResult)
+          return
         }
 
         // 静默更新，只有wgt有
@@ -51,7 +56,8 @@ function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterR
               }
             }
           });
-          return;
+          resolve(uniUpgradeCenterResult)
+          return
         }
 
         /**
@@ -60,12 +66,34 @@ function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterR
          */
         // #ifdef APP-PLUS
         uni.setStorageSync(PACKAGE_INFO_KEY, uniUpgradeCenterResult)
-        uni.navigateTo({
-          url: `/uni_modules/uh-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}`,
-          fail: (err) => {
-            console.error('更新弹框跳转失败', err)
-            uni.removeStorageSync(PACKAGE_INFO_KEY)
+        // 弹窗关闭后放行;下载开始重挂超时,避免计时器关闭下载中的弹窗
+        await new Promise<void>((waitResolve) => {
+          const done = () => {
+            if (timer) {
+              clearTimeout(timer)
+              timer = null
+            }
+            uni.$off('uh-upgrade:closed', done)
+            uni.$off('uh-upgrade:busy', onBusy)
+            waitResolve()
           }
+          const onBusy = () => {
+            if (timer) {
+              clearTimeout(timer)
+            }
+            timer = setTimeout(() => done(), UPGRADE_WAIT_TIMEOUT)
+          }
+          let timer: ReturnType<typeof setTimeout> | null = setTimeout(() => done(), UPGRADE_WAIT_TIMEOUT)
+          uni.$on('uh-upgrade:closed', done)
+          uni.$on('uh-upgrade:busy', onBusy)
+          uni.navigateTo({
+            url: `/uni_modules/uh-upgrade/pages/upgrade-popup?local_storage_key=${PACKAGE_INFO_KEY}`,
+            fail: (err) => {
+              console.error('更新弹框跳转失败', err)
+              uni.removeStorageSync(PACKAGE_INFO_KEY)
+              done()
+            }
+          })
         })
         // #endif
         // #ifdef APP-HARMONY
@@ -76,15 +104,18 @@ function checkUpdateImpl(options: CheckUpdateOptions): Promise<UniUpgradeCenterR
             code: -1,
             message: '在 HarmonyOS Next 平台请传递组件使用'
           })
+          return
         }
         // #endif
 
-        return resolve(uniUpgradeCenterResult)
+        resolve(uniUpgradeCenterResult)
       } else if (code < 0) {
         console.error(message)
-        return reject(uniUpgradeCenterResult)
+        reject(uniUpgradeCenterResult)
       }
-      return resolve(uniUpgradeCenterResult)
+      else {
+        resolve(uniUpgradeCenterResult)
+      }
     }).catch((err) => {
       reject(err)
     })

@@ -5,6 +5,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useSettingStore } from '@/store/setting'
 import { collectSiteDefaults } from '@/utils/preference'
 import { useMaintenanceIntercept } from '@/hooks/useMaintenanceIntercept'
+import { waitForUpgradeCheck } from '@/utils/checkUpdate'
 
 definePage({
   type: 'home',
@@ -30,23 +31,17 @@ const { applySiteDefaults } = useSettingStore()
 // 维护拦截
 const { reason, interceptOrContinue, redirectToMaintenance } = useMaintenanceIntercept()
 
-onLoad(async () => {
-  // 本地开发,快速跳转页面,发布请设置 DEV_MODE = false
-  if (DEV_MODE && DEV_TO_PATH) {
-    if (DEV_TO_TYPE === 'tabbar') {
-      uni.switchTab({ url: DEV_TO_PATH })
-    }
-    else {
-      uni.navigateTo({
-        animationType: 'fade-in',
-        url: DEV_TO_PATH,
-      })
-    }
-    return
-  }
+const entering = ref(false)
 
-  // 获取配置
+/** 初始化并进入应用(启动页加载与"进入应用"按钮共用) */
+async function enterApp() {
+  if (entering.value) return
+  entering.value = true
   try {
+    // 有升级时等升级弹窗关闭后再继续
+    await waitForUpgradeCheck()
+
+    // 获取配置
     const { ok } = await bootstrap()
     if (!ok) {
       uni.switchTab({ url: homePagePath })
@@ -66,6 +61,27 @@ onLoad(async () => {
     console.error('入口页初始化失败', err)
     redirectToMaintenance(reason.value)
   }
+  finally {
+    entering.value = false
+  }
+}
+
+onLoad(async () => {
+  // 本地开发,快速跳转页面,发布请设置 DEV_MODE = false
+  if (DEV_MODE && DEV_TO_PATH) {
+    if (DEV_TO_TYPE === 'tabbar') {
+      uni.switchTab({ url: DEV_TO_PATH })
+    }
+    else {
+      uni.navigateTo({
+        animationType: 'fade-in',
+        url: DEV_TO_PATH,
+      })
+    }
+    return
+  }
+
+  enterApp()
 })
 </script>
 
@@ -107,6 +123,15 @@ onLoad(async () => {
         </text>
       </text>
     </view>
+
+    <button
+      class="mt-10 h-20 w-64 flex items-center justify-center border-none rounded-full from-[#ebfabf] to-[#b8ec3f] bg-gradient-to-r text-base text-gray-900 font-bold"
+      :disabled="entering"
+      :loading="entering"
+      @click="enterApp"
+    >
+      进入应用
+    </button>
   </view>
 </template>
 

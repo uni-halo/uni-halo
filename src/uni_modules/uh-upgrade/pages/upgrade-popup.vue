@@ -145,9 +145,14 @@ export default {
 		// 强制更新不允许返回
 		if (this.is_mandatory) return true;
 		if (!this.needNotificationProgress) downloadTask && downloadTask.abort();
+		uni.$emit('uh-upgrade:closed');
 	},
 	onHide() {
 		openSchemePromise = null;
+	},
+	onUnload() {
+		// 所有退出路径统一放行等待方(含程序化 navigateBack,uni-app 不触发 onBackPress)
+		uni.$emit('uh-upgrade:closed');
 	},
 	computed: {
 		isWGT() {
@@ -234,6 +239,7 @@ export default {
             if (this.needNotificationProgress) {
               cancelNotificationProgress();
             }
+						uni.$emit('uh-upgrade:closed');
 						uni.navigateBack();
 					}
 				}
@@ -260,6 +266,7 @@ export default {
 			}
 
 			// #ifdef APP-PLUS
+			uni.$emit('uh-upgrade:closed');
 			uni.navigateBack();
 			// #endif
 			// #ifdef APP-HARMONY
@@ -300,6 +307,7 @@ export default {
 		},
 		downloadPackage() {
 			this.downloading = true;
+			uni.$emit('uh-upgrade:busy');
 			//下载包
 			downloadTask = createUpgradeDownloadTask({
 				url: this.url,

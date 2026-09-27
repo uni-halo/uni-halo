@@ -19,7 +19,7 @@ onLaunch((options) => {
   // 初始化获取配置
   useAppConfigStore().refreshStatic()
 
-  // 检查更新
+  // 检查更新(APP 端 index 页会等待升级弹窗关闭后再进应用)
   checkUpdates()
 })
 onShow((options) => {

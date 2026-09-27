@@ -93,6 +93,7 @@ interface INavItem {
   title: string
   iconPrefix?: string
   icon: string
+  iconColor?: string
   bgColor: string
   color?: string
   subTitle?: string
@@ -135,8 +136,9 @@ const appVersionItem: INavItem = {
   key: 'app-version',
   title: '应用版本',
   icon: 'info-circle',
-  color: '#b9e424',
-  bgColor: '#b9e42461',
+  color: '#a1887f',
+  iconColor: '#a1887f',
+  bgColor: '#a1887f24',
   subTitle: getAppVersion(),
   path: null,
   show: true,
@@ -144,7 +146,7 @@ const appVersionItem: INavItem = {
 }
 
 function handleAppVersion() {
-  checkUpdates()
+  checkUpdates(true)
 }
 
 const navList = ref<INavItem[]>([])
@@ -384,8 +386,8 @@ onPageScroll((option: Page.PageScrollOption) => {
           >
             <view class="nav-left flex items-center gap-3 py-3">
               <view
-                class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
-                :style="{ backgroundColor: nav.bgColor }"
+                class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl text-gray-600"
+                :style="{ backgroundColor: nav.bgColor,color: nav.iconColor }"
               >
                 <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
               </view>
@@ -420,7 +422,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="nav-left flex items-center gap-3 py-3">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
-                :style="{ backgroundColor: nav.bgColor }"
+                :style="{ backgroundColor: nav.bgColor,color: nav.iconColor }"
               >
                 <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
               </view>
