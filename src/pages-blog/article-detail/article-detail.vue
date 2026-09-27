@@ -43,6 +43,7 @@ const queryName = ref('')
 const result = ref<IPost & {
   _voteIds?: string[]
   _doubanUrls?: string[]
+  _portfolioSlugs?: string[]
   owner?: { displayName?: string, avatar?: string }
   stats?: { visit?: number, upvote?: number, comment?: number }
 } | null>(null)
@@ -108,6 +109,16 @@ function extractDoubanBlockUrls(html: string): string[] {
   return urls
 }
 
+/** 从 HTML 提取项目集块 slug（<portfolio-project-card data-slug="xxx">） */
+function extractPortfolioSlugs(html: string): string[] {
+  const regex = /<portfolio-project-card\s[^>]*data-slug="([^"]+)"/g
+  const slugs: string[] = []
+  for (const match of html.matchAll(regex)) {
+    slugs.push(match[1])
+  }
+  return slugs
+}
+
 /** 移除内容中的 tag 链接 */
 function removeTagLinksCompletely(html: string): string {
   const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
@@ -140,6 +151,7 @@ async function handleGetData() {
     if (tempResult) {
       tempResult._voteIds = extractVoteBlockIds(res.data.content?.raw || res.data.content?.content || '')
       tempResult._doubanUrls = extractDoubanBlockUrls(res.data.content?.raw || res.data.content?.content || '')
+      tempResult._portfolioSlugs = extractPortfolioSlugs(res.data.content?.raw || res.data.content?.content || '')
       tempResult.owner.avatar = checkAvatarUrl(tempResult.owner.avatar)
       tempResult.spec.cover = checkImageUrl(tempResult.spec.cover)
       const openid = uni.getStorageSync('openid')
@@ -446,6 +458,12 @@ onShareTimeline(() => {
 
         <!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
         <uh-article-vote :vote-ids="result?._voteIds || []" />
+
+        <!-- 项目集(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
+        <uh-article-portfolio :slugs="result?._portfolioSlugs || []" />
+
+        <!-- 豆瓣(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
+        <uh-article-douban :urls="result?._doubanUrls || []" />
 
         <view class="box-border px-3">
           <!-- 版权声明 -->

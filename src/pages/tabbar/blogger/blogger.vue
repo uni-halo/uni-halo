@@ -125,7 +125,6 @@ const configuredFeatures = computed(() => {
   return mp
 })
 
-
 /** 当前应用版本号 */
 function getAppVersion() {
   return `检查更新 v${uni.getAppBaseInfo().appVersion || ''}`
@@ -175,10 +174,38 @@ const commonFeatures = computed(() => {
   return navList.value.filter(f => f.show && f.group === 'blog')
 })
 const otherFeatures = computed(() => {
-  return [...navList.value.filter(f => f.show && f.group === 'more'),appVersionItem]
+  return [...navList.value.filter(f => f.show && f.group === 'more'), appVersionItem]
 })
 
 /* ---------------- 功能导航 ---------------- */
+
+/** 固定功能入口（后续迁移到插件端配置） */
+const fixedNavItems: INavItem[] = [
+  {
+    key: 'portfolio',
+    title: '项目集',
+    icon: 'app-store',
+    color: '#3E87F7',
+    iconColor: '#3E87F7',
+    bgColor: '#3E87F724',
+    subTitle: '',
+    path: '/pages-blog/portfolio/portfolio',
+    show: true,
+    group: 'blog',
+  },
+  {
+    key: 'douban',
+    title: '豆瓣',
+    icon: 'star',
+    color: '#43B024',
+    iconColor: '#43B024',
+    bgColor: '#43B02424',
+    subTitle: '',
+    path: '/pages-blog/douban/douban',
+    show: true,
+    group: 'blog',
+  },
+]
 
 async function handleGetNavList() {
   // 配置模式：插件端 mine 两组（常用功能→blog、其他功能→more），
@@ -202,12 +229,16 @@ async function handleGetNavList() {
         group,
       }
     }
-    navList.value = [
+    const configured = [
       ...(mp.commonFeatures || []).map(e => mapEntry(e, 'blog')).filter((n): n is INavItem => n !== null),
       ...(mp.otherFeatures || []).map(e => mapEntry(e, 'more')).filter((n): n is INavItem => n !== null),
     ]
+    // 固定入口追加到常用功能（已配置同 key 则不重复）
+    const keys = new Set(configured.map(n => n.key))
+    navList.value = [...configured, ...fixedNavItems.filter(n => !keys.has(n.key))]
     return
   }
+  navList.value = [...fixedNavItems]
 }
 
 /* ---------------- 数据加载 ---------------- */
@@ -387,7 +418,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="nav-left flex items-center gap-3 py-3">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl text-gray-600"
-                :style="{ backgroundColor: nav.bgColor,color: nav.iconColor }"
+                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
               >
                 <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
               </view>
@@ -422,7 +453,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="nav-left flex items-center gap-3 py-3">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
-                :style="{ backgroundColor: nav.bgColor,color: nav.iconColor }"
+                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
               >
                 <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
               </view>

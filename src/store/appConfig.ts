@@ -121,7 +121,7 @@ export const useAppConfigStore = defineStore(
     const refreshStatic = () => bootstrap({ force: true })
 
     /** 审核模式引用 name 列表(接口下发为引用快照对象数组,取 name 供页面 includes 过滤;数组顺序即展示顺序) */
-    const auditNamesOf = (type: 'posts' | 'categories' | 'galleryGroups' | 'moments' | 'linkGroups'): string[] =>
+    const auditNamesOf = (type: 'posts' | 'categories' | 'galleryGroups' | 'moments' | 'linkGroups' | 'projects' | 'douban'): string[] =>
       (auditData.value.spec?.[type] || []).map(ref => ref.name)
 
     return {
