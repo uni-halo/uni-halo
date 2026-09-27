@@ -39,7 +39,7 @@ const customClasses = computed(() => {
     button: isLovePage ? '!bg-love !text-white' : '!bg-primary !text-gray-900',
     dot: isLovePage ? 'bg-love' : 'bg-primary',
     dotA: isLovePage ? 'bg-love' : 'bg-primary',
-    dotB: isLovePage ? 'bg-love/30' : 'bg-primary/30',
+    dotB: isLovePage ? 'bg-love/30' : 'bg-primary',
   }
 })
 

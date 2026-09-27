@@ -10,16 +10,8 @@ import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
 import { checkImageUrl } from '@/utils/url'
+import { DOUBAN_TYPE_LABELS, doubanStatusLabelOf, doubanStatusOptionsOf } from '@/config/douban'
 import type { IDoubanMovie } from '@/api/types/halo-plugin'
-
-/** 类型中文映射 */
-const TYPE_LABELS: Record<string, string> = {
-  movie: '电影',
-  book: '图书',
-  music: '音乐',
-  game: '游戏',
-  drama: '舞台剧',
-}
 
 definePage({
   style: {
@@ -69,12 +61,8 @@ const typeOptions: IFilterOption[] = [
   { label: '舞台剧', value: 'drama' },
 ]
 
-const statusOptions: IFilterOption[] = [
-  { label: '全部状态', value: '' },
-  { label: '想做', value: 'mark' },
-  { label: '在做', value: 'doing' },
-  { label: '做完', value: 'done' },
-]
+/** 状态筛选项(文案随类型筛选联动) */
+const statusOptions = computed(() => doubanStatusOptionsOf(filterValues.value.type))
 
 const filterValues = ref<Record<string, string>>({ type: '', status: '' })
 
@@ -171,6 +159,11 @@ function handleToDetail(item: IDoubanMovie) {
   })
 }
 
+/** 记录状态文案(如 看过/想读，随类型联动) */
+function statusLabelOf(item: IDoubanMovie) {
+  return doubanStatusLabelOf(item.type, item.favesStatus)
+}
+
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
@@ -250,39 +243,50 @@ onReachBottom(() => {
     <view v-else class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="item in doubanList" :key="item.id"
-        class="uh-global-card-glass box-border flex gap-3 overflow-hidden rounded-xl p-3"
+        class="uh-global-card-glass uh-shadow-xs box-border flex gap-3 overflow-hidden rounded-xl p-3"
         @click="handleToDetail(item)"
       >
-        <image
-          v-if="item.poster" :src="checkImageUrl(item.poster)" mode="aspectFill"
-          class="h-27 w-20 flex-shrink-0 rounded-lg"
-        />
-        <view v-else class="h-27 w-20 flex flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-3xs text-gray-400">
-          无封面
+        <!-- 海报(与右侧内容等高，状态角标压底部) -->
+        <view class="relative w-28 flex-shrink-0 self-stretch overflow-hidden rounded-lg">
+          <image
+            v-if="item.poster" :src="checkImageUrl(item.poster)" mode="aspectFill"
+            class="h-full w-full"
+          />
+          <view v-else class="h-full w-full flex items-center justify-center bg-gray-100 text-3xs text-gray-400">
+            无封面
+          </view>
+          <view
+            v-if="statusLabelOf(item)"
+            class="absolute bottom-0 left-0 w-full bg-black/50 py-0.5 text-center text-3xs text-white"
+          >
+            {{ statusLabelOf(item) }}
+          </view>
         </view>
-        <view class="min-w-0 flex flex-1 flex-col gap-1">
-          <view class="flex items-center gap-2">
-            <text class="flex-1 truncate text-sm text-gray-900 font-semibold">{{ item.name }}</text>
-            <text v-if="item.year" class="text-10px text-gray-400">{{ item.year }}</text>
+        <view class="min-w-0 flex flex-1 flex-col gap-1.5 py-0.5">
+          <view class="flex items-baseline gap-2">
+            <text class="min-w-0 flex-1 truncate text-sm text-gray-900 font-bold">{{ item.name }}</text>
+            <text v-if="item.year" class="flex-shrink-0 text-3xs text-gray-400">{{ item.year }}</text>
           </view>
           <view v-if="item.score" class="flex items-center gap-1">
             <wd-icon name="star-fill" size="12px" class="text-orange-400" />
-            <text class="text-xs text-orange-400">{{ item.score }}</text>
+            <text class="text-xs text-orange-400 font-semibold">{{ item.score }}</text>
+            <text class="text-3xs text-gray-400">豆瓣评分</text>
           </view>
-          <text v-if="item.cardSubtitle" class="line-clamp-2 text-xs text-gray-500">{{ item.cardSubtitle }}</text>
-          <view v-if="item.favesRemark" class="line-clamp-1 mt-1 rounded-md bg-gray-100 px-2 py-1 text-10px text-gray-500">
-            {{ item.favesRemark }}
+          <text v-if="item.cardSubtitle" class="line-clamp-2 text-3xs text-gray-600 leading-5">{{ item.cardSubtitle }}</text>
+          <view v-if="item.favesRemark" class="mt-0.5 flex gap-2">
+            <view class="w-0.5 flex-shrink-0 self-stretch rounded bg-primary" />
+            <text class="min-w-0 flex-1 truncate text-3xs text-gray-600 leading-5">{{ item.favesRemark }}</text>
           </view>
-          <view class="mt-auto flex items-center gap-2">
+          <view class="mt-auto flex items-center gap-1.5 pt-1">
             <text
               v-if="item.type"
-              class="rounded-md bg-orange-100 px-1.5 py-0.5 text-10px text-orange-500"
+              class="rounded-xl bg-orange-100 px-2 py-0.5 text-xs text-orange-500"
             >
-              {{ item.type ? TYPE_LABELS[item.type] || item.type : '' }}
+              {{ DOUBAN_TYPE_LABELS[item.type] || item.type }}
             </text>
             <text
               v-for="genre in (item.genres || []).slice(0, 2)" :key="genre"
-              class="rounded-md bg-gray-100 px-1.5 py-0.5 text-10px text-gray-500"
+              class="rounded-xl bg-gray-100 px-2 py-0.5 text-xs text-gray-500"
             >
               {{ genre }}
             </text>

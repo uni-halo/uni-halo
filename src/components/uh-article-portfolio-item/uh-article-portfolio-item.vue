@@ -71,7 +71,7 @@ handleGetData()
           <text class="flex-1 truncate text-sm text-gray-900 font-semibold">{{ project.title }}</text>
           <view
             v-if="project.featured"
-            class="inline-flex rounded-full bg-primary/15 px-2 py-0.5 text-10px text-primary"
+            class="inline-flex rounded-full bg-primary px-2 py-0.5 text-10px text-gray-900"
           >
             推荐
           </view>

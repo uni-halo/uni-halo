@@ -9,6 +9,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
+import { formatTime } from '@/utils/formatTime'
 import { checkImageUrl } from '@/utils/url'
 import { PORTFOLIO_PLATFORM_LABELS, PORTFOLIO_TYPE_LABELS, portfolioLabelOf } from '@/config/portfolio'
 import type { IProject } from '@/api/types/halo-plugin'
@@ -250,41 +251,46 @@ onReachBottom(() => {
       empty-text="啊偶，还没有任何项目哦~" min-height="65vh" @refresh="handleGetProjectList"
     />
 
-    <view v-else class="box-border flex flex-col gap-3 p-3">
+    <view v-else class="box-border flex flex-col gap-4 p-3">
       <view
         v-for="project in projectList" :key="project.slug"
-        class="uh-global-card-glass box-border overflow-hidden rounded-xl"
+        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"
         @click="handleToDetail(project)"
       >
-        <image
-          v-if="project.cover" :src="checkImageUrl(project.cover)" mode="aspectFill"
-          class="h-36 w-full"
-        />
-        <view v-else class="h-36 w-full flex items-center justify-center bg-gray-100 text-xs text-gray-400">
-          暂无封面
+        <!-- 推荐角标(对齐文章卡置顶角标位置语义) -->
+        <text
+          v-if="project.featured"
+          class="uh-global-card-glass absolute right-4 top-4 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-xs text-gray-900"
+        >
+          推荐
+        </text>
+        <view v-if="project.cover" class="relative mb-1 h-36 w-full overflow-hidden rounded-lg">
+          <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="text-primary" />
+            </template>
+          </wd-img>
         </view>
-        <view class="box-border flex flex-col gap-1.5 p-3">
-          <view class="flex items-center gap-2">
-            <text class="flex-1 truncate text-sm text-gray-900 font-semibold">{{ project.title }}</text>
-            <view
-              v-if="project.featured"
-              class="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-10px text-primary"
-            >
-              推荐
-            </view>
+        <view class="flex flex-col gap-y-2">
+          <view class="truncate text-sm text-gray-900 font-bold">
+            {{ project.title }}
           </view>
-          <text v-if="project.summary" class="line-clamp-2 text-xs text-gray-500">{{ project.summary }}</text>
-          <view v-if="project.techStacks?.length" class="mt-1 flex flex-wrap gap-1.5">
+          <view v-if="project.summary" class="line-clamp-2 text-3xs text-gray-600 leading-5">
+            {{ project.summary }}
+          </view>
+          <view v-if="project.techStacks?.length" class="box-border flex flex-wrap gap-2">
             <text
               v-for="tech in project.techStacks.slice(0, 4)" :key="tech"
-              class="rounded-md bg-gray-100 px-1.5 py-0.5 text-10px text-gray-500"
+              class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
             >
               {{ tech }}
             </text>
           </view>
-          <view class="mt-1 flex items-center gap-2 text-10px text-gray-400">
-            <text v-if="typeLabel(project.type)">{{ typeLabel(project.type) }}</text>
-            <text v-if="platformLabel(project.platform)">{{ platformLabel(project.platform) }}</text>
+          <view class="flex items-center text-xs text-gray-500">
+            <text class="min-w-0 flex-1 truncate">
+              {{ [typeLabel(project.type), platformLabel(project.platform)].filter(Boolean).join(' · ') }}
+            </text>
+            <text v-if="project.createTime" class="flex-shrink-0 text-gray-400">{{ formatTime({ d: project.createTime, f: 'yyyy/MM/dd' }) }}</text>
           </view>
         </view>
       </view>

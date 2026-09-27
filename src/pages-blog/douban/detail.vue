@@ -8,6 +8,7 @@ import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { markdownConfig } from '@/config/markdown'
 import { checkImageUrl } from '@/utils/url'
+import { DOUBAN_TYPE_LABELS, doubanStatusLabelOf } from '@/config/douban'
 import type { IDoubanMovie } from '@/api/types/halo-plugin'
 
 definePage({
@@ -36,29 +37,14 @@ onShareTimeline(() => ({
   query: '',
 }))
 
-/* ---------------- 类型中文映射 ---------------- */
-const TYPE_LABELS: Record<string, string> = {
-  movie: '电影',
-  book: '图书',
-  music: '音乐',
-  game: '游戏',
-  drama: '舞台剧',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  mark: '想做',
-  doing: '在做',
-  done: '做完',
-}
-
+/* ---------------- 类型/状态文案(按类型联动) ---------------- */
 const typeLabel = computed(() => {
   const type = douban.value?.type
-  return type ? TYPE_LABELS[type] || type : ''
+  return type ? DOUBAN_TYPE_LABELS[type] || type : ''
 })
 
 const statusLabel = computed(() => {
-  const status = douban.value?.favesStatus
-  return status ? STATUS_LABELS[status] || status : ''
+  return doubanStatusLabelOf(douban.value?.type, douban.value?.favesStatus)
 })
 
 /* ---------------- 数据加载 ---------------- */
@@ -110,10 +96,24 @@ function handleCopy(text: string, title: string) {
   })
 }
 
-/** 复制豆瓣地址 */
-function handleCopyDoubanLink() {
-  if (!douban.value?.link) { return }
-  handleCopy(douban.value.link, '豆瓣地址复制成功')
+/** 打开豆瓣地址：APP 内置 web-view，H5 新窗口，小程序复制链接 */
+function handleOpenDoubanLink() {
+  const url = douban.value?.link
+  if (!url) { return }
+  // #ifdef APP-PLUS
+  uni.navigateTo({
+    url: `/pages-blog/website/website?data=${JSON.stringify({
+      title: douban.value?.name || '豆瓣',
+      url: encodeURIComponent(url),
+    })}`,
+  })
+  // #endif
+  // #ifdef H5
+  window.open(url, '_blank')
+  // #endif
+  // #ifdef MP-WEIXIN
+  handleCopy(url, '豆瓣地址复制成功')
+  // #endif
 }
 
 /** 复制资源信息 */
@@ -141,7 +141,7 @@ function handleCopyInfo() {
       empty-text="啊偶，记录不存在哦~" min-height="65vh" @refresh="run"
     />
 
-    <view v-else-if="douban" class="box-border flex flex-col gap-3 p-3">
+    <view v-else-if="douban" class="box-border flex flex-col gap-3 p-3 pb-24">
       <!-- 海报与基本信息 -->
       <view class="uh-global-card-glass box-border rounded-xl p-4">
         <view class="flex gap-4">
@@ -152,7 +152,7 @@ function handleCopyInfo() {
           <view v-else class="h-60 w-44 flex flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
             无封面
           </view>
-          <view class="min-w-0 min-w-0 flex flex-1 flex-col gap-1.5">
+          <view class="min-w-0 flex flex-1 flex-col gap-1.5">
             <text class="text-base text-gray-900 font-semibold">{{ douban.name }}</text>
             <view v-if="douban.score" class="flex items-center gap-1">
               <wd-icon name="star-fill" size="14px" class="text-orange-400" />
@@ -171,7 +171,7 @@ function handleCopyInfo() {
                 {{ genre }}
               </text>
             </view>
-            <view v-if="statusLabel" class="mt-auto w-fit inline-flex rounded-full bg-primary/15 px-2.5 py-0.5 text-10px text-primary">
+            <view v-if="statusLabel" class="mt-auto w-fit inline-flex rounded-full bg-primary px-2.5 py-0.5 text-10px text-gray-900">
               {{ statusLabel }}
             </view>
           </view>
@@ -193,32 +193,33 @@ function handleCopyInfo() {
       </view>
 
       <!-- 操作按钮 -->
-      <view class="uh-global-card-glass box-border rounded-xl p-4">
-        <view class="flex flex-wrap gap-2">
-          <view
-            class="inline-flex items-center border border-gray-200 rounded-full px-4 py-1.5 text-xs text-gray-600"
-            @click="handleCopyDoubanLink()"
-          >
-            <wd-icon name="link" class="mr-1" size="14px" />
-            豆瓣地址
-          </view>
-          <view
-            class="inline-flex items-center border border-gray-200 rounded-full px-4 py-1.5 text-xs text-gray-600"
-            @click="handleCopyInfo()"
-          >
-            <wd-icon name="copy" class="mr-1" size="14px" />
-            资源信息
-          </view>
-        </view>
-      </view>
-
-      <!-- 正文（getDoubanDetail 实时抓取可能带简介 HTML） -->
-      <view v-if="(douban as any).content" class="uh-global-card-glass box-border rounded-xl p-4">
+      <!-- 正文（getDoubanDetail 实时抓取返回的简介 HTML） -->
+      <view v-if="douban.content" class="uh-global-card-glass box-border rounded-xl p-4">
         <mp-html
-          :content="(douban as any).content" lazy-load :domain="markdownConfig.domain"
+          :content="douban.content" lazy-load :domain="markdownConfig.domain"
           :loading-img="markdownConfig.loadingGif" scroll-table selectable
           :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
         />
+      </view>
+    </view>
+
+    <!-- 悬浮操作 -->
+    <view v-if="douban" class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+      <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
+        <view
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleOpenDoubanLink()"
+        >
+          <wd-icon name="link" size="36rpx" />
+          <text class="shrink-0 text-xs text-gray-900 font-semibold">豆瓣地址</text>
+        </view>
+        <view
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleCopyInfo()"
+        >
+          <wd-icon name="copy" size="36rpx" />
+          <text class="shrink-0 text-xs text-gray-900 font-semibold">资源信息</text>
+        </view>
       </view>
     </view>
   </view>

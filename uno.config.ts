@@ -102,7 +102,11 @@ export default defineConfig({
   ],
   theme: {
     colors: {
-      /** 主题色，用法如: text-primary */
+      /**
+       * 主题色，用法如: text-primary
+       * 注意：var() 定义的颜色不支持透明度修饰符（bg-primary/15 会静默降级为实色），
+       * 如需半透明请用 color-mix 或改用 hex 定义的颜色（如 love）
+       */
       primary: 'var(--wot-color-theme,#B9E424)',
       secondary: 'var(--wot-color-secondary,#D7F94C)',
       page: 'var(--wot-color-page,#f6f3ee)',

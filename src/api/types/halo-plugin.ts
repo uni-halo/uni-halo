@@ -88,6 +88,8 @@ export interface IDoubanMovie {
   /** 我的评分 */
   favesScore?: string
   favesStatus?: string
+  /** 简介 HTML(仅 getDoubanDetail 实时抓取返回) */
+  content?: string
 }
 
 /** 豆瓣记录列表请求参数 */
