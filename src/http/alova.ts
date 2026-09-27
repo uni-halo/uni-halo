@@ -5,6 +5,7 @@ import VueHook from 'alova/vue'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
 import { toLoginPage } from '@/utils/toLoginPage'
+import { getEnvBaseUrl } from '@/utils'
 import { ContentTypeEnum, RequestFrom, ResultEnum, ShowMessage } from './tools/enum'
 import { saveCommentCookies } from './tools/commentCookies'
 import { UniHaloError } from './tools/exception'
@@ -14,7 +15,7 @@ import type { IResponse } from './types'
 
 // 配置动态Tag
 export const API_DOMAINS = {
-  DEFAULT: import.meta.env.VITE_SERVER_BASEURL,
+  DEFAULT: getEnvBaseUrl(),
   SECONDARY: import.meta.env.VITE_SERVER_BASEURL_SECONDARY,
 }
 

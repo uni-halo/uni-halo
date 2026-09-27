@@ -7,6 +7,7 @@ import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
 import { sleep } from '@/utils/common'
+import { getEnvBaseUrl } from '@/utils'
 
 const props = defineProps<{
   voteId: string
@@ -133,7 +134,7 @@ async function handleSubmit() {
       cancelButtonProps: { ...DIALOG_CANCEL_BUTTON_PROPS, text: '关闭' },
     }).then(() => {
       uni.setClipboardData({
-        data: import.meta.env.VITE_SERVER_BASEURL || '',
+        data: getEnvBaseUrl() || '',
         showToast: false,
         success: () => showToast('复制成功'),
       })

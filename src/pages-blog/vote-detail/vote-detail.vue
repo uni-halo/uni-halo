@@ -9,6 +9,7 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
+import { getEnvBaseUrl } from '@/utils'
 import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
 
 const dialog = useDialog()
@@ -203,7 +204,7 @@ async function handleSubmit() {
       cancelButtonProps: { ...DIALOG_CANCEL_BUTTON_PROPS, text: '关闭' },
     }).then(() => {
       uni.setClipboardData({
-        data: import.meta.env.VITE_SERVER_BASEURL || '',
+        data: getEnvBaseUrl() || '',
         showToast: false,
         success: () => {
           showToast('复制成功')

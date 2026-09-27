@@ -1,10 +1,12 @@
+import { getEnvBaseUrl } from '@/utils'
+
 /**
  * URL 处理工具
  * 依赖 BASE_API(env),负责相对路径补全为完整地址
  */
 
 /** 基础请求地址(env) */
-const BASE_API = import.meta.env.VITE_SERVER_BASEURL || ''
+const BASE_API = getEnvBaseUrl() || ''
 
 /**
  * 检查是否为 http/https 链接
@@ -33,7 +35,7 @@ export function checkUrl(url?: string): string {
 export function checkThumbnailUrl(thumbnail?: string, mustRealUrl = false): string {
   if (!thumbnail && mustRealUrl)
     return ''
-  let fallback = ''
+  const fallback = ''
   if (!thumbnail)
     return fallback
   if (!checkIsUrl(thumbnail))

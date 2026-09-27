@@ -10,6 +10,7 @@
 import { getCurrentInstance, ref } from 'vue'
 import { getAttachmentPermalink, uploadAttachment } from '@/api/uni-admin'
 import { checkThumbnailUrl } from '@/utils/url'
+import { getEnvBaseUrl } from '@/utils'
 
 const props = withDefaults(defineProps<{
   /** 占位提示文本 */
@@ -32,7 +33,7 @@ const emit = defineEmits<{
 }>()
 
 /** 基础请求地址（与 utils/url 一致） */
-const BASE_API = import.meta.env.VITE_SERVER_BASEURL || ''
+const BASE_API = getEnvBaseUrl() || ''
 
 /** 相对路径图片补全域名（编辑回显用，editor 内无法渲染相对地址） */
 function toDisplayHtml(html: string): string {

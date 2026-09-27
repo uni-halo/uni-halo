@@ -14,6 +14,7 @@ import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildPostFavoriteItem } from '@/utils/favorite'
 import { getDomainOnly } from '@/utils/urlParams'
+import { getEnvBaseUrl } from '@/utils'
 import { handleScrollToSelector } from '@/utils/page'
 import { markdownConfig } from '@/config/markdown'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -168,7 +169,7 @@ async function handleTrackersCounter() {
   }
   const winInfo = uni.getWindowInfo()
   const appBaseInfo = uni.getAppBaseInfo()
-  const baseUrl = import.meta.env.VITE_SERVER_BASEURL || ''
+  const baseUrl = getEnvBaseUrl() || ''
   try {
     await postTrackersCounter({
       group: 'content.halo.run',

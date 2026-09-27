@@ -1,9 +1,10 @@
 import { checkImageUrl } from '@/utils/url'
+import { getEnvBaseUrl } from '@/utils'
 
-const primaryColor = '#B9E424' 
+const primaryColor = '#B9E424'
 
 export const markdownConfig = {
-  domain: import.meta.env.VITE_SERVER_BASEURL || '',
+  domain: getEnvBaseUrl() || '',
   tagStyle: {
     table: `
       table-layout: fixed;
