@@ -28,10 +28,10 @@ export interface IListResult<T> {
 }
 
 export interface IOwner {
-	avatar?: string
-	displayName?: string
-	bio?: string
-	metadata:{name:string}
+  avatar?: string
+  displayName?: string
+  bio?: string
+  metadata: { name: string }
 }
 
 /* ---------- 笔记 Post ---------- */
@@ -41,7 +41,7 @@ export interface IPostSpec {
   slug: string
   excerpt?: string
   cover?: string
-  owner:IOwner
+  owner: IOwner
   /** 发布时间(Halo 2.x 结构) */
   publishTime?: string
   deleted: boolean

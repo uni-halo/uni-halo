@@ -2,12 +2,12 @@
 import { computed, ref } from 'vue'
 import { onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { getChartData } from '@/api/uni-halo'
+import { getChartData } from '@/api/halo-plugin-third/data-visual'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
-import type { IDataStatistics } from '@/api/uni-halo'
+import type { IDataStatistics } from '@/api/types/halo-plugin-third/data-visual'
 import { sleep } from '@/utils/common'
 
 definePage({

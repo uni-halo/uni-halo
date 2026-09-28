@@ -2,17 +2,18 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getFeaturedProjects, getProjectList } from '@/api/halo-plugin'
+import { getFeaturedProjects, getProjectList } from '@/api/halo-plugin-third/portfolio'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
+import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { sleep } from '@/utils/common'
 import { formatTime } from '@/utils/formatTime'
 import { checkImageUrl } from '@/utils/url'
 import { PORTFOLIO_PLATFORM_LABELS, PORTFOLIO_TYPE_LABELS, portfolioLabelOf } from '@/config/portfolio'
-import type { IProject } from '@/api/types/halo-plugin'
+import type { IProject } from '@/api/types/halo-plugin-third/portfolio'
 
 definePage({
   style: {
@@ -30,6 +31,16 @@ const appConfigStore = useAppConfigStore()
 const { auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 
 const siteName = computed(() => appConfigStore.configs.featureConfig?.profile?.appInfo?.name || 'uni-halo')
+
+/** 依赖插件(PluginPortfolio)，不可用时展示占位并可重试 */
+const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginPortfolio,
+  tips: '啊偶，功能正在维护中...',
+  callback: (isAvailable) => {
+    if (!isAvailable) { return }
+    handleGetProjectList()
+  },
+})
 
 /* ---------------- 分享 ---------------- */
 
@@ -58,22 +69,10 @@ const typeOptions: IFilterOption[] = [
   { label: '推荐', value: 'featured' },
 ]
 
-const sortOptions: IFilterOption[] = [
-  { label: '默认排序', value: 'default' },
-  { label: '最新', value: 'latest' },
-  { label: '最早', value: 'oldest' },
-]
+const filterValues = ref<Record<string, string>>({ type: '' })
 
-const sortMap: Record<string, string[]> = {
-  default: ['priority,desc'],
-  latest: ['createTime,desc'],
-  oldest: ['createTime,asc'],
-}
-
-const filterValues = ref<Record<string, string>>({ type: '', sort: 'default' })
-
-/** 切换类型/排序：重置分页并重新查询 */
-function handleSelectFilter(key: 'type' | 'sort', value: string) {
+/** 切换类型：重置分页并重新查询 */
+function handleSelectFilter(key: 'type', value: string) {
   if (filterValues.value[key] === value) { return }
   filterValues.value[key] = value
   resetLoadMoreStatus()
@@ -89,7 +88,7 @@ async function handleGetProjectList() {
     resetLoadMoreStatus()
     const auditProjectSlugs = appConfigStore.auditNamesOf('projects')
     try {
-      const res = await getProjectList({ page: 1, size: 0, sort: ['priority,desc'] })
+      const res = await getProjectList({ page: 1, size: 0 })
       const filtered = res.data.items.filter(item => auditProjectSlugs.includes(item.slug))
       // 按审核配置顺序展示（数组顺序即展示顺序）
       const orderMap = new Map(auditProjectSlugs.map((slug, index) => [slug, index]))
@@ -125,7 +124,6 @@ async function handleGetProjectList() {
     const params = {
       ...queryParams.value,
       featured: filterValues.value.type === 'featured' ? true : undefined,
-      sort: sortMap[filterValues.value.sort] || sortMap.default,
     }
     const res = filterValues.value.type === 'featured'
       ? await getFeaturedProjects(params)
@@ -179,11 +177,18 @@ onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
 
-onLoad(() => {
-  handleGetProjectList()
+onLoad(async () => {
+  await checkPluginAvailable()
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+  }
 })
 
 onPullDownRefresh(() => {
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+    return
+  }
   if (calcAuditModeEnabled.value) {
     uni.stopPullDownRefresh()
     return
@@ -195,6 +200,7 @@ onPullDownRefresh(() => {
 })
 
 onReachBottom(() => {
+  if (!uniHaloPluginAvailable.value) { return }
   if (calcAuditModeEnabled.value) {
     uni.showToast({ icon: 'none', title: '没有更多数据了' })
     return
@@ -219,7 +225,12 @@ onReachBottom(() => {
   <view class="min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
-    <wd-sticky :offset-top="offsetTop">
+    <uh-plugin-unavailable
+      v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+      :error-text="tips" :checking="checking" @on-refresh="checkPluginAvailable"
+    />
+
+    <wd-sticky v-if="uniHaloPluginAvailable" :offset-top="offsetTop">
       <view class="w-screen overflow-hidden">
         <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pb-1.5">
           <view
@@ -231,27 +242,15 @@ onReachBottom(() => {
             {{ opt.label }}
           </view>
         </scroll-view>
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-          <view class="box-border flex gap-2 px-3 pb-1.5">
-            <view
-              v-for="opt in sortOptions" :key="opt.value"
-              class="uh-global-card-glass inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-              :class="{ '!bg-primary text-gray-900 font-semibold': filterValues.sort === opt.value, 'text-gray-500': filterValues.sort !== opt.value }"
-              @click="handleSelectFilter('sort', opt.value)"
-            >
-              {{ opt.label }}
-            </view>
-          </view>
-        </scroll-view>
       </view>
     </wd-sticky>
 
     <uh-data-loading
-      v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+      v-if="uniHaloPluginAvailable && loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
       empty-text="啊偶，还没有任何项目哦~" min-height="65vh" @refresh="handleGetProjectList"
     />
 
-    <view v-else class="box-border flex flex-col gap-4 p-3">
+    <view v-else-if="uniHaloPluginAvailable" class="box-border flex flex-col gap-4 p-3">
       <view
         v-for="project in projectList" :key="project.slug"
         class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo'
+import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo-plugin-official/friend-links'
 import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
 import { sleep } from '@/utils/common'

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import { getVoteList } from '@/api/uni-halo'
+import { getVoteList } from '@/api/halo-plugin-third/vote'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -11,7 +11,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { debounce } from '@/utils/debounce'
 import { sleep } from '@/utils/common'
 import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
-import type { IVoteItem } from '@/api/types/uni-halo'
+import type { IVoteItem } from '@/api/types/halo-plugin-third/vote'
 
 definePage({
   style: {

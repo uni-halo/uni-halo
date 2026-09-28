@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
-import { getPostListByKeyword } from '@/api/halo'
+import { getPostListByKeyword } from '@/api/halo-plugin-official/search'
 import { sleep } from '@/utils/common'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'

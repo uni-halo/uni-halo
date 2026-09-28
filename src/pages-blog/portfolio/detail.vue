@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getProjectDetail } from '@/api/halo-plugin'
+import { getProjectDetail } from '@/api/halo-plugin-third/portfolio'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useDataLoading } from '@/hooks/useDataLoading'
@@ -12,7 +12,7 @@ import { markdownConfig } from '@/config/markdown'
 import { formatTime } from '@/utils/formatTime'
 import { checkImageUrl } from '@/utils/url'
 import { PORTFOLIO_PLATFORM_LABELS, PORTFOLIO_TYPE_LABELS, portfolioLabelOf } from '@/config/portfolio'
-import type { IProject } from '@/api/types/halo-plugin'
+import type { IProject } from '@/api/types/halo-plugin-third/portfolio'
 
 definePage({
   style: {
@@ -121,7 +121,7 @@ function handleOpenLink(url: string | undefined, label: string) {
 
     <uh-data-loading
       v-if="status !== DataLoadingStatusEnum.Success" :loading-status="status"
-      empty-text="啊偶，项目不存在哦~" min-height="65vh" @refresh="run"
+      empty-text="啊偶，项目不存在哦~" min-height="90vh" @refresh="run"
     />
 
     <view v-else-if="project" class="box-border pt-72 pb-24">

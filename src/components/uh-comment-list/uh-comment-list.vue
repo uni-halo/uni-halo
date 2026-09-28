@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
-import { getPostCommentList, getPostCommentReplyList } from '@/api/halo'
+import { getPostCommentList, getPostCommentReplyList } from '@/api/halo-plugin-official/comment'
 import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IComment, ICommentListRes, ICommentReply } from '@/api/types/halo'

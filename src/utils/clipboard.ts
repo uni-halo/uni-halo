@@ -4,7 +4,9 @@ export function copyToClipboard(content: string, tips = '内容已复制成功�
     data: content,
     showToast: false,
     success: () => {
-      uni.showToast({ icon: 'none', title: tips })
+      if (tips) {
+        uni.showToast({ icon: 'none', title: tips })
+      }
     },
   })
 }

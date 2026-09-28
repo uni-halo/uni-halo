@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getVoteDetail, submitVote } from '@/api/uni-halo'
+import { getVoteDetail, submitVote } from '@/api/halo-plugin-third/vote'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -10,7 +10,7 @@ import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/confi
 import { calcVotePercent, calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
 import { getEnvBaseUrl } from '@/utils'
-import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
+import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/halo-plugin-third/vote'
 
 const dialog = useDialog()
 

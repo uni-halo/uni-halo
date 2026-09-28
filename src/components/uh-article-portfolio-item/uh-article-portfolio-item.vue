@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { getProjectDetail } from '@/api/halo-plugin'
+import { getProjectDetail } from '@/api/halo-plugin-third/portfolio'
 import { checkImageUrl } from '@/utils/url'
 import { PORTFOLIO_TYPE_LABELS, portfolioLabelOf } from '@/config/portfolio'
 import { useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import type { IProject } from '@/api/types/halo-plugin'
+import type { IProject } from '@/api/types/halo-plugin-third/portfolio'
 
 const props = defineProps<{
   slug: string

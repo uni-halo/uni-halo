@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
-import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo'
+import { getPhotoGroupList, getPhotoListByGroupName } from '@/api/halo-plugin-official/gallery'
 import { useAppConfigStore } from '@/store/appConfig'
 import { checkImageUrl } from '@/utils/url'
 import { usePluginAvailable } from '@/hooks/usePluginAvailable'

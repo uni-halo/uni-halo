@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { getDoubanDetail } from '@/api/halo-plugin'
+import { getDoubanDetail } from '@/api/halo-plugin-third/douban'
 import { checkImageUrl } from '@/utils/url'
 import { useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
-import type { IDoubanMovie } from '@/api/types/halo-plugin'
+import type { IDoubanMovie } from '@/api/types/halo-plugin-third/douban'
 
 const props = defineProps<{
   url: string

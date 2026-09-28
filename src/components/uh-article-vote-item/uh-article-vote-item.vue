@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { getVoteDetail, submitVote } from '@/api/uni-halo'
+import { getVoteDetail, submitVote } from '@/api/halo-plugin-third/vote'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { calcVoteState, VOTE_TYPES, voteCacheUtil } from '@/utils/vote'
 import { formatTime as formatTimeUtil } from '@/utils/formatTime'
-import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/uni-halo'
+import type { IVote, IVoteDetail, IVoteOption } from '@/api/types/halo-plugin-third/vote'
 import { sleep } from '@/utils/common'
 import { getEnvBaseUrl } from '@/utils'
 

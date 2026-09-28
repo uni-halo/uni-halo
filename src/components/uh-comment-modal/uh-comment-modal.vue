@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { addPostComment, addPostCommentReply } from '@/api/halo'
-import { getCommentWidgetCaptcha, getCommentWidgetConfig } from '@/api/uni-halo'
+import { addPostComment, addPostCommentReply, getCommentWidgetCaptcha, getCommentWidgetConfig } from '@/api/halo-plugin-official/comment'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { setCache } from '@/utils/storage'

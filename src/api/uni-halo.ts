@@ -5,14 +5,11 @@ import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
 import { getLoveModuleToken } from '@/utils/loveModuleToken'
-import { getPersonalToken } from '@/store/token'
 import type {
   IAppConfig,
   IAuditDataResult,
   IBannerPublicDetail,
   IBannerPublicItem,
-  ICommentWidgetConfig,
-  IDoubanDetail,
   IHaloGlobalConfig,
   ILoveAlbum,
   ILoveAlbumListReq,
@@ -33,14 +30,7 @@ import type {
   INoticeListVo,
   INoticeTypeListRes,
   IUpdateCheckRes,
-  IVoteDetail,
-  IVoteListReq,
-  IVoteListRes,
-  IVoteSubmitReq,
 } from './types/uni-halo'
-
-/** 评论验证码 cookie key */
-const COMMENT_WIDGET_CAPTCHA_COOKIES = 'comment-widget-captcha'
 
 /* ==================== uni-halo 配置 ==================== */
 
@@ -91,16 +81,6 @@ export function getBannerDetail(name: string) {
  */
 export function getHaloGlobalInfo() {
   return http.Get<IResponse<IHaloGlobalConfig>>('/actuator/globalinfo', {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 获取评论组件配置
- */
-export function getCommentWidgetConfig() {
-  return http.Get<IResponse<ICommentWidgetConfig>>('/apis/api.commentwidget.halo.run/v1alpha1/config', {
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })
@@ -355,129 +335,6 @@ export function submitMiniProgramLinkApplication(data: IMiniProgramLinkSubmissio
   )
 }
 
-/* ==================== 投票(api.vote.kunkunyu.com) ==================== */
-
-/**
- * 投票列表
- */
-export function getVoteList(params: IVoteListReq) {
-  return http.Get<IResponse<IVoteListRes>>('/apis/api.vote.kunkunyu.com/v1alpha1/votes', {
-    params,
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 投票详情
- */
-export function getVoteDetail(name: string) {
-  return http.Get<IResponse<IVoteDetail>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/detail`, {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 投票用户列表
- */
-export function getVoteUserList(name: string) {
-  return http.Get<IResponse<unknown[]>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/user-list`, {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 提交投票
- * @param canAnonymously 是否允许匿名;非匿名时带个人 token
- */
-export function submitVote(name: string, data: IVoteSubmitReq, canAnonymously = true) {
-  const headers: Record<string, string> = {}
-  if (!canAnonymously) {
-    const token = getPersonalToken()
-    if (token)
-      headers.Authorization = `Bearer ${token}`
-  }
-  return http.Post<IResponse<unknown>>(`/apis/api.vote.kunkunyu.com/v1alpha1/votes/${name}/submit`, data, {
-    headers,
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/* ==================== 豆瓣(api.douban.moony.la) ==================== */
-
-/**
- * 获取豆瓣条目详情
- */
-export function getDoubanDetail(url: string) {
-  return http.Get<IResponse<IDoubanDetail>>('/apis/api.douban.moony.la/v1alpha1/doubanmovies/-/getDoubanDetail', {
-    params: { url },
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/* ==================== 评论验证码(api.commentwidget.halo.run) ==================== */
-
-/**
- * 获取评论验证码
- */
-export function getCommentWidgetCaptcha() {
-  return http.Get<IResponse<string>>('/apis/api.commentwidget.halo.run/v1alpha1/captcha/-/generate', {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/* ==================== 数据看板(api.data.statistics.xhhao.com) ==================== */
-
-/** 图表统计数据 */
-export interface IDataStatistics {
-  tags: { name: string, count: number }[]
-  categories: { name: string, total: number }[]
-  /** 发布趋势:articleTotal=当日笔记数,momentTotal=当日瞬间数,total=二者之和 */
-  articles: { date: string, articleTotal: number, momentTotal: number, name: string, total: number }[]
-  comments: { username: string, count: number }[]
-  top10Articles: { name: string, views: number }[]
-  [key: string]: unknown
-}
-
-/**
- * 获取图表统计数据
- * @description 标签、分类、笔记发布趋势、评论活跃用户、热门笔记 top10
- */
-export function getChartData() {
-  return http.Get<IResponse<IDataStatistics>>('/apis/api.data.statistics.xhhao.com/v1alpha1/chart/data', {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 获取 Github 配置信息
- */
-export function getGithubConfig() {
-  return http.Get<IResponse<unknown>>('/apis/api.data.statistics.xhhao.com/v1alpha1/github/config', {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
-/**
- * 获取 Uptime Kuma 状态页面数据
- */
-export function getUptimeKumaStatus() {
-  return http.Get<IResponse<unknown>>('/apis/api.data.statistics.xhhao.com/v1alpha1/uptime/status', {
-    cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
-  })
-}
-
 /* ==================== 内部辅助 ==================== */
-
-/** 评论验证码 cookie key(供拦截器/页面使用) */
-export { COMMENT_WIDGET_CAPTCHA_COOKIES }
 
 export type { ILoveDailyItem, ILoveStory }
