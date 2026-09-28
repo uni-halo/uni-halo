@@ -1,4 +1,15 @@
 <script setup lang="ts">
+interface IProps {
+  position?: 'left' | 'right'
+}
+
+const props = withDefaults(defineProps<IProps>(), {
+  position: 'left',
+})
+
+const decorationClass = computed(() => {
+  return props.position === 'left' ? 'left-0 h-2' : '-right-1 h-4'
+})
 </script>
 
 <template>
@@ -7,7 +18,7 @@
       <text class="relative z-2 text-2xs font-semibold">
         <slot />
       </text>
-      <view class="absolute z-1 h-4 w-4/5 rounded-xl bg-secondary -bottom-0.5 -right-1" />
+      <view class="absolute z-1 w-4/5 rounded-xl bg-secondary -bottom-0.5" :class="decorationClass" />
     </view>
     <view class="flex flex-1 items-center justify-end">
       <slot name="right" />

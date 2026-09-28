@@ -117,6 +117,7 @@ interface IMyPageEntry {
   title?: string
   subTitle?: string
   color?: string
+  iconColor?: string
   bgColor?: string
   iconPrefix?: string
   icon?: string
@@ -213,6 +214,7 @@ async function handleGetNavList() {
         iconMode: e.iconMode,
         bgColor: e.bgColor || '#969696F2',
         color: e.color,
+		iconColor: e.iconColor,
         subTitle: e.subTitle || '',
         path: e.path || null,
         show: e.visible !== false,
@@ -379,7 +381,7 @@ onPageScroll((option: Page.PageScrollOption) => {
           >
             <view
               class="uh-global-card-glass uh-shadow-xs h-10 w-10 flex items-center justify-center border rounded-xl"
-              :style="{ backgroundColor: nav.bgColor,color:nav.iconColor }"
+              :style="{ backgroundColor: nav.bgColor,color: nav.iconColor || nav.color }"
             >
               <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
             </view>
@@ -405,7 +407,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="nav-left flex items-center gap-3 py-3">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl text-gray-600"
-                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
+                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
               >
                 <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="36rpx" />
               </view>
@@ -440,7 +442,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="nav-left flex items-center gap-3 py-3">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
-                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
+                :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
               >
                 <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="36rpx" />
               </view>

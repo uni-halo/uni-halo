@@ -385,7 +385,7 @@ onShareTimeline(() => {
               :src="checkAvatarUrl(result.owner.avatar)"
               :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
               :shape="avatarShape"
-              custom-class="uh-global-card-glass !block !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
+              custom-class="uh-global-card-glass !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
               :class="avatarClass"
               mode="aspectFill"
             />
