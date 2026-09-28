@@ -11,8 +11,8 @@ const utils = {
   pickObjectKeys (obj, keys) {
     const result = {}
     for (const key of keys) {
-      // attrs 为无原型对象，不能直接调 hasOwnProperty
-      if (obj && Object.prototype.hasOwnProperty.call(obj, key)) {
+      // Vue3 实例代理生产模式下 hasOwnProperty 恒为 false，须用 in 判断
+      if (obj && key in obj) {
         result[key] = obj[key]
       }
     }

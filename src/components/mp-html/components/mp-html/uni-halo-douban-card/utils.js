@@ -9,8 +9,8 @@ const utils = {
     const result = {}
     // 遍历要保留的 key
     for (const key of keys) {
-      // 仅当源对象包含该 key 时才添加（避免 undefined）；attrs 为无原型对象，不能直接调 hasOwnProperty
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      // 仅当源对象包含该 key 时才添加（避免 undefined）；Vue3 实例代理生产模式下 hasOwnProperty 恒为 false，须用 in 判断
+      if (obj && key in obj) {
         result[key] = obj[key]
       }
     }
