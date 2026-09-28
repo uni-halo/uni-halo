@@ -1,22 +1,28 @@
 <template>
-  <view @tap="nodeTap" :id="attrs.id" :class="'_block _'+name+' '+attrs.class" :style="(ctrl.root?'border:1px solid black;padding:5px;display:block;':'')+attrs.style">
-    <block v-for="(n, i) in childs" v-bind:key="i">
+  <view @tap="nodeTap" :id="attrs.id" :class="'_block _'+name+' '+attrs.class" :style="(ctrl.root&&opts[5]!=='simple'?'border:1px solid black;padding:5px;display:block;':'')+attrs.style">
+    <block v-for="(n, i) in nodes" v-bind:key="i">
       <!-- 图片 -->
       <!-- 占位图 -->
       <image v-if="n.name==='img'&&!n.t&&((opts[1]&&!ctrl[i])||ctrl[i]<0)" class="_img" :style="n.attrs.style" :src="ctrl[i]<0?opts[2]:opts[1]" mode="widthFix" />
       <!-- 显示图片 -->
       <!-- #ifdef H5 || (APP-PLUS && VUE2) -->
-      <img v-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+n.attrs.style" :src="n.attrs.src||(ctrl.load?n.attrs['data-src']:'')" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
+      <img v-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]&&opts[5]!=='simple'?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+n.attrs.style" :src="n.attrs.src||(ctrl.load?n.attrs['data-src']:'')" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
       <!-- #endif -->
       <!-- #ifndef H5 || (APP-PLUS && VUE2) -->
       <!-- 表格中的图片，使用 rich-text 防止大小不正确 -->
-      <rich-text v-if="n.name==='img'&&n.t" :style="'display:'+n.t" :nodes="'<img class=\'_img\' style=\''+n.attrs.style+'\' src=\''+n.attrs.src+'\'>'" :data-i="i" @tap.stop="imgTap" />
+      <rich-text v-if="n.name==='img'&&n.t" :style="'display:'+n.t" :nodes="[{attrs:{style:n.attrs.style||'',src:n.attrs.src},name:'img'}]" :data-i="i" @tap.stop="imgTap" />
       <!-- #endif -->
-      <!-- #ifndef H5 || APP-PLUS -->
-      <image v-else-if="n.name==='img'" :id="n.attrs.id||('n'+i)" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+'width:'+(ctrl[i]||1)+'px;height:'+(ctrl['h'+i]||1)+'px;'+n.attrs.style" :src="n.attrs.src" :mode="!n.h?'widthFix':(!n.w?'heightFix':'')" :lazy-load="opts[0]" :webp="n.webp" :show-menu-by-longpress="!opts[5]&&opts[3]&&!n.attrs.ignore" :image-menu-prevent="opts[5]||!opts[3]||n.attrs.ignore" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
+      <!-- #ifdef APP-HARMONY -->
+      <image v-else-if="n.name==='img'" :id="n.attrs.id||('n'+i)" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]&&opts[5]!=='simple'?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+'width:'+ctrl[i]+'px;'+n.attrs.style" :src="n.attrs.src||(ctrl.load?n.attrs['data-src']:'')" :mode="!n.h?'widthFix':(!n.w?'heightFix':(n.m||'scaleToFill'))" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
+      <!-- #endif -->
+      <!-- #ifndef H5 || APP-PLUS || MP-KUAISHOU -->
+      <image v-else-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]&&opts[5]!=='simple'?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+'width:'+(ctrl[i]||1)+'px;height:'+(ctrl['h'+i]||1)+'px;'+n.attrs.style" :src="n.attrs.src" :mode="!n.h?'widthFix':(!n.w?'heightFix':(n.m||'scaleToFill'))" :lazy-load="opts[0]" :webp="n.webp" :show-menu-by-longpress="!opts[5]&&opts[3]&&!n.attrs.ignore" :image-menu-prevent="opts[5]||!opts[3]||n.attrs.ignore" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
+      <!-- #endif -->
+      <!-- #ifdef MP-KUAISHOU -->
+      <image v-else-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]&&opts[5]!=='simple'?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+n.attrs.style" :src="n.attrs.src" :lazy-load="opts[0]" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap"></image>
       <!-- #endif -->
       <!-- #ifdef APP-PLUS && VUE3 -->
-      <image v-else-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+'width:'+(ctrl[i]||1)+'px;'+n.attrs.style" :src="n.attrs.src||(ctrl.load?n.attrs['data-src']:'')" :mode="!n.h?'widthFix':(!n.w?'heightFix':'')" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
+      <image v-else-if="n.name==='img'" :id="n.attrs.id" :class="'_img '+n.attrs.class" :style="(ctrl['e'+i]&&opts[5]!=='simple'?'border:1px dashed black;padding:3px;':'')+(ctrl[i]===-1?'display:none;':'')+'width:'+(ctrl[i]||1)+'px;'+n.attrs.style" :src="n.attrs.src||(ctrl.load?n.attrs['data-src']:'')" :mode="!n.h?'widthFix':(!n.w?'heightFix':(n.m||''))" :data-i="i" @load="imgLoad" @error="mediaError" @tap.stop="imgTap" @longpress="imgLongTap" />
       <!-- #endif -->
       <!-- 文本 -->
       <text v-else-if="n.type==='text'&&!ctrl['e'+i]" :data-i="i" :user-select="opts[4]" :decode="!opts[5]" @tap="editStart">{{n.text}}
@@ -25,7 +31,7 @@
       <text v-else-if="n.type==='text'&&ctrl['e'+i]===1" :data-i="i" style="border:1px dashed black;min-width:50px;width:auto;padding:5px;display:block" @tap.stop="editStart">{{n.text}}
         <text v-if="!n.text" style="color:gray">{{opts[6]||'请输入'}}</text>
       </text>
-      <textarea v-else-if="n.type==='text'" style="border:1px dashed black;min-width:50px;width:auto;padding:5px" auto-height maxlength="-1" :focus="ctrl['e'+i]===3" :value="n.text" :data-i="i" @input="editInput" @blur="editEnd" />
+      <textarea v-else-if="n.type==='text'" :style="opts[5]==='simple'?'':'border:1px dashed black;'+'min-width:50px;width:auto;padding:5px'" auto-height maxlength="-1" :focus="ctrl['e'+i]===3" :value="n.text" :data-i="i" @input="editInput" @blur="editEnd" />
       <text v-else-if="n.name==='br'">\n</text>
       <!-- 链接 -->
       <view v-else-if="n.name==='a'" :id="n.attrs.id" :class="(n.attrs.href?'_a ':'')+n.attrs.class" hover-class="_hover" :style="'display:inline;'+n.attrs.style" :data-i="i" @tap.stop="linkTap">
@@ -33,10 +39,10 @@
       </view>
       <!-- 视频 -->
       <!-- #ifdef APP-PLUS -->
-      <view v-else-if="n.html" :data-i="i" @tap="mediaTap" :id="n.attrs.id" :class="'_video '+n.attrs.class" :style="n.attrs.style" v-html="n.html" @vplay.stop="play" />
+      <view v-else-if="n.html" @tap="mediaTap" :id="n.attrs.id" :class="'_video '+n.attrs.class" :style="n.attrs.style" v-html="n.html" :data-i="i" @vplay.stop="play" />
       <!-- #endif -->
       <!-- #ifndef APP-PLUS -->
-      <video :show-center-play-btn="!opts[5]" @tap="mediaTap" v-else-if="n.name==='video'" :id="n.attrs.id" :class="n.attrs.class" :style="n.attrs.style" :autoplay="n.attrs.autoplay" :controls="n.attrs.controls" :loop="n.attrs.loop" :muted="n.attrs.muted" :object-fit="n.attrs['object-fit']" :poster="n.attrs.poster" :src="n.src[ctrl[i]||0]" :data-i="i" @play="play" @error="mediaError" />
+      <video :show-center-play-btn="!opts[5]" @tap="mediaTap" v-else-if="n.name==='video'" :id="n.attrs.id" :class="n.attrs.class" :style="n.attrs.style" :autoplay="n.attrs.autoplay" :controls="n.attrs.controls" :loop="n.attrs.loop" :muted="n.attrs.muted" :object-fit="n.attrs['object-fit']" :poster="n.attrs.poster" :src="n.src[ctrl[i]||0]" :data-i="i" @play="play" @pause="mediaEvent" @fullscreenchange="mediaEvent" @error="mediaError" />
       <!-- #endif -->
       <!-- #ifdef H5 || APP-PLUS -->
       <iframe v-else-if="n.name==='iframe'" :style="n.attrs.style" :allowfullscreen="n.attrs.allowfullscreen" :frameborder="n.attrs.frameborder" :src="n.attrs.src" />
@@ -44,7 +50,7 @@
       <!-- #endif -->
       <!-- #ifndef MP-TOUTIAO || ((H5 || APP-PLUS) && VUE3) -->
       <!-- 音频 -->
-      <audio @tap="mediaTap" v-else-if="n.name==='audio'" :id="n.attrs.id" :class="n.attrs.class" :style="n.attrs.style" :author="n.attrs.author" :controls="n.attrs.controls" :loop="n.attrs.loop" :name="n.attrs.name" :poster="n.attrs.poster" :src="n.src[ctrl[i]||0]" :data-i="i" @play="play" @error="mediaError" />
+      <audio @tap="mediaTap" v-else-if="n.name==='audio'" :id="n.attrs.id" :class="n.attrs.class" :style="n.attrs.style" :author="n.attrs.author" :controls="n.attrs.controls" :loop="n.attrs.loop" :name="n.attrs.name" :poster="n.attrs.poster" :src="n.src[ctrl[i]||0]" :data-i="i" @play="play" @pause="mediaEvent" @error="mediaError" />
       <!-- #endif -->
       <view v-else-if="(n.name==='table'&&(n.c||opts[5]))||n.name==='li'" :id="n.attrs.id" :class="'_'+n.name+' '+n.attrs.class" :style="n.attrs.style">
         <node v-if="n.name==='li'" :childs="n.children" :opts="[opts[0],opts[1],opts[2],opts[3],opts[4],opts[5],opts[6],opts[7]+'.'+i+'.children']" />
@@ -62,13 +68,13 @@
           </block>
         </view>
       </view>
-      <rich-text v-else-if="n.attrs['data-content']" :nodes="[n]" :data-content="n.attrs['data-content']" :data-lang="n.attrs['data-lang']" @longpress="copyCode" />
+      <uni-halo-douban-card @click="mediaTap($event, i)" v-else-if="n.name=='douban'" :class="n.attrs.class" :style="n.attrs.style" :n="n" :mode="opts[5]" :url="n.attrs.src" @actions="onDoubanActions" /><uni-halo-vote-card v-else-if="n.name=='vote-block'" :class="n.attrs.class" :style="n.attrs.style"  :n="n" :mode="opts[5]" :id="n.attrs.id" :data-i="i" data-source="vote-block" @actions="onVoteActions" /><uni-halo-portfolio-card v-else-if="n.name=='portfolio-project-card'" :class="n.attrs.class" :style="n.attrs.style" :slug="n.attrs.slug" :n="n" :data-i="i" data-source="portfolio-project-card" @actions="onPortfolioActions" />
       <!-- 富文本 -->
       <!-- #ifdef H5 || ((MP-WEIXIN || MP-QQ || APP-PLUS || MP-360) && VUE2) -->
       <rich-text v-else-if="!opts[5]&&!n.c&&!handler.isInline(n.name, n.attrs.style)" :id="n.attrs.id" :style="n.f" :user-select="opts[4]" :nodes="[n]" />
       <!-- #endif -->
       <!-- #ifndef H5 || ((MP-WEIXIN || MP-QQ || APP-PLUS || MP-360) && VUE2) -->
-      <rich-text v-else-if="!opts[5]&&!n.c" :id="n.attrs.id" :style="n.f+';display:inline'" :preview="false" :selectable="opts[4]" :user-select="opts[4]" :nodes="[n]" />
+      <rich-text v-else-if="!opts[5]&&!n.c" :id="n.attrs.id" :style="'display:inline;'+n.f" :preview="false" :selectable="opts[4]" :user-select="opts[4]" :nodes="[n]" />
       <!-- #endif -->
       <!-- 继续递归 -->
       <view v-else-if="n.c===2" :id="n.attrs.id" :class="'_block _'+n.name+' '+n.attrs.class" :style="n.f+';'+n.attrs.style">
@@ -107,9 +113,13 @@ module.exports = {
 }
 </script>
 <script>
+import Parser from '../parser'
 function getTop(e) {
   let top
-  // #ifdef H5 || APP-PLUS
+  // #ifdef H5 && VUE3
+  top = e.pageY
+  // #endif
+  // #ifdef (H5 && VUE2) || APP-PLUS
   top = e.touches[0].pageY
   // #endif
   // #ifdef MP-ALIPAY
@@ -126,17 +136,13 @@ function getTop(e) {
   }
   return top - 30
 }
+import uniHaloDoubanCard from '../uni-halo-douban-card/uni-halo-douban-card'
+import uniHaloVoteCard from '../uni-halo-vote-card/uni-halo-vote-card'
+import uniHaloPortfolioCard from '../uni-halo-portfolio-card/uni-halo-portfolio-card'
 
-// #ifdef MP
 import node from './node'
-// #endif
 export default {
   name: 'node',
-  // #ifdef MP
-  components: {
-    node
-  },
-  // #endif
   options: {
     // #ifdef MP-WEIXIN
     virtualHost: true,
@@ -148,8 +154,9 @@ export default {
   data () {
     return {
       ctrl: {},
+      nodes: [],
       // #ifdef MP-WEIXIN
-      isiOS: uni.getSystemInfoSync().system.includes('iOS')
+      isiOS: (uni.canIUse('getDeviceInfo') ? uni.getDeviceInfo() : uni.getSystemInfoSync()).system.includes('iOS')
       // #endif
     }
   },
@@ -163,6 +170,27 @@ export default {
     },
     childs: Array,
     opts: Array
+  },
+  watch: {
+    childs: {
+		  handler (nodes) {
+        // 列表缩短会刷新整个列表，因此进行空填充
+        while (this.nodes.length > nodes.length) {
+			    nodes.push({})
+		    }
+        this.nodes = nodes
+      },
+	    immediate: true
+	  }
+  },
+  components: {
+uniHaloDoubanCard,
+uniHaloVoteCard,
+uniHaloPortfolioCard,
+
+    // #ifndef ((H5 || APP-PLUS) && VUE3) || APP-HARMONY
+    node
+    // #endif
   },
   mounted () {
     this.$nextTick(() => {
@@ -190,7 +218,7 @@ export default {
     // #endif
   },
   beforeDestroy () {
-  if (this.root._edit === this) {
+  if (this.root && this.root._edit === this) {
     this.root._edit = undefined
   }
     // #ifdef H5 || APP-PLUS
@@ -199,18 +227,31 @@ export default {
     }
     // #endif
   },
-  methods:{copyCode (e) {
-      uni.showActionSheet({
-        itemList: ['复制代码'],
-        success: () =>
-          uni.setClipboardData({
-            data: e.currentTarget.dataset.content
-          })
-      })
+  methods:{onDoubanActions (e) {
+      const detail = e && e.detail ? e.detail : e
+      if (typeof this.root.triggerEvent === 'function') {
+        this.root.triggerEvent('uhe-douban-actions', detail)
+      } else {
+        this.root.$emit('uhe-douban-actions', detail)
+      }
+    },onVoteActions (e) {
+      const detail = e && e.detail ? e.detail : e
+      if (typeof this.root.triggerEvent === 'function') {
+        this.root.triggerEvent('uhe-vote-actions', detail)
+      } else {
+        this.root.$emit('uhe-vote-actions', detail)
+      }
+    },onPortfolioActions (e) {
+      const detail = e && e.detail ? e.detail : e
+      if (typeof this.root.triggerEvent === 'function') {
+        this.root.triggerEvent('uhe-portfolio-actions', detail)
+      } else {
+        this.root.$emit('uhe-portfolio-actions', detail)
+      }
     },editStart (e) {
       if (this.opts[5]) {
         const i = e.currentTarget.dataset.i
-        if (!this.ctrl['e' + i]) {
+        if (!this.ctrl['e' + i] && this.opts[5] !== 'simple') {
           // 显示虚线框
           this.$set(this.ctrl, 'e' + i, 1)
           setTimeout(() => {
@@ -220,6 +261,11 @@ export default {
           this.i = i
           this.cursor = this.childs[i].text.length
         } else {
+          if (this.opts[5] === 'simple') {
+            this.root._edit = this
+            this.i = i
+            this.cursor = this.childs[i].text.length
+          }
           this.root._mask.pop()
           this.root._maskTap()
           // 将 text 转为 textarea
@@ -313,6 +359,7 @@ export default {
         if (this.ctrl['e' + this.i] === 3) return
         this.root._maskTap()
         this.root._edit = this
+        if (this.opts[5] === 'simple') return
         let start = this.opts[7].lastIndexOf('children.')
         if (start !== -1) {
           start += 9
@@ -324,7 +371,37 @@ export default {
         while (parent && parent.$options.name !== 'node') {
           parent = parent.$parent
         }
-        if (!parent || this.opts[7].length - parent.opts[7].length > 15) return
+        let remove = () => {
+          parent.remove(i)
+        }
+        if (this.opts[7].length - parent.opts[7].length > 15) {
+          const parts = this.opts[7].split('.')
+          let childs = parent.childs
+          const i = parseInt(parts[parent.opts[7].split('.').length])
+          const oldParent = parent
+          // 删除整个表格
+          remove = () => {
+            oldParent.remove(i)
+          }
+          for (let i = parent.opts[7].split('.').length; i < parts.length - 2; i++) {
+            childs = childs[parts[i]]
+          }
+          const that = this
+          parent = {
+            childs,
+            opts: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, parts.slice(0, parts.length - 2).join('.')],
+            changeStyle (name, i, value, oldVal) {
+              let style = this.childs[i].attrs.style || ''
+              if (style.includes(';' + name + ':' + oldVal)) {
+                style = style.replace(';' + name + ':' + oldVal, ';' + name + ':' + value)
+              } else {
+                style += ';' + name + ':' + value
+              }
+              that.root._setData(`${this.opts[7]}.${i}.attrs.style`, style)
+            }
+          }
+        }
+        if (!parent) return
         // 显示实线框
         this.$set(this.ctrl, 'root', 1)
         this.root._mask.push(() => this.$set(this.ctrl, 'root', 0))
@@ -367,6 +444,19 @@ export default {
                   this.root._editVal(`${parent.opts[7]}.${i}.attrs.style`, style, parent.childs[i].attrs.style)
                 }
               })
+            } else if (items[tapIndex] === '颜色') {
+              // 改变文字颜色
+              const items = this.root._getItem('color')
+              this.root._color({
+                top: getTop(e),
+                items,
+                success: tapIndex => {
+                  const style = parent.childs[i].attrs.style || ''
+                  const value = style.match(/;color:([^;]+)/)
+                  parent.changeStyle('color', i, items[tapIndex], value ? value[1] : undefined)
+                  this.root._editVal(`${parent.opts[7]}.${i}.attrs.style`, style, parent.childs[i].attrs.style)
+                }
+              })
             } else if (items[tapIndex] === '上移' || items[tapIndex] === '下移') {
               const arr = parent.childs.slice(0)
               const item = arr[i]
@@ -379,7 +469,7 @@ export default {
               }
               this.root._editVal(parent.opts[7], parent.childs, arr, true)
             } else if (items[tapIndex] === '删除') {
-              parent.remove(i)
+              remove()
             } else {
               const style = parent.childs[i].attrs.style || ''
               let newStyle = ''
@@ -414,15 +504,16 @@ export default {
           }
         })
       }
-    },mediaTap (e) {
+    },mediaTap (e, index) {
       if (this.opts[5]) {
-        const i = e.target.dataset.i
+        const i = e.target.dataset.i || index
         const node = this.childs[i]
         const items = this.root._getItem(node)
+        this.root._maskTap()
         this.root._edit = this
         this.i = i
         this.root._tooltip({
-          top: e.target.offsetTop - 30,
+          top: e.currentTarget.offsetTop - 30,
           items,
           success: tapIndex => {
             switch (items[tapIndex]) {
@@ -479,7 +570,15 @@ export default {
      * @param {Event} e
      */
     play (e) {
-      this.root.$emit('play')
+      const i = e.currentTarget.dataset.i
+      const node = this.childs[i]
+      this.root.$emit('play', {
+        source: node.name,
+        attrs: {
+          ...node.attrs,
+          src: node.src[this.ctrl[i] || 0]
+        }
+      })
       // #ifndef APP-PLUS
       if (this.root.pauseVideo) {
         let flag = false
@@ -507,6 +606,22 @@ export default {
       }
       // #endif
     },
+    /**
+     * @description 音视频其他事件
+     * @param {Event} e
+     */
+    mediaEvent (e) {
+      const i = e.currentTarget.dataset.i
+      const node = this.childs[i]
+      this.root.$emit(e.type, {
+        ...e.detail,
+        source: node.name,
+        attrs: {
+          ...node.attrs,
+          src: node.src[this.ctrl[i] || 0]
+        }
+      })
+    },
 
     /**
      * @description 图片点击事件
@@ -523,7 +638,14 @@ export default {
       // #ifdef H5 || APP-PLUS
       node.attrs.src = node.attrs.src || node.attrs['data-src']
       // #endif
+      // #ifndef APP-HARMONY
       this.root.$emit('imgtap', node.attrs)
+      // #endif
+      // #ifdef APP-HARMONY
+      this.root.$emit('imgtap', {
+        ...node.attrs
+      })
+      // #endif
       // 自动预览图片
       if (this.root.previewImg) {
         uni.previewImage({
@@ -542,6 +664,7 @@ export default {
         const i = e.currentTarget.dataset.i
         const node = this.childs[i]
         const items = this.root._getItem(node)
+        const parser = new Parser(this.root)
         this.root._edit = this
         this.i = i
         this.root._maskTap()
@@ -554,7 +677,7 @@ export default {
             if (items[tapIndex] === '换图') {
               // 换图
               this.root.getSrc('img', node.attrs.src || '').then(url => {
-                this.root._editVal(this.opts[7] + '.' + i + '.attrs.src', node.attrs.src, url instanceof Array ? url[0] : url, true)
+                this.root._editVal(this.opts[7] + '.' + i + '.attrs.src', node.attrs.src, parser.getUrl(url instanceof Array ? url[0] : url), true)
               }).catch(() => { })
             } else if (items[tapIndex] === '宽度') {
               // 更改宽度
@@ -590,12 +713,12 @@ export default {
               this.root.getSrc('link', node.a ? node.a.href : '').then(url => {
                 // 如果有 a 标签则替换 href
                 if (node.a) {
-                  this.root._editVal(this.opts[7] + '.' + i + '.a.href', node.a.href, url, true)
+                  this.root._editVal(this.opts[7] + '.' + i + '.a.href', node.a.href, parser.getUrl(url), true)
                 } else {
                   const link = {
                     name: 'a',
                     attrs: {
-                      href: url
+                      href: parser.getUrl(url)
                     },
                     children: [node]
                   }
@@ -609,7 +732,7 @@ export default {
             } else if (items[tapIndex] === '预览图') {
               // 设置预览图链接
               this.root.getSrc('img', node.attrs['original-src'] || '').then(url => {
-                this.root._editVal(this.opts[7] + '.' + i + '.attrs.original-src', node.attrs['original-src'], url instanceof Array ? url[0] : url, true)
+                this.root._editVal(this.opts[7] + '.' + i + '.attrs.original-src', node.attrs['original-src'], parser.getUrl(url instanceof Array ? url[0] : url), true)
                 uni.showToast({
                   title: '成功'
                 })
@@ -700,12 +823,14 @@ export default {
      * @description 检查是否所有图片加载完毕
      */
     checkReady () {
-      if (!this.root.lazyLoad) {
+      if (this.root && !this.root.lazyLoad) {
         this.root._unloadimgs -= 1
         if (!this.root._unloadimgs) {
           setTimeout(() => {
             this.root.getRect().then(rect => {
               this.root.$emit('ready', rect)
+            }).catch(() => {
+              this.root.$emit('ready', {})
             })
           }, 350)
         }
@@ -878,51 +1003,6 @@ export default {
   font-size: 100%;
   background: transparent;
   border: 0;
-}/deep/ .hl-pre {
-  position: relative;
-}
-/deep/ .hl-code {
-  overflow: auto;
-  display: block;
-}/deep/ .hl-language {
-  font-size: 12px;
-  font-weight: 600;
-  position: absolute;
-  right: 8px;
-  text-align: right;
-  top: 3px;
-}
-/deep/ .hl-pre {
-  padding-top: 1.5em;
-}/deep/ .hl-pre {
-  font-size: 14px;
-  padding-left: 3.8em;
-  counter-reset: linenumber;
-}
-/deep/ .line-numbers-rows {
-  position: absolute;
-  pointer-events: none;
-  top: 1.5em;
-  font-size: 100%;
-  left: 0;
-  width: 3em; /* works for line-numbers below 1000 lines */
-  letter-spacing: -1px;
-  border-right: 1px solid #999;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-/deep/ .line-numbers-rows .span {
-  display: block;
-  counter-increment: linenumber;
-} 
-/deep/ .line-numbers-rows .span:before {
-  content: counter(linenumber);
-  color: #999;
-  display: block;
-  padding-right: 0.8em;
-  text-align: right;
 }/* #ifndef H5 || MP-ALIPAY || APP-PLUS */
   /deep/ ._address,
   /deep/ ._article,

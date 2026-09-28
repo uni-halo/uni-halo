@@ -15,12 +15,17 @@
     <view v-if="slider" class="_slider" :style="'top:'+slider.top+'px'">
       <slider :value="slider.value" :min="slider.min" :max="slider.max" handle-size="14" block-size="14" show-value activeColor="white" style="padding:3px" @changing="_sliderChanging" @change="_sliderChange" />
     </view>
+    <view v-if="color" class="_tooltip_contain" :style="'top:'+color.top+'px'">
+      <view class="_tooltip" style="overflow-y: hidden;">
+        <view v-for="(item, index) in color.items" v-bind:key="index" class="_color_item" :style="'background-color:'+item" :data-i="index" @tap="_colorTap"></view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script>
 /**
- * mp-html v2.4.0
+ * mp-html v2.5.2
  * @description 富文本组件
  * @tutorial https://github.com/jin-yufeng/mp-html
  * @property {String} container-style 容器的样式
@@ -44,6 +49,8 @@
  * @event {Function} linktap 链接被点击时触发
  * @event {Function} play 音视频播放时触发
  * @event {Function} error 媒体加载出错时触发
+ * @event {Function} pause 音视频暂停时触发
+ * @event {Function} fullscreenchange 视频全屏状态变化时触发
  */
 // #ifndef APP-PLUS-NVUE
 import node from './node/node'
@@ -54,8 +61,11 @@ import emoji from './emoji/index.js'
 import highlight from './highlight/index.js'
 import style from './style/index.js'
 import imgCache from './img-cache/index.js'
+import uniHaloDoubanCard from './uni-halo-douban-card/index.js'
+import uniHaloVoteCard from './uni-halo-vote-card/index.js'
+import uniHaloPortfolioCard from './uni-halo-portfolio-card/index.js'
 import editable from './editable/index.js'
-const plugins=[markdown,emoji,highlight,style,imgCache,editable,]
+const plugins=[markdown,emoji,highlight,style,imgCache,uniHaloDoubanCard,uniHaloVoteCard,uniHaloPortfolioCard,editable,]
 // #ifdef APP-PLUS-NVUE
 const dom = weex.requireModule('dom')
 // #endif
@@ -65,6 +75,7 @@ export default {
     return {
       tooltip: null,
       slider: null,
+      color: null,
       nodes: [],
       // #ifdef APP-PLUS-NVUE
       height: 3
@@ -72,7 +83,7 @@ export default {
     }
   },
   props: {
-    editable: Boolean,
+    editable: [Boolean, String],
     placeholder: String,
     ImgCache: Boolean,
     markdown: Boolean,
@@ -123,7 +134,7 @@ export default {
     useAnchor: [Boolean, Number]
   },
   // #ifdef VUE3
-  emits: ['load', 'ready', 'imgtap', 'linktap', 'play', 'error'],
+  emits: ['uhe-portfolio-actions','uhe-vote-actions','uhe-douban-actions','load', 'ready', 'imgtap', 'linktap', 'play', 'error'],
   // #endif
   // #ifndef APP-PLUS-NVUE
   components: {
@@ -156,7 +167,7 @@ export default {
   },
   methods: {
     _containTap() {
-      if (!this._lock && !this.slider) {
+      if (!this._lock && !this.slider && !this.color) {
         this._edit = undefined
         this._maskTap()
       }
@@ -170,6 +181,10 @@ export default {
     },
     _sliderChange(e) {
       this._slidercb(e.detail.value)
+    },
+    _colorTap(e) {
+      this._colorcb(e.currentTarget.dataset.i)
+      this.$set(this, 'color', null)
     },
     /**
      * @description 将锚点跳转的范围限定在一个 scroll-view 内
@@ -373,24 +388,27 @@ export default {
 
       if (this.lazyLoad || this.imgList._unloadimgs < this.imgList.length / 2) {
         // 设置懒加载，每 350ms 获取高度，不变则认为加载完毕
-        let height
+        let height = 0
         const callback = rect => {
+          if (!rect || !rect.height) rect = {}
           // 350ms 总高度无变化就触发 ready 事件
           if (rect.height === height) {
             this.$emit('ready', rect)
           } else {
             height = rect.height
             setTimeout(() => {
-              this.getRect().then(callback)
+              this.getRect().then(callback).catch(callback)
             }, 350)
           }
         }
-        this.getRect().then(callback)
+        this.getRect().then(callback).catch(callback)
       } else {
         // 未设置懒加载，等待所有图片加载完毕
         if (!this.imgList._unloadimgs) {
-          this.getRect(rect => {
+          this.getRect().then(rect => {
             this.$emit('ready', rect)
+          }).catch(() => {
+            this.$emit('ready', {})
           })
         }
       }
@@ -413,7 +431,7 @@ export default {
      * @description 设置内容
      */
     _set (nodes, append) {
-      this.$refs.web.evalJs('setContent(' + JSON.stringify(nodes) + ',' + JSON.stringify([this.containerStyle.replace(/(?:margin|padding)[^;]+/g, ''), this.errorImg, this.loadingImg, this.pauseVideo, this.scrollTable, this.selectable]) + ',' + append + ')')
+      this.$refs.web.evalJs('setContent(' + JSON.stringify(nodes).replace(/%22/g, '') + ',' + JSON.stringify([this.containerStyle.replace(/(?:margin|padding)[^;]+/g, ''), this.errorImg, this.loadingImg, this.pauseVideo, this.scrollTable, this.selectable]) + ',' + append + ')')
     },
 
     /**
@@ -439,7 +457,9 @@ export default {
         case 'onReady':
           this.getRect().then(res => {
             this.$emit('ready', res)
-          }).catch(() => { })
+          }).catch(() => {
+            this.$emit('ready', {})
+          })
           break
         // 总高度发生变化
         case 'onHeightChange':
@@ -561,6 +581,15 @@ export default {
   line-height: 30px;
   background-color: black;
   color: white;
+}
+
+._color_item {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin: 5px 2vw;
+  border:1px solid #dfe2e5;
+  border-radius: 50%;
 }
 
 /* 图片宽度滚动条 */

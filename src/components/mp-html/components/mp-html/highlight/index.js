@@ -2,9 +2,9 @@
  * @fileoverview highlight 插件
  * Include prismjs (https://prismjs.com)
  */
-import prism from './prism.min'
-import config from './config'
-import Parser from '../parser'
+import prism  from './prism.min'
+import config  from './config'
+import Parser  from '../parser'
 
 function Highlight (vm) {
   this.vm = vm

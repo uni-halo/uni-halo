@@ -3,7 +3,7 @@
  * Include marked (https://github.com/markedjs/marked)
  * Include github-markdown-css (https://github.com/sindresorhus/github-markdown-css)
  */
-import marked from './marked.min'
+import { marked }  from './marked.min'
 let index = 0
 
 function Markdown (vm) {
@@ -13,6 +13,8 @@ function Markdown (vm) {
 
 Markdown.prototype.onUpdate = function (content) {
   if (this.vm.markdown) {
+    // 解决中文标点符号后粗体失效的问题，增加零宽空格
+    content = content.replace(/\*\*([^*]+)\*\*([，。！？；：])/g, '**$1**&#8203;$2')
     return marked(content)
   }
 }

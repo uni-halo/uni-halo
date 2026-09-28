@@ -1,8 +1,8 @@
 /**
  * @fileoverview editable 插件
  */
-import config from './config'
-import Parser from '../parser'
+import config  from './config'
+import Parser  from '../parser'
 
 function Editable (vm) {
   this.vm = vm
@@ -90,6 +90,9 @@ function Editable (vm) {
   vm._getItem = function (node, up, down) {
     let items
     let i
+    if (node === 'color') {
+      return config.color
+    }
     if (node.name === 'img') {
       items = config.img.slice(0)
       if (!vm.getSrc) {
@@ -132,6 +135,8 @@ function Editable (vm) {
       if (node.attrs.autoplay && i !== -1) {
         items[i] = '不自动播放'
       }
+    } else if (node.name === 'card') {
+      items = config.card.slice(0)
     } else {
       items = config.node.slice(0)
     }
@@ -180,6 +185,19 @@ function Editable (vm) {
   }
 
   /**
+   * @description 显示颜色选择
+   * @param {object} obj
+   * @private
+   */
+  vm._color = function (obj) {
+    vm.$set(vm, 'color', {
+      items: obj.items,
+      top: obj.top
+    })
+    vm._colorcb = obj.success
+  }
+
+  /**
    * @description 点击蒙版
    * @private
    */
@@ -193,6 +211,9 @@ function Editable (vm) {
     }
     if (vm.slider) {
       vm.$set(vm, 'slider', null)
+    }
+    if (vm.color) {
+      vm.$set(vm, 'color', null)
     }
   }
 
@@ -442,7 +463,7 @@ function Editable (vm) {
                 children: []
               }]
               for (let j = 0; j < item.children.length; j++) {
-                item.children[j].attrs.style = item.children[j].attrs.style.replace(/grid-[^;]+;*/g, '')
+                item.children[j].attrs.style = item.children[j].attrs.style.replace(/grid-[^;]+;*/g, '').replace(/justify-content[^;]+;*/g, '').replace(';display:flex;', '')
                 if (item.children[j].r !== children.length) {
                   children.push({
                     name: 'tr',
