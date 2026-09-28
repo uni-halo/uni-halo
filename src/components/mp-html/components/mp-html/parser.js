@@ -274,7 +274,9 @@ Parser.prototype.parseStyle = function (node) {
     // 暴露锚点
     if (this.options.useAnchor) {
       this.expose()
-    } else if (node.name !== 'img' && node.name !== 'a' && node.name !== 'video' && node.name !== 'audio') {
+    } else if (node.name !== 'img' && node.name !== 'a' && node.name !== 'video' && node.name !== 'audio'
+      && node.name !== 'vote-block' && node.name !== 'douban' && node.name !== 'portfolio-project-card') {
+      // 插件卡片标签的 id 是业务参数，不作为锚点清理
       attrs.id = undefined
     }
   }

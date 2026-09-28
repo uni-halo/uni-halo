@@ -88,11 +88,20 @@ const allStats = computed(() => [
   { key: 'upvote', label: '点赞', value: statistics.value.upvote, visible: true },
 ].filter(item => item.visible))
 
+interface INavIconStyle {
+  /** 风格标识（ri=remixicon / emoji-font=emoji 字体） */
+  key: string
+  prefix: string
+  iconName: string
+}
+
 interface INavItem {
   key: string
   title: string
-  iconPrefix?: string
-  icon: string
+  /** 图标风格集合 */
+  icons?: INavIconStyle[]
+  /** 当前生效风格 key，缺省取 icons[0] */
+  iconMode?: string
   iconColor?: string
   bgColor: string
   color?: string
@@ -111,6 +120,8 @@ interface IMyPageEntry {
   bgColor?: string
   iconPrefix?: string
   icon?: string
+  icons?: INavIconStyle[]
+  iconMode?: string
   path?: string
   visible?: boolean
 }
@@ -134,7 +145,7 @@ function getAppVersion() {
 const appVersionItem: INavItem = {
   key: 'app-version',
   title: '应用版本',
-  icon: 'info-circle',
+  icons: [{ key: 'ri', prefix: 'ri', iconName: 'information-2-line' }],
   color: '#a1887f',
   iconColor: '#a1887f',
   bgColor: '#a1887f24',
@@ -142,6 +153,14 @@ const appVersionItem: INavItem = {
   path: null,
   show: true,
   group: 'more',
+}
+
+/** 解析条目当前生效的图标风格（iconMode 优先，缺省取 icons[0]） */
+function resolveNavItemIcon(item: INavItem): INavIconStyle | null {
+  if (!item.icons?.length) {
+    return null
+  }
+  return item.icons.find(i => i.key === item.iconMode) ?? item.icons[0]
 }
 
 function handleAppVersion() {
@@ -179,39 +198,8 @@ const otherFeatures = computed(() => {
 
 /* ---------------- 功能导航 ---------------- */
 
-/** 固定功能入口（后续迁移到插件端配置） */
-const fixedNavItems: INavItem[] = [
-  {
-    key: 'portfolio',
-    title: '项目集',
-    iconPrefix: 'uhemoji-icon',
-    icon: '-shocked',
-    color: '#3E87F7',
-    iconColor: '#3E87F7',
-    bgColor: '#3E87F724',
-    subTitle: '博主的项目作品',
-    path: '/pages-blog/portfolio/portfolio',
-    show: true,
-    group: 'blog',
-  },
-  {
-    key: 'douban',
-    title: '豆瓣',
-    iconPrefix: 'uhemoji-icon',
-    icon: '-joy',
-    color: '#43B024',
-    iconColor: '#43B024',
-    bgColor: '#43B02424',
-    subTitle: '博主的书影音记录',
-    path: '/pages-blog/douban/douban',
-    show: true,
-    group: 'blog',
-  },
-]
-
 async function handleGetNavList() {
-  // 配置模式：插件端 mine 两组（常用功能→blog、其他功能→more），
-  // 未配置/为空时回退本地内置默认（保留原显隐推导）
+  // 配置模式：插件端 mine 两组（常用功能→blog、其他功能→more）
   const mp = configuredFeatures.value
   if (mp) {
     const mapEntry = (e: IMyPageEntry, group: 'blog' | 'more'): INavItem | null => {
@@ -221,8 +209,8 @@ async function handleGetNavList() {
       return {
         key: e.key,
         title: e.title || '',
-        iconPrefix: e.iconPrefix,
-        icon: e.icon || '',
+        icons: e.icons?.length ? e.icons : (e.icon ? [{ key: 'emoji-font', prefix: e.iconPrefix || '', iconName: e.icon }] : undefined),
+        iconMode: e.iconMode,
         bgColor: e.bgColor || '#969696F2',
         color: e.color,
         subTitle: e.subTitle || '',
@@ -231,16 +219,13 @@ async function handleGetNavList() {
         group,
       }
     }
-    const configured = [
+    navList.value = [
       ...(mp.commonFeatures || []).map(e => mapEntry(e, 'blog')).filter((n): n is INavItem => n !== null),
       ...(mp.otherFeatures || []).map(e => mapEntry(e, 'more')).filter((n): n is INavItem => n !== null),
     ]
-    // 固定入口追加到常用功能（已配置同 key 则不重复）
-    const keys = new Set(configured.map(n => n.key))
-    navList.value = [...configured, ...fixedNavItems.filter(n => !keys.has(n.key))]
     return
   }
-  navList.value = [...fixedNavItems]
+  navList.value = []
 }
 
 /* ---------------- 数据加载 ---------------- */
@@ -393,10 +378,10 @@ onPageScroll((option: Page.PageScrollOption) => {
             @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
             <view
-              class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
-              :style="{ backgroundColor: nav.bgColor }"
+              class="uh-global-card-glass uh-shadow-xs h-10 w-10 flex items-center justify-center border rounded-xl"
+              :style="{ backgroundColor: nav.bgColor,color:nav.iconColor }"
             >
-              <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
+              <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
             </view>
             <text class="mt-1 text-xs text-gray-900" :style="{ color: nav.color }">
               {{ nav.title }}
@@ -422,7 +407,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl text-gray-600"
                 :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
               >
-                <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
+                <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="36rpx" />
               </view>
               <text class="nav-title text-sm text-gray-900" :style="{ color: nav.color }">
                 {{ nav.title }}
@@ -457,7 +442,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
                 :style="{ backgroundColor: nav.bgColor, color: nav.iconColor }"
               >
-                <wd-icon :class-prefix="nav.iconPrefix" :name="nav.icon" size="36rpx" />
+                <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="36rpx" />
               </view>
               <text class="nav-title text-sm text-gray-900" :style="{ color: nav.color }">
                 {{ nav.title }}

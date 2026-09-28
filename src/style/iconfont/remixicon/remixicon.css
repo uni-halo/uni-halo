@@ -5,11 +5,12 @@
 * Copyright RemixIcon.com
 * Released under the Remix Icon License v1.0
 */
+
 @font-face {
     font-family: "remixicon";
-    src: url("./remixicon.woff2") format("woff2"),
-    url("./remixicon.woff") format("woff"),
-    url('./remixicon.ttf') format('truetype');
+    src: url("remixicon.woff2?t=1790602049597") format("woff2"),
+    url("remixicon.woff?t=1790602049597") format("woff"),
+    url('remixicon.ttf?t=1790602049597') format('truetype'); 
     font-display: swap;
 }
 
@@ -39,7 +40,6 @@
 
 .ri-mail-line:before { content: "\eef6"; }
 .ri-notification-2-line:before { content: "\ef92"; }
-.ri-home-heart-line:before { content: "\ee2a"; }
 .ri-folder-settings-line:before { content: "\ed76"; }
 .ri-hearts-line:before { content: "\ee13"; }
 .ri-links-line:before { content: "\eeb8"; }
@@ -53,3 +53,4 @@
 .ri-telegram-2-line:before { content: "\f547"; }
 .ri-spy-line:before { content: "\f17f"; }
 .ri-contract-line:before { content: "\f432"; }
+.ri-star-smile-line:before { content: "\f18f"; }

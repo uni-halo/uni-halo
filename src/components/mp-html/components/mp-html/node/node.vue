@@ -68,7 +68,7 @@
           </block>
         </view>
       </view>
-      <uni-halo-douban-card @click="mediaTap($event, i)" v-else-if="n.name=='douban'" :class="n.attrs.class" :style="n.attrs.style" :n="n" :mode="opts[5]" :url="n.attrs.src" @actions="onDoubanActions" /><uni-halo-vote-card v-else-if="n.name=='vote-block'" :class="n.attrs.class" :style="n.attrs.style"  :n="n" :mode="opts[5]" :id="n.attrs.id" :data-i="i" data-source="vote-block" @actions="onVoteActions" /><uni-halo-portfolio-card v-else-if="n.name=='portfolio-project-card'" :class="n.attrs.class" :style="n.attrs.style" :slug="n.attrs.slug" :n="n" :data-i="i" data-source="portfolio-project-card" @actions="onPortfolioActions" />
+      <uni-halo-douban-card @click="mediaTap($event, i)" v-else-if="n.name=='douban'" :class="n.attrs.class" :style="n.attrs.style" :n="n" :mode="opts[5]" :url="n.attrs.src" @actions="onDoubanActions" /><uni-halo-vote-card v-else-if="n.name=='vote-block'" :class="n.attrs.class" :style="n.attrs.style"  :n="n" :mode="opts[5]" :vote-id="n.attrs.id" :data-i="i" data-source="vote-block" @actions="onVoteActions" /><uni-halo-portfolio-card v-else-if="n.name=='portfolio-project-card'" :class="n.attrs.class" :style="n.attrs.style" :slug="n.attrs.slug" :n="n" :data-i="i" data-source="portfolio-project-card" @actions="onPortfolioActions" />
       <!-- 富文本 -->
       <!-- #ifdef H5 || ((MP-WEIXIN || MP-QQ || APP-PLUS || MP-360) && VUE2) -->
       <rich-text v-else-if="!opts[5]&&!n.c&&!handler.isInline(n.name, n.attrs.style)" :id="n.attrs.id" :style="n.f" :user-select="opts[4]" :nodes="[n]" />

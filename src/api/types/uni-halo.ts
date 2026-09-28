@@ -45,11 +45,25 @@ export interface IQuickNavItem {
   /** 副标题（对标 rightText，可空） */
   subTitle?: string
   color?: string
+  /** 图标颜色（缺省回落 color） */
+  iconColor?: string
   bgColor?: string
   iconPrefix?: string
   icon?: string
+  /** 多风格图标集合（key 风格标识 / prefix 字体前缀 / iconName 图标名） */
+  icons?: IQuickNavIconStyle[]
+  /** 当前生效风格 key（缺省取 icons[0]） */
+  iconMode?: string
   path?: string
   visible?: boolean
+}
+
+/** 多风格图标项 */
+export interface IQuickNavIconStyle {
+  /** 风格标识（ri=remixicon / emoji-font=emoji 字体 / emoji-icon=纯 emoji 字符） */
+  key: string
+  prefix: string
+  iconName: string
 }
 
 /** 轮播图公开条目(uni-halo Banner 归一化模型公开接口,列表脱敏不含 content) */

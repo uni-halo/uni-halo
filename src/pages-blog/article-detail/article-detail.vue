@@ -458,13 +458,13 @@ onShareTimeline(() => {
         </view>
 
         <!-- 相关投票(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
-        <uh-article-vote :vote-ids="result?._voteIds || []" />
+        <uh-article-vote v-if="false" :vote-ids="result?._voteIds || []" />
 
         <!-- 项目集(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
-        <uh-article-portfolio :slugs="result?._portfolioSlugs || []" />
+        <uh-article-portfolio v-if="false" :slugs="result?._portfolioSlugs || []" />
 
         <!-- 豆瓣(容器内置插件检查/展开收起,无数据或插件未激活自动不渲染) -->
-        <uh-article-douban :urls="result?._doubanUrls || []" />
+        <uh-article-douban v-if="false" :urls="result?._doubanUrls || []" />
 
         <view class="box-border px-3">
           <!-- 版权声明 -->
