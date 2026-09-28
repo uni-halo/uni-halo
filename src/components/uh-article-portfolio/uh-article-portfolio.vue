@@ -22,7 +22,7 @@ onMounted(() => {
   <view v-if="pluginAvailable && slugs.length > 0" class="mb-3 box-border px-3">
     <view class="uh-global-card-glass box-border rounded-xl p-3">
       <uh-section-title>
-        项目集
+        相关项目
         <template #right>
           <text class="text-xs text-gray-400" @click="isOpen = !isOpen">
             <wd-icon :name="isOpen ? 'up' : 'down'" /> {{ isOpen ? '收起' : '展开' }}

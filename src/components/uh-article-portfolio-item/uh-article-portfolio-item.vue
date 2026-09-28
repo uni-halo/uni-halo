@@ -43,6 +43,11 @@ function handleCopyLink(url: string | undefined, label: string) {
   handleCopy(url, `${label}链接复制成功`)
 }
 
+/** 跳转项目详情 */
+function handleToDetail() {
+  uni.navigateTo({ url: `/pages-blog/portfolio/detail?slug=${props.slug}` })
+}
+
 const linkButtons = computed(() => [
   { label: '仓库', url: project.value?.repoUrl },
   { label: '演示', url: project.value?.demoUrl },
@@ -54,10 +59,10 @@ handleGetData()
 
 <template>
   <uh-data-loading
-    v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" size="small"
-    empty-text="项目不存在哦~" min-height="120px" @refresh="handleGetData"
+    v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" size="mini"
+    empty-text="项目不存在哦~" min-height="22vh" @refresh="handleGetData"
   />
-  <view v-else-if="project" class="box-border border border-black/5 rounded-xl p-3">
+  <view v-else-if="project" class="box-border border border-primary rounded-lg border-solid p-3" @click="handleToDetail">
     <view class="flex gap-3">
       <image
         v-if="project.cover" :src="checkImageUrl(project.cover)" mode="aspectFill"
@@ -76,7 +81,7 @@ handleGetData()
             推荐
           </view>
         </view>
-        <text v-if="project.summary" class="line-clamp-2 text-xs text-gray-500">{{ project.summary }}</text>
+        <text v-if="project.summary" class="line-clamp-1 text-xs text-gray-500">{{ project.summary }}</text>
         <view v-if="project.type" class="flex items-center gap-1 text-10px text-gray-400">
           {{ portfolioLabelOf(PORTFOLIO_TYPE_LABELS, project.type) }}
         </view>
@@ -91,14 +96,15 @@ handleGetData()
       </view>
     </view>
     <view v-if="linkButtons.length" class="mt-2 flex flex-wrap gap-2 border-t border-black/5 pt-2">
-      <view
+      <uh-button
         v-for="btn in linkButtons" :key="btn.label"
-        class="inline-flex items-center gap-0.5 border border-gray-200 rounded-full px-2.5 py-1 text-10px text-gray-600"
+        class="flex-1"
+        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="handleCopyLink(btn.url, btn.label)"
       >
         <wd-icon name="link" size="12px" />
         {{ btn.label }}
-      </view>
+      </uh-button>
     </view>
   </view>
 </template>

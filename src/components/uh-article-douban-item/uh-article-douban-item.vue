@@ -70,10 +70,10 @@ handleGetData()
 
 <template>
   <uh-data-loading
-    v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" size="small"
-    empty-text="豆瓣内容不存在哦~" min-height="120px" @refresh="handleGetData"
+    v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" size="mini"
+    empty-text="豆瓣内容不存在哦~" min-height="22vh" @refresh="handleGetData"
   />
-  <view v-else-if="douban" class="relative box-border overflow-hidden border border-black/5 rounded-xl p-3">
+  <view v-else-if="douban" class="relative box-border overflow-hidden border border-primary rounded-lg p-3">
     <!-- 角标 -->
     <view class="absolute right-0 top-0 rounded-bl-lg bg-[#f5c618] px-2 py-0.5 text-10px text-gray-900">
       豆瓣
