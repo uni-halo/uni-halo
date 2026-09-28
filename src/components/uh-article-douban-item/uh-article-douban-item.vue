@@ -112,7 +112,7 @@ handleGetData()
     <view class="mt-2 w-full flex flex items-center gap-2 pt-2">
       <uh-button
         class="flex-1"
-        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-[#f5c618] !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
+        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-full !bg-[#f5c618] !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="douban.link && handleCopy(douban.link, '豆瓣地址复制成功')"
       >
         <wd-icon name="link" size="24rpx" />
@@ -120,7 +120,7 @@ handleGetData()
       </uh-button>
       <uh-button
         class="flex-1"
-        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-[#f5c618] !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
+        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-full !bg-[#f5c618] !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="handleCopyInfo()"
       >
         <wd-icon name="copy" size="24rpx" />

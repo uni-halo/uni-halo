@@ -62,27 +62,32 @@ handleGetData()
     v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" size="mini"
     empty-text="项目不存在哦~" min-height="22vh" @refresh="handleGetData"
   />
-  <view v-else-if="project" class="box-border border border-primary rounded-lg border-solid p-3" @click="handleToDetail">
+  <view
+    v-else-if="project"
+    class="relative box-border border border-primary rounded-lg border-solid p-3"
+    @click="handleToDetail"
+  >
+    <view
+      v-if="project.featured"
+      class="absolute right-0 top-0 rounded-bl-lg bg-primary px-2 py-0.5 text-10px text-gray-900"
+    >
+      推荐
+    </view>
     <view class="flex gap-3">
-      <view v-if="project.cover" class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
+      <view v-if="project.cover" class="h-22 w-22 flex-shrink-0 overflow-hidden rounded-lg">
         <wd-img width="100%" height="100%" :src="checkThumbnailUrl(project.cover)" mode="aspectFill" lazy-load>
           <template #loading>
             <wd-loading size="64rpx" custom-class="text-primary" />
           </template>
         </wd-img>
       </view>
-      <view v-else class="h-20 w-20 flex flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-3xs text-gray-400">
+      <view v-else class="h-22 w-22 flex flex-shrink-0 flex-col items-center justify-center gap-y-1 rounded-lg bg-gray-100 text-xs text-gray-400">
+        <wd-icon name="image" size="48rpx" />
         暂无封面
       </view>
       <view class="min-w-0 flex flex-1 flex-col gap-1">
         <view class="flex items-center gap-2">
           <text class="flex-1 truncate text-sm text-gray-900 font-semibold">{{ project.title }}</text>
-          <view
-            v-if="project.featured"
-            class="inline-flex rounded-full bg-primary px-2 py-0.5 text-10px text-gray-900"
-          >
-            推荐
-          </view>
         </view>
         <text v-if="project.summary" class="line-clamp-1 text-xs text-gray-500">{{ project.summary }}</text>
         <view v-if="project.type" class="flex items-center gap-1 text-10px text-gray-400">
@@ -102,15 +107,14 @@ handleGetData()
       <uh-button
         v-for="btn in linkButtons" :key="btn.label"
         class="flex-1"
-        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
+        custom-class="uh-global-card-glass !rounded-full !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="handleCopyLink(btn.url, btn.label)"
       >
-        <wd-icon name="link" size="24rpx" />
         {{ btn.label }}
       </uh-button>
       <uh-button
         class="flex-1"
-        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
+        custom-class="uh-global-card-glass !rounded-full !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="handleToDetail"
       >
         详情
