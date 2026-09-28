@@ -124,7 +124,7 @@ function handleOpenLink(url: string | undefined, label: string) {
       empty-text="啊偶，项目不存在哦~" min-height="90vh" @refresh="run"
     />
 
-    <view v-else-if="project" class="box-border pt-72 pb-24">
+    <view v-else-if="project" class="box-border pt-72">
       <!-- 顶部背景封面区域 -->
       <view class="fixed left-0 top-0 h-72 w-full">
         <wd-img v-if="project.cover" :src="checkImageUrl(project.cover)" class="h-full w-full" mode="aspectFill">
@@ -139,7 +139,7 @@ function handleOpenLink(url: string | undefined, label: string) {
       </view>
 
       <view
-        class="-mt-8 uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none"
+        class="uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-8"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
@@ -198,6 +198,9 @@ function handleOpenLink(url: string | undefined, label: string) {
             />
           </view>
         </view>
+
+        <!-- 占位 -->
+        <view class="w-full pb-safe" />
       </view>
 
       <!-- 悬浮操作：仓库/演示/文档外链 -->
@@ -208,7 +211,7 @@ function handleOpenLink(url: string | undefined, label: string) {
         <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
           <view
             v-for="btn in linkButtons" :key="btn.label"
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full !px-6 shadow-none"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full shadow-none !px-6"
             @click="handleOpenLink(btn.url, btn.label)"
           >
             <wd-icon name="link" size="32rpx" />

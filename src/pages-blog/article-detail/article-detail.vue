@@ -351,7 +351,7 @@ onShareTimeline(() => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <!-- 顶部导航 -->
     <uh-navbar
       :scroll-y="scrollY" :default-title="pageTitle" :need-placeholder="false"
@@ -363,7 +363,7 @@ onShareTimeline(() => {
       @refresh="handleGetData()"
     />
 
-    <view v-else class="box-border pb-4 pt-72">
+    <view v-else class="box-border pt-72">
       <!-- 顶部背景封面区域 -->
       <view class="fixed left-0 top-0 h-72 w-full">
         <wd-img v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill">
@@ -375,7 +375,7 @@ onShareTimeline(() => {
       </view>
 
       <view
-        class="uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-lt-3xl rounded-rt-3xl border-b-none"
+        class="uh-global-card-glass box-border overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-10"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
@@ -495,6 +495,9 @@ onShareTimeline(() => {
             />
           </view>
         </view>
+
+        <!-- 占位 -->
+        <view class="w-full pb-safe" />
       </view>
 
       <!-- 悬浮操作 -->

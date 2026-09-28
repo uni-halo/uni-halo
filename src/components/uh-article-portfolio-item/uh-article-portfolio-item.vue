@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { getProjectDetail } from '@/api/halo-plugin-third/portfolio'
-import { checkImageUrl } from '@/utils/url'
+import { checkThumbnailUrl } from '@/utils/url'
 import { PORTFOLIO_TYPE_LABELS, portfolioLabelOf } from '@/config/portfolio'
 import { useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IProject } from '@/api/types/halo-plugin-third/portfolio'
@@ -64,10 +64,13 @@ handleGetData()
   />
   <view v-else-if="project" class="box-border border border-primary rounded-lg border-solid p-3" @click="handleToDetail">
     <view class="flex gap-3">
-      <image
-        v-if="project.cover" :src="checkImageUrl(project.cover)" mode="aspectFill"
-        class="h-20 w-20 flex-shrink-0 rounded-lg"
-      />
+      <view v-if="project.cover" class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
+        <wd-img width="100%" height="100%" :src="checkThumbnailUrl(project.cover)" mode="aspectFill" lazy-load>
+          <template #loading>
+            <wd-loading size="64rpx" custom-class="text-primary" />
+          </template>
+        </wd-img>
+      </view>
       <view v-else class="h-20 w-20 flex flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-3xs text-gray-400">
         暂无封面
       </view>
@@ -95,15 +98,22 @@ handleGetData()
         </view>
       </view>
     </view>
-    <view v-if="linkButtons.length" class="mt-2 flex flex-wrap gap-2 border-t border-black/5 pt-2">
+    <view v-if="linkButtons.length" class="mt-2 box-border flex flex-wrap gap-2 pt-2">
       <uh-button
         v-for="btn in linkButtons" :key="btn.label"
         class="flex-1"
-        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1 !text-xs !text-gray-900 !border !shadow-none"
+        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
         @click.stop="handleCopyLink(btn.url, btn.label)"
       >
-        <wd-icon name="link" size="12px" />
+        <wd-icon name="link" size="24rpx" />
         {{ btn.label }}
+      </uh-button>
+      <uh-button
+        class="flex-1"
+        custom-class="uh-global-card-glass flex items-center gap-x-1 !rounded-lg !bg-primary !px-3 !py-1.5 !text-xs !text-gray-900 !border !shadow-none"
+        @click.stop="handleToDetail"
+      >
+        详情
       </uh-button>
     </view>
   </view>
