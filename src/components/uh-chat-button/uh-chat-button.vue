@@ -14,18 +14,14 @@ const emits = defineEmits<{
   (e: 'action-click'): void
 }>()
 
-// 白名单模式
-const whiteList = [
-  'pages/tabbar/home/home',
-  'pages/tabbar/moments/moments',
-  'pages-blog/articles/articles',
-  'pages-blog/article-detail/article-detail',
-  'pages-blog/archives/archives',
+// 黑名单模式
+const blackList = [
+
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]
 const visible = computed(() => {
-  return whiteList.includes(currentPage.route)
+  return !blackList.includes(currentPage.route)
 })
 
 const _customClass = computed(() => {
@@ -47,7 +43,7 @@ function handleClick() {
       class="uh-global-card-glass h-11 w-11 flex items-center justify-center border rounded-full"
       :class="_customClass"
     >
-      <wd-icon name="settings" size="42rpx" />
+      <wd-icon name="message" size="42rpx" />
     </view>
   </view>
 </template>
