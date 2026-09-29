@@ -286,7 +286,7 @@ onReachBottom(() => {
     <block v-else>
       <view
         class="box-border p-3 pt-0"
-        :class="homeListLayout === 'double' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-y-3'"
+        :class="homeListLayout === 'double' ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-y-3'"
       >
         <uh-article-card
           v-for="(article, index) in articleList" :key="index" from="home" :article="article"

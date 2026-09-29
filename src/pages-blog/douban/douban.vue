@@ -318,7 +318,7 @@ onReachBottom(() => {
                 {{ genre }}
               </text>
             </view>
-            <uh-button class="shrink-0" custom-class="uh-global-card-glass !border !py-0.5 !px-2 !text-xs !rounded-md" @click="handleCopy(item)">
+            <uh-button class="shrink-0" custom-class="uh-global-card-glass !border !py-0.5 !px-2 !text-xs !rounded-full" @click="handleCopy(item)">
               复制链接
             </uh-button>
           </view>

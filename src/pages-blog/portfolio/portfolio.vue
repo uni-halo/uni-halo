@@ -259,11 +259,11 @@ onReachBottom(() => {
         <!-- 推荐角标(对齐文章卡置顶角标位置语义) -->
         <text
           v-if="project.featured"
-          class="uh-global-card-glass absolute right-4 top-4 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-xs text-gray-900"
+          class="uh-global-card-glass absolute right-4 top-4 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-gray-900 !text-xs"
         >
           推荐
         </text>
-        <view v-if="project.cover" class="relative mb-1 h-36 w-full overflow-hidden rounded-lg">
+        <view v-if="project.cover" class="relative mb-3 h-36 w-full overflow-hidden rounded-lg">
           <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
             <template #loading>
               <wd-loading size="64rpx" custom-class="text-primary" />

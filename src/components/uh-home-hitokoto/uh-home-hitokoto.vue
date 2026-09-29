@@ -93,7 +93,7 @@ watch(isShowHitokoto, (value, oldValue) => {
 <template>
   <view
     v-if="isShowHitokoto && uniHaloPluginAvailable"
-    class="uh-global-card-glass relative mx-3 mb-1 mt-2 box-border overflow-hidden border border-[#EFF1C9] rounded-xl border-solid bg-white/72 p-4 pb-3.5 !shadow-none"
+    class="uh-global-card-glass relative mx-3 mb-1 mt-2 box-border overflow-hidden border border-[#EFF1C9] rounded-xl border-solid p-4 pb-3.5 !shadow-none"
     @click="handleNext()"
   >
     <!-- 右上角光晕 -->
