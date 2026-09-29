@@ -132,30 +132,13 @@ export default {
       })
     },
 
-    showToast (content) {
-      uni.showToast({
-        icon: 'none',
-        title: content,
-        mask: true
-      })
-    },
-    copyText (data, tipText) {
-      uni.setClipboardData({
-        data: data,
-        success: () => {
-          if (tipText) this.showToast(tipText)
-        }
-      })
-    },
     copy (type) {
-      // 抛给宿主：动作 + 原始数据（src 为正文标记的原始地址）
-      this.$emit('actions', { action: 'copy-' + type, data: { src: this.url } })
+      const d = this.detail || {}
+      // 拼接复制文本，复制行为由宿主页面统一处理
+      let text = ''
       if (type === 'douban') {
-        this.copyText(this.detail ? this.detail.link : '', '豆瓣地址复制成功')
-        return
-      }
-      if (type === 'info') {
-        const d = this.detail || {}
+        text = d.link || ''
+      } else if (type === 'info') {
         const parts = [
           `名称：${d.name || ''}`,
           d.cardSubtitle ? `其他：${d.cardSubtitle}` : '',
@@ -164,8 +147,10 @@ export default {
           d.score ? `评分：${d.score}分` : '',
           d.link ? `链接：${d.link}` : ''
         ].filter(Boolean)
-        this.copyText(parts.join('\n'), '资源信息复制成功')
+        text = parts.join('\n')
       }
+      // 抛给宿主：动作 + 整卡全量数据（type 标识按钮，text 为拼好的复制文本，src 为正文标记的原始地址）
+      this.$emit('actions', { action: 'copy', data: { ...d, type, src: this.url, text } })
     }
   }
 }
@@ -174,6 +159,8 @@ export default {
 <style scoped>
 /* ===== 卡片容器（对齐文章卡片：黄色边框 + 角标） ===== */
 .uh-douban-card {
+  --uh-primary: var(--wot-color-theme, #b9e424);
+  --uh-primary-soft: var(--wot-primary-1, #f4fbe0);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -196,9 +183,9 @@ export default {
 
 .uh-douban-card.loading {
   border-style: dashed;
-  border-color: rgba(3, 174, 252, 1);
-  color: rgba(3, 174, 252, 1);
-  background-color: rgba(3, 174, 252, 0.075);
+  border-color: var(--uh-primary);
+  color: var(--uh-primary);
+  background-color: var(--uh-primary-soft);
 }
 
 .uh-douban-card.empty {

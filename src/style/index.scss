@@ -63,6 +63,14 @@ page {
   box-shadow: 0 0 24rpx rgba(0, 0, 0, 0.1);
 }
 
+.uh-shadow-primary {
+  box-shadow: 0 8rpx 28rpx rgba(143, 188, 18, 0.08);
+}
+
+.uh-shadow-primary-xs {
+  box-shadow: 0 4rpx 16rpx rgba(143, 188, 18, 0.08);
+}
+
 .uh-global-love-page {
   background: linear-gradient(
     135deg,

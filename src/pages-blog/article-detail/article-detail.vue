@@ -126,6 +126,44 @@ function removeTagLinksCompletely(html: string): string {
   return html.replace(regex, '')
 }
 
+/** 投票卡片事件：详情按钮跳转投票详情页，data 为整卡全量数据 */
+function handleVoteCardActions(payload: { action: string, data: Record<string, any> }) {
+  if (payload.action !== 'detail') return
+  const data = payload.data || {}
+  const name = data.id || data.metadata?.name
+  if (!name) return
+  uni.navigateTo({ url: `/pages-blog/vote-detail/vote-detail?name=${name}` })
+}
+
+/** 项目集卡片事件：详情跳转；复制按平台分流，App 打开外链，其余复制链接 */
+function handlePortfolioCardActions(payload: { action: string, data: Record<string, any> }) {
+  const data = payload.data || {}
+  if (payload.action === 'detail') {
+    if (!data.slug) return
+    uni.navigateTo({ url: `/pages-blog/portfolio/detail?slug=${data.slug}` })
+  }
+  else if (payload.action === 'copy') {
+    // #ifdef APP-PLUS
+    if (data.url) plus.runtime.openURL(data.url)
+    // #endif
+    // #ifndef APP-PLUS
+    uni.setClipboardData({
+      data: data.url || '',
+      success: () => uni.showToast({ title: `${data.label || '链接'}已复制`, icon: 'none' }),
+    })
+    // #endif
+  }
+}
+
+/** 豆瓣卡片事件：统一复制插件拼好的文本，data 为整卡全量数据 */
+function handleDoubanCardActions(payload: { action: string, data: Record<string, any> }) {
+  if (payload.action !== 'copy') return
+  uni.setClipboardData({
+    data: payload.data?.text || '',
+    success: () => uni.showToast({ title: '已复制', icon: 'none' }),
+  })
+}
+
 /** 获取 openid(微信端) */
 function handleGetOpenid() {
   // #ifdef MP-WEIXIN
@@ -453,6 +491,9 @@ onShareTimeline(() => {
               :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
               :markdown="true" :show-line-number="true"
               :show-language-name="true" copy-by-long-press
+              @uhe-vote-actions="handleVoteCardActions"
+              @uhe-portfolio-actions="handlePortfolioCardActions"
+              @uhe-douban-actions="handleDoubanCardActions"
             />
           </view>
         </view>

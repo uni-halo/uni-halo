@@ -150,22 +150,33 @@ import utils from './utils'
 const VOTE_BASE = '/apis/api.vote.kunkunyu.com/v1alpha1/votes'
 
 /**
- * @description 已投记录本地缓存（跨端 storage，key 独立于宿主避免格式耦合）
+ * @description 已投记录本地缓存（key 与值格式与宿主 voteCacheUtil 一致，卡片与详情页互通）
  */
 const voteCache = {
   key (id) {
-    return 'uh-mp-html-vote-' + id
+    return 'unihalo_vote_' + id
   },
   get (id) {
     try {
-      return uni.getStorageSync(this.key(id)) || null
+      const raw = uni.getStorageSync(this.key(id))
+      if (!raw) return null
+      const item = JSON.parse(raw)
+      if (item.expire && Date.now() / 1000 - item.time > item.expire) {
+        uni.removeStorageSync(this.key(id))
+        return null
+      }
+      return item.data || null
     } catch (e) {
       return null
     }
   },
   set (id, data) {
     try {
-      uni.setStorageSync(this.key(id), data)
+      uni.setStorageSync(this.key(id), JSON.stringify({
+        data,
+        time: Date.now() / 1000,
+        expire: 0
+      }))
     } catch (e) { /* 存储失败忽略，仅影响已投标记 */ }
   },
   has (id) {
@@ -384,7 +395,8 @@ export default {
     },
     // 详情不做内部跳转，抛给宿主处理：<mp-html @uhe-vote-actions="..." />
     onDetail () {
-      this.$emit('actions', { action: 'detail', data: { id: this.voteId } })
+      // data 为整卡全量数据（接口原始数据 + 加工字段），id 为跳转兜底参数
+      this.$emit('actions', { action: 'detail', data: { ...(this.vote || {}), id: this.voteId } })
     }
   }
 }
@@ -394,6 +406,7 @@ export default {
 /* ===== 卡片容器（对齐文章卡片：玻璃质感 + primary 边框） ===== */
 .uh-vote-card {
   --uh-primary: var(--wot-color-theme, #b9e424);
+  --uh-primary-soft: var(--wot-primary-1, #f4fbe0);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -417,9 +430,9 @@ export default {
 
 .uh-vote-card.loading {
   border-style: dashed;
-  border-color: rgba(3, 174, 252, 1);
-  color: rgba(3, 174, 252, 1);
-  background-color: rgba(3, 174, 252, 0.075);
+  border-color: var(--uh-primary);
+  color: var(--uh-primary);
+  background-color: var(--uh-primary-soft);
 }
 
 .card-error {

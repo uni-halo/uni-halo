@@ -122,7 +122,7 @@ function handleToSearch() {
         class="pointer-events-none absolute inset-0 z-10 box-border flex flex-col items-center justify-center gap-y-2 bg-white/5 pt-safe"
       >
         <view
-          class="mt-3 box-border max-w-[45vw] flex items-center justify-center truncate border rounded-full px-3 py-1.5"
+          class="uh-shadow-primary mt-3 box-border max-w-[45vw] flex items-center justify-center truncate border rounded-full px-3 py-1.5"
           :style="{
             backdropFilter: 'blur(2rpx)',
             backgroundColor: 'rgba(215, 249, 76, 0.9)',
@@ -143,7 +143,7 @@ function handleToSearch() {
     <view class="absolute bottom-0 left-0 right-0 h-12 w-full from-white/0 to-page bg-gradient-to-b" />
     <view class="uh-translate-y-n6 absolute left-0 right-0 z-10 flex items-center justify-center">
       <view
-        class="uh-global-card-glass w-4/5 flex items-center justify-center gap-x-2 border rounded-full px-4 py-2.5 text-gray-600"
+        class="uh-global-card-glass uh-shadow-primary w-4/5 flex items-center justify-center gap-x-2 border rounded-full px-4 py-2.5 text-gray-600"
         @click="handleToSearch()"
       >
         <wd-icon name="search-line" size="32rpx" />

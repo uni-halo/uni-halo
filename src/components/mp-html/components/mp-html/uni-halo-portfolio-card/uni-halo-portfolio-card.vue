@@ -113,12 +113,13 @@ export default {
       this.posterEmpty = true
     },
     copyLink (url, label) {
-      // 抛给宿主：动作 + 原始数据
-      this.$emit('actions', { action: 'copy', data: { slug: this.slug, label, url } })
+      // 抛给宿主：动作 + 整卡全量数据，label/url 标识点击的链接按钮
+      this.$emit('actions', { action: 'copy', data: { ...(this.project || {}), slug: this.slug, label, url } })
     },
     // 详情不做内部跳转，统一抛给宿主处理：<mp-html @uhe-portfolio-actions="..." />
     onDetail () {
-      this.$emit('actions', { action: 'detail', data: { slug: this.slug } })
+      // data 为整卡全量数据（接口原始数据 + 加工字段），slug 为跳转兜底参数
+      this.$emit('actions', { action: 'detail', data: { ...(this.project || {}), slug: this.slug } })
     }
   }
 }
@@ -128,6 +129,7 @@ export default {
 /* ===== 卡片容器（对齐文章卡片：primary 边框） ===== */
 .uh-portfolio-card {
   --uh-primary: var(--wot-color-theme, #b9e424);
+  --uh-primary-soft: var(--wot-primary-1, #f4fbe0);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -150,9 +152,9 @@ export default {
 
 .uh-portfolio-card.loading {
   border-style: dashed;
-  border-color: rgba(3, 174, 252, 1);
-  color: rgba(3, 174, 252, 1);
-  background-color: rgba(3, 174, 252, 0.075);
+  border-color: var(--uh-primary);
+  color: var(--uh-primary);
+  background-color: var(--uh-primary-soft);
 }
 
 .uh-portfolio-card.empty {

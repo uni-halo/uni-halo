@@ -243,6 +243,9 @@ onReachBottom(() => {
     <!-- 公告 -->
     <uh-home-notify />
 
+    <!-- 今日一言 -->
+    <uh-home-hitokoto />
+
     <!-- 快捷导航 -->
     <uh-home-quick-nav />
 
