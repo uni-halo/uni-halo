@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { getHitokotoRandom, likeHitokoto } from '@/api/halo-plugin-third/hitokoto'
 import { usePluginAvailable } from '@/hooks/usePluginAvailable'
@@ -38,7 +38,7 @@ async function fetchSentence() {
   if (!uniHaloPluginAvailable.value) { return }
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
-    const res = await getHitokotoRandom({ limit: 1 })
+    const res = await getHitokotoRandom({ encode: 'json', limit: 1 })
     if (!res.data) {
       updateLoadingStatus(DataLoadingStatusEnum.Empty)
       return
@@ -80,6 +80,13 @@ function handleNext() {
 
 onMounted(() => {
   fetchSentence()
+})
+
+/** 开关由 false 变 true(配置晚到)时自动拉取,避免卡片显示后内容一直停在兜底文案 */
+watch(isShowHitokoto, (value, oldValue) => {
+  if (value && !oldValue) {
+    fetchSentence()
+  }
 })
 </script>
 
