@@ -1,14 +1,22 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { getHitokotoRandom, likeHitokoto } from '@/api/halo-plugin-third/hitokoto'
 import { usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { useAppConfigStore } from '@/store/appConfig'
 import type { IHitokotoSentence } from '@/api/types/halo-plugin-third/hitokoto'
 
 /** 依赖插件(hitokoto-hub) */
 const { available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
   pluginId: 'hitokoto-hub',
 })
+
+const { configs } = storeToRefs(useAppConfigStore())
+
+/** 是否显示一言(插件端「页面设置-首页」开关控制) */
+const isShowHitokoto = computed(() => configs.value.featureConfig?.pages?.home?.useHitokoto)
+
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 const sentence = ref<IHitokotoSentence | null>(null)
@@ -25,6 +33,7 @@ const likeCount = computed(() => (sentence.value?.likeCount ?? 0) + (sentence.va
 
 /** 获取一条随机句子 */
 async function fetchSentence() {
+  if (!isShowHitokoto.value) { return }
   await checkPluginAvailable()
   if (!uniHaloPluginAvailable.value) { return }
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
@@ -76,7 +85,7 @@ onMounted(() => {
 
 <template>
   <view
-    v-if="uniHaloPluginAvailable"
+    v-if="isShowHitokoto && uniHaloPluginAvailable"
     class="uh-global-card-glass relative mx-3 mb-1 mt-2 box-border overflow-hidden border border-[#EFF1C9] rounded-xl border-solid bg-white/72 p-4 pb-3.5 !shadow-none"
     @click="handleNext()"
   >

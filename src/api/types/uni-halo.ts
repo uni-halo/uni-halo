@@ -141,6 +141,8 @@ export interface IPageConfig {
     useCategory?: boolean
     /** 是否显示快捷导航(首页) */
     useQuickNavigation?: boolean
+    /** 是否显示一言(依赖轻言插件) */
+    useHitokoto?: boolean
     /** 快捷导航项（数组顺序 = 展示顺序；未配置/为空时客户端回退内置默认项） */
     quickNavigation?: IQuickNavItem[]
     /** 首页分类栏分类引用（配置模式下直接映射渲染不发请求，未配置/为空时回退默认取数） */
