@@ -31,24 +31,11 @@ export interface SseHandle {
   abort: () => void
 }
 
-/** 调试日志开关: 生产可通过 VITE_DELETE_CONSOLE 剔除 */
-function sseLog(...args: unknown[]) {
-  console.log('[sse]', ...args)
-}
-
-/** 调试用: 二进制前 32 字节的十六进制预览 */
-function bytesPreview(chunk: ArrayBuffer | Uint8Array): string {
-  const bytes = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk)
-  const head = Array.from(bytes.slice(0, 32)).map(b => b.toString(16).padStart(2, '0')).join(' ')
-  return `(${bytes.length}B) ${head}`
-}
-
 /** 手写 UTF-8 解码(无 TextDecoder 环境兜底, 跨 chunk 安全) */
 function createUtf8Decoder() {
   let pending: Uint8Array | null = null
   function decode(chunk: ArrayBuffer | Uint8Array, stream: boolean): string {
     let bytes = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk)
-    sseLog('decode: bytes in =', bytes.length, 'pending =', pending?.length ?? 0)
     // 拼接上一轮残留的多字节序列
     if (pending && pending.length) {
       const merged = new Uint8Array(pending.length + bytes.length)
@@ -124,17 +111,14 @@ function createSseParser(onData: (data: string) => void) {
     let text = ''
     if (typeof chunk === 'string') {
       text = chunk
-      sseLog('feed(string):', JSON.stringify(chunk.slice(0, 200)))
     }
     else {
       text = decoder!.decode(chunk, true)
-      sseLog('feed(buffer):', bytesPreview(chunk), '-> text =', JSON.stringify(text.slice(0, 200)))
     }
     buffer += text
     // SSE 事件以空行分隔
     const events = buffer.split(/\r?\n\r?\n/)
     buffer = events.pop() ?? ''
-    sseLog('feed: complete events =', events.length, 'buffer left =', buffer.length)
     for (const event of events) {
       emitEvent(event)
     }
@@ -147,25 +131,15 @@ function createSseParser(onData: (data: string) => void) {
         dataLines.push(line.slice(5).trimStart())
       // 忽略 event:/id:/retry: 与注释行
     }
-    if (dataLines.length) {
-      const payload = dataLines.join('\n')
-      sseLog('event -> data payload:', JSON.stringify(payload.slice(0, 300)))
-      onData(payload)
-    }
-    else {
-      sseLog('event -> no data lines:', JSON.stringify(event.slice(0, 200)))
-    }
+    if (dataLines.length)
+      onData(dataLines.join('\n'))
   }
 
   function end() {
     // 冲刷残留缓冲
     if (buffer.trim()) {
-      sseLog('end: flush residual buffer:', JSON.stringify(buffer.slice(0, 300)))
       emitEvent(buffer)
       buffer = ''
-    }
-    else {
-      sseLog('end: buffer empty')
     }
   }
 

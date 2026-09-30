@@ -36,6 +36,8 @@ export interface SendChatOptions {
   needAuthToken?: boolean
   /** 收到增量文本 */
   onText: (fullText: string) => void
+  /** 本轮发生了工具调用(服务端 finishReason=tool-calls) */
+  onToolCall?: () => void
   /** 收到错误(流中 error 块或请求失败) */
   onError: (message: string) => void
   /** 流结束 */
@@ -96,12 +98,10 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
       recordUserMessage: attemptNo === 1,
       ragEnabledForAgent: true,
     }
-    console.log('[ai-chat] request body (attempt', `${attemptNo}):`, JSON.stringify(body))
 
     function handleChunk(data: string) {
       // DONE 标记
       if (data === '[DONE]') {
-        console.log('[ai-chat] stream [DONE]')
         return
       }
       let chunk: IChatStreamChunk
@@ -109,11 +109,9 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
         chunk = JSON.parse(data) as IChatStreamChunk
       }
       catch {
-        console.warn('[ai-chat] non-JSON payload:', JSON.stringify(data.slice(0, 300)))
         // 非JSON负载忽略
         return
       }
-      console.log('[ai-chat] chunk:', JSON.stringify(chunk).slice(0, 300))
       if (chunk.type === 'text-delta' && typeof chunk.delta === 'string') {
         text += chunk.delta
         options.onText(text)
@@ -125,9 +123,16 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
       }
       else if (chunk.type === 'error') {
         errored = true
-        console.error('[ai-chat] stream error chunk:', JSON.stringify(chunk))
         options.onError(friendlyChatError(chunk.errorText || 'AI 回复出错'))
       }
+      else if (chunk.type === 'finish') {
+        // 仅 finishReason=tool-calls 才认定本轮发生了工具调用(其余为普通回答/思考)
+        const reason = chunk.finishReason || chunk.rawFinishReason || ''
+        const isToolCall = reason === 'tool-calls' || reason === 'tool_calls'
+        if (isToolCall)
+          options.onToolCall?.()
+      }
+      // 其余控制类分块(start/start-step/tool-*/reasoning-* 等)由服务端处理, 客户端忽略
     }
 
     activeHandle = requestSse({
@@ -142,10 +147,8 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
           options.onDone()
       },
       onError: (message) => {
-        console.error('[ai-chat] request error:', message)
         // 尚无正文输出且为瞬态错误时自动重试一次
         if (!aborted && !errored && !text && attemptNo === 1 && isTransientChatError(message)) {
-          console.warn('[ai-chat] transient error, retrying once')
           run(2)
           return
         }

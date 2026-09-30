@@ -34,7 +34,13 @@ interface IChatBubble {
   id: string
   role: 'user' | 'assistant'
   text: string
+  /** 本轮工具调用状态: running=执行中, done=已完成 */
+  toolState?: 'running' | 'done'
 }
+
+/** 工具调用状态文案 */
+const TOOL_RUNNING_TEXT = '正在查找并调用工具…'
+const TOOL_DONE_TEXT = '暂不支持工具调用'
 
 const bubbles = ref<IChatBubble[]>([])
 const inputText = ref('')
@@ -61,6 +67,15 @@ const scrollToBottom = throttle(() => {
   scrollNow()
 }, 200)
 
+/** 将执行中的工具状态置为完成 */
+function settleToolState() {
+  for (const bubble of bubbles.value) {
+    if (bubble.toolState === 'running') {
+      bubble.toolState = 'done'
+    }
+  }
+}
+
 /** 发送一条消息 */
 function handleSend() {
   const message = inputText.value.trim()
@@ -79,21 +94,29 @@ function handleSend() {
     conversationId,
     visitorId,
     onText: (fullText) => {
-      console.log('[chat-popup] onText, length =', fullText.length)
+      settleToolState()
       const bubble = bubbles.value.find(item => item.id === assistantId)
       if (bubble) {
         bubble.text = fullText
         scrollToBottom()
       }
     },
+    onToolCall: () => {
+      // 工具调用在服务端执行, 在当前回答气泡内嵌展示进度
+      const bubble = bubbles.value.find(item => item.id === assistantId)
+      if (bubble && !bubble.toolState) {
+        bubble.toolState = 'running'
+      }
+      scrollToBottom()
+    },
     onError: (message) => {
-      console.error('[chat-popup] onError:', message)
       errorText.value = message
+      settleToolState()
       streaming.value = false
       currentHandle = null
     },
     onDone: () => {
-      console.log('[chat-popup] onDone, assistant text length =', bubbles.value.find(item => item.id === assistantId)?.text.length ?? 0)
+      settleToolState()
       streaming.value = false
       currentHandle = null
       // 空回复兜底
@@ -109,6 +132,7 @@ function handleStop() {
   currentHandle?.abort()
   currentHandle = null
   streaming.value = false
+  settleToolState()
 }
 
 /** 新会话 */
@@ -135,7 +159,7 @@ onUnmounted(() => {
         <text class="text-base font-semibold">AI 助手</text>
         <view class="flex items-center gap-3">
           <view
-            class="uh-global-card-glass h-6 flex items-center justify-center gap-x-1 text-gray-900 !border !rounded-lg !bg-primary !px-2 !shadow-none"
+            class="uh-global-card-glass h-6 flex items-center justify-center gap-x-1 text-gray-900 !border !rounded-lg !px-2 !shadow-none"
             @click="handleNewChat"
           >
             <wd-icon name="plus" size="26rpx" />
@@ -176,7 +200,7 @@ onUnmounted(() => {
             :class="bubble.role === 'user' ? 'justify-end' : 'justify-start'"
           >
             <view
-              class="uh-ai-chat__bubble uh-global-card-glass uh-shadow-xs max-w-[80%] !border !text-3xs"
+              class="uh-ai-chat__bubble uh-global-card-glass uh-shadow-xs max-w-[80%] flex flex-col gap-y-2 !border !text-3xs"
               :class="bubble.role === 'user' ? 'uh-ai-chat__bubble--user' : 'uh-ai-chat__bubble--assistant'"
             >
               <template v-if="bubble.role === 'assistant'">
@@ -191,10 +215,22 @@ onUnmounted(() => {
                   :markdown="true" :show-line-number="true"
                   :show-language-name="true" copy-by-long-press
                 />
-                <view v-else class="uh-ai-chat__dots">
-                  <text />
-                  <text />
-                  <text />
+                <view v-else class="uh-ai-chat__status">
+                  <view class="uh-ai-chat__dots">
+                    <text />
+                    <text />
+                    <text />
+                  </view>
+                </view>
+
+                <!-- 工具调用记录 -->
+                <view
+                  v-if="bubble.toolState"
+                  class="box-border flex items-center gap-x-1 rounded-md p-1.5 text-xs"
+                  :class="[bubble.toolState === 'running' ? 'bg-gray-200 text-gray-500' : 'bg-red-100 text-red-400']"
+                >
+                  <wd-icon name="tool" size="28rpx" />
+                  <text>{{ bubble.toolState === 'running' ? TOOL_RUNNING_TEXT : TOOL_DONE_TEXT }}</text>
                 </view>
               </template>
               <text v-else class="whitespace-pre-wrap">{{ bubble.text }}</text>
@@ -267,6 +303,12 @@ onUnmounted(() => {
   font-size: 14px;
   background-color: rgb(0 0 0 / 4%);
   border-radius: 36rpx;
+}
+
+.uh-ai-chat__status {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
 }
 
 .uh-ai-chat__dots {
