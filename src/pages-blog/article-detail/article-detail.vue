@@ -483,6 +483,19 @@ onShareTimeline(() => {
 
         <!-- 内容区域 -->
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
+          <!-- 摘要 -->
+          <view
+            v-if="result?.spec?.excerpt?.raw"
+            class="relative box-border overflow-hidden border border-[#EFF1C9] rounded-xl border-solid p-4 pb-3.5 uh-global-card-glass !shadow-none"
+          >
+            <view class="hk-glow" />
+            <view class="hk-tag relative flex items-center gap-2 text-xs text-primary font-semibold tracking-0.5 before:bg-primary">
+              摘要
+            </view>
+            <view class="relative mt-3 text-[27rpx] text-[#1F2937] font-medium leading-5 tracking-wider">
+              {{ result.spec.excerpt.raw }}
+            </view>
+          </view>
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
             <mp-html
               :content="result?.content?.raw"
@@ -589,6 +602,23 @@ onShareTimeline(() => {
 <style scoped lang="scss">
 .uh-content-lift {
   transform: translateY(-3rem);
+}
+
+.hk-glow {
+  position: absolute;
+  right: -36rpx;
+  top: -44rpx;
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(185, 228, 36, 0.18), transparent 68%);
+}
+
+.hk-tag::before {
+  content: '';
+  width: 28rpx;
+  height: 4rpx;
+  border-radius: 4rpx;
 }
 
 .uh-translate-x-center {

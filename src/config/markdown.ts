@@ -25,14 +25,14 @@ export const markdownConfig = {
     blockquote: `
       padding: 8px 15px;
       color: #606266;
-	  background-color: rgb(255 255 255 / 55%);
+	    background-color: rgb(255 255 255 / 55%);
       backdrop-filter: blur(24rpx) saturate(160%);
       -webkit-backdrop-filter: blur(24rpx) saturate(160%);
       border-left: 5px solid ${primaryColor};
       border-radius: 4px;
       line-height: 26px;
       margin-bottom: 18px;
-	  box-shadow: 0 0px 12px rgba(0, 0, 0, 0.035);
+	    box-shadow: 0 0px 12px rgba(0, 0, 0, 0.035);
     `,
     ul: 'padding-left: 15px;line-height: 1.85;',
     ol: 'padding-left: 15px;line-height: 1.85;',
@@ -85,10 +85,22 @@ export const markdownConfig = {
     `,
     code: '  ',
     strong: 'font-weight: 700;color: rgb(248, 57, 41);',
-	img: 'border-radius: 10px',
+    img: 'border-radius: 10px',
     video: 'width: 100%',
   },
   containStyle: 'padding:0;background-color:transparent;',
   loadingGif: checkImageUrl(undefined),
   emptyGif: checkImageUrl(undefined),
+}
+
+export const chatMarkdownConfig = {
+  ...markdownConfig,
+  tagStyle: {
+    ...markdownConfig.tagStyle,
+    p: `
+      line-height: 1.65;
+      margin-top: 0px;
+      margin-bottom: 0px;
+    `,
+  },
 }

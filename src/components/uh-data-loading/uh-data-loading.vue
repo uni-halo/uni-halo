@@ -5,6 +5,7 @@ import type { DataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 interface IProps {
   loadingStatus?: DataLoadingStatus
   size?: 'mini' | 'small' | 'large'
+  loadingSpinner?: boolean
   minHeight?: string
   loadingText?: string
   errorText?: string
@@ -19,6 +20,7 @@ interface IProps {
 const props = withDefaults(defineProps<IProps>(), {
   loadingStatus: 'loading',
   size: 'large',
+  loadingSpinner: true,
   minHeight: '80vh',
   loadingText: '稍等，正在加载中',
   errorText: '哎呀，加载失败了呢~',
@@ -124,7 +126,7 @@ const statusScene = computed(() => {
     <view class="relative z-2 flex flex-col items-center">
       <view class="flex items-center justify-center text-3xs font-medium" :class="statusScene.mainTextClass">
         <text>{{ statusScene.mainText }}</text>
-        <view v-if="isLoading" class="ml-1 flex items-end gap-1">
+        <view v-if="isLoading && props.loadingSpinner" class="ml-1 flex items-end gap-1">
           <view
             v-for="n in 3" :key="n" class="typing-dot" :class="customClasses.dot"
             :style="{ animationDelay: `${(n - 1) * 0.15}s` }"

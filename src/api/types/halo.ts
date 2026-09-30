@@ -39,7 +39,8 @@ export interface IOwner {
 export interface IPostSpec {
   title: string
   slug: string
-  excerpt?: string
+  /** 摘要(Halo ExcerptVo) */
+  excerpt?: { autoGenerate?: boolean, raw?: string }
   cover?: string
   owner: IOwner
   /** 发布时间(Halo 2.x 结构) */
