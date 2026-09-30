@@ -9,6 +9,7 @@ const isCurrentPageTabbar = ref(true)
 
 const { popupVisible: settingsPopupVisible, openPopup: openSettingsPopup } = useOpenPopup()
 const { popupVisible: userPopupVisible, openPopup: openUserPopup } = useOpenPopup()
+const { popupVisible: chatPopupVisible, openPopup: openChatPopup } = useOpenPopup()
 onShow(() => {
   const { path } = currRoute()
   if (path === '/') {
@@ -24,13 +25,14 @@ onShow(() => {
   <view>
     <uh-global-actions>
       <uh-scrolltop-button :fixed="false" />
-      <!-- <uh-chat-button :fixed="false" /> -->
+      <uh-chat-button :fixed="false" @action-click="openChatPopup()" />
       <uh-settings-button :fixed="false" @action-click="openSettingsPopup()" />
       <uh-user-button :fixed="false" @action-click="openUserPopup()" />
     </uh-global-actions>
 
     <uh-settings-popup v-model="settingsPopupVisible" />
     <uh-user-popup v-model="userPopupVisible" />
+    <uh-ai-chat-popup v-model="chatPopupVisible" />
 
     <!-- ui 全局组件 -->
     <wd-dialog />

@@ -250,28 +250,28 @@ onReachBottom(() => {
       empty-text="啊偶，还没有任何项目哦~" min-height="65vh" @refresh="handleGetProjectList"
     />
 
-    <view v-else-if="uniHaloPluginAvailable" class="box-border flex flex-col gap-4 p-3">
+    <view v-else-if="uniHaloPluginAvailable" class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="project in projectList" :key="project.slug"
-        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl p-3"
+        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl box-border"
         @click="handleToDetail(project)"
       >
         <!-- 推荐角标(对齐文章卡置顶角标位置语义) -->
         <text
           v-if="project.featured"
-          class="uh-global-card-glass absolute right-4 top-4 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-gray-900 !text-xs"
+          class="uh-global-card-glass absolute right-2 top-2 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-gray-900 !text-xs"
         >
           推荐
         </text>
-        <view v-if="project.cover" class="relative mb-3 h-36 w-full overflow-hidden rounded-lg">
+        <view v-if="project.cover" class="relative h-36 w-full">
           <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
             <template #loading>
               <wd-loading size="64rpx" custom-class="text-primary" />
             </template>
           </wd-img>
         </view>
-        <view class="flex flex-col gap-y-2">
-          <view class="truncate text-sm text-gray-900 font-bold">
+        <view class="flex flex-col gap-y-2 box-border p-3">
+          <view class="truncate text-sm text-gray-900 font-semibold">
             {{ project.title }}
           </view>
           <view v-if="project.summary" class="line-clamp-2 text-3xs text-gray-600 leading-5">
