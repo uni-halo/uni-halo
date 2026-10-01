@@ -5,6 +5,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useTypewriter } from '@/hooks/useTypewriter'
 import { checkAvatarUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { markdownConfig } from '@/config/markdown'
@@ -65,6 +66,9 @@ onShareTimeline(() => ({
 }))
 
 const isNotEmpty = computed(() => socialList.value.some(item => item.visible && item.content.trim()))
+
+/** 信件正文打字机效果 */
+const { displayText: introDisplayText } = useTypewriter(() => bloggerInfo.value.intro, { speed: 30 })
 
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 watchEffect(() => {
@@ -150,7 +154,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
         <view v-if="bloggerInfo.intro" class="text-3xs text-gray-900">
           <mp-html
-            :content="bloggerInfo.intro"
+            :content="introDisplayText"
             lazy-load :domain="markdownConfig.domain"
             :loading-img="markdownConfig.loadingGif" scroll-table selectable
             :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"

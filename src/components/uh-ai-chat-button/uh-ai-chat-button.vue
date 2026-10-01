@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { dialogNeedLogin, fetchDialogConfigOrNull } from '@/api/dialog-config'
+import { storeToRefs } from 'pinia'
+import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
 
 interface IProps {
@@ -28,6 +30,12 @@ const currentPage = pages[pages.length - 1]
 const tokenStore = useTokenStore()
 const hasLogin = computed(() => !!tokenStore.validToken)
 
+const { configs } = storeToRefs(useAppConfigStore())
+/** 站点开关：aiAssistant.enabled 显式 false 时隐藏入口（缺省视为开启，兼容存量站点） */
+const assistantEnabled = computed(
+  () => configs.value?.integrationConfig?.pluginConfig?.aiAssistant?.enabled !== false,
+)
+
 /** 对话功能可用：插件已启用(dialogConfig 可访问) 且 (匿名可用 或 已登录) */
 const dialogAvailable = ref(false)
 
@@ -44,7 +52,7 @@ watch(hasLogin, () => { checkDialogAvailable(true) })
 onMounted(() => { checkDialogAvailable() })
 
 const visible = computed(() => {
-  return dialogAvailable.value && !blackList.includes(currentPage.route)
+  return assistantEnabled.value && dialogAvailable.value && !blackList.includes(currentPage.route)
 })
 
 const _customClass = computed(() => {

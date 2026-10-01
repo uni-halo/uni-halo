@@ -38,7 +38,7 @@ export const markdownConfig = {
     ol: 'padding-left: 15px;line-height: 1.85;',
     li: 'margin-bottom: 12px;line-height: 1.85;',
     h1: `
-      margin: 30px 0 20px;
+      margin: 24px 0 20px;
       color: ${primaryColor};
       line-height: 24px;
       position: relative;
@@ -81,7 +81,6 @@ export const markdownConfig = {
     `,
     p: `
       line-height: 1.65;
-      margin-bottom: 14px;
     `,
     code: '  ',
     strong: 'font-weight: 700;color: rgb(248, 57, 41);',

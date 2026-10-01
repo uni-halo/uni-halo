@@ -1,6 +1,6 @@
 /**
  * AI Agent 动作解析与执行（页面跳转协议 @@UNI_HALO_APP_ACTION@@）
- * 职责：从回复文本提取动作块、剥离残缺前缀、校验站内白名单、按路由表纠正跳转类型并执行
+ * 职责：从回复文本提取动作块、剥离残缺前缀、校验站内白名单、识别目标与当前页相同、按路由表纠正跳转类型并执行
  */
 import { isPageTabbar, normalizeRoutePath } from '@/tabbar/store'
 
@@ -76,11 +76,37 @@ export function isAllowedActionUrl(url: string): boolean {
 }
 
 /**
+ * 判断目标页面与参数是否与当前页面一致
+ * 路径相同且目标的每个参数都能与当前页参数对上（当前页多出的参数忽略）即视为同页
+ */
+export function isSameAsCurrentPage(url: string): boolean {
+  const pages = getCurrentPages()
+  const current = pages[pages.length - 1]
+  if (!current?.route) {
+    return false
+  }
+  const [rawPath, rawQuery = ''] = url.split('?')
+  if (normalizeRoutePath(rawPath) !== normalizeRoutePath(current.route)) {
+    return false
+  }
+  const currentOptions = (current as unknown as { options?: Record<string, string> }).options ?? {}
+  return rawQuery.split('&').every((pair) => {
+    if (!pair) {
+      return true
+    }
+    const eq = pair.indexOf('=')
+    const key = eq === -1 ? pair : pair.slice(0, eq)
+    const value = eq === -1 ? '' : pair.slice(eq + 1)
+    return decodeURIComponent(value) === decodeURIComponent(currentOptions[key] ?? '')
+  })
+}
+
+/**
  * 执行跳转动作
- * 跳转类型以站内路由表（isPageTabbar）兜底纠正，成功返回 true
+ * 当前已在目标页时不执行跳转（调用方提示）；跳转类型以站内路由表（isPageTabbar）兜底纠正，成功返回 true
  */
 export function executeAgentAction(action: IAgentAction): boolean {
-  if (!isAllowedActionUrl(action.url)) {
+  if (!isAllowedActionUrl(action.url) || isSameAsCurrentPage(action.url)) {
     return false
   }
   const type = isPageTabbar(normalizeRoutePath(action.url))

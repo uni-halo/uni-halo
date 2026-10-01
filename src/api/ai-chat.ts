@@ -10,6 +10,9 @@ export type { SseHandle }
 
 const API_PREFIX = '/apis/api.summary.summaraidgpt.lik.cc/v1alpha1'
 
+/** 每轮随用户消息下发的隐藏来源说明(仅进请求体, 不进气泡展示) */
+const CLIENT_SOURCE_NOTE = '\n\n[系统备注] 本请求来自 UniHalo App 端（非浏览器网页端），请勿调用内置的资源打开类工具；如需页面跳转，请按系统提示词中的动作协议输出。'
+
 /** 生成短 id */
 export function genChatId(): string {
   return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -79,7 +82,7 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
   const userMessage: IChatUIMessage = {
     id: genChatId(),
     role: 'user',
-    parts: [{ id: genChatId(), type: 'text', text: options.message }],
+    parts: [{ id: genChatId(), type: 'text', text: options.message + CLIENT_SOURCE_NOTE }],
   }
   const historyMessages = options.systemPrompt
     ? [{
