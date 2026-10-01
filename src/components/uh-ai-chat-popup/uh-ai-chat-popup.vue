@@ -113,10 +113,6 @@ function loadDialogConfig(force = false) {
   })
 }
 
-watch(popupVisible, (visible) => {
-  if (visible) { loadDialogConfig(true) }
-})
-
 /** 立即滚动到底部锚点(清空后再设置, 触发 scroll-into-view 重新定位) */
 function scrollNow() {
   scrollIntoId.value = ''
@@ -127,6 +123,15 @@ function scrollNow() {
 const scrollToBottom = throttle(() => {
   scrollNow()
 }, 200)
+
+watch(popupVisible, (visible) => {
+  if (visible) {
+    loadDialogConfig(true)
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
+})
 
 /** 将执行中的工具状态置为完成 */
 function settleToolState() {
@@ -206,8 +211,12 @@ function runTurn(message: string) {
       const bubble = bubbles.value.find(item => item.id === assistantId)
       if (bubble) {
         bubble.streaming = false
+        console.log('bubble.text', bubble.text)
+
         // 输出结束后统一剥离动作块
         const { text, actions } = parseAgentActions(bubble.text)
+        console.log('text', text)
+        console.log('actions', actions)
         bubble.text = text
         if (actions.length) {
           bubble.actions = actions
@@ -215,9 +224,9 @@ function runTurn(message: string) {
         if (!bubble.text && !bubble.actions?.length)
           bubble.text = '（未收到回复，请稍后重试）'
       }
-      // 输出结束 1.5s 后自动执行首个跳转动作
+      // 输出结束 1.5s 后自动执行首个跳转动作(仅唯一目标; 多候选由用户点击卡片选择)
       clearAutoJumpTimer()
-      if (bubble?.actions?.length) {
+      if (bubble?.actions?.length === 1) {
         autoJumpTimer = setTimeout(() => {
           autoJumpTimer = null
           if (bubble.actions?.length) {
@@ -467,10 +476,10 @@ onUnmounted(() => {
                   <text>{{ bubble.toolState === 'running' ? TOOL_RUNNING_TEXT : TOOL_DONE_TEXT }}</text>
                 </view>
 
-                <!-- 跳转动作卡片 -->
+                <!-- 跳转动作卡片(单个即将自动打开, 多个为候选列表由用户点击选择) -->
                 <view v-if="bubble.actions?.length" class="flex flex-col gap-y-1.5">
                   <view class="text-xs text-gray-500">
-                    已为您找到相关页面...
+                    {{ bubble.actions.length > 1 ? '已为您找到相关页面，点击选择打开' : '已为您找到相关页面并打开' }}
                   </view>
                   <view
                     v-for="(action, index) in bubble.actions"

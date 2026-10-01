@@ -25,45 +25,139 @@ export interface IAgentActionResult {
 /** 站内页面路径前缀白名单（清单外路径一律拒绝跳转） */
 const PAGE_PATH_PREFIXES = ['/pages/', '/pages-blog/', '/pages-admin/', '/uni_modules/']
 
-/** 完整动作块：标记 + 单行 JSON */
-const ACTION_LINE_RE = /@@UNI_HALO_APP_ACTION@@\s*(\{[^\n]*\})/g
-/** 流式输出中尚未输出完的动作块尾部（整体剥离，避免标记闪现） */
-const ACTION_TAIL_RE = /@@UNI_HALO_APP_ACTION@@[\s\S]*$/
+/** 单轮动作数量上限（防止模型输出过长候选列表） */
+const MAX_ACTIONS = 10
 
-/** 解析单个动作 JSON，非法内容返回 null */
-function parseActionJson(json: string): IAgentAction | null {
-  try {
-    const data = JSON.parse(json) as Partial<IAgentAction>
-    if (data.action !== 'navigate' || typeof data.url !== 'string' || !data.url) {
+/**
+ * 从指定位置起提取完整的 JSON 负载（大括号/方括号配对扫描，支持多行与数组）
+ * 自动跳过代码块围栏（```json 等）；忽略字符串内的括号与引号；扫描到结尾仍未闭合返回 null（流式残缺/格式异常）
+ */
+function extractActionPayload(source: string, from: number): { json: string; end: number } | null {
+  let start = from
+  while (start < source.length && /\s/.test(source[start])) {
+    start++
+  }
+  if (source.startsWith('```', start)) {
+    const lineEnd = source.indexOf('\n', start)
+    if (lineEnd === -1) {
       return null
     }
-    const url = data.url
-    const type = isPageTabbar(normalizeRoutePath(url))
-      ? 'switchTab'
-      : (data.type === 'redirectTo' ? 'redirectTo' : 'navigateTo')
-    const name = typeof data.name === 'string' && data.name ? data.name : undefined
-    return { action: 'navigate', name, type, url }
+    start = lineEnd + 1
+    while (start < source.length && /\s/.test(source[start])) {
+      start++
+    }
+  }
+  const openChar = source[start]
+  if (openChar !== '{' && openChar !== '[') {
+    return null
+  }
+  const closeChar = openChar === '{' ? '}' : ']'
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i]
+    if (inString) {
+      if (escaped) {
+        escaped = false
+      }
+      else if (ch === '\\') {
+        escaped = true
+      }
+      else if (ch === '"') {
+        inString = false
+      }
+      continue
+    }
+    if (ch === '"') {
+      inString = true
+    }
+    else if (ch === openChar) {
+      depth++
+    }
+    else if (ch === closeChar) {
+      depth--
+      if (depth === 0) {
+        // JSON 后紧随的代码块闭合围栏一并消费
+        let end = i + 1
+        const fence = /^\s*```/.exec(source.slice(end))
+        if (fence) {
+          end += fence[0].length
+        }
+        return { json: source.slice(start, i + 1), end }
+      }
+    }
+  }
+  return null
+}
+
+/** 校验并规范化单个动作对象，非法内容返回 null */
+function normalizeAction(data: unknown): IAgentAction | null {
+  if (!data || typeof data !== 'object') {
+    return null
+  }
+  const item = data as Partial<IAgentAction>
+  if (item.action !== 'navigate' || typeof item.url !== 'string' || !item.url) {
+    return null
+  }
+  const url = item.url
+  const type = isPageTabbar(normalizeRoutePath(url))
+    ? 'switchTab'
+    : (item.type === 'redirectTo' ? 'redirectTo' : 'navigateTo')
+  const name = typeof item.name === 'string' && item.name ? item.name : undefined
+  return { action: 'navigate', name, type, url }
+}
+
+/** 解析动作块负载（单对象或数组），返回合法动作列表（数组内非法项跳过） */
+function parseActionPayload(json: string): IAgentAction[] {
+  try {
+    const data = JSON.parse(json) as unknown
+    const items = Array.isArray(data) ? data : [data]
+    const actions: IAgentAction[] = []
+    for (const item of items) {
+      const action = normalizeAction(item)
+      if (action) {
+        actions.push(action)
+      }
+      if (actions.length >= MAX_ACTIONS) {
+        break
+      }
+    }
+    return actions
   }
   catch {
-    return null
+    return []
   }
 }
 
 /**
- * 从回复文本提取动作块
- * 返回剥离动作块后的正文（含流式中未闭合的尾部标记）与合法动作列表
+ * 从回复文本提取动作块（标记后跟 JSON 负载，支持单对象/数组/多行格式）
+ * 返回剥离动作块后的正文（流式未闭合的尾部标记一并剥离）与合法动作列表
  */
 export function parseAgentActions(raw: string): IAgentActionResult {
   const actions: IAgentAction[] = []
-  let text = (raw || '').replace(ACTION_LINE_RE, (_, json: string) => {
-    const action = parseActionJson(json)
-    if (action) {
-      actions.push(action)
+  let text = ''
+  let rest = raw || ''
+  for (;;) {
+    const index = rest.indexOf(AGENT_ACTION_TAG)
+    if (index === -1) {
+      text += rest
+      break
     }
-    return ''
-  })
-  text = text.replace(ACTION_TAIL_RE, '').replace(/\s+$/, '')
-  return { text, actions }
+    text += rest.slice(0, index)
+    rest = rest.slice(index + AGENT_ACTION_TAG.length)
+    const payload = extractActionPayload(rest, 0)
+    if (payload) {
+      actions.push(...parseActionPayload(payload.json))
+      rest = rest.slice(payload.end)
+    }
+    else {
+      // 负载未闭合(流式残缺或格式异常): 标记起整体剥离, 避免标记闪现
+      rest = ''
+      break
+    }
+  }
+  return { text: text.replace(/\s+$/, ''), actions }
 }
 
 /** 是否为允许跳转的站内页面路径 */
