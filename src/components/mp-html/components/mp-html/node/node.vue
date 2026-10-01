@@ -140,7 +140,9 @@ import uniHaloDoubanCard from '../uni-halo-douban-card/uni-halo-douban-card'
 import uniHaloVoteCard from '../uni-halo-vote-card/uni-halo-vote-card'
 import uniHaloPortfolioCard from '../uni-halo-portfolio-card/uni-halo-portfolio-card'
 
+// #ifdef MP
 import node from './node'
+// #endif
 export default {
   name: 'node',
   options: {
@@ -184,11 +186,11 @@ export default {
 	  }
   },
   components: {
-uniHaloDoubanCard,
-uniHaloVoteCard,
-uniHaloPortfolioCard,
+	uniHaloDoubanCard,
+	uniHaloVoteCard,
+	uniHaloPortfolioCard,
 
-    // #ifndef ((H5 || APP-PLUS) && VUE3) || APP-HARMONY
+    // #ifdef MP
     node
     // #endif
   },
