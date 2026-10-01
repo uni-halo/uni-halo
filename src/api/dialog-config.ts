@@ -53,7 +53,7 @@ export interface IDialogConfig {
   access?: Partial<IDialogAccess>
 }
 
-const DEFAULT_ASSISTANT_NAME = '智阅助手'
+const DEFAULT_ASSISTANT_NAME = 'AI 助手'
 
 /** 内置默认值：快捷问题/欢迎语为空 = 使用组件自身空态（uh-data-loading） */
 export const DEFAULT_DIALOG_CONFIG: IDialogConfig = {

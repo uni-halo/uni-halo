@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 import { genChatId, sendAgentChat } from '@/api/ai-chat'
+import { APP_AGENT_PROMPT } from '@/ai/prompt'
+import { executeAgentAction, parseAgentActions } from '@/ai/action'
+import type { IAgentAction } from '@/ai/action'
 import { chatMarkdownConfig } from '@/config/markdown'
 import { throttle } from '@/utils/common'
 import { DEFAULT_DIALOG_CONFIG, dialogNeedLogin, fetchDialogConfig } from '@/api/dialog-config'
 import type { IDialogConfig } from '@/api/dialog-config'
+import { storeToRefs } from 'pinia'
+import { useAiChatStore } from '@/store/ai-chat'
+import type { IChatBubble } from '@/store/ai-chat'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl } from '@/utils/url'
-import type { IChatUIMessage } from '@/api/types/ai-chat'
 import type { SseHandle } from '@/api/ai-chat'
 
 defineOptions({
@@ -35,31 +40,32 @@ const popupVisible = computed({
 })
 
 /* ---------------- 会话状态 ---------------- */
-interface IChatBubble {
-  id: string
-  role: 'user' | 'assistant'
-  text: string
-  /** 助手消息时间(HH:mm) */
-  time?: string
-  /** 本轮工具调用状态: running=执行中, done=已完成 */
-  toolState?: 'running' | 'done'
-}
-
 /** 工具调用状态文案 */
 const TOOL_RUNNING_TEXT = '正在查找并调用工具…'
 const TOOL_DONE_TEXT = '暂不支持工具调用'
 
-const bubbles = ref<IChatBubble[]>([])
+/** 会话 store(persist 持久化, 跨页面/重启恢复; 新会话时清空全部数据) */
+const aiChatStore = useAiChatStore()
+const { conversationId, visitorId, systemPromptSent, history, bubbles } = storeToRefs(aiChatStore)
+// 恢复持久化数据后清理运行态标记(上次会话可能在流式中断)
+aiChatStore.normalize()
+
 const inputText = ref('')
 const streaming = ref(false)
 const errorText = ref('')
 const scrollIntoId = ref('')
 
-/** 会话与服务端记录标识 */
-let conversationId = genChatId()
-const visitorId = genChatId()
-/** 服务端 UIMessage 历史(下一轮请求回传) */
-let history: IChatUIMessage[] = []
+/** 自动跳转定时器(输出结束 1.5s 后执行首个动作) */
+let autoJumpTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 取消待执行的自动跳转 */
+function clearAutoJumpTimer() {
+  if (autoJumpTimer) {
+    clearTimeout(autoJumpTimer)
+    autoJumpTimer = null
+  }
+}
+
 /** 当前流式请求句柄 */
 let currentHandle: SseHandle | null = null
 
@@ -141,22 +147,26 @@ function handleSend() {
 /** 执行一轮对话: 追加助手占位气泡并发起流式请求 */
 function runTurn(message: string) {
   errorText.value = ''
+  clearAutoJumpTimer()
   const assistantId = genChatId()
-  bubbles.value.push({ id: assistantId, role: 'assistant', text: '', time: formatTime() })
+  bubbles.value.push({ id: assistantId, role: 'assistant', text: '', time: formatTime(), streaming: true })
   scrollNow()
   streaming.value = true
 
   currentHandle = sendAgentChat({
     message,
-    history,
-    conversationId,
-    visitorId,
+    // 系统提示词仅会话首轮随请求下发, 避免每轮重复携带消耗 token
+    systemPrompt: systemPromptSent.value ? undefined : APP_AGENT_PROMPT,
+    history: history.value,
+    conversationId: conversationId.value,
+    visitorId: visitorId.value,
     // 登录态下携带 token（authenticated_* 模式服务端要求）
     needAuthToken: hasLogin.value,
     onText: (fullText) => {
       settleToolState()
       const bubble = bubbles.value.find(item => item.id === assistantId)
       if (bubble) {
+        // 流式期间直接展示原始全文, 动作块的剥离留到输出结束后统一处理
         bubble.text = fullText
         scrollToBottom()
       }
@@ -172,6 +182,7 @@ function runTurn(message: string) {
     onError: (message) => {
       errorText.value = message
       settleToolState()
+      bubbles.value.find(item => item.id === assistantId).streaming = false
       streaming.value = false
       currentHandle = null
     },
@@ -179,12 +190,43 @@ function runTurn(message: string) {
       settleToolState()
       streaming.value = false
       currentHandle = null
-      // 空回复兜底
+      // 首轮成功结束后标记已下发, 后续轮次不再重复注入
+      systemPromptSent.value = true
+      // 空回复兜底(仅动作无正文的气泡不兜底, 由动作卡片展示)
       const bubble = bubbles.value.find(item => item.id === assistantId)
-      if (bubble && !bubble.text)
-        bubble.text = '（未收到回复，请稍后重试）'
+      if (bubble) {
+        bubble.streaming = false
+        // 输出结束后统一剥离动作块, 解析出的动作交给下方自动跳转
+        const { text, actions } = parseAgentActions(bubble.text)
+        bubble.text = text
+        if (actions.length) {
+          bubble.actions = actions
+        }
+        if (!bubble.text && !bubble.actions?.length)
+          bubble.text = '（未收到回复，请稍后重试）'
+      }
+      // 输出结束 1.5s 后自动执行首个跳转动作
+      clearAutoJumpTimer()
+      if (bubble?.actions?.length) {
+        autoJumpTimer = setTimeout(() => {
+          autoJumpTimer = null
+          if (bubble.actions?.length) {
+            handleAction(bubble.actions[0])
+          }
+        }, 1500)
+      }
     },
   })
+}
+
+/** 执行 AI 跳转动作(仅站内白名单路径), 成功后收起弹窗 */
+function handleAction(action: IAgentAction) {
+  if (executeAgentAction(action)) {
+    popupVisible.value = false
+  }
+  else {
+    uni.showToast({ title: '暂不支持跳转该页面', icon: 'none' })
+  }
 }
 
 /** 复制回答内容 */
@@ -236,22 +278,36 @@ function goLogin() {
 function handleStop() {
   currentHandle?.abort()
   currentHandle = null
+  clearAutoJumpTimer()
   streaming.value = false
   settleToolState()
+  const bubble = bubbles.value.find(item => item.id === lastAssistantId.value)
+  if (bubble) {
+    bubble.streaming = false
+    // 手动停止同样是输出结束, 统一剥离动作块(可能存在未闭合的尾部标记)
+    const { text, actions } = parseAgentActions(bubble.text)
+    bubble.text = text
+    if (actions.length) {
+      bubble.actions = actions
+    }
+    if (!bubble.text && !bubble.actions?.length) {
+      bubble.text = '（已停止生成）'
+    }
+  }
 }
 
-/** 新会话 */
+/** 新会话: 清空 store 中全部会话数据(持久化同步清空) */
 function handleNewChat() {
   if (streaming.value) { handleStop() }
-  conversationId = genChatId()
-  history = []
-  bubbles.value = []
+  aiChatStore.newSession()
+  clearAutoJumpTimer()
   errorText.value = ''
 }
 
 onUnmounted(() => {
   currentHandle?.abort()
   currentHandle = null
+  clearAutoJumpTimer()
   scrollToBottom.cancel()
 })
 </script>
@@ -363,8 +419,12 @@ onUnmounted(() => {
               :class="bubble.role === 'user' ? 'uh-ai-chat__bubble--user' : 'uh-ai-chat__bubble--assistant'"
             >
               <template v-if="bubble.role === 'assistant'">
+                <!-- 流式输出中用纯文本渲染, 结束后交 mp-html 一次性解析(连续更新会打穿其异步解析器) -->
+                <text v-if="bubble.streaming && bubble.text" class="whitespace-pre-wrap break-words">
+                  {{ bubble.text }}
+                </text>
                 <mp-html
-                  v-if="bubble.text"
+                  v-else-if="bubble.text"
                   :content="bubble.text"
                   lazy-load :domain="chatMarkdownConfig.domain"
                   :loading-img="chatMarkdownConfig.loadingGif"
@@ -390,6 +450,23 @@ onUnmounted(() => {
                 >
                   <wd-icon name="tool" size="28rpx" />
                   <text>{{ bubble.toolState === 'running' ? TOOL_RUNNING_TEXT : TOOL_DONE_TEXT }}</text>
+                </view>
+
+                <!-- 跳转动作卡片 -->
+                <view v-if="bubble.actions?.length" class="flex flex-col gap-y-1.5">
+                  <view class="text-xs text-gray-500">
+                    即将为您打开...
+                  </view>
+                  <view
+                    v-for="(action, index) in bubble.actions"
+                    :key="index"
+                    class="box-border flex items-center gap-x-1 rounded-md bg-primary p-1.5 text-gray-900"
+                    @click="handleAction(action)"
+                  >
+                    <wd-icon name="link" size="24rpx" />
+                    <text class="flex-1 truncate text-xs">{{ action.name || action.url }}</text>
+                    <wd-icon name="arrow-right" size="24rpx" />
+                  </view>
                 </view>
               </template>
               <text v-else class="whitespace-pre-wrap">{{ bubble.text }}</text>

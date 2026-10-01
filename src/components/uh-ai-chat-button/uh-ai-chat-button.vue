@@ -18,7 +18,10 @@ const emits = defineEmits<{
 }>()
 
 // 黑名单模式：这些页面不显示入口
-const blackList: string[] = []
+const blackList: string[] = [
+  'pages/index/index',
+  'pages/maintenance/maintenance',
+]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]
 

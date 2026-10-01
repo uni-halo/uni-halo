@@ -26,6 +26,8 @@ export function messageText(message: IChatUIMessage): string {
 export interface SendChatOptions {
   /** 本轮用户输入(用于组装 messages) */
   message: string
+  /** 系统提示词(非空时作为 system 消息前插, 每轮注入) */
+  systemPrompt?: string
   /** 历史消息(不含本轮) */
   history?: IChatUIMessage[]
   /** 会话标识 */
@@ -79,7 +81,14 @@ export function sendAgentChat(options: SendChatOptions): SseHandle {
     role: 'user',
     parts: [{ id: genChatId(), type: 'text', text: options.message }],
   }
-  const messages = [...(options.history ?? []), userMessage]
+  const historyMessages = options.systemPrompt
+    ? [{
+        id: genChatId(),
+        role: 'system' as const,
+        parts: [{ id: genChatId(), type: 'text' as const, text: options.systemPrompt }],
+      }]
+    : []
+  const messages = [...historyMessages, ...(options.history ?? []), userMessage]
   let activeHandle: SseHandle | null = null
   let aborted = false
 
