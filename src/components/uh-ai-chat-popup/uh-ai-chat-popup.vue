@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { genChatId, sendAgentChat } from '@/api/ai-chat'
 import { APP_AGENT_PROMPT } from '@/ai/prompt'
-import { executeAgentAction, parseAgentActions } from '@/ai/action'
+import { executeAgentAction, isSameAsCurrentPage, parseAgentActions } from '@/ai/action'
 import type { IAgentAction } from '@/ai/action'
 import { chatMarkdownConfig } from '@/config/markdown'
 import { throttle } from '@/utils/common'
@@ -10,6 +10,7 @@ import type { IDialogConfig } from '@/api/dialog-config'
 import { storeToRefs } from 'pinia'
 import { useAiChatStore } from '@/store/ai-chat'
 import type { IChatBubble } from '@/store/ai-chat'
+import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl } from '@/utils/url'
@@ -49,6 +50,15 @@ const aiChatStore = useAiChatStore()
 const { conversationId, visitorId, systemPromptSent, history, bubbles } = storeToRefs(aiChatStore)
 // 恢复持久化数据后清理运行态标记(上次会话可能在流式中断)
 aiChatStore.normalize()
+
+const { configs } = storeToRefs(useAppConfigStore())
+/** 会话系统提示词：agentPrompt 取站点配置(平台接入-AI助手, 缺省回退内置默认)，chatPrompt(含服务端追加的站点信息)追加在后 */
+const systemPrompt = computed(() => {
+  const assistant = configs.value?.integrationConfig?.pluginConfig?.aiAssistant
+  const agentPrompt = assistant?.agentPrompt?.trim() || APP_AGENT_PROMPT
+  const chatPrompt = assistant?.chatPrompt?.trim() || ''
+  return [agentPrompt, chatPrompt].filter(Boolean).join('\n\n')
+})
 
 const inputText = ref('')
 const streaming = ref(false)
@@ -155,8 +165,8 @@ function runTurn(message: string) {
 
   currentHandle = sendAgentChat({
     message,
-    // 系统提示词仅会话首轮随请求下发, 避免每轮重复携带消耗 token
-    systemPrompt: systemPromptSent.value ? undefined : APP_AGENT_PROMPT,
+    // 系统提示词仅会话首轮随请求下发(站点配置优先, 缺省回退内置), 避免每轮重复携带消耗 token
+    systemPrompt: systemPromptSent.value ? undefined : systemPrompt.value,
     history: history.value,
     conversationId: conversationId.value,
     visitorId: visitorId.value,
@@ -196,7 +206,7 @@ function runTurn(message: string) {
       const bubble = bubbles.value.find(item => item.id === assistantId)
       if (bubble) {
         bubble.streaming = false
-        // 输出结束后统一剥离动作块, 解析出的动作交给下方自动跳转
+        // 输出结束后统一剥离动作块
         const { text, actions } = parseAgentActions(bubble.text)
         bubble.text = text
         if (actions.length) {
@@ -221,6 +231,11 @@ function runTurn(message: string) {
 
 /** 执行 AI 跳转动作(仅站内白名单路径), 成功后收起弹窗 */
 function handleAction(action: IAgentAction) {
+  // 目标与当前页面(含参数)一致时无需跳转, 弹窗保持打开
+  if (isSameAsCurrentPage(action.url)) {
+    uni.showToast({ title: '当前已经在该页面', icon: 'none' })
+    return
+  }
   if (executeAgentAction(action)) {
     popupVisible.value = false
   }
@@ -419,8 +434,8 @@ onUnmounted(() => {
               :class="bubble.role === 'user' ? 'uh-ai-chat__bubble--user' : 'uh-ai-chat__bubble--assistant'"
             >
               <template v-if="bubble.role === 'assistant'">
-                <!-- 流式输出中用纯文本渲染, 结束后交 mp-html 一次性解析(连续更新会打穿其异步解析器) -->
-                <text v-if="bubble.streaming && bubble.text" class="whitespace-pre-wrap break-words">
+                <!-- 仅工具调用轮次流式用纯文本(结束时剥离动作块), 普通轮次直接流式渲染 mp-html -->
+                <text v-if="bubble.streaming && bubble.text" class="whitespace-pre-wrap break-words text-3xs leading-6">
                   {{ bubble.text }}
                 </text>
                 <mp-html
@@ -455,7 +470,7 @@ onUnmounted(() => {
                 <!-- 跳转动作卡片 -->
                 <view v-if="bubble.actions?.length" class="flex flex-col gap-y-1.5">
                   <view class="text-xs text-gray-500">
-                    即将为您打开...
+                    已为您找到相关页面...
                   </view>
                   <view
                     v-for="(action, index) in bubble.actions"

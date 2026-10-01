@@ -244,7 +244,7 @@ export interface IAuditDataResult {
  * - featureConfig：功能设置单例 spec 直发（脱敏后）——profile/pages/assets/
  *   preferences/love(脱敏)/linkInfo/maintenance（审核模式开关已迁至公开 /audit-data）
  * - safetyConfig：setting.yaml 组原样（captchaConfig）
- * - integrationConfig：setting.yaml 组原样（pluginConfig，当前暂无插件）
+ * - integrationConfig：服务端组装（AI助手 chatPrompt 追加站点信息，其余插件节点原样）
  * - themeConfig：setting.yaml 组原样（悬浮窗等主题端配置，app 端暂不消费）
  * - loginConfig：脱敏（仅 client 子对象内的两个登录方式开关）
  * - maintenance：可选，服务端按时间窗计算的 status（键缺失 = 未维护）
@@ -324,11 +324,14 @@ export interface IAppConfig {
     }
   }
   /**
-   * 平台接入（setting.yaml 组原样：第三方插件）
-   * 当前暂无插件，保留结构供后续接入
+   * 平台接入（第三方插件；aiAssistant 为 AI 助手配置，其余插件节点原样透传）
    */
   integrationConfig?: {
-    pluginConfig?: Record<string, unknown>
+    pluginConfig?: {
+      /** AI 助手（对话能力依赖 summaraidGPT 插件；chatPrompt 服务端已追加站点信息） */
+      aiAssistant?: IAIAssistantConfig
+      [key: string]: unknown
+    }
   }
   /** 主题展示（setting.yaml 组原样：悬浮窗等主题端配置，app 端暂不消费） */
   themeConfig?: Record<string, unknown>
@@ -339,6 +342,16 @@ export interface IAppConfig {
    * 键缺失=未维护或已到点自动结束)
    */
   maintenance?: IPublicMaintenance
+}
+
+/** AI 助手配置（平台接入-第三方插件-AI助手；enabled 缺省视为开启，兼容存量站点） */
+export interface IAIAssistantConfig {
+  /** 是否启用（显式 false 时 App 端隐藏 AI 助手入口） */
+  enabled?: boolean
+  /** 对话提示词（应用信息/博主资料/社交信息由服务端自动追加在其后） */
+  chatPrompt?: string
+  /** Agent 提示词（站点级补充指令，追加在 App 内置提示词之后） */
+  agentPrompt?: string
 }
 
 /**
