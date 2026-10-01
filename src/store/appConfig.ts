@@ -7,6 +7,7 @@ import { getAppConfigs, getAuditData, getHaloGlobalInfo } from '@/api/uni-halo'
 import { DefaultAppConfigs } from '@/config/appConfig'
 import { deepMerge } from '@/utils/merge'
 import { setCache } from '@/utils/storage'
+import { useTokenStore } from '@/store/token'
 import type { IAppConfig, IAuditDataResult, IHaloGlobalConfig } from '@/api/types/uni-halo'
 
 /** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
@@ -100,19 +101,34 @@ export const useAppConfigStore = defineStore(
       }
     }
 
+    /** 审核模式开启时清空本地登录数据(仅本地清理,不调服务端吊销;审核期间不允许已登录态) */
+    const handleAuditModeLogout = () => {
+      if (!auditData.value.enabled) {
+        return
+      }
+      const tokenStore = useTokenStore()
+      if (tokenStore.hasLogin) {
+        tokenStore.clearAllLoginInfo()
+      }
+    }
+
     /**
      * 统一拉取静态配置:
-     * getConfigs + audit-data 并行一次;TTL 内(默认 5 分钟,persist 恢复后
-     * 亦生效)直接返回缓存,避免每次冷启动/onShow 重复请求;force=true 强制刷新。
-     * 返回 ok = getConfigs 是否成功(失败时走内置默认/旧缓存,由调用方决定后续)。
+     * audit-data 每次都新拉,不走 TTL 缓存(审核开关状态需即时生效);
+     * getConfigs + haloGlobalInfo 在 TTL 内(默认 5 分钟,persist 恢复后亦生效)
+     * 直接返回缓存;审核模式开启时配置同样不走缓存,保证覆盖后的配置即时生效;
+     * force=true 强制刷新。返回 ok = getConfigs 是否成功(失败时走内置默认/旧缓存)。
      * 恋爱配置读 getConfigs 的 loveConfig 组,由 love.vue 直接读 configs.featureConfig.love。
      */
     const bootstrap = async (options?: { force?: boolean }): Promise<{ ok: boolean, fromCache: boolean }> => {
+      await fetchAuditData()
+      handleAuditModeLogout()
       const force = options?.force ?? false
-      if (!force && fetchedAt.value > 0 && Date.now() - fetchedAt.value < STATIC_TTL) {
+      if (!force && !auditModeEnabled.value && fetchedAt.value > 0
+        && Date.now() - fetchedAt.value < STATIC_TTL) {
         return { ok: true, fromCache: true }
       }
-      const [cfg] = await Promise.all([fetchHaloGlobalInfo(), fetchConfigs(), fetchAuditData()])
+      const [cfg] = await Promise.all([fetchHaloGlobalInfo(), fetchConfigs()])
       fetchedAt.value = Date.now()
       return { ok: !!cfg, fromCache: false }
     }
@@ -140,6 +156,7 @@ export const useAppConfigStore = defineStore(
     }
   },
   {
-    persist: true,
+    // 审核模式数据(auditData)不持久化:开关状态必须每次启动实时拉取,避免旧缓存误判
+    persist: { paths: ['configs', 'haloGlobalInfo', 'fetchedAt'] },
   },
 )
