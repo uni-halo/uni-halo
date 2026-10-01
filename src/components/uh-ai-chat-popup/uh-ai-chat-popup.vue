@@ -2,6 +2,11 @@
 import { genChatId, sendAgentChat } from '@/api/ai-chat'
 import { chatMarkdownConfig } from '@/config/markdown'
 import { throttle } from '@/utils/common'
+import { DEFAULT_DIALOG_CONFIG, dialogNeedLogin, fetchDialogConfig } from '@/api/dialog-config'
+import type { IDialogConfig } from '@/api/dialog-config'
+import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
+import { checkAvatarUrl } from '@/utils/url'
 import type { IChatUIMessage } from '@/api/types/ai-chat'
 import type { SseHandle } from '@/api/ai-chat'
 
@@ -34,6 +39,8 @@ interface IChatBubble {
   id: string
   role: 'user' | 'assistant'
   text: string
+  /** 助手消息时间(HH:mm) */
+  time?: string
   /** 本轮工具调用状态: running=执行中, done=已完成 */
   toolState?: 'running' | 'done'
 }
@@ -56,6 +63,44 @@ let history: IChatUIMessage[] = []
 /** 当前流式请求句柄 */
 let currentHandle: SseHandle | null = null
 
+/** 对话框配置（dialogConfig，失败回退默认值） */
+const dialogConfig = ref<IDialogConfig>({ ...DEFAULT_DIALOG_CONFIG })
+const tokenStore = useTokenStore()
+const userStore = useUserStore()
+
+/** AI 助手头像与名称 */
+const assistantAvatar = computed(() => checkAvatarUrl(dialogConfig.value.assistantAvatar || ''))
+const assistantName = computed(() => dialogConfig.value.assistantName || 'AI 助手')
+/** 欢迎语与快捷问题（站点均未配置时保持组件默认空态） */
+const welcomeMessage = computed(() => (dialogConfig.value.welcomeMessage || '').trim())
+const quickQuestions = computed(() => dialogConfig.value.quickQuestions || [])
+const showWelcome = computed(() => !!(welcomeMessage.value || quickQuestions.value.length))
+/** 登录态与用户头像 */
+const hasLogin = computed(() => !!tokenStore.validToken)
+const userAvatar = computed(() => (hasLogin.value ? checkAvatarUrl(userStore.userInfo?.avatar || '') : ''))
+/** 需登录但未认证：应引导登录 */
+const needLogin = computed(() => dialogNeedLogin(dialogConfig.value) && !hasLogin.value)
+/** 最后一条助手气泡(仅其上展示重新生成) */
+const lastAssistantId = computed(() => {
+  for (let i = bubbles.value.length - 1; i >= 0; i--) {
+    if (bubbles.value[i].role === 'assistant') { return bubbles.value[i].id }
+  }
+  return ''
+})
+
+/** 拉取配置：token 状态与缓存不一致时强制刷新（登录前后 authenticated 会变化） */
+function loadDialogConfig(force = false) {
+  const tokenChanged = hasLogin.value !== (dialogConfig.value.access?.authenticated === true)
+  return fetchDialogConfig(force || tokenChanged).then((config) => {
+    dialogConfig.value = config
+    return config
+  })
+}
+
+watch(popupVisible, (visible) => {
+  if (visible) { loadDialogConfig(true) }
+})
+
 /** 立即滚动到底部锚点(清空后再设置, 触发 scroll-into-view 重新定位) */
 function scrollNow() {
   scrollIntoId.value = ''
@@ -76,15 +121,28 @@ function settleToolState() {
   }
 }
 
+/** 助手消息时间(HH:mm) */
+function formatTime(date = new Date()): string {
+  const pad = (n: number) => `${n}`.padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 /** 发送一条消息 */
 function handleSend() {
   const message = inputText.value.trim()
   if (!message || streaming.value) { return }
+  // 需登录模式未认证：拦截发送, 由提示条引导登录（见模板 needLogin 区块）
+  if (needLogin.value) { return }
   inputText.value = ''
-  errorText.value = ''
   bubbles.value.push({ id: genChatId(), role: 'user', text: message })
+  runTurn(message)
+}
+
+/** 执行一轮对话: 追加助手占位气泡并发起流式请求 */
+function runTurn(message: string) {
+  errorText.value = ''
   const assistantId = genChatId()
-  bubbles.value.push({ id: assistantId, role: 'assistant', text: '' })
+  bubbles.value.push({ id: assistantId, role: 'assistant', text: '', time: formatTime() })
   scrollNow()
   streaming.value = true
 
@@ -93,6 +151,8 @@ function handleSend() {
     history,
     conversationId,
     visitorId,
+    // 登录态下携带 token（authenticated_* 模式服务端要求）
+    needAuthToken: hasLogin.value,
     onText: (fullText) => {
       settleToolState()
       const bubble = bubbles.value.find(item => item.id === assistantId)
@@ -127,6 +187,51 @@ function handleSend() {
   })
 }
 
+/** 复制回答内容 */
+function handleCopy(bubble: IChatBubble) {
+  if (!bubble.text) { return }
+  uni.setClipboardData({
+    data: bubble.text,
+    success: () => uni.showToast({ title: '已复制', icon: 'none' }),
+  })
+}
+
+/** 重新生成: 沿用该回答前最近一条用户消息重新提问 */
+function handleRegenerate(bubbleId: string) {
+  if (streaming.value || needLogin.value) { return }
+  const index = bubbles.value.findIndex(item => item.id === bubbleId)
+  if (index < 0) { return }
+  let userIndex = -1
+  for (let i = index - 1; i >= 0; i--) {
+    if (bubbles.value[i].role === 'user') {
+      userIndex = i
+      break
+    }
+  }
+  if (userIndex < 0) { return }
+  const message = bubbles.value[userIndex].text
+  // 丢弃该用户消息之后的所有气泡(旧回答/工具状态), 重新执行本轮
+  bubbles.value.splice(userIndex + 1)
+  runTurn(message)
+}
+
+/** 点击快捷问题直接发送 */
+function handleQuickAsk(question: string) {
+  if (streaming.value || needLogin.value) { return }
+  inputText.value = question
+  handleSend()
+}
+
+/** 前往登录页 */
+function goLogin() {
+  uni.navigateTo({
+    url: '/pages/auth/login',
+    success: () => {
+      popupVisible.value = false
+    },
+  })
+}
+
 /** 停止生成 */
 function handleStop() {
   currentHandle?.abort()
@@ -156,7 +261,19 @@ onUnmounted(() => {
     <view class="uh-ai-chat box-border flex flex-col gap-y-3 p-3">
       <!-- 顶部栏 -->
       <view class="flex items-center justify-between pb-3">
-        <text class="text-base font-semibold">AI 助手</text>
+        <view class="flex flex-1 items-center gap-x-2">
+          <view
+            v-if="assistantAvatar"
+            class="uh-global-card-glass uh-shadow-primary-xs h-5.5 w-5.5 border rounded-lg !bg-primary"
+          >
+            <image
+              :src="assistantAvatar"
+              class="block h-full w-full rounded-full"
+              mode="aspectFill"
+            />
+          </view>
+          <text class="text-base font-semibold">AI 助手</text>
+        </view>
         <view class="flex items-center gap-3">
           <view
             class="uh-global-card-glass h-6 flex items-center justify-center gap-x-1 text-gray-900 !border !rounded-lg !px-2 !shadow-none"
@@ -183,8 +300,35 @@ onUnmounted(() => {
         :scroll-anchoring="true"
       >
         <view class="h-[56vh] w-full">
-          <view v-if="!bubbles.length" class="flex flex-col items-center">
+          <view v-if="!bubbles.length" class="w-full flex flex-col items-center">
+            <!-- 站点配置了欢迎语/快捷问题：自定义欢迎态 -->
+            <view v-if="showWelcome" class="mt-16 w-full flex flex-col items-center gap-y-4 px-6">
+              <view v-if="assistantAvatar" class="uh-global-card-glass uh-shadow-primary-xs rounded-2xl !bg-primary">
+                <image
+                  :src="assistantAvatar"
+                  class="block h-16 w-16 rounded-full"
+                  mode="aspectFill"
+                />
+              </view>
+              <text class="text-sm font-semibold">{{ assistantName }}</text>
+              <text v-if="welcomeMessage" class="text-center text-xs color-gray-500 leading-5">
+                {{ welcomeMessage }}
+              </text>
+              <view v-if="quickQuestions.length" class="mt-2 w-full flex flex-col gap-y-2">
+                <view
+                  v-for="(question, index) in quickQuestions"
+                  :key="index"
+                  class="uh-ai-chat__quick flex items-center rounded-lg px-3 py-2 text-xs"
+                  @click="handleQuickAsk(question)"
+                >
+                  <text class="flex-1">{{ question }}</text>
+                  <wd-icon name="arrow-right" size="24rpx" />
+                </view>
+              </view>
+            </view>
+            <!-- 未配置欢迎语/快捷问题：默认空态 -->
             <uh-data-loading
+              v-else
               loading-status="loading" size="small" min-height="56vh"
               :use-refresh-button="false"
               :loading-spinner="false"
@@ -196,9 +340,24 @@ onUnmounted(() => {
             v-for="bubble in bubbles"
             :id="`chat-bubble-${bubble.id}`"
             :key="bubble.id"
-            class="mb-3 flex"
-            :class="bubble.role === 'user' ? 'justify-end' : 'justify-start'"
+            class="mb-3 flex flex-col gap-2"
+            :class="bubble.role === 'user' ? 'items-end' : 'items-start'"
           >
+            <!-- 消息元信息: 助手 + 时间 + 复制 + 重新生成 -->
+            <view v-if="bubble.role === 'assistant'" class="w-full flex items-center gap-x-2 text-xs text-gray-500">
+              <text>{{ assistantName }}</text>
+              <text v-if="bubble.time">{{ bubble.time }}</text>
+              <view v-if="bubble.text" class="p-0.5" @click="handleCopy(bubble)">
+                <wd-icon name="copy" size="26rpx" />
+              </view>
+              <view
+                v-if="bubble.id === lastAssistantId && !streaming"
+                class="p-0.5"
+                @click="handleRegenerate(bubble.id)"
+              >
+                <wd-icon name="refresh" size="26rpx" />
+              </view>
+            </view>
             <view
               class="uh-ai-chat__bubble uh-global-card-glass uh-shadow-xs max-w-[80%] flex flex-col gap-y-2 !border !text-3xs"
               :class="bubble.role === 'user' ? 'uh-ai-chat__bubble--user' : 'uh-ai-chat__bubble--assistant'"
@@ -246,6 +405,20 @@ onUnmounted(() => {
         {{ errorText }}
       </view>
 
+      <!-- 登录引导：需登录模式未认证时展示, 用户自行选择去登录 -->
+      <view
+        v-if="needLogin"
+        class="box-border flex items-center justify-between gap-x-2 rounded-full bg-red-50 py-1 pl-3 pr-1 text-xs color-red-500"
+      >
+        <text class="flex-1">提示：登录后才能继续与AI助手对话。</text>
+        <uh-button
+          custom-class="uh-global-card-glass !shadow-none !border !py-1 !px-3 !rounded-full !text-xs"
+          @click="goLogin"
+        >
+          去登录
+        </uh-button>
+      </view>
+
       <!-- 输入区 -->
       <view class="uh-ai-chat__input box-border w-full flex items-center gap-3">
         <input
@@ -278,6 +451,11 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.uh-ai-chat__quick {
+  background-color: rgb(0 0 0 / 3%);
+  color: rgb(0 0 0 / 65%);
+}
+
 .uh-ai-chat__bubble {
   box-sizing: border-box;
   padding: 16rpx 24rpx;
@@ -293,7 +471,7 @@ onUnmounted(() => {
 
 .uh-ai-chat__bubble--assistant {
   background-color: rgb(0 0 0 / 4%);
-  border-bottom-left-radius: 6rpx;
+  border-top-left-radius: 6rpx;
 }
 
 .uh-ai-chat__input-field {

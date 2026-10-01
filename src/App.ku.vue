@@ -25,7 +25,7 @@ onShow(() => {
   <view>
     <uh-global-actions>
       <uh-scrolltop-button :fixed="false" />
-      <uh-chat-button :fixed="false" @action-click="openChatPopup()" />
+      <uh-ai-chat-button :fixed="false" @action-click="openChatPopup()" />
       <uh-settings-button :fixed="false" @action-click="openSettingsPopup()" />
       <uh-user-button :fixed="false" @action-click="openUserPopup()" />
     </uh-global-actions>
