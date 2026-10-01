@@ -28,9 +28,9 @@ const currentPage = pages[pages.length - 1]
 
 const { configs } = storeToRefs(useAppConfigStore())
 
-/** 站点开关：aiAssistant.enabled 显式 false 时隐藏入口（缺省视为开启，兼容存量站点） */
+/** 站点开关：aiAssistant.enabled 显式 true 时显示入口（缺省视为关闭） */
 const assistantEnabled = computed(
-  () => configs.value?.integrationConfig?.pluginConfig?.aiAssistant?.enabled !== false,
+  () => configs.value?.integrationConfig?.pluginConfig?.aiAssistant?.enabled === true,
 )
 
 /** 登录能力是否可用(账号密码登录或小程序一键登录任一开启, 与登录页判定一致) */

@@ -344,11 +344,11 @@ onUnmounted(() => {
         <view class="flex flex-1 items-center gap-x-2">
           <view
             v-if="assistantAvatar"
-            class="uh-global-card-glass uh-shadow-primary-xs h-5.5 w-5.5 border rounded-lg !bg-primary"
+            class="uh-global-card-glass uh-shadow-primary-xs h-5.5 w-5.5 border rounded-lg"
           >
             <image
               :src="assistantAvatar"
-              class="block h-full w-full rounded-full"
+              class="block h-full w-full"
               mode="aspectFill"
             />
           </view>
@@ -383,10 +383,10 @@ onUnmounted(() => {
           <view v-if="!bubbles.length" class="w-full flex flex-col items-center">
             <!-- 站点配置了欢迎语/快捷问题：自定义欢迎态 -->
             <view v-if="showWelcome" class="mt-16 w-full flex flex-col items-center gap-y-4 px-6">
-              <view v-if="assistantAvatar" class="uh-global-card-glass uh-shadow-primary-xs rounded-2xl !bg-primary">
+              <view v-if="assistantAvatar" class="uh-global-card-glass uh-shadow-primary-xs rounded-2xl">
                 <image
                   :src="assistantAvatar"
-                  class="block h-16 w-16 rounded-full"
+                  class="block h-16 w-16"
                   mode="aspectFill"
                 />
               </view>
