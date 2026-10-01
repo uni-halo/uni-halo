@@ -10,8 +10,20 @@ export type { SseHandle }
 
 const API_PREFIX = '/apis/api.summary.summaraidgpt.lik.cc/v1alpha1'
 
-/** 每轮随用户消息下发的隐藏来源说明(仅进请求体, 不进气泡展示) */
-const CLIENT_SOURCE_NOTE = '\n\n[系统备注] 本请求来自 UniHalo App 端（非浏览器网页端），请勿调用内置的资源打开类工具；如需页面跳转，请按系统提示词中的动作协议输出。'
+/** 每轮随用户消息下发的隐藏备注：来源声明 + 紧凑跳转协议(格式模板与全部页面路径清单)，防止后续轮次格式漂移与路径自创 */
+const CLIENT_SOURCE_NOTE = [
+  '',
+  '',
+  '[系统备注] 本请求来自 UniHalo App 端（非浏览器网页端）。',
+  '禁止调用 open_halo_resource、open_current_page_link 等内置资源打开工具，禁止输出 openResource/openHaloResource 之类的内置工具参数格式。',
+  '如需打开站内页面或文章，在回答末尾另起一行原样输出动作块（JSON 必须单行，禁止用代码块包裹）：',
+  '@@UNI_HALO_APP_ACTION@@ {"action":"navigate","name":"页面名称或内容标题","type":"switchTab|navigateTo","url":"页面路径?参数"}',
+  'url 只能从下面的路径清单中选取，禁止自创路径，禁止用检索结果的 permalink 拼接：',
+  '[tabbar 页] /pages/tabbar/home/home /pages/tabbar/category/category /pages/tabbar/gallery/gallery /pages/tabbar/moments/moments /pages/tabbar/blogger/blogger',
+  '[普通页] /pages-blog/articles/articles /pages-blog/archives/archives /pages-blog/tags/tags /pages-blog/search/search /pages-blog/favorites/favorites /pages-blog/friend-links/friend-links /pages-blog/contact/contact /pages-blog/notice/notice /pages-blog/votes/votes /pages-blog/love/love /pages-blog/love/list /pages-blog/love/stories /pages-blog/love/album /pages-blog/portfolio/portfolio /pages-blog/douban/douban /pages-blog/data-visual/data-visual /pages-blog/setting/setting /pages-blog/about-project/about-project /pages-blog/disclaimer/disclaimer /pages-blog/user-agreement/user-agreement /pages-blog/privacy-policy/privacy-policy',
+  '[详情页模板] /pages-blog/article-detail/article-detail?name=<笔记 metadata.name> /pages-blog/moment-detail/moment-detail?name=<动态 metadata.name> /pages-blog/notice/detail?name=<公告 metadata.name> /pages-blog/banner-detail/banner-detail?name=<Banner metadata.name> /pages-blog/vote-detail/vote-detail?name=<投票 metadata.name> /pages-blog/portfolio/detail?slug=<项目 slug> /pages-blog/category-articles/category-articles?name=<分类 metadata.name> /pages-blog/tag-articles/tag-articles?name=<标签 metadata.name> /pages-blog/user-profile/user-profile?username=<用户 metadata.name>',
+  '打开笔记、动态等详情必须使用对应详情页模板并以检索到的 metadata.name / slug 作为参数，禁止把标题或 slug 拼到列表页路径后面。',
+].join('\n')
 
 /** 生成短 id */
 export function genChatId(): string {
