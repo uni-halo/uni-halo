@@ -223,6 +223,10 @@ export interface IAuditDataResult {
     moments?: IAuditDataRef[]
     /** 选中的链接分组 LinkGroup 引用列表 */
     linkGroups?: IAuditDataRef[]
+    /** 选中的项目集引用列表(预留:插件端暂未下发,取值恒为空) */
+    projects?: IAuditDataRef[]
+    /** 选中的豆瓣记录引用列表(预留:插件端暂未下发,取值恒为空) */
+    douban?: IAuditDataRef[]
     /** 备注 */
     description?: string
     [key: string]: unknown

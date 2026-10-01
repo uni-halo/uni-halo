@@ -16,7 +16,7 @@ definePage({
 })
 
 const { bootstrap } = useAppConfigStore()
-const { configs } = storeToRefs(useAppConfigStore())
+const { configs, auditModeEnabled } = storeToRefs(useAppConfigStore())
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('login', '登录')
 const tokenStore = useTokenStore()
@@ -39,10 +39,11 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 
-/* ---------- 注册开关(Halo /actuator/globalinfo,匿名可访问,读取失败视为关闭) ---------- */
-const registrationAllowed = ref(false)
+/* ---------- 注册开关(Halo /actuator/globalinfo,匿名可访问,读取失败视为关闭;审核模式下不显示) ---------- */
+const registrationAllowedRaw = ref(false)
+const registrationAllowed = computed(() => registrationAllowedRaw.value && !auditModeEnabled.value)
 getGlobalInfo().then((res) => {
-  registrationAllowed.value = res.data?.allowRegistration === true
+  registrationAllowedRaw.value = res.data?.allowRegistration === true
 }).catch((error) => {
   console.error('获取注册开关失败:', error)
 })
