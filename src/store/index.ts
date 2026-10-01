@@ -15,6 +15,7 @@ setActivePinia(store)
 
 export default store
 
+export * from './ai-chat'
 export * from './appConfig'
 export * from './favorites'
 export * from './halo'
