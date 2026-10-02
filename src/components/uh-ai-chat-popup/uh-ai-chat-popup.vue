@@ -79,6 +79,45 @@ function clearAutoJumpTimer() {
 /** 当前流式请求句柄 */
 let currentHandle: SseHandle | null = null
 
+/** 流式加载趣味文案（对话未结束时轮换展示） */
+const LOADING_TEXTS = [
+  '正在翻阅站内资料…',
+  '灵感碰撞中…',
+  '正从代码山海赶来…',
+  '组织语言中，稍安勿躁…',
+  '键盘已经敲出火星子了…',
+  '神经元高速运转中…',
+]
+const loadingText = ref(LOADING_TEXTS[0])
+let loadingTextTimer: ReturnType<typeof setInterval> | null = null
+
+function stopLoadingTextTimer() {
+  if (loadingTextTimer) {
+    clearInterval(loadingTextTimer)
+    loadingTextTimer = null
+  }
+}
+
+/** 开始轮换加载文案（随机起点，顺序轮换） */
+function startLoadingText() {
+  stopLoadingTextTimer()
+  const start = Math.floor(Math.random() * LOADING_TEXTS.length)
+  loadingText.value = LOADING_TEXTS[start]
+  loadingTextTimer = setInterval(() => {
+    const index = LOADING_TEXTS.indexOf(loadingText.value)
+    loadingText.value = LOADING_TEXTS[(index + 1) % LOADING_TEXTS.length]
+  }, 2500)
+}
+
+watch(streaming, (val) => {
+  if (val) {
+    startLoadingText()
+  }
+  else {
+    stopLoadingTextTimer()
+  }
+})
+
 /** 对话框配置（dialogConfig，失败回退默认值） */
 const dialogConfig = ref<IDialogConfig>({ ...DEFAULT_DIALOG_CONFIG })
 const tokenStore = useTokenStore()
@@ -332,6 +371,7 @@ onUnmounted(() => {
   currentHandle?.abort()
   currentHandle = null
   clearAutoJumpTimer()
+  stopLoadingTextTimer()
   scrollToBottom.cancel()
 })
 </script>
@@ -398,7 +438,7 @@ onUnmounted(() => {
                 <view
                   v-for="(question, index) in quickQuestions"
                   :key="index"
-                  class="uh-ai-chat__quick flex items-center rounded-lg px-3 py-2 text-xs"
+                  class="uh-ai-chat__quick flex items-center rounded-lg px-3 py-2 text-xs leading-5"
                   @click="handleQuickAsk(question)"
                 >
                   <text class="flex-1">{{ question }}</text>
@@ -495,6 +535,11 @@ onUnmounted(() => {
               </template>
               <text v-else class="whitespace-pre-wrap">{{ bubble.text }}</text>
             </view>
+          </view>
+          <!-- 流式加载中：末尾跟随 loading 与趣味文案 -->
+          <view v-if="streaming" class="mb-3 flex items-center gap-x-2 text-3xs text-gray-500">
+            <wd-loading size="28rpx" custom-class="text-primary" />
+            <text>{{ loadingText }}</text>
           </view>
           <!-- 底部跟随锚点 -->
           <view id="chat-bottom-anchor" class="h-px w-full" />

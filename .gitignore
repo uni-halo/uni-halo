@@ -50,3 +50,4 @@ src/pages.json
 .docs/
 .screenshots/
 .design/
+env/.env.local

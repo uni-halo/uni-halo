@@ -156,6 +156,19 @@ const appVersionItem: INavItem = {
   group: 'more',
 }
 
+/** 足迹入口(本地定义，后续迁移到插件端 mine.commonFeatures 配置) */
+const footprintItem: INavItem = {
+  key: 'footprint',
+  title: '足迹',
+  icons: [{ key: 'ri', prefix: 'ri', iconName: 'footprint-line' }],
+  color: '#65a30d',
+  iconColor: '#65a30d',
+  bgColor: '#B9E42424',
+  path: '/pages-blog/footprint/footprint',
+  show: true,
+  group: 'blog',
+}
+
 /** 解析条目当前生效的图标风格（iconMode 优先，缺省取 icons[0]） */
 function resolveNavItemIcon(item: INavItem): INavIconStyle | null {
   if (!item.icons?.length) {
@@ -179,7 +192,7 @@ const featureMode = computed<'grid' | 'list'>(() =>
 
 /** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
 const calcNavGroups = computed(() => {
-  const visible = [...navList.value.filter(n => n.show), appVersionItem]
+  const visible = [footprintItem, ...navList.value.filter(n => n.show), appVersionItem]
   const groupDefs: { key: 'blog' | 'more', title: string }[] = [
     { key: 'blog', title: '常用功能' },
     { key: 'more', title: '其他功能' },
@@ -191,7 +204,7 @@ const calcNavGroups = computed(() => {
 })
 
 const commonFeatures = computed(() => {
-  return navList.value.filter(f => f.show && f.group === 'blog')
+  return [footprintItem, ...navList.value.filter(f => f.show && f.group === 'blog')]
 })
 const otherFeatures = computed(() => {
   return [...navList.value.filter(f => f.show && f.group === 'more'), appVersionItem]
@@ -214,7 +227,7 @@ async function handleGetNavList() {
         iconMode: e.iconMode,
         bgColor: e.bgColor || '#969696F2',
         color: e.color,
-		iconColor: e.iconColor,
+        iconColor: e.iconColor,
         subTitle: e.subTitle || '',
         path: e.path || null,
         show: e.visible !== false,
@@ -381,7 +394,7 @@ onPageScroll((option: Page.PageScrollOption) => {
           >
             <view
               class="uh-global-card-glass uh-shadow-xs h-10 w-10 flex items-center justify-center border rounded-xl"
-              :style="{ backgroundColor: nav.bgColor,color: nav.iconColor || nav.color }"
+              :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
             >
               <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
             </view>
