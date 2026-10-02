@@ -26,6 +26,7 @@ export type PageTitleKey
     | 'portfolioDetail'
     | 'douban'
     | 'doubanDetail'
+    | 'footprint'
     | 'setting'
     | 'aboutProject'
     | 'disclaimer'

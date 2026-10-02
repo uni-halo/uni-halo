@@ -10,7 +10,7 @@ function getMode() {
   const modeFlagIndex = args.findIndex(arg => arg === '--mode')
   return modeFlagIndex !== -1 ? args[modeFlagIndex + 1] : args[0] === 'build' ? 'production' : 'development' // 默认 development
 }
-// 获取环境变量的范例
+// 获取环境变量（loadEnv 优先级：.env.local > .env，真实 Key 放 env/.env.local，占位兜底值在 env/.env）
 const env = loadEnv(getMode(), path.resolve(process.cwd(), 'env'))
 const {
   VITE_APP_TITLE,
@@ -18,7 +18,54 @@ const {
   VITE_WX_APPID,
   VITE_APP_PUBLIC_BASE,
   VITE_FALLBACK_LOCALE,
+  // 足迹地图：默认腾讯地图，高德为备选（各端同一时刻只输出一个图商节点，避免多图商冲突）
+  VITE_FOOTPRINT_MAP_TENCENT_KEY = '',
+  VITE_FOOTPRINT_MAP_AMAP_ANDROID_KEY = '',
+  VITE_FOOTPRINT_MAP_AMAP_IOS_KEY = '',
+  VITE_FOOTPRINT_MAP_AMAP_JSKEY = '',
+  VITE_FOOTPRINT_MAP_AMAP_SECURITY_JS_CODE = '',
 } = env
+
+/** App 端地图配置：腾讯(web 方案，HBuilderX 4.31+)优先，高德(原生 SDK)兜底；均无则不输出 */
+function buildAppMaps() {
+  if (VITE_FOOTPRINT_MAP_TENCENT_KEY) {
+    return { tencent: { key: VITE_FOOTPRINT_MAP_TENCENT_KEY } }
+  }
+  if (VITE_FOOTPRINT_MAP_AMAP_ANDROID_KEY || VITE_FOOTPRINT_MAP_AMAP_IOS_KEY) {
+    return {
+      amap: {
+        name: '',
+        appkey_android: VITE_FOOTPRINT_MAP_AMAP_ANDROID_KEY,
+        appkey_ios: VITE_FOOTPRINT_MAP_AMAP_IOS_KEY,
+        privacy: {
+          __platform__: ['android', 'ios'],
+          enabled: true,
+        },
+      },
+    }
+  }
+  return {}
+}
+
+/** H5 端地图配置：腾讯(4.36+ tencent 节点)优先，高德(Web JS)兜底；均无则不输出 */
+function buildH5Maps() {
+  if (VITE_FOOTPRINT_MAP_TENCENT_KEY) {
+    return { tencent: { key: VITE_FOOTPRINT_MAP_TENCENT_KEY } }
+  }
+  if (VITE_FOOTPRINT_MAP_AMAP_JSKEY) {
+    const amap: Record<string, string> = { key: VITE_FOOTPRINT_MAP_AMAP_JSKEY }
+    if (VITE_FOOTPRINT_MAP_AMAP_SECURITY_JS_CODE) {
+      amap.securityJsCode = VITE_FOOTPRINT_MAP_AMAP_SECURITY_JS_CODE
+    }
+    return { amap }
+  }
+  return {}
+}
+
+const appMaps = buildAppMaps()
+const h5Maps = buildH5Maps()
+/** App 端是否使用高德(原生 SDK 需勾选 Maps 模块，腾讯 web 方案不需要) */
+const appUseAmap = 'amap' in appMaps
 // console.log('manifest.config.ts env:', env)
 
 export default defineManifestConfig({
@@ -32,6 +79,9 @@ export default defineManifestConfig({
   'h5': {
     router: {
       base: VITE_APP_PUBLIC_BASE,
+    },
+    sdkConfigs: {
+      maps: h5Maps,
     },
   },
   /* 5+App特有相关 */
@@ -48,8 +98,8 @@ export default defineManifestConfig({
       autoclose: true,
       delay: 0,
     },
-    /* 模块配置 */
-    modules: {},
+    /* 模块配置：高德为原生 SDK 需 Maps 模块，腾讯 web 方案不需要 */
+    modules: appUseAmap ? { Maps: {} } : {},
     /* 应用发布信息 */
     distribute: {
       /* android打包配置 */
@@ -77,8 +127,10 @@ export default defineManifestConfig({
       },
       /* ios打包配置 */
       ios: {},
-      /* SDK配置 */
-      sdkConfigs: {},
+      /* SDK配置：足迹地图（默认腾讯，高德备选，Key 来自 env） */
+      sdkConfigs: {
+        maps: appMaps,
+      },
       /* 图标配置 */
       icons: {
         android: {

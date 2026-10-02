@@ -30,6 +30,7 @@ export const NeedPluginIds = Object.freeze({
   PluginDataStatistics: 'data-statistics',
   PluginPortfolio: 'portfolio',
   PluginDouban: 'plugin-douban',
+  PluginFootprint: 'footprint',
 })
 
 interface IPluginAvailableOption {
@@ -154,6 +155,16 @@ export const NeedPlugins = new Map<string, IPluginInfo>([
       url: 'https://github.com/chengzhongxue/plugin-douban',
     },
   ],
+  [
+    NeedPluginIds.PluginFootprint,
+    {
+      id: 'footprint',
+      name: '足迹',
+      desc: '足迹模块所需要的插件，用于展示去过地方的足迹记录（基于高德地图）',
+      logo: checkUrl('/plugins/footprint/logo.svg'),
+      url: 'https://github.com/acanyo/halo-plugin-footprint',
+    },
+  ],
 ])
 
 export function usePluginAvailable(option: IPluginAvailableOption) {
@@ -165,24 +176,22 @@ export function usePluginAvailable(option: IPluginAvailableOption) {
    * 检查插件是否启用、安装
    */
   function check(): Promise<boolean> {
-    return new Promise<boolean>(async (resolve) => {
-      try {
-        checking.value = true
-        const result = await checkPluginAvailable(pluginId)
+    checking.value = true
+    return checkPluginAvailable(pluginId)
+      .then((result) => {
         console.log(`检查插件 ${pluginId} 可用性成功`, result)
         available.value = result.data
-        resolve(result.data)
-      }
-      catch (err) {
+        return result.data
+      })
+      .catch((err) => {
         console.error(`检查插件 ${pluginId} 可用性失败`, err)
         available.value = false
-        resolve(false)
-      }
-      finally {
+        return false
+      })
+      .finally(() => {
         typeof callback === 'function' && callback(available.value)
         checking.value = false
-      }
-    })
+      })
   }
 
   return { pluginId, tips, checking, available, check }
