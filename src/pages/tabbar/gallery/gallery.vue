@@ -53,7 +53,7 @@ const category = ref<{ activeIndex: number, list: IPhotoGroup[] }>({
 })
 const queryParams = ref({ size: 10, page: 1, group: '' })
 const dataList = ref<IPhoto[]>([])
-const visiblePhotoName = ref(true)
+const visiblePhotoName = ref(false)
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetCategory() {

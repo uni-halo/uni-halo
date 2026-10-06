@@ -60,7 +60,7 @@ export interface IQuickNavItem {
 
 /** 多风格图标项 */
 export interface IQuickNavIconStyle {
-  /** 风格标识（ri=remixicon / emoji-font=emoji 字体 / emoji-icon=纯 emoji 字符） */
+  /** 风格标识（animal-font=动物字体 / emoji-font=emoji 字体 / ri=remixicon / emoji-icon=纯 emoji 字符） */
   key: string
   prefix: string
   iconName: string

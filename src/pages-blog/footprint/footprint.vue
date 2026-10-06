@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getAllFootprints } from '@/api/halo-plugin-third/footprint'
 import { useAppConfigStore } from '@/store/appConfig'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -15,7 +15,6 @@ definePage({
   style: {
     navigationBarTitleText: '足迹',
     navigationStyle: 'custom',
-    enablePullDownRefresh: true,
   },
 })
 
@@ -49,9 +48,13 @@ onShareTimeline(() => ({
 /* ---------------- 状态 ---------------- */
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const footprints = ref<IFootprint[]>([])
+/** 首次加载成功(后续刷新不再走整页加载态，避免地图与操作栏被销毁重建) */
+const firstLoaded = ref(false)
 /** 弹层模式：list=列表 / detail=详情 / null=关闭 */
 const sheetMode = ref<'list' | 'detail' | null>(null)
+/** 选中的足迹（详情内容载体，与地图聚焦点相互独立） */
 const selected = ref<IFootprint | null>(null)
+const mapRef = ref<InstanceType<typeof FootprintMap> | null>(null)
 
 const sheetOpen = computed(() => sheetMode.value !== null)
 
@@ -81,19 +84,19 @@ onUnmounted(() => {
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetData() {
+  // 重新拉取数据时清选中
+  selected.value = null
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getAllFootprints()
     footprints.value = Array.isArray(res.data) ? res.data : []
+    firstLoaded.value = true
     await sleep(600)
     updateLoadingStatus(footprints.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
   }
   catch (err) {
     console.error('获取足迹列表失败', err)
     updateLoadingStatus(DataLoadingStatusEnum.Error)
-  }
-  finally {
-    uni.stopPullDownRefresh()
   }
 }
 
@@ -144,34 +147,40 @@ function handleItemTap(footprint: IFootprint) {
   sheetMode.value = 'detail'
 }
 
-/** 关闭弹层：恢复全局视野 */
+/** 关闭弹层：地图保持当前视野（不自动还原全局，需要时点底部[还原]） */
 function handleSheetClose() {
   selected.value = null
   sheetMode.value = null
 }
 
-/** 重置视野：清除选中点，地图回到全局适配 */
+/** 返回列表：弹层 detail 原位切回 list（不重挂动画） */
+function handleBackToList() {
+  sheetMode.value = 'list'
+}
+
+/** 定位：地图聚焦该点，不改变弹层状态 */
+function handleLocate(footprint: IFootprint) {
+  mapRef.value?.focusOn(footprint)
+}
+
+/** 还原：地图适配所有足迹点 */
 function handleResetView() {
-  selected.value = null
+  mapRef.value?.resetView()
+}
+
+/** 放大：读取地图当前缩放级别后 +1 */
+function handleZoomIn() {
+  mapRef.value?.zoomIn()
+}
+
+/** 缩小：读取地图当前缩放级别后 -1 */
+function handleZoomOut() {
+  mapRef.value?.zoomOut()
 }
 
 /* ---------------- 生命周期 ---------------- */
 onLoad(async () => {
   await checkPlugin()
-  if (!pluginAvailable.value) {
-    uni.stopPullDownRefresh()
-  }
-})
-
-onPullDownRefresh(() => {
-  if (!pluginAvailable.value) {
-    uni.stopPullDownRefresh()
-    return
-  }
-  if (sheetOpen.value) {
-    handleSheetClose()
-  }
-  handleGetData()
 })
 </script>
 
@@ -190,42 +199,60 @@ onPullDownRefresh(() => {
       @on-refresh="checkPlugin"
     />
 
-    <!-- 加载中 / 空 / 错误 -->
+    <!-- 首次加载中 / 空 / 错误 -->
     <uh-data-loading
-      v-else-if="loadingStatus !== DataLoadingStatusEnum.Success"
+      v-if="!firstLoaded && loadingStatus !== DataLoadingStatusEnum.Success"
       :loading-status="loadingStatus"
       empty-text="啊偶，还没有任何足迹哦~"
       min-height="85vh"
       @refresh="handleGetData"
     />
 
-    <!-- 地图区域 + 底部悬浮操作栏 -->
-    <view v-else class="min-h-0 flex flex-1 flex-col">
+    <!-- 地图区域 + 底部悬浮操作栏(首次加载成功后常驻，刷新只原地更新数据) -->
+    <view v-else-if="firstLoaded" class="min-h-0 flex flex-1 flex-col">
       <view class="relative min-h-0 flex-1 overflow-hidden">
         <footprint-map
           v-if="mapVisible"
+          ref="mapRef"
           class="h-full w-full"
           :footprints="footprints"
-          :selected="selected"
           @marker-tap="handleMarkerTap"
         />
       </view>
-      <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/定位 -->
-      <view class="fixed bottom-0 left-0 right-0 flex flex-shrink-0 items-center justify-center pt-2 pb-safe">
+      <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/放大/缩小/刷新/还原 -->
+      <view class="footprint-bar flex flex-shrink-0 items-center justify-center pt-2 pb-safe">
         <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
           <view
             class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
             @click="openListSheet"
           >
-            <wd-icon name="list" size="36rpx" class="text-gray-900" />
+            <wd-icon name="list" size="28rpx" class="text-gray-900" />
             <text class="shrink-0 text-xs text-gray-900 font-semibold">列表</text>
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleZoomIn"
+          >
+            <wd-icon name="zoom-in" size="36rpx" class="text-gray-900" />
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleZoomOut"
+          >
+            <wd-icon name="zoom-out" size="36rpx" class="text-gray-900" />
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleGetData"
+          >
+            <wd-icon name="sync" size="34rpx" class="text-gray-900" />
           </view>
           <view
             class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
             @click="handleResetView"
           >
-            <wd-icon name="location" size="36rpx" class="text-gray-900" />
-            <text class="shrink-0 text-xs text-gray-900 font-semibold">定位</text>
+            <wd-icon name="refresh" size="28rpx" class="text-gray-900" />
+            <text class="shrink-0 text-xs text-gray-900 font-semibold">还原</text>
           </view>
         </view>
       </view>
@@ -240,6 +267,27 @@ onPullDownRefresh(() => {
       :selected="selected"
       @close="handleSheetClose"
       @item-tap="handleItemTap"
+      @back-to-list="handleBackToList"
+      @locate="handleLocate"
     />
   </view>
 </template>
+
+<style scoped lang="scss">
+/* 底部操作栏定位的平台差异(uni-app style 条件编译)：
+   App 端原生地图层级最高，fixed 栏会被地图盖住 → 正常流放地图下方；
+   H5/微信小程序同层渲染 → 悬浮于地图底部上方 */
+.footprint-bar {
+  /* #ifdef APP-PLUS */
+  position: relative;
+  /* #endif */
+
+  /* #ifndef APP-PLUS */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  /* #endif */
+}
+</style>

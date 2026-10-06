@@ -253,43 +253,60 @@ onReachBottom(() => {
     <view v-else-if="uniHaloPluginAvailable" class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="project in projectList" :key="project.slug"
-        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl box-border"
+        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-2xl"
         @click="handleToDetail(project)"
       >
-        <!-- 推荐角标(对齐文章卡置顶角标位置语义) -->
-        <text
-          v-if="project.featured"
-          class="uh-global-card-glass absolute right-2 top-2 z-1 box-border border rounded-md bg-secondary px-1.5 py-0.5 text-gray-900 !text-xs"
-        >
-          推荐
-        </text>
-        <view v-if="project.cover" class="relative h-36 w-full">
-          <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
-            <template #loading>
-              <wd-loading size="64rpx" custom-class="text-primary" />
-            </template>
-          </wd-img>
-        </view>
-        <view class="flex flex-col gap-y-2 box-border p-3">
-          <view class="truncate text-sm text-gray-900 font-semibold">
-            {{ project.title }}
+        <image
+          v-if="project.cover"
+          :src="checkImageUrl(project.cover)"
+          class="absolute z-0 block h-full w-full"
+          mode="aspectFill"
+          lazy-load
+        />
+        <view class="uh-filter-blur-xs relative z-10 box-border flex flex-col gap-y-3 bg-black/50 p-3.5">
+          <view class="w-full flex gap-x-3 overflow-hidden">
+            <view v-if="project.cover" class="uh-global-card-glass relative h-18 w-18 shrink-0 overflow-hidden rounded-lg shadow-none !border">
+              <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
+                <template #loading>
+                  <wd-loading size="64rpx" custom-class="text-primary" />
+                </template>
+              </wd-img>
+            </view>
+            <view class="w-full flex flex-col justify-between gap-y-1 overflow-hidden">
+              <view class="flex items-center gap-x-1.5 overflow-hidden">
+                <text
+                  v-if="project.featured"
+                  class="uh-global-card-glass box-border shrink-0 border rounded-md bg-secondary px-1.5 text-gray-900 !text-xs"
+                >
+                  推荐
+                </text>
+                <text class="flex-1 truncate text-sm text-white font-semibold">{{ project.title }}aaaa法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨</text>
+              </view>
+              <view
+                class="text-3xs text-gray-100 leading-5"
+                :class="[
+                  project.techStacks?.length ? 'line-clamp-1' : 'line-clamp-2',
+                ]"
+              >
+                {{ project.summary || '这个项目还没有介绍~' }}法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨
+              </view>
+              <view v-if="project.techStacks?.length" class="box-border flex flex-wrap gap-2">
+                <text
+                  v-for="tech in project.techStacks.slice(0, 4)" :key="tech"
+                  class="text-xs text-gray-100"
+                >
+                  #{{ tech }}
+                </text>
+              </view>
+            </view>
           </view>
-          <view v-if="project.summary" class="line-clamp-2 text-3xs text-gray-600 leading-5">
-            {{ project.summary }}
-          </view>
-          <view v-if="project.techStacks?.length" class="box-border flex flex-wrap gap-2">
-            <text
-              v-for="tech in project.techStacks.slice(0, 4)" :key="tech"
-              class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
-            >
-              {{ tech }}
-            </text>
-          </view>
-          <view class="flex items-center text-xs text-gray-500">
-            <text class="min-w-0 flex-1 truncate">
-              {{ [typeLabel(project.type), platformLabel(project.platform)].filter(Boolean).join(' · ') }}
-            </text>
-            <text v-if="project.createTime" class="flex-shrink-0 text-gray-400">{{ formatTime({ d: project.createTime, f: 'yyyy/MM/dd' }) }}</text>
+          <view class="box-border flex flex-col gap-y-2">
+            <view class="flex items-center text-xs text-gray-200">
+              <text class="min-w-0 flex-1 truncate">
+                {{ [typeLabel(project.type), platformLabel(project.platform)].filter(Boolean).join(' · ') }}
+              </text>
+              <text v-if="project.createTime" class="flex-shrink-0 text-gray-200">{{ formatTime({ d: project.createTime, f: 'yyyy/MM/dd' }) }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -297,3 +314,9 @@ onReachBottom(() => {
     </view>
   </view>
 </template>
+
+<style scoped lang="scss">
+.uh-filter-blur-xs {
+  backdrop-filter: blur(4rpx);
+}
+</style>
