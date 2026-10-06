@@ -149,7 +149,7 @@ export function getAttachmentPermalink(attachment: IAttachment): string {
 
 /* ==================== 恋爱模块管理（插件端 CRUD） ====================
  * 注意：恋爱模块的管理端 CRUD 挂在 console.api.unihalo.ialley.cn 分组（需登录），
- * 端点注册在组根路径（无 plugins/uni-halo 前缀段，对齐 Halo 角色模板规范）；
+ * 端点注册在组根路径（无 plugins/uni-halo 前缀段，确保 Halo 角色规则可匹配）；
  * 公开读接口才是 api.unihalo.ialley.cn 分组（见 api/uni-halo.ts）。
  */
 

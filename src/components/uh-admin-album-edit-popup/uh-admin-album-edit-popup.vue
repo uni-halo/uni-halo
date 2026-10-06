@@ -31,7 +31,7 @@ const emit = defineEmits<{
 const isShow = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editName = ref('')
-/** 表单（对齐插件端 LoveAlbumSpec + 密码操作语义） */
+/** 表单（相册名称/封面/密码等操作字段） */
 const form = ref({
   displayName: '',
   description: '',

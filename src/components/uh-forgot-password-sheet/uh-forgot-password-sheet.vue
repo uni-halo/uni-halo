@@ -5,14 +5,17 @@ import { getPluginCaptcha } from '@/api/uni-halo'
 import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 
 /**
- * 忘记密码/重置密码弹层(两段式匿名流程,小程序与 App 均可用):
+ * 忘记密码/重置密码弹层(两段式流程,小程序与 App 均可用):
  * 用户名 → 发送重置验证码(经 Halo SMTP 发往账号绑定邮箱) → 取回不透明 HMAC 票据 →
  * 回填邮件中的 6 位验证码 + 新密码完成重置。重置成功 emit('success'),页面自行决定后续
  * (通常已登录态则提示重新登录,未登录态则跳转登录页)。
+ * 已登录场景传入 presetUsername 免输用户名,提交时直接采用预设值。
  */
 const props = defineProps<{
   /** 弹层显示(v-model) */
   modelValue: boolean
+  /** 预设用户名(登录态传入,隐藏用户名输入框并直接采用) */
+  presetUsername?: string
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +24,8 @@ const emit = defineEmits<{
 }>()
 
 const username = ref('')
+/** 生效用户名:登录态预设优先,否则取输入值 */
+const effectiveUsername = computed(() => props.presetUsername?.trim() || username.value.trim())
 const resetCode = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -93,7 +98,7 @@ watch(() => props.modelValue, (visible) => {
 
 /** 发送重置验证码(服务端三层防护:图形验证码→限流→Halo SMTP 转发) */
 async function sendCode() {
-  const value = username.value.trim()
+  const value = effectiveUsername.value
   if (!value) {
     uni.showToast({ icon: 'none', title: '请先填写用户名' })
     return
@@ -170,7 +175,7 @@ async function submit() {
   submitting.value = true
   try {
     await resetPassword({
-      username: username.value.trim(),
+      username: effectiveUsername.value,
       ticket: ticket.value,
       code: resetCode.value.trim(),
       newPassword: pwd,
@@ -217,8 +222,8 @@ function close() {
       </view>
       <view class="flex flex-col gap-y-3">
         <wd-input
-          v-model="username" custom-class="uh-profile-input !rounded-lg" prefix-icon="user"
-          no-border placeholder="请输入账号用户名" clearable :disabled="submitting || codeSending"
+          v-if="!presetUsername" v-model="username" custom-class="uh-profile-input !rounded-lg"
+          prefix-icon="user" no-border placeholder="请输入账号用户名" clearable :disabled="submitting || codeSending"
         />
         <view class="flex items-center gap-x-2">
           <wd-input
@@ -228,7 +233,7 @@ function close() {
           <uh-button
             class="shrink-0"
             custom-class="uh-global-card-glass uh-shadow-xs border shrink-0 !px-3 py-2.5 !text-xs text-gray-900 min-w-24 !bg-primary"
-            :class="codeCountdown > 0 || codeSending || !username.trim() ? 'opacity-60' : ''"
+            :class="codeCountdown > 0 || codeSending || !effectiveUsername ? 'opacity-60' : ''"
             @action-click="sendCode"
           >
             {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : (codeSending ? '发送中' : '发送验证码') }}
@@ -249,7 +254,7 @@ function close() {
         </view>
         <wd-input
           v-model="newPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
-          no-border placeholder="请输入新密码(至少 6 位)" clearable :disabled="submitting"
+          no-border placeholder="请输入新密码(至少 5 位)" clearable :disabled="submitting"
         />
         <wd-input
           v-model="confirmPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"

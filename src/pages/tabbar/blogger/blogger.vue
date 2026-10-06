@@ -177,7 +177,7 @@ const featureMode = computed<'grid' | 'list'>(() =>
   pageConfig.value?.commonFeaturesMode === 'list' ? 'list' : 'grid',
 )
 
-/** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
+/** 分组渲染(过滤后空组整组隐藏；组标题按常用功能/其他功能分组) */
 const calcNavGroups = computed(() => {
   const visible = [...navList.value.filter(n => n.show), appVersionItem]
   const groupDefs: { key: 'blog' | 'more', title: string }[] = [
