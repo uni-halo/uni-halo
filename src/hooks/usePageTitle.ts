@@ -25,7 +25,6 @@ export type PageTitleKey
     | 'portfolio'
     | 'portfolioDetail'
     | 'douban'
-    | 'doubanDetail'
     | 'footprint'
     | 'setting'
     | 'aboutProject'
@@ -35,6 +34,9 @@ export type PageTitleKey
     | 'register'
     | 'userAgreement'
     | 'privacyPolicy'
+    | 'momentDetail'
+    | 'bannerDetail'
+    | 'userProfile'
 
 /**
  * 页面标题（uh-navbar default-title）：
