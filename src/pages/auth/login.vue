@@ -130,6 +130,9 @@ async function doWechatLogin() {
 const wxEmailSheet = ref(false)
 const wxTicket = ref('')
 
+/* ---------- 忘记密码(重置密码弹层,匿名两段式流程) ---------- */
+const forgotSheet = ref(false)
+
 /**
  * 拦截服务端 WECHAT_EMAIL_REQUIRED 业务码:取出注册票据并打开补邮箱弹层。
  * @returns 是否已拦截(true = 该错误已处理,调用方无需再提示)
@@ -236,6 +239,10 @@ async function handleLoginSuccess() {
               >
                 {{ loading ? '登录中...' : '登 录' }}
               </uh-button>
+              <!-- 忘记密码:仅账号密码登录开启时展示(邮箱重置流程) -->
+              <view class="mt-3 flex justify-end">
+                <text class="text-xs text-black/50" @click="forgotSheet = true">忘记密码？</text>
+              </view>
             </template>
 
             <!-- 微信登录 -->
@@ -283,6 +290,9 @@ async function handleLoginSuccess() {
 
     <!-- 微信补邮箱注册弹层(新微信一键登录被拦后的第二段) -->
     <uh-wx-email-verify-sheet v-model="wxEmailSheet" :ticket="wxTicket" @success="handleLoginSuccess" />
+
+    <!-- 忘记密码/重置密码弹层(匿名两段式流程) -->
+    <uh-forgot-password-sheet v-model="forgotSheet" />
   </view>
 </template>
 

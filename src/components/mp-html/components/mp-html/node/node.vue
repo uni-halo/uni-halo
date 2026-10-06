@@ -140,9 +140,7 @@ import uniHaloDoubanCard from '../uni-halo-douban-card/uni-halo-douban-card'
 import uniHaloVoteCard from '../uni-halo-vote-card/uni-halo-vote-card'
 import uniHaloPortfolioCard from '../uni-halo-portfolio-card/uni-halo-portfolio-card'
 
-// #ifdef MP
 import node from './node'
-// #endif
 export default {
   name: 'node',
   options: {
@@ -176,9 +174,9 @@ export default {
   watch: {
     childs: {
 		  handler (nodes) {
-        // 列表缩短会刷新整个列表，因此进行空填充
+        // 列表缩短会刷新整个列表，因此进行空填充（空对象无 attrs，渲染读 attrs.style 会崩溃，须填充带 attrs 的空节点）
         while (this.nodes.length > nodes.length) {
-			    nodes.push({})
+			    nodes.push({ name: 'span', attrs: {} })
 		    }
         this.nodes = nodes
       },
@@ -190,7 +188,7 @@ export default {
     uniHaloVoteCard,
     uniHaloPortfolioCard,
 
-    // #ifdef MP
+    // #ifndef ((H5 || APP-PLUS) && VUE3) || APP-HARMONY
     node
     // #endif
   },

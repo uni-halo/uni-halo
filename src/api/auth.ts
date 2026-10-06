@@ -325,6 +325,64 @@ export function setInitialPassword(newPassword: string) {
   )
 }
 
+/* ---------- 忘记密码(重置密码) ---------- */
+
+/** 发送重置验证码响应：服务端签发的 HMAC 票据，重置时回传（不透明、不可伪造） */
+export interface IResetEmailCodeRes {
+  ticket: string
+}
+
+/**
+ * 发送密码重置邮箱验证码(匿名接口 POST /auth/-/send-reset-email-code)
+ *
+ * 请求体 { username }（重置目标账号；邮箱由服务端按账号查得，客户端无法指定任意邮箱轰炸）。
+ * 成功返回 200 与不透明 HMAC 票据 { ticket }（绑定用户名 + 有效期 + 重置码 + 密码哈希，
+ * 改密后旧码仍可用则签名失效）。
+ * 服务端三层防护:图形验证码(safetyConfig.captchaConfig.scope.resetEmailCode 开启时必携，
+ * 缺省/校验失败 403 返回 {message, captcha}) → 限流(429) → 经 Halo SMTP 发往绑定邮箱。
+ * 账号未绑定/未验证邮箱时服务端返回 400 { code: 'EMAIL_NOT_VERIFIED' }。
+ * @param username 目标用户名
+ * @param captcha 图形验证码(服务端 403 附新码后必带;站点关闭验证码时不传)
+ */
+export function sendResetEmailCode(username: string, captcha?: ICaptchaQuery | null) {
+  return http.Post<IResponse<IResetEmailCodeRes>>(
+    `${AUTH_API_BASE}/-/send-reset-email-code`,
+    { username },
+    {
+      params: { ...buildCaptchaQuery(captcha) },
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 凭邮箱重置码重置密码(匿名接口 POST /auth/-/reset-password)
+ *
+ * 校验票据签名 + 重置码 + 未过期 + 账号一致后，经 Halo 原生 UserService 写入新密码
+ * (不绕过密码策略)，打 password-set-by-user 注解，吊销该用户名下全部 PAT(改密即踢全部设备)，
+ * 并发送确认通知。成功返回 { success: true }。
+ * @param form.username    目标用户名(须与发码时一致)
+ * @param form.ticket      发码时下发的不透明票据
+ * @param form.code        用户从邮件收取的 6 位重置码
+ * @param form.newPassword 新密码明文
+ */
+export function resetPassword(form: {
+  username: string
+  ticket: string
+  code: string
+  newPassword: string
+}) {
+  return http.Post<IResponse<{ success: boolean }>>(
+    `${AUTH_API_BASE}/-/reset-password`,
+    form,
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
 /* ---------- 微信扫码绑定(BindTicket) ---------- */
 
 /** 扫码绑定票据状态(插件端 BindTicketService.Status) */
