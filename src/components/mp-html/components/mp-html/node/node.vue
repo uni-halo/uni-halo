@@ -186,9 +186,9 @@ export default {
 	  }
   },
   components: {
-	uniHaloDoubanCard,
-	uniHaloVoteCard,
-	uniHaloPortfolioCard,
+    uniHaloDoubanCard,
+    uniHaloVoteCard,
+    uniHaloPortfolioCard,
 
     // #ifdef MP
     node
