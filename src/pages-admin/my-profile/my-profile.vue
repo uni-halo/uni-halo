@@ -275,11 +275,16 @@ async function savePassword() {
   }
 }
 
-/** 忘记密码重置成功:服务端已吊销该账号全部 PAT(含当前登录会话),先提示再延时登出并回首页(tabBar 页用 switchTab) */
-async function onForgotResetSuccess() {
+/** 忘记密码重置成功:服务端已吊销该账号全部 PAT(含当前登录会话),先提示再延时登出并回首页(tabBar 页用 switchTab);登出失败也照常跳转 */
+function onForgotResetSuccess() {
   uni.showToast({ icon: 'none', title: '密码已重置成功，请重新登录！' })
   setTimeout(async () => {
-    await tokenStore.logout()
+    try {
+      await tokenStore.logout()
+    }
+    catch (error) {
+      console.error('退出登录失败:', error)
+    }
     uni.switchTab({ url: '/pages/tabbar/home/home' })
   }, 2000)
 }
@@ -642,6 +647,7 @@ onShow(() => {
       </view>
 
       <!-- 账号绑定 -->
+      <!-- #ifdef MP-WEIXIN -->
       <view class="flex flex-col">
         <uh-section-title>账号绑定</uh-section-title>
         <view class="uh-global-card-glass uh-shadow-xs mt-3 flex items-center gap-x-3 rounded-2xl px-4 py-4">
@@ -679,6 +685,7 @@ onShow(() => {
           </template>
         </view>
       </view>
+      <!-- #endif -->
 
       <!-- 账号安全 -->
       <view class="flex flex-col">

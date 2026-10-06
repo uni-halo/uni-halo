@@ -6,6 +6,8 @@ import { useTokenStore } from '@/store/token'
 import { checkImageUrl } from '@/utils/url'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { getGlobalInfo } from '@/api/auth'
+import { getPluginCaptcha } from '@/api/uni-halo'
+import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 import { REGISTER_PAGE } from '@/router/config'
 
 definePage({
@@ -38,6 +40,52 @@ const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled 
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+
+/* ---------- 登录图形验证码(站点开启 captchaConfig.scope.login 后,服务端 403 附新码时展示) ---------- */
+const captchaImage = ref('')
+const captchaId = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+
+const captchaSrc = computed(() => {
+  if (!captchaImage.value)
+    return ''
+  return captchaImage.value.startsWith('data:')
+    ? captchaImage.value
+    : `data:image/png;base64,${captchaImage.value}`
+})
+
+function resetCaptcha() {
+  captchaImage.value = ''
+  captchaId.value = ''
+  captchaCode.value = ''
+}
+
+async function refreshCaptcha() {
+  if (captchaLoading.value)
+    return
+  captchaLoading.value = true
+  try {
+    const res = await getPluginCaptcha()
+    if (res.data) {
+      captchaImage.value = res.data.imageBase64
+      captchaId.value = res.data.id
+      captchaCode.value = ''
+    }
+  }
+  catch (error) {
+    console.error('获取验证码失败:', error)
+  }
+  finally {
+    captchaLoading.value = false
+  }
+}
+
+function buildCaptcha(): ICaptchaQuery | undefined {
+  return captchaImage.value
+    ? { captchaId: captchaId.value, captchaCode: captchaCode.value }
+    : undefined
+}
 
 /* ---------- 注册开关(Halo /actuator/globalinfo,匿名可访问,读取失败视为关闭;审核模式下不显示) ---------- */
 const registrationAllowedRaw = ref(false)
@@ -93,13 +141,32 @@ async function doPasswordLogin() {
     uni.showToast({ icon: 'none', title: '请输入账号和密码' })
     return
   }
+  if (captchaSrc.value && !captchaCode.value.trim()) {
+    uni.showToast({ icon: 'none', title: '请输入图形验证码' })
+    return
+  }
   loading.value = true
   try {
-    await tokenStore.login({ username: username.value, password: password.value })
+    await tokenStore.login({
+      username: username.value,
+      password: password.value,
+      captcha: buildCaptcha(),
+    })
+    resetCaptcha()
     handleLoginSuccess()
   }
   catch (error) {
-    console.error('账号密码登录失败:', error)
+    const err = error as { code?: number, data?: { captcha?: IPluginCaptcha } }
+    // 服务端要求/校验失败图形验证码:403 附新码(一次性),展示后随下次登录携带
+    if (err.code === 403 && err.data?.captcha) {
+      captchaImage.value = err.data.captcha.imageBase64
+      captchaId.value = err.data.captcha.id
+      captchaCode.value = ''
+      uni.showToast({ icon: 'none', title: '请完成图形验证码后重新登录' })
+    }
+    else {
+      console.error('账号密码登录失败:', error)
+    }
   }
   finally {
     loading.value = false
@@ -237,6 +304,21 @@ async function handleLoginSuccess() {
                 show-password no-border placeholder="请输入密码" :disabled="loading"
                 @confirm="doPasswordLogin"
               />
+              <!-- 图形验证码:站点开启登录验证码后展示(403 附新码出现,点击图片刷新) -->
+              <view v-if="captchaSrc" class="mt-3 flex items-center gap-x-2">
+                <wd-input
+                  v-model="captchaCode" custom-class="uh-login-input flex-1" prefix-icon="image"
+                  no-border placeholder="图形验证码" :disabled="loading"
+                  @confirm="doPasswordLogin"
+                />
+                <image
+                  :src="captchaSrc" class="h-10 w-26 shrink-0 border border-gray-200 rounded-lg"
+                  mode="widthFix" @click="refreshCaptcha"
+                />
+              </view>
+              <view v-if="captchaSrc" class="mt-2 text-xs text-gray-500">
+                点击图片可刷新验证码
+              </view>
               <uh-button
                 class="w-full"
                 custom-class="mt-6 uh-global-card-glass !bg-primary !py-2.5 uh-shadow-xs border w-full !rounded-full text-gray-900 border-none !text-3xs"

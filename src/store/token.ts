@@ -149,7 +149,7 @@ export const useTokenStore = defineStore(
      */
     const login = async (loginForm: ILoginForm) => {
       try {
-        const res = await _loginByPassword(loginForm.username, loginForm.password)
+        const res = await _loginByPassword(loginForm.username, loginForm.password, loginForm.captcha)
         const result = res.data as ILoginResult
         await _postLogin(toSingleToken(result), result)
         uni.showToast({
