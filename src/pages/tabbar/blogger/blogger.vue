@@ -384,7 +384,7 @@ onPageScroll((option: Page.PageScrollOption) => {
               class="uh-global-card-glass uh-shadow-xs h-12 w-12 flex items-center justify-center border rounded-2xl"
               :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
             >
-              <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
+              <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="52rpx" />
             </view>
             <text class="mt-1 w-full truncate text-center text-xs text-gray-900" :style="{ color: nav.color }">
               {{ nav.title }}
