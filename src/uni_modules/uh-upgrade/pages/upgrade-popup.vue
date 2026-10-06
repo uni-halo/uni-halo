@@ -22,7 +22,7 @@
 						<!-- 包体积仅在实际下载开始后才有值，为 0 时只显示下载建议 -->
 						<text v-if="packageFileSize > 0">安装包 {{ packageFileSize }} MB</text>
 						<view v-if="packageFileSize > 0" class="dot"></view>
-						<text>建议 Wi-Fi 环境下载</text>
+						<text>{{ metaText }}</text>
 					</view>
 
 					<!-- 更新日志卡片（rich-text 渲染后台文本） -->
@@ -51,9 +51,9 @@
 										<text>({{ downloadedSize }}/{{ packageFileSize }}M)</text>
 									</view>
 								</view>
-								<button v-else class="btn-primary" hover-class="btn-primary-hover" @click="updateApp">
-									<text class="btn-label">{{ downLoadBtnText }}</text>
-								</button>
+							<button v-else class="btn-primary" hover-class="btn-primary-hover" @click="updateApp">
+								<text class="btn-label">{{ btnText }}</text>
+							</button>
 							</template>
 							<button
 								v-else-if="downloadSuccess && !installed"
@@ -138,6 +138,9 @@ export default {
 			url: '',
 			platform: [],
 			store_list: null,
+			download_type: 'direct',
+			external_url: '',
+			external_name: '',
 
 			// 可自定义属性
 			subTitle: '发现新版本',
@@ -208,6 +211,28 @@ export default {
 				this.isHarmony
 			)
 			// return this.isiOS || (!this.isiOS && !this.isWGT && this.url.indexOf('.apk') === -1);
+		},
+		// 商店分发模式:仅 Android 整包生效,iOS/Harmony 恒走 AppStore 分支
+		storeEnabled() {
+			return this.isAndroid && !this.isWGT
+				&& this.download_type === 'store'
+				&& (this.store_list || []).some((item) => item.enable);
+		},
+		// 外部链接模式:跳系统浏览器打开网盘/落地页,仅 Android 整包生效
+		externalMode() {
+			return this.isAndroid && !this.isWGT
+				&& this.download_type === 'external'
+				&& !!this.external_url;
+		},
+		btnText() {
+			if (this.externalMode) return this.external_name || '前往下载';
+			if (this.storeEnabled) return '前往商店更新';
+			return this.downLoadBtnText;
+		},
+		metaText() {
+			if (this.storeEnabled) return '将在应用商店完成更新';
+			if (this.externalMode) return '即将前往外部页面下载';
+			return '建议 Wi-Fi 环境下载';
 		},
 		needNotificationProgress() {
 			return this.platform.indexOf(platform_iOS) === -1 && !this.is_mandatory && !this.isHarmony;
@@ -325,8 +350,18 @@ export default {
 			// #endif
 		},
 		updateApp() {
+			// 外部链接模式:跳系统浏览器打开网盘/落地页,不做应用内下载
+			if (this.externalMode) {
+				// #ifdef APP-PLUS
+				plus.runtime.openURL(this.external_url);
+				// #endif
+				return;
+			}
 			this.checkStoreScheme()
 				.catch(() => {
+					if (this.storeEnabled) {
+						uni.showToast({ icon: 'none', title: '未找到应用商店，已转为直接下载' });
+					}
 					this.downloadPackage();
 				})
 				.finally(() => {
