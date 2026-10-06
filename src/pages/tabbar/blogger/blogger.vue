@@ -89,7 +89,7 @@ const allStats = computed(() => [
 ].filter(item => item.visible))
 
 interface INavIconStyle {
-  /** 风格标识（ri=remixicon / emoji-font=emoji 字体） */
+  /** 风格标识（animal-font=动物字体 / emoji-font=emoji 字体 / ri=remixicon） */
   key: string
   prefix: string
   iconName: string
@@ -156,19 +156,6 @@ const appVersionItem: INavItem = {
   group: 'more',
 }
 
-/** 足迹入口(本地定义，后续迁移到插件端 mine.commonFeatures 配置) */
-const footprintItem: INavItem = {
-  key: 'footprint',
-  title: '足迹',
-  icons: [{ key: 'ri', prefix: 'ri', iconName: 'footprint-line' }],
-  color: '#65a30d',
-  iconColor: '#65a30d',
-  bgColor: '#B9E42424',
-  path: '/pages-blog/footprint/footprint',
-  show: true,
-  group: 'blog',
-}
-
 /** 解析条目当前生效的图标风格（iconMode 优先，缺省取 icons[0]） */
 function resolveNavItemIcon(item: INavItem): INavIconStyle | null {
   if (!item.icons?.length) {
@@ -192,7 +179,7 @@ const featureMode = computed<'grid' | 'list'>(() =>
 
 /** 分组渲染(过滤后空组整组隐藏；组标题对齐插件端：常用功能/其他功能) */
 const calcNavGroups = computed(() => {
-  const visible = [footprintItem, ...navList.value.filter(n => n.show), appVersionItem]
+  const visible = [...navList.value.filter(n => n.show), appVersionItem]
   const groupDefs: { key: 'blog' | 'more', title: string }[] = [
     { key: 'blog', title: '常用功能' },
     { key: 'more', title: '其他功能' },
@@ -204,7 +191,7 @@ const calcNavGroups = computed(() => {
 })
 
 const commonFeatures = computed(() => {
-  return [footprintItem, ...navList.value.filter(f => f.show && f.group === 'blog')]
+  return navList.value.filter(f => f.show && f.group === 'blog')
 })
 const otherFeatures = computed(() => {
   return [...navList.value.filter(f => f.show && f.group === 'more'), appVersionItem]
@@ -331,13 +318,14 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
     <view class="relative h-96 w-full">
-      <image
+     <image
         v-if="pageConfig?.bgImageUrl"
         :src="checkImageUrl(pageConfig?.bgImageUrl)"
         class="absolute left-0 top-0 z-0 h-full w-full"
         mode="aspectFill"
         lazy-load
-      />
+      /> 
+	  
       <view class="relative z-6 h-full flex flex-col items-center justify-center">
         <wd-avatar
           :src="bloggerInfo.avatar"
@@ -386,19 +374,19 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 功能导航：非分组模式 -->
     <template v-if="featureMode === 'grid'">
       <view v-if="commonFeatures.length !== 0" class="relative z-90 box-border overflow-hidden p-4 -mt-20">
-        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-4 box-border gap-2 border rounded-3xl p-3">
+        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-5 box-border gap-3 border rounded-3xl p-4">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
-            class="uh-global-card-glass uh-shadow-xs flex flex-col items-center justify-between rounded-2xl p-2"
+            class="flex flex-col items-center justify-between overflow-hidden"
             @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
             <view
-              class="uh-global-card-glass uh-shadow-xs h-10 w-10 flex items-center justify-center border rounded-xl"
+              class="uh-global-card-glass uh-shadow-xs h-12 w-12 flex items-center justify-center border rounded-2xl"
               :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
             >
               <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
             </view>
-            <text class="mt-1 text-xs text-gray-900" :style="{ color: nav.color }">
+            <text class="mt-1 text-xs text-gray-900 truncate w-full text-center" :style="{ color: nav.color }">
               {{ nav.title }}
             </text>
           </view>

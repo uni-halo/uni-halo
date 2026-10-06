@@ -22,6 +22,12 @@ function resolveItemIcon(item: IQuickNavItem): IQuickNavIconStyle | null {
   return item.icon ? { key: 'emoji-font', prefix: item.iconPrefix || '', iconName: item.icon } : null
 }
 
+/** 图标尺寸：emoji/动物等彩色字体放大一档，ri 线性图标用常规尺寸 */
+function resolveIconSize(item: IQuickNavItem): string {
+  const key = resolveItemIcon(item)?.key || ''
+  return ['emoji-font', 'animal-font'].includes(key) ? '64rpx' : '56rpx'
+}
+
 /* 恋爱模块解锁拦截(目前仅恋爱日记设密码,命中锁定则先解锁再跳转;样式不变) */
 const {
   unlockModalVisible,
@@ -60,7 +66,7 @@ function handleClickNav(item: { path?: string }) {
           <wd-icon
             :class-prefix="resolveItemIcon(item)?.prefix"
             :name="resolveItemIcon(item)?.iconName"
-            :size="item.iconMode === 'emoji-font' ? '64rpx' : '56rpx'"
+            :size="resolveIconSize(item)"
           />
         </view>
         <view class="flex flex-col items-center gap-0.5">

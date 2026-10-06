@@ -28,6 +28,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'item-tap', footprint: IFootprint): void
+  (e: 'back-to-list'): void
+  (e: 'locate', footprint: IFootprint): void
 }>()
 
 /* ---------- detail 状态 ---------- */
@@ -44,6 +46,18 @@ watch(() => props.selected, () => {
 
 function handleItemTap(footprint: IFootprint) {
   emit('item-tap', footprint)
+}
+
+/** 列表卡片定位：仅地图聚焦，弹层保持 list 模式 */
+function handleLocate(footprint: IFootprint) {
+  emit('locate', footprint)
+}
+
+/** 详情[定位到地图]：仅聚焦地图，不关闭弹层 */
+function handleLocateMap() {
+  if (props.selected) {
+    emit('locate', props.selected)
+  }
 }
 
 /** 相关笔记：v1 仅复制链接(article 为文章 URL，非端内跳转所需的 metadata.name) */
@@ -74,6 +88,7 @@ function handleCopyArticle() {
           <view v-if="props.mode !== 'list'">
             <view
               class="uh-global-card-glass h-6 flex items-center justify-center gap-x-1 border rounded-lg px-2 shadow-none"
+              @click="emit('back-to-list')"
             >
               <wd-icon name="arrow-left" size="28rpx" class="text-gray-500" />
               <text class="text-xs text-gray-500">返回列表</text>
@@ -98,14 +113,12 @@ function handleCopyArticle() {
               足迹
             </view>
           </view>
-          <view class="w-px bg-black/5" />
           <view class="flex-1 py-2.5 text-center">
             <text class="text-base text-gray-900 font-bold">{{ props.stats.cityCount }}</text>
             <view class="mt-0.5 text-3xs text-gray-500">
               城市
             </view>
           </view>
-          <view class="w-px bg-black/5" />
           <view class="flex-1 py-2.5 text-center">
             <text class="text-base text-gray-900 font-bold">{{ props.stats.yearSpan }}</text>
             <view class="mt-0.5 text-3xs text-gray-500">
@@ -127,7 +140,8 @@ function handleCopyArticle() {
                   v-for="(item, index) in group.items"
                   :key="item.metadata?.name || index"
                   :footprint="item"
-                  @tap="handleItemTap(item)"
+                  @open="handleItemTap(item)"
+                  @locate="handleLocate"
                 />
               </view>
             </view>
@@ -172,7 +186,7 @@ function handleCopyArticle() {
           </view>
         </scroll-view>
         <view class="w-full flex items-center gap-x-3 pt-2">
-          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !border !rounded-full !py-2.5 !text-3xs">
+          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !border !rounded-full !py-2.5 !text-3xs" @click="handleLocateMap">
             定位到地图
           </uh-button>
           <uh-button v-if="spec?.article" class="w-full flex-1" custom-class="uh-global-card-glass !border !rounded-full !py-2.5 !text-3xs" @click="handleCopyArticle">

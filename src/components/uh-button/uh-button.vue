@@ -13,14 +13,17 @@ interface IProps {
   customClass?: string | Array<string>
 }
 
+// 事件需透传给 emit：组件事件默认不带 DOM 事件对象，
+// 调用方写 @click.stop 时修饰符包装器对 undefined 事件调 stopPropagation 会抛
+// Unhandled error，且原生点击仍会继续冒泡
 interface IEmits {
-  (e: 'click'): void
-  (e: 'action-click'): void
+  (e: 'click', event?: any): void
+  (e: 'action-click', event?: any): void
 }
 
-function handleClick() {
-  emits('action-click')
-  emits('click')
+function handleClick(e: any) {
+  emits('action-click', e)
+  emits('click', e)
 }
 </script>
 
