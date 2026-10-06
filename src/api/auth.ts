@@ -20,6 +20,8 @@ const AUTH_API_BASE = '/apis/api.unihalo.ialley.cn/v1alpha1/auth'
 export interface ILoginForm {
   username: string
   password: string
+  /** 图形验证码(服务端 403 附新码后必带;站点未开启登录验证码时不传) */
+  captcha?: ICaptchaQuery | null
 }
 
 /** 双 token 刷新请求 */
@@ -61,12 +63,14 @@ export function verifyTokenExpires() {
 /**
  * 账号密码登录(公开接口)
  * 成功返回 LoginResult(token + user + roles + permissions),失败 401 返回 { code, message }
+ * safetyConfig.captchaConfig.scope.login 开启时必携图形验证码,缺省/校验失败 403 返回 {message, captcha}
  */
-export function loginByPassword(username: string, password: string) {
+export function loginByPassword(username: string, password: string, captcha?: ICaptchaQuery | null) {
   return http.Post<IResponse<ILoginResult>>(
     `${AUTH_API_BASE}/-/login`,
     { username, password },
     {
+      params: { ...buildCaptchaQuery(captcha) },
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
