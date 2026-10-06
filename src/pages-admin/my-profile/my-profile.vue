@@ -29,7 +29,6 @@ import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 import { isValidEmail } from '@/utils/validate'
-import { LOGIN_PAGE } from '@/router/config'
 
 definePage({
   style: {
@@ -276,13 +275,13 @@ async function savePassword() {
   }
 }
 
-/** 忘记密码重置成功:服务端已吊销该账号全部 PAT(含当前登录会话),引导重新登录 */
+/** 忘记密码重置成功:服务端已吊销该账号全部 PAT(含当前登录会话),先提示再延时登出并回首页(tabBar 页用 switchTab) */
 async function onForgotResetSuccess() {
-  uni.showToast({ icon: 'none', title: '密码已重置，请重新登录' })
-  await tokenStore.logout()
-  setTimeout(() => {
-    uni.reLaunch({ url: LOGIN_PAGE })
-  }, 600)
+  uni.showToast({ icon: 'none', title: '密码已重置成功，请重新登录！' })
+  setTimeout(async () => {
+    await tokenStore.logout()
+    uni.switchTab({ url: '/pages/tabbar/home/home' })
+  }, 2000)
 }
 
 /* ---------------- 邮箱验证/换绑 ---------------- */
@@ -686,10 +685,10 @@ onShow(() => {
         <uh-section-title>账号安全</uh-section-title>
         <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
           <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3.5" @click="forgotSheet = true">
-            <wd-icon name="help" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+            <wd-icon name="unlock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">忘记密码</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-3xs text-gray-400">通过绑定邮箱重置</text>
+              <text class="text-3xs text-gray-400">找回忘记的密码</text>
               <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
             </view>
           </view>
@@ -822,7 +821,7 @@ onShow(() => {
     </uh-glass-popup>
 
     <!-- 忘记密码/重置密码弹层(匿名两段式流程,重置成功引导重新登录) -->
-    <uh-forgot-password-sheet v-model="forgotSheet" @success="onForgotResetSuccess" />
+    <uh-forgot-password-sheet v-model="forgotSheet" :preset-username="userInfo.username" @success="onForgotResetSuccess" />
   </view>
 </template>
 

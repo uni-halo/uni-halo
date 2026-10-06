@@ -133,6 +133,11 @@ const wxTicket = ref('')
 /* ---------- 忘记密码(重置密码弹层,匿名两段式流程) ---------- */
 const forgotSheet = ref(false)
 
+/** 重置密码成功:匿名场景直接提示用新密码登录 */
+function onForgotResetSuccess() {
+  uni.showToast({ icon: 'none', title: '密码重置成功，请使用新密码登录！' })
+}
+
 /**
  * 拦截服务端 WECHAT_EMAIL_REQUIRED 业务码:取出注册票据并打开补邮箱弹层。
  * @returns 是否已拦截(true = 该错误已处理,调用方无需再提示)
@@ -239,10 +244,6 @@ async function handleLoginSuccess() {
               >
                 {{ loading ? '登录中...' : '登 录' }}
               </uh-button>
-              <!-- 忘记密码:仅账号密码登录开启时展示(邮箱重置流程) -->
-              <view class="mt-3 flex justify-end">
-                <text class="text-xs text-black/50" @click="forgotSheet = true">忘记密码？</text>
-              </view>
             </template>
 
             <!-- 微信登录 -->
@@ -256,9 +257,13 @@ async function handleLoginSuccess() {
             </button>
             <!-- #endif -->
           </view>
-          <!-- 去注册 -->
-          <view v-if="registrationAllowed" class="mt-4 text-center text-xs text-black/50" @click="goRegister">
-            没有账号？去注册
+          <!-- 忘记密码/去注册:同行居中展示 -->
+          <view
+            v-if="passwordLoginEnabled || registrationAllowed"
+            class="mt-4 flex items-center justify-center gap-x-6 text-xs text-black/50"
+          >
+            <text v-if="passwordLoginEnabled" @click="forgotSheet = true">忘记密码？</text>
+            <text v-if="registrationAllowed" @click="goRegister">没有账号？去注册</text>
           </view>
           <!-- 用户协议/隐私政策 -->
           <view class="mt-4 text-center text-xs text-black/40 leading-5">
@@ -292,7 +297,7 @@ async function handleLoginSuccess() {
     <uh-wx-email-verify-sheet v-model="wxEmailSheet" :ticket="wxTicket" @success="handleLoginSuccess" />
 
     <!-- 忘记密码/重置密码弹层(匿名两段式流程) -->
-    <uh-forgot-password-sheet v-model="forgotSheet" />
+    <uh-forgot-password-sheet v-model="forgotSheet" @success="onForgotResetSuccess" />
   </view>
 </template>
 

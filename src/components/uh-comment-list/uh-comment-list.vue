@@ -35,7 +35,7 @@ const queryParams = ref({
 const result = ref<ICommentListRes | null>(null)
 const dataList = ref<IComment[]>([])
 
-/** 回复按需加载每页条数(对齐官方 comment-widget replySize 默认 20) */
+/** 回复按需加载每页条数（默认 20 条） */
 const REPLIES_PAGE_SIZE = 20
 
 interface IRepliesState {

@@ -85,7 +85,7 @@ interface IPagedFetchResult<T> {
 }
 
 /**
- * 分页列表状态机(对齐 tabbar/moments.vue 的三态与加载更多写法):
+ * 分页列表状态机（未加载/加载中/无更多三态 + 加载更多）:
  * 三态 uh-data-loading + 加载更多 uh-data-loadmore + onReachBottom 翻页;
  * 审核模式下一次拉取后本地过滤,不分页
  */
