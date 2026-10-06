@@ -41,6 +41,7 @@ export const APP_AGENT_PROMPT = [
   '- 相册列表（恋爱相册、相册、照片）：/pages-blog/love/album',
   '- 项目集列表（项目集、作品集、项目展示）：/pages-blog/portfolio/portfolio',
   '- 豆瓣（豆瓣页、书影音、豆瓣动态）：/pages-blog/douban/douban',
+  '- 足迹地图（足迹、旅行足迹、去过的地方）：/pages-blog/footprint/footprint',
   '- 数据可视化（数据统计、统计页、数据大屏）：/pages-blog/data-visual/data-visual',
   '- 偏好设置（设置、设置页、偏好）：/pages-blog/setting/setting',
   '- 关于项目（关于、关于页、关于本站）：/pages-blog/about-project/about-project',
