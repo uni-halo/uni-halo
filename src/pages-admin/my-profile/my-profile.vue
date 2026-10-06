@@ -29,6 +29,7 @@ import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 import { isValidEmail } from '@/utils/validate'
+import { LOGIN_PAGE } from '@/router/config'
 
 definePage({
   style: {
@@ -205,6 +206,8 @@ async function saveNickname() {
 /* ---------------- 修改密码（UC 端点） ---------------- */
 const passwordSheet = ref(false)
 const passwordSet = ref(true)
+/** 忘记密码/重置密码弹层(匿名两段式流程,与登录页共用同一组件) */
+const forgotSheet = ref(false)
 const oldPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -233,7 +236,7 @@ async function savePassword() {
     uni.showToast({ icon: 'none', title: '请输入原密码' })
     return
   }
-  if (!pwd || pwd.length < 6) {
+  if (!pwd || pwd.length < 5) {
     uni.showToast({ icon: 'none', title: '新密码至少 5 位' })
     return
   }
@@ -271,6 +274,15 @@ async function savePassword() {
   finally {
     passwordSaving.value = false
   }
+}
+
+/** 忘记密码重置成功:服务端已吊销该账号全部 PAT(含当前登录会话),引导重新登录 */
+async function onForgotResetSuccess() {
+  uni.showToast({ icon: 'none', title: '密码已重置，请重新登录' })
+  await tokenStore.logout()
+  setTimeout(() => {
+    uni.reLaunch({ url: LOGIN_PAGE })
+  }, 600)
 }
 
 /* ---------------- 邮箱验证/换绑 ---------------- */
@@ -673,6 +685,14 @@ onShow(() => {
       <view class="flex flex-col">
         <uh-section-title>账号安全</uh-section-title>
         <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
+          <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3.5" @click="forgotSheet = true">
+            <wd-icon name="help" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+            <text class="shrink-0 text-sm text-gray-900">忘记密码</text>
+            <view class="flex flex-1 items-center justify-end gap-x-2">
+              <text class="text-3xs text-gray-400">通过绑定邮箱重置</text>
+              <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
+            </view>
+          </view>
           <view class="flex items-center gap-x-3 px-4 py-3.5" @click="openPasswordSheet">
             <wd-icon name="lock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">修改密码</text>
@@ -800,6 +820,9 @@ onShow(() => {
         </view>
       </view>
     </uh-glass-popup>
+
+    <!-- 忘记密码/重置密码弹层(匿名两段式流程,重置成功引导重新登录) -->
+    <uh-forgot-password-sheet v-model="forgotSheet" @success="onForgotResetSuccess" />
   </view>
 </template>
 
