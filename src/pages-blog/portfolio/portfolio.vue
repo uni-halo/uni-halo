@@ -280,7 +280,7 @@ onReachBottom(() => {
                 >
                   推荐
                 </text>
-                <text class="flex-1 truncate text-sm text-white font-semibold">{{ project.title }}aaaa法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨</text>
+                <text class="flex-1 truncate text-sm text-white font-semibold">{{ project.title }}</text>
               </view>
               <view
                 class="text-3xs text-gray-100 leading-5"
@@ -288,7 +288,7 @@ onReachBottom(() => {
                   project.techStacks?.length ? 'line-clamp-1' : 'line-clamp-2',
                 ]"
               >
-                {{ project.summary || '这个项目还没有介绍~' }}法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨法沙发沙发安抚阿斯弗萨芬阿萨发生发生发发生阿萨阿萨
+                {{ project.summary || '这个项目还没有介绍~' }}
               </view>
               <view v-if="project.techStacks?.length" class="box-border flex flex-wrap gap-2">
                 <text

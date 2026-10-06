@@ -318,14 +318,14 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 头部:博主信息(背景图 + 遮罩 + wave,内容区做状态栏适配) -->
     <view class="relative h-96 w-full">
-     <image
+      <image
         v-if="pageConfig?.bgImageUrl"
         :src="checkImageUrl(pageConfig?.bgImageUrl)"
         class="absolute left-0 top-0 z-0 h-full w-full"
         mode="aspectFill"
         lazy-load
-      /> 
-	  
+      />
+
       <view class="relative z-6 h-full flex flex-col items-center justify-center">
         <wd-avatar
           :src="bloggerInfo.avatar"
@@ -374,7 +374,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     <!-- 功能导航：非分组模式 -->
     <template v-if="featureMode === 'grid'">
       <view v-if="commonFeatures.length !== 0" class="relative z-90 box-border overflow-hidden p-4 -mt-20">
-        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-5 box-border gap-3 border rounded-3xl p-4">
+        <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-5 box-border gap-3.5 border rounded-3xl p-4">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
             class="flex flex-col items-center justify-between overflow-hidden"
@@ -386,7 +386,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             >
               <wd-icon :class-prefix="resolveNavItemIcon(nav)?.prefix" :name="resolveNavItemIcon(nav)?.iconName" size="42rpx" />
             </view>
-            <text class="mt-1 text-xs text-gray-900 truncate w-full text-center" :style="{ color: nav.color }">
+            <text class="mt-1 w-full truncate text-center text-xs text-gray-900" :style="{ color: nav.color }">
               {{ nav.title }}
             </text>
           </view>

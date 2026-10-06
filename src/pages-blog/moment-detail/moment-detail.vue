@@ -15,6 +15,7 @@ import { markdownConfig } from '@/config/markdown'
 import { handleScrollToSelector } from '@/utils/page'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import type { IMoment } from '@/api/types/halo'
 
 definePage({
@@ -26,6 +27,7 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
+const pageTitle = usePageTitle('momentDetail', '瞬间详情')
 const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
 
 const bloggerInfo = computed(() => {
@@ -274,7 +276,7 @@ onShareTimeline(() => ({
 
 <template>
   <view class="box-border min-h-screen w-screen bg-page pb-safe">
-    <uh-navbar :scroll-y="scrollY" default-title="瞬间详情" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-data-loading
       v-if="status !== 'success'" :loading-status="status" min-height="70vh" error-text="瞬间内容加载失败"

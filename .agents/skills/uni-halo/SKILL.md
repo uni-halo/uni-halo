@@ -354,6 +354,7 @@ const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 **使用要点**：
 
+- **默认标题走插件配置**：页面标题统一接入 `usePageTitle(key, fallback)`（key 枚举见 `@/hooks/usePageTitle` 的 `PageTitleKey`），模板传 `:default-title="pageTitle"`，插件端「页面设置 → 页面标题」留空时自动回退 fallback；**新页面禁止硬编码 default-title**（key 不存在时先在 `PageTitleKey` 联合类型与插件端 `FeatureConfig.PageTitles`、Console `PagesSection.vue` 三层同步新增）
 - **`need-placeholder` 必须按场景传对**：
   - 页面内容直接从导航下开始（普通子页面）→ `:need-placeholder="true"`（默认即可，如 test.vue / setting.vue）
   - 页面顶部有全屏封面/背景图，内容要盖到导航下面 → `:need-placeholder="false"`（如 article-detail.vue，封面 `pt-72` 上移）
