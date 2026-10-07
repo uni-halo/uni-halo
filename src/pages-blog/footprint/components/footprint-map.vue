@@ -102,6 +102,12 @@ function mapCtx() {
   return ctx
 }
 
+/** 地图尺寸：视口宽高的 px 直接量 */
+const mapStyle = computed(() => {
+  const { windowWidth, windowHeight } = uni.getWindowInfo()
+  return { width: `${windowWidth}px`, height: `${windowHeight}px` }
+})
+
 /** 所有有效足迹点 */
 function allPoints() {
   return markers.value.map(m => ({ latitude: m.latitude, longitude: m.longitude }))
@@ -176,7 +182,7 @@ defineExpose({ zoomIn, zoomOut, focusOn, resetView })
 <template>
   <map
     :id="MAP_ID"
-    class="h-full w-full"
+    :style="mapStyle"
     :latitude="centerView.latitude"
     :longitude="centerView.longitude"
     :scale="scaleView"

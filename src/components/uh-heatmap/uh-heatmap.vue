@@ -135,7 +135,7 @@ const currentYearCount = computed(() => Object.values(yearDataMap.value).reduce(
 </script>
 
 <template>
-  <view class="uh-heatmap box-border w-full rounded-xl bg-white p-3">
+  <view class="uh-heatmap box-border w-full">
     <view class="header mb-6 flex items-center justify-between">
       <view class="title text-[28rpx] text-[#303133] font-bold">
         {{ currentYear }}年 笔记发布趋势

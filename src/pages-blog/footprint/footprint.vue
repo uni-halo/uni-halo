@@ -65,7 +65,10 @@ const sheetOpen = computed(() => sheetMode.value !== null)
 const mapVisible = ref(true)
 let mapTimer: ReturnType<typeof setTimeout> | null = null
 
-// #ifdef APP-PLUS
+/** 待执行的聚焦目标(App 端关闭弹层后地图才重挂载，需延迟到挂载完成再聚焦) */
+let pendingFocus: IFootprint | null = null
+
+// #ifdef APP
 watch(sheetOpen, (open) => {
   if (mapTimer) {
     clearTimeout(mapTimer)
@@ -73,6 +76,15 @@ watch(sheetOpen, (open) => {
   mapTimer = setTimeout(() => {
     mapVisible.value = !open
   }, open ? 320 : 420)
+})
+
+watch(mapVisible, (visible) => {
+  if (!visible || !pendingFocus) {
+    return
+  }
+  const target = pendingFocus
+  pendingFocus = null
+  mapRef.value?.focusOn(target)
 })
 
 onUnmounted(() => {
@@ -86,6 +98,7 @@ onUnmounted(() => {
 async function handleGetData() {
   // 重新拉取数据时清选中
   selected.value = null
+  pendingFocus = null
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getAllFootprints()
@@ -158,9 +171,20 @@ function handleBackToList() {
   sheetMode.value = 'list'
 }
 
-/** 定位：地图聚焦该点，不改变弹层状态 */
+/**
+ * 定位：地图聚焦该点
+ * App 端弹层会盖住原生地图，需先关闭弹层，待地图重挂载后再聚焦
+ * 非 App 端弹层与地图可共存，直接聚焦即可
+ */
 function handleLocate(footprint: IFootprint) {
+  // #ifdef APP
+  pendingFocus = footprint
+  handleSheetClose()
+  // #endif
+
+  // #ifndef APP
   mapRef.value?.focusOn(footprint)
+  // #endif
 }
 
 /** 还原：地图适配所有足迹点 */
@@ -185,7 +209,7 @@ onLoad(async () => {
 </script>
 
 <template>
-  <view class="app-page h-screen w-screen flex flex-col overflow-hidden bg-page">
+  <view class="app-page h-screen w-screen bg-page">
     <!-- 自定义导航 -->
     <uh-navbar :default-title="pageTitle" :need-placeholder="false" title-color="text-gray-900" />
 
@@ -203,15 +227,12 @@ onLoad(async () => {
       />
 
       <!-- 地图区域 + 底部悬浮操作栏(首次加载成功后常驻，刷新只原地更新数据) -->
-      <view v-else-if="firstLoaded" class="min-h-0 flex flex-1 flex-col">
-        <view class="relative min-h-0 flex-1 overflow-hidden">
-          <footprint-map
-            v-if="mapVisible" ref="mapRef" class="h-full w-full" :footprints="footprints"
-            @marker-tap="handleMarkerTap"
-          />
-        </view>
+      <view v-else-if="firstLoaded" class="relative">
+        <footprint-map
+          v-if="mapVisible" ref="mapRef" :footprints="footprints" @marker-tap="handleMarkerTap"
+        />
         <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/放大/缩小/刷新/还原 -->
-        <view class="footprint-bar flex flex-shrink-0 items-center justify-center pt-2 pb-safe">
+        <view class="footprint-bar fixed bottom-0 left-0 right-0 z-10 flex items-center justify-center pt-2 pb-safe">
           <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
             <view
               class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
@@ -257,19 +278,3 @@ onLoad(async () => {
     </template>
   </view>
 </template>
-
-<style scoped lang="scss">
-.footprint-bar {
-  /* #ifdef APP-PLUS */
-  position: relative;
-  /* #endif */
-
-  /* #ifndef APP-PLUS */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  /* #endif */
-}
-</style>
