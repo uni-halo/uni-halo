@@ -72,8 +72,8 @@ export default defineManifestConfig({
       autoclose: true,
       delay: 0,
     },
-    /* 模块配置 */
-    modules: {},
+    /* 模块配置：高德为原生 SDK 需 Maps 模块，腾讯 web 方案不需要 */
+    modules: appUseAmap ? { Maps: {} } : {},
     /* 应用发布信息 */
     distribute: {
       /* android打包配置 */
