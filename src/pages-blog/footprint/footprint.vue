@@ -191,92 +191,74 @@ onLoad(async () => {
 
     <!-- 插件不可用 -->
     <uh-plugin-unavailable
-      v-if="!pluginAvailable"
-      custom-class="h-[85vh]"
-      :plugin-id="pluginId"
-      :error-text="tips"
-      :checking="checking"
-      @on-refresh="checkPlugin"
+      v-if="!pluginAvailable" custom-class="h-[85vh]" :plugin-id="pluginId" :error-text="tips"
+      :checking="checking" @on-refresh="checkPlugin"
     />
 
-    <!-- 首次加载中 / 空 / 错误 -->
-    <uh-data-loading
-      v-if="!firstLoaded && loadingStatus !== DataLoadingStatusEnum.Success"
-      :loading-status="loadingStatus"
-      empty-text="啊偶，还没有任何足迹哦~"
-      min-height="85vh"
-      @refresh="handleGetData"
-    />
+    <template v-else>
+      <!-- 首次加载中 / 空 / 错误 -->
+      <uh-data-loading
+        v-if="!firstLoaded && loadingStatus !== DataLoadingStatusEnum.Success"
+        :loading-status="loadingStatus" empty-text="啊偶，还没有任何足迹哦~" min-height="85vh" @refresh="handleGetData"
+      />
 
-    <!-- 地图区域 + 底部悬浮操作栏(首次加载成功后常驻，刷新只原地更新数据) -->
-    <view v-else-if="firstLoaded" class="min-h-0 flex flex-1 flex-col">
-      <view class="relative min-h-0 flex-1 overflow-hidden">
-        <footprint-map
-          v-if="mapVisible"
-          ref="mapRef"
-          class="h-full w-full"
-          :footprints="footprints"
-          @marker-tap="handleMarkerTap"
-        />
-      </view>
-      <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/放大/缩小/刷新/还原 -->
-      <view class="footprint-bar flex flex-shrink-0 items-center justify-center pt-2 pb-safe">
-        <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
-          <view
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
-            @click="openListSheet"
-          >
-            <wd-icon name="list" size="28rpx" class="text-gray-900" />
-            <text class="shrink-0 text-xs text-gray-900 font-semibold">列表</text>
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-            @click="handleZoomIn"
-          >
-            <wd-icon name="zoom-in" size="36rpx" class="text-gray-900" />
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-            @click="handleZoomOut"
-          >
-            <wd-icon name="zoom-out" size="36rpx" class="text-gray-900" />
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-            @click="handleGetData"
-          >
-            <wd-icon name="sync" size="34rpx" class="text-gray-900" />
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
-            @click="handleResetView"
-          >
-            <wd-icon name="refresh" size="28rpx" class="text-gray-900" />
-            <text class="shrink-0 text-xs text-gray-900 font-semibold">还原</text>
+      <!-- 地图区域 + 底部悬浮操作栏(首次加载成功后常驻，刷新只原地更新数据) -->
+      <view v-else-if="firstLoaded" class="min-h-0 flex flex-1 flex-col">
+        <view class="relative min-h-0 flex-1 overflow-hidden">
+          <footprint-map
+            v-if="mapVisible" ref="mapRef" class="h-full w-full" :footprints="footprints"
+            @marker-tap="handleMarkerTap"
+          />
+        </view>
+        <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/放大/缩小/刷新/还原 -->
+        <view class="footprint-bar flex flex-shrink-0 items-center justify-center pt-2 pb-safe">
+          <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
+            <view
+              class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
+              @click="openListSheet"
+            >
+              <wd-icon name="list" size="28rpx" class="text-gray-900" />
+              <text class="shrink-0 text-xs text-gray-900 font-semibold">列表</text>
+            </view>
+            <view
+              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+              @click="handleZoomIn"
+            >
+              <wd-icon name="zoom-in" size="36rpx" class="text-gray-900" />
+            </view>
+            <view
+              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+              @click="handleZoomOut"
+            >
+              <wd-icon name="zoom-out" size="36rpx" class="text-gray-900" />
+            </view>
+            <view
+              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+              @click="handleGetData"
+            >
+              <wd-icon name="sync" size="34rpx" class="text-gray-900" />
+            </view>
+            <view
+              class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
+              @click="handleResetView"
+            >
+              <wd-icon name="refresh" size="28rpx" class="text-gray-900" />
+              <text class="shrink-0 text-xs text-gray-900 font-semibold">还原</text>
+            </view>
           </view>
         </view>
       </view>
-    </view>
-
-    <!-- 底部弹层 -->
-    <footprint-sheet
-      :visible="sheetOpen"
-      :mode="sheetMode ?? 'list'"
-      :stats="stats"
-      :groups="timelineGroups"
-      :selected="selected"
-      @close="handleSheetClose"
-      @item-tap="handleItemTap"
-      @back-to-list="handleBackToList"
-      @locate="handleLocate"
-    />
+      <!-- 底部弹层 -->
+      <footprint-sheet
+        :visible="sheetOpen" :mode="sheetMode ?? 'list'" :stats="stats" :groups="timelineGroups"
+        :selected="selected" @close="handleSheetClose" @item-tap="handleItemTap" @back-to-list="handleBackToList"
+        @locate="handleLocate"
+      />
+    </template>
   </view>
 </template>
 
 <style scoped lang="scss">
-/* 底部操作栏定位的平台差异(uni-app style 条件编译)：
-   App 端原生地图层级最高，fixed 栏会被地图盖住 → 正常流放地图下方；
-   H5/微信小程序同层渲染 → 悬浮于地图底部上方 */
 .footprint-bar {
   /* #ifdef APP-PLUS */
   position: relative;
