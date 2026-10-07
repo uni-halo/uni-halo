@@ -377,7 +377,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-5 box-border gap-3.5 border rounded-3xl p-4">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
-            class="flex flex-col items-center justify-between overflow-hidden"
+            class="flex flex-col items-center justify-between"
             @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
             <view

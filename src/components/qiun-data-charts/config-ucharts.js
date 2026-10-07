@@ -153,6 +153,11 @@ const cfu = {
         return `${series[index].name}：${series[index].data}元`
       }
     },
+    // X 轴标签过长时截断并补省略号，跨端统一走 format 字符串映射传入
+    xAxisLabelShort(val, index, opts) {
+      const maxLength = 4
+      return val.length > maxLength ? `${val.slice(0, maxLength)}…` : val
+    },
   },
   // 这里演示了自定义您的图表类型的option，可以随意命名，之后在组件上 type="demotype" 后，组件会调用这个花括号里的option，如果组件上还存在opts参数，会将demotype与opts中option合并后渲染图表。
   demotype: {

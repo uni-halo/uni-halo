@@ -133,8 +133,6 @@ const top10ArticlesChart = ref({
 const TAG_CHART_TOP_N = 8
 /** 柱状图每屏最多显示的柱子数(超过则横向滚动) */
 const COLUMN_ITEM_COUNT = 5
-/** 柱状图 X 轴 label 最大字符数(超出省略号截断) */
-const COLUMN_LABEL_MAX_LENGTH = 4
 
 /** 柱状图通用配置(超过每屏数量才显示滚动条;label 超长省略) */
 function columnOpts(categoriesCount: number) {
@@ -149,8 +147,7 @@ function columnOpts(categoriesCount: number) {
       fontSize: 10,
       itemCount: COLUMN_ITEM_COUNT,
       ...(categoriesCount > COLUMN_ITEM_COUNT ? { scrollShow: true, scrollAlign: 'left' } : {}),
-      formatter: (item: string) =>
-        item.length > COLUMN_LABEL_MAX_LENGTH ? `${item.slice(0, COLUMN_LABEL_MAX_LENGTH)}…` : item,
+      format: 'xAxisLabelShort',
     },
     yAxis: { gridType: 'dash', dashLength: 4, tofix: 0 },
     extra: { column: { type: 'group', width: 22, linearType: 'custom', seriesGap: 5, barBorderCircle: true, customColor: [themeColor] } },
@@ -316,7 +313,8 @@ init()
           </uh-section-title>
           <view v-show="top10ArticlesChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :ontouch="true" :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :in-scroll-view="true" :page-scroll-top="scrollY"
+              :chart-data="top10ArticlesChart.data" :opts="columnOpts(top10ArticlesChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, top10ArticlesChart)"
             />
           </view>
@@ -338,7 +336,8 @@ init()
           </uh-section-title>
           <view v-show="userCommentsChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :ontouch="true" :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :in-scroll-view="true" :page-scroll-top="scrollY"
+              :chart-data="userCommentsChart.data" :opts="columnOpts(userCommentsChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, userCommentsChart)"
             />
           </view>
@@ -360,7 +359,8 @@ init()
           </uh-section-title>
           <view v-show="categoryChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="column" :canvas2d="true" :ontouch="true" :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
+              type="column" :canvas2d="true" :ontouch="true" :in-scroll-view="true" :page-scroll-top="scrollY"
+              :chart-data="categoryChart.data" :opts="columnOpts(categoryChart.data.categories.length)"
               @get-index="(e: any) => handleColumnClick(e.currentIndex, categoryChart)"
             />
           </view>
@@ -382,7 +382,8 @@ init()
           </uh-section-title>
           <view v-show="tagChart.isExpand" class="mt-3 box-border w-full">
             <qiun-data-charts
-              type="ring" :chart-data="tagChart.data"
+              type="ring" :canvas2d="true" :ontouch="true" :in-scroll-view="true" :page-scroll-top="scrollY"
+              :chart-data="tagChart.data"
               :opts="{ color: chartColors, padding: [5, 5, 5, 5], dataLabel: false, legend: { show: false }, title: tagChart.title, subtitle: tagChart.subtitle, extra: { ring: { ringWidth: 36, offsetAngle: -90, border: true, borderWidth: 1, borderColor: '#FFFFFF' } } }"
             />
           </view>

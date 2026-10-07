@@ -253,9 +253,15 @@ onReachBottom(() => {
     <view v-else-if="uniHaloPluginAvailable" class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="project in projectList" :key="project.slug"
-        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-2xl"
+        class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl"
         @click="handleToDetail(project)"
       >
+        <text
+          v-if="project.featured"
+          class="absolute right-0 top-0 z-20 box-border rounded-lb-lg bg-secondary px-2 py-0.5 text-gray-900 !text-xs"
+        >
+          推荐
+        </text>
         <image
           v-if="project.cover"
           :src="checkImageUrl(project.cover)"
@@ -263,9 +269,9 @@ onReachBottom(() => {
           mode="aspectFill"
           lazy-load
         />
-        <view class="uh-filter-blur-xs relative z-10 box-border flex flex-col gap-y-3 bg-black/50 p-3.5">
+        <view class="uh-filter-blur-xs relative z-10 box-border flex flex-col gap-y-3 bg-black/30 p-4">
           <view class="w-full flex gap-x-3 overflow-hidden">
-            <view v-if="project.cover" class="uh-global-card-glass relative h-18 w-18 shrink-0 overflow-hidden rounded-lg shadow-none !border">
+            <view v-if="project.cover" class="uh-global-card-glass relative h-18 w-18 shrink-0 overflow-hidden rounded-lg shadow-none">
               <wd-img width="100%" height="100%" :src="checkImageUrl(project.cover)" mode="aspectFill" lazy-load>
                 <template #loading>
                   <wd-loading size="64rpx" custom-class="text-primary" />
@@ -276,11 +282,11 @@ onReachBottom(() => {
               <view class="flex items-center gap-x-1.5 overflow-hidden">
                 <text
                   v-if="project.featured"
-                  class="uh-global-card-glass box-border shrink-0 border rounded-md bg-secondary px-1.5 text-gray-900 !text-xs"
+                  class="uh-global-card-glass box-border shrink-0 border rounded-md bg-secondary px-1.5 text-gray-900 !hidden !text-xs"
                 >
                   推荐
                 </text>
-                <text class="flex-1 truncate text-sm text-white font-semibold">{{ project.title }}</text>
+                <text class="flex-1 truncate text-[30rpx] text-white font-semibold">{{ project.title }}</text>
               </view>
               <view
                 class="text-3xs text-gray-100 leading-5"

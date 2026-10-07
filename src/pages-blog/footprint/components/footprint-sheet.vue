@@ -48,12 +48,12 @@ function handleItemTap(footprint: IFootprint) {
   emit('item-tap', footprint)
 }
 
-/** 列表卡片定位：仅地图聚焦，弹层保持 list 模式 */
+/** 列表卡片定位：聚焦地图，App 端由父组件关闭弹层 */
 function handleLocate(footprint: IFootprint) {
   emit('locate', footprint)
 }
 
-/** 详情[定位到地图]：仅聚焦地图，不关闭弹层 */
+/** 详情[定位到地图]：聚焦地图，App 端由父组件关闭弹层 */
 function handleLocateMap() {
   if (props.selected) {
     emit('locate', props.selected)
@@ -186,10 +186,10 @@ function handleCopyArticle() {
           </view>
         </scroll-view>
         <view class="w-full flex items-center gap-x-3 pt-2">
-          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !border !rounded-full !py-2.5 !text-3xs" @click="handleLocateMap">
+          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-full !py-2.5 !text-3xs" @click="handleLocateMap">
             定位到地图
           </uh-button>
-          <uh-button v-if="spec?.article" class="w-full flex-1" custom-class="uh-global-card-glass !border !rounded-full !py-2.5 !text-3xs" @click="handleCopyArticle">
+          <uh-button v-if="spec?.article" class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-full !py-2.5 !text-3xs" @click="handleCopyArticle">
             复制笔记链接
           </uh-button>
         </view>
