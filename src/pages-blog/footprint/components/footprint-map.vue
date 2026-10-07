@@ -173,9 +173,9 @@ function estimateScale(points: { latitude: number, longitude: number }[]): numbe
   return 4
 }
 
-/** 适配视野：H5 端 includePoints 会把中心算到 (0,180)，改为自行计算中心+级别走绑定下发；其他端走命令式 */
+/** 适配视野：H5/App 端 includePoints 视野计算有缺陷(中心落到 0,180)，自行算中心+级别走绑定下发；微信小程序走命令式 */
 function fitPoints(points: { latitude: number, longitude: number }[]) {
-  // #ifdef H5
+  // #ifndef MP-WEIXIN
   const lats = points.map(p => p.latitude)
   const lngs = points.map(p => p.longitude)
   touched = true
@@ -186,7 +186,7 @@ function fitPoints(points: { latitude: number, longitude: number }[]) {
   }
   // #endif
 
-  // #ifndef H5
+  // #ifdef MP-WEIXIN
   mapCtx().includePoints({ points, padding: [80, 80, 80, 80] })
   scheduleSync()
   // #endif

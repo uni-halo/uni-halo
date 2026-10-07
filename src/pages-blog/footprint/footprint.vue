@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getAllFootprints } from '@/api/halo-plugin-third/footprint'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -84,7 +84,10 @@ watch(mapVisible, (visible) => {
   }
   const target = pendingFocus
   pendingFocus = null
-  mapRef.value?.focusOn(target)
+  // 等 v-if 重挂载完成(watch 先于 DOM 更新，此时 mapRef 还是 null)
+  nextTick(() => {
+    mapRef.value?.focusOn(target)
+  })
 })
 
 onUnmounted(() => {
