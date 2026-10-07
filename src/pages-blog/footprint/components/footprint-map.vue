@@ -26,6 +26,14 @@ const DEFAULT_VIEW = { latitude: 35, longitude: 105, scale: 4 }
 /** 兜底 pin(本地资源，160×160 正方形画布，pin 尖端位于底边中点锚定坐标点；正方形画布避免地图非等比压缩) */
 const PIN_ICON = '/static/images/footprint/footprint-pin.png'
 
+/** 中国范围粗校验(纬度 3~54 / 经度 73~136)：过滤脏数据(互换/境外/异常值)，避免视野适配拉到海面 */
+function isValidCoord(latitude: unknown, longitude: unknown): boolean {
+  return typeof latitude === 'number'
+    && typeof longitude === 'number'
+    && latitude >= 3 && latitude <= 54
+    && longitude >= 73 && longitude <= 136
+}
+
 /** callout 文本：名称 + 日期两行(callout 支持换行符) */
 function calloutText(item: IFootprint): string {
   const name = item.spec?.name || ''
@@ -47,8 +55,7 @@ const markers = computed(() => {
   }[] = []
   props.footprints.forEach((item, index) => {
     const { longitude, latitude } = item.spec || {}
-    // 过滤无效坐标(缺失/0,0 会把视野适配拉到海面)
-    if (typeof longitude !== 'number' || typeof latitude !== 'number' || (!latitude && !longitude)) {
+    if (!isValidCoord(latitude, longitude)) {
       return
     }
     // 优先用数据图片(微信/H5 官方支持网络图片；App 需真机验证)，无图回退本地 pin
@@ -88,10 +95,16 @@ const baseView = computed(() => {
   return DEFAULT_VIEW
 })
 
-const centerView = computed(() => baseView.value)
-/** 手动缩放级别(非空时覆盖绑定 scale；读地图实际级别调整，与双指缩放不打架) */
-const manualScale = ref<number | null>(null)
-const scaleView = computed(() => manualScale.value ?? centerView.value.scale)
+/** 地图视野(单一事实源：绑定值与地图实际状态持续同步，属性重下发时不会回跳旧视野) */
+const region = ref({ ...DEFAULT_VIEW })
+/** 用户是否已操作过视野(未操作时跟随 baseView 初始化) */
+let touched = false
+
+watch(baseView, (v) => {
+  if (!touched) {
+    region.value = { ...v }
+  }
+}, { immediate: true })
 
 /** 地图上下文(模板渲染后可用) */
 let ctx: ReturnType<typeof uni.createMapContext> | null = null
@@ -113,32 +126,104 @@ function allPoints() {
   return markers.value.map(m => ({ latitude: m.latitude, longitude: m.longitude }))
 }
 
-/** 聚焦：清手动缩放，适配到该点(moveToLocation 即使传坐标也要 scope.userLocation 授权，includePoints 单点不需要) */
-function focusOn(item: IFootprint) {
-  const sp = item?.spec
-  if (typeof sp?.latitude !== 'number' || typeof sp?.longitude !== 'number' || (!sp.latitude && !sp.longitude)) {
-    return
-  }
-  manualScale.value = null
-  mapCtx().includePoints({
-    points: [{ latitude: sp.latitude, longitude: sp.longitude }],
-    padding: [80, 80, 80, 80],
+/** 读取地图实际中心与级别 */
+function readRegion(): Promise<{ latitude: number, longitude: number, scale: number }> {
+  return new Promise((resolve, reject) => {
+    try {
+      mapCtx().getCenterLocation({
+        success: (center: any) => {
+          mapCtx().getScale({
+            success: (s: any) => resolve({ latitude: center.latitude, longitude: center.longitude, scale: s.scale }),
+            fail: reject,
+          })
+        },
+        fail: reject,
+      })
+    }
+    catch (err) {
+      reject(err)
+    }
   })
-  manualScale.value = 14
 }
 
-/** 还原：命令式适配所有点，动画结束后把地图实际级别写回 manualScale(保持绑定值不变，避免属性重下发覆盖 includePoints) */
+/** 把地图实际视野写回 region(使命令式结果与绑定值一致，避免后续属性更新回跳) */
+function syncRegion() {
+  readRegion().then((r) => {
+    region.value = r
+  }).catch(() => {})
+}
+
+/** 命令式视野动画结束后再同步(includePoints 动画约 300-500ms) */
+function scheduleSync() {
+  setTimeout(syncRegion, 500)
+}
+
+/** 由点集估算缩放级别(H5 端 includePoints 有缺陷，自行适配时用)：实测校准，5 级可容约 17° 跨度(北上广深全览) */
+function estimateScale(points: { latitude: number, longitude: number }[]): number {
+  const lats = points.map(p => p.latitude)
+  const lngs = points.map(p => p.longitude)
+  const span = Math.max(Math.max(...lats) - Math.min(...lats), (Math.max(...lngs) - Math.min(...lngs)) * Math.cos((lats[0] * Math.PI) / 180))
+  if (span <= 0.02) { return 15 }
+  if (span <= 0.1) { return 13 }
+  if (span <= 0.5) { return 11 }
+  if (span <= 2) { return 10 }
+  if (span <= 5) { return 9 }
+  if (span <= 12) { return 7 }
+  if (span <= 20) { return 5 }
+  return 4
+}
+
+/** 适配视野：H5 端 includePoints 会把中心算到 (0,180)，改为自行计算中心+级别走绑定下发；其他端走命令式 */
+function fitPoints(points: { latitude: number, longitude: number }[]) {
+  // #ifdef H5
+  const lats = points.map(p => p.latitude)
+  const lngs = points.map(p => p.longitude)
+  touched = true
+  region.value = {
+    latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
+    longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2,
+    scale: estimateScale(points),
+  }
+  // #endif
+
+  // #ifndef H5
+  mapCtx().includePoints({ points, padding: [80, 80, 80, 80] })
+  scheduleSync()
+  // #endif
+}
+
+/** 视野变化：用户拖动/缩放结束后同步实际视野到 region */
+function handleRegionChange(e: any) {
+  const detail = e?.detail || {}
+  if (detail.type === 'end' && detail.causedBy !== 'update') {
+    syncRegion()
+  }
+}
+
+/** 聚焦：直接改绑定视野(中心与级别一起下发，不会带上过期中心) */
+function focusOn(item: IFootprint) {
+  const sp = item?.spec
+  if (!isValidCoord(sp?.latitude, sp?.longitude)) {
+    return
+  }
+  const target = { latitude: sp.latitude, longitude: sp.longitude, scale: 14 }
+  const r = region.value
+  // 绑定值与地图状态一致(如拖动后未及同步)：走命令式适配兜底
+  if (r.latitude === target.latitude && r.longitude === target.longitude && r.scale === target.scale) {
+    fitPoints([{ latitude: target.latitude, longitude: target.longitude }])
+    return
+  }
+  touched = true
+  region.value = target
+}
+
+/** 还原：适配所有足迹点，动画结束后把实际视野写回 region */
 function resetView() {
   const points = allPoints()
   if (!points.length) {
     return
   }
-  mapCtx().includePoints({ points, padding: [80, 80, 80, 80] })
-  setTimeout(() => {
-    readScale().then((scale) => {
-      manualScale.value = scale
-    }).catch(() => {})
-  }, 400)
+  fitPoints(points)
 }
 
 /** marker 点击：markerId 反查足迹(各端兼容顶层 markerId 与微信小程序的 e.detail 结构) */
@@ -151,29 +236,17 @@ function handleMarkerTap(e: object) {
   }
 }
 
-/** 缩放：读取地图当前级别后增减(读实际级别，与双指缩放不打架) */
-function readScale(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    try {
-      mapCtx().getScale({
-        success: (res: any) => resolve(res.scale),
-        fail: reject,
-      })
-    }
-    catch (err) {
-      reject(err)
-    }
-  })
-}
-
+/** 缩放：读取地图实际视野后增减级别，回写 region */
 async function zoomIn() {
-  const current = await readScale().catch(() => scaleView.value)
-  manualScale.value = Math.min(20, Math.round(current) + 1)
+  const current = await readRegion().catch(() => region.value)
+  touched = true
+  region.value = { ...current, scale: Math.min(20, Math.round(current.scale) + 1) }
 }
 
 async function zoomOut() {
-  const current = await readScale().catch(() => scaleView.value)
-  manualScale.value = Math.max(3, Math.round(current) - 1)
+  const current = await readRegion().catch(() => region.value)
+  touched = true
+  region.value = { ...current, scale: Math.max(3, Math.round(current.scale) - 1) }
 }
 
 defineExpose({ zoomIn, zoomOut, focusOn, resetView })
@@ -183,10 +256,11 @@ defineExpose({ zoomIn, zoomOut, focusOn, resetView })
   <map
     :id="MAP_ID"
     :style="mapStyle"
-    :latitude="centerView.latitude"
-    :longitude="centerView.longitude"
-    :scale="scaleView"
+    :latitude="region.latitude"
+    :longitude="region.longitude"
+    :scale="region.scale"
     :markers="markers"
+    @regionchange="handleRegionChange"
     @markertap="handleMarkerTap"
   />
 </template>
