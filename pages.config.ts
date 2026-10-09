@@ -32,6 +32,7 @@ export default defineUniPages({
   pages: [{
     path: 'uni_modules/uh-upgrade/pages/upgrade-popup',
     style: {
+      navigationStyle: 'custom',
       disableScroll: true,
       'app-plus': {
         backgroundColor: 'rgba(0,0,0,0)',
