@@ -29,6 +29,12 @@
 
 **uni-halo** 是一款基于 [Halo 2.x](https://www.halo.run/) 开放 API 打造的免费开源博客多端应用。一套源码，编译为 **微信小程序（推荐）/ APP / H5**，配合 [Uni Halo 配置插件](https://github.com/uni-halo/uni-halo-plugin) 实现「改内容不改代码」——文章、公告、轮播、恋爱日记等全部内容均可在 Halo 后台动态配置。
 
+### 📲 在线预览
+
+微信扫描下方小程序码，即可在线体验 UniHalo 完整功能，无需下载安装：
+
+![UniHalo 微信小程序码](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/images/mp.jpeg)
+
 ## ✨ 特性一览
 
 | | 特性 | 说明 |
