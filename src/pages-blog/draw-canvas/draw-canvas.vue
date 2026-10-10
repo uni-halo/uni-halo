@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
-import KexColorPicker from '@/uni_modules/kex-color-picker/components/kex-color-picker/kex-color-picker.vue'
 import { useCanvasDraw } from '@/hooks/useCanvasDraw'
 import { useTokenStore } from '@/store/token'
 import { toLoginPage } from '@/utils/toLoginPage'
 import { getAttachmentPermalink, uploadAttachment } from '@/api/uni-admin'
 import { createMyDraw } from '@/api/draw'
+import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import type { BrushStyle, DrawTool } from '@/hooks/useCanvasDraw'
+
+import KexColorPicker from '@/uni_modules/kex-color-picker/components/kex-color-picker/kex-color-picker.vue'
 
 definePage({
   style: {
@@ -15,6 +18,10 @@ definePage({
     disableScroll: true,
   },
 })
+
+const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('drawCanvas', '画一幅')
 
 /* ---------------- 画布 ---------------- */
 const textInputVisible = ref(false)
@@ -128,6 +135,7 @@ function handleShowReleasePopup() {
 /* ---------------- 发布 ---------------- */
 const tokenStore = useTokenStore()
 const title = ref('')
+const description = ref('')
 const publishing = ref(false)
 
 /** 发布画作：导出图片 → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
@@ -155,6 +163,7 @@ async function handlePublish() {
     }
     const res = await createMyDraw({
       title: title.value.trim(),
+      description: description.value.trim() || undefined,
       cover: permalink,
       attachmentName: attachment.metadata?.name,
     })
@@ -170,11 +179,15 @@ async function handlePublish() {
     publishing.value = false
   }
 }
+
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
+})
 </script>
 
 <template>
   <view class="box-border min-h-screen w-screen flex flex-col gap-y-3 bg-page p-3 pt-0">
-    <uh-navbar default-title="画一幅" :use-back="true" />
+    <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :use-back="true" title-color="text-gray-900" />
 
     <!-- 画布(固定高度,背景色动态跟随纸张) -->
     <view class="uh-shadow-xs h-[750rpx] overflow-hidden rounded-xl" :style="{ backgroundColor: bgColor }">
@@ -335,8 +348,17 @@ async function handlePublish() {
             <wd-icon name="close" size="28rpx" class="text-gray-500" />
           </view>
         </view>
-        <view class="uh-global-card-glass w-full flex flex-1 items-center border rounded-xl px-4 py-2.5 !shadow-none">
-          <textarea v-model="title" placeholder="说一说你的创作，画作描述..." class="w-full text-sm" :maxlength="30" />
+        <view class="uh-global-card-glass w-full flex items-center border rounded-xl px-4 py-2.5 !shadow-none">
+          <input
+            v-model="title" placeholder="给画作起个标题（必填）" placeholder-class="text-gray-400"
+            class="w-full text-sm" :maxlength="50"
+          >
+        </view>
+        <view class="uh-global-card-glass w-full flex items-start border rounded-xl px-4 py-2.5 !shadow-none">
+          <textarea
+            v-model="description" placeholder="介绍一下你的创作灵感（选填）" placeholder-class="text-gray-400"
+            class="h-20 w-full text-sm" :maxlength="200"
+          />
         </view>
         <view class="w-full">
           <uh-button

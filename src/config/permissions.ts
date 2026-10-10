@@ -98,6 +98,13 @@ export const PERMISSIONS = {
     resource: 'draws',
     verbs: ['create', 'delete'],
   },
+  /** 绘画审核管理（Console 管理端点，需 draws 管理角色） */
+  DRAW_REVIEW: {
+    id: 'draw:review',
+    apiGroup: API_GROUP.UNIHALO_CONSOLE,
+    resource: 'draws',
+    verbs: ['create', 'delete'],
+  },
 } as const satisfies Record<string, IBizPermission>
 
 /** 业务权限标识（供组件/页面引用，避免直接传对象） */

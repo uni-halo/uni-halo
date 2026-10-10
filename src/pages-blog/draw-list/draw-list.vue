@@ -153,6 +153,11 @@ const rightColumn = computed(() => drawList.value.filter((_, i) => i % 2 === 1))
 /* ---------------- 详情弹层 ---------------- */
 const detailVisible = ref(false)
 const currentDraw = ref<IDraw | null>(null)
+/** 详情弹窗作者信息：头像相对路径补全 + 首字回退在数据层算好，模板不做判断 */
+const currentOwnerAvatar = computed(() => checkThumbnailUrl(currentDraw.value?.owner?.avatar || ''))
+const currentOwnerText = computed(() =>
+  currentDraw.value?.owner?.displayName || currentDraw.value?.owner?.username || '佚名')
+const currentOwnerInitial = computed(() => currentOwnerText.value.slice(0, 1).toUpperCase())
 const currentCover = ref('')
 
 function handleOpenDetail(draw: IDraw) {
@@ -169,7 +174,7 @@ function handlePreviewCover() {
 
 <template>
   <view class="min-h-screen w-screen flex flex-col bg-page">
-    <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="绘画作品" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-plugin-unavailable
       v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
@@ -256,10 +261,12 @@ function handlePreviewCover() {
           <view class="flex items-center justify-between text-xs text-gray-400">
             <view class="w-full flex items-center gap-x-2">
               <wd-avatar
-                src="" text="A" shape="round" size="42rpx"
+                :src="currentOwnerAvatar"
+                :text="currentOwnerInitial"
+                shape="round" size="42rpx"
                 custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
               />
-              <text>{{ currentDraw.spec.ownerDisplayName || currentDraw.spec.owner }}</text>
+              <text>{{ currentOwnerText }}</text>
             </view>
             <text class="shrink-0">
               {{ formatTime({ d: currentDraw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' })

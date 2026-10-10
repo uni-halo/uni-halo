@@ -27,6 +27,8 @@ export type PageTitleKey
     | 'douban'
     | 'footprint'
     | 'drawList'
+    | 'drawCanvas'
+    | 'drawManage'
     | 'setting'
     | 'aboutProject'
     | 'disclaimer'

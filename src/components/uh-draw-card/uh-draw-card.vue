@@ -20,7 +20,10 @@ const emit = defineEmits<{
 
 const coverUrl = computed(() => checkThumbnailUrl(props.draw.spec.cover))
 const titleText = computed(() => props.draw.spec.title || '无题')
-const ownerText = computed(() => props.draw.spec.ownerDisplayName || props.draw.spec.owner)
+const owner = computed(() => props.draw.owner)
+const ownerText = computed(() => owner.value?.displayName || owner.value?.username || '佚名')
+const ownerAvatar = computed(() => checkThumbnailUrl(owner.value?.avatar || ''))
+const ownerFallbackText = computed(() => ownerText.value.slice(0, 1).toUpperCase())
 const dateText = computed(() => {
   const time = props.draw.metadata?.creationTimestamp
   return time ? dayjs(time).format('YYYY年MM月DD日') : ''
@@ -44,8 +47,8 @@ const dateText = computed(() => {
       <text class="text-xs text-gray-500">{{ dateText }}</text>
       <view class="flex items-center gap-x-1 text-3xs text-gray-400">
         <wd-avatar
-          src=""
-          text="A"
+          :src="ownerAvatar"
+          :text="ownerFallbackText"
           shape="round"
           size="42rpx"
           custom-class="uh-global-card-glass !shadow-none !border"

@@ -9,6 +9,7 @@ import { deleteMyDraw, getMyDrawList } from '@/api/draw'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { useTokenStore } from '@/store/token'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -27,6 +28,8 @@ definePage({
 
 const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 页面标题（插件端可配置，留空回退内置默认） */
+const pageTitle = usePageTitle('drawManage', '我的绘画')
 const { height: offsetTop } = useNavbarSticky()
 
 /* ---------------- 状态筛选 ---------------- */
@@ -175,15 +178,15 @@ function handleDelete(draw: IDraw) {
   }).catch(() => { })
 }
 
-onPageScroll((e: Page.PageScrollOption) => {
-  updatePageScrollValue(e.scrollTop)
+onPageScroll((option: Page.PageScrollOption) => {
+  updatePageScrollValue(option.scrollTop)
 })
 </script>
 
 <template>
   <wd-dialog />
   <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
-    <uh-navbar :scroll-y="scrollY" :use-back="true" default-title="我的绘画" title-color="text-gray-900" />
+    <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
 
     <!-- 状态筛选(吸顶) -->
     <wd-sticky :offset-top="offsetTop">
@@ -233,7 +236,7 @@ onPageScroll((e: Page.PageScrollOption) => {
               日期：{{ formatTime(draw.metadata.creationTimestamp) }}
             </text>
             <text class="truncate text-3xs text-gray-500 leading-relaxed">
-              结果：{{ draw.spec.reason ?? '暂无结果' }}
+              审核：{{ draw.spec.reason ?? '暂无结果' }}
             </text>
             <view class="flex items-center justify-between gap-2 text-xs">
               <text class="text-3xs text-gray-400">
