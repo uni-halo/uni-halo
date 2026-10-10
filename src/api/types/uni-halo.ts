@@ -113,6 +113,17 @@ export interface IPageTitles {
   votes?: string
   voteDetail?: string
   contact?: string
+  portfolio?: string
+  portfolioDetail?: string
+  douban?: string
+  footprint?: string
+  drawList?: string
+  drawCanvas?: string
+  drawManage?: string
+  drawReview?: string
+  momentDetail?: string
+  bannerDetail?: string
+  userProfile?: string
   setting?: string
   aboutProject?: string
   disclaimer?: string
