@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<IProps>(), {
   confirmText: '解锁',
   closeable: true,
   captchaEnabled: false,
+  zIndex: 110,
   request: undefined,
 })
 
@@ -38,6 +39,8 @@ interface IProps {
   closeable?: boolean
   /** 是否启用防刷验证码(受保护写接口 403 附新码时展示) */
   captchaEnabled?: boolean
+  /** 弹窗遮罩层 z-index */
+  zIndex?: number
   /** 解锁请求函数(父组件注入具体接口;返回含 token 的对象表示成功) */
   request?: (password: string, captcha?: ICaptchaQuery | null) => Promise<{ token?: string, [key: string]: unknown } | null | undefined>
 }
@@ -169,7 +172,7 @@ async function handleOnConfirm() {
 
 <template>
   <uh-glass-popup
-    :model-value="isShow" position="bottom" :z-index="100" custom-class="!border !rounded-2xl"
+    :model-value="isShow" position="bottom" :z-index="props.zIndex" custom-class="!border !rounded-2xl"
     :close-on-click-modal="closeable" @update:model-value="handleOnPopupClose"
   >
     <!-- 弹窗容器 -->
