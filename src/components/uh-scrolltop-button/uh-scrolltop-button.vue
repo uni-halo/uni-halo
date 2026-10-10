@@ -14,7 +14,7 @@ function handleScrollTop() {
 }
 
 // 黑名单模式
-const balckList = [
+const blackList = [
   'pages/auth/login',
   'pages/auth/register',
   'pages/index/index',
@@ -24,15 +24,16 @@ const balckList = [
   'pages-blog/love/love',
   'pages-blog/contact/contact',
   'pages-blog/about-project/about-project',
+  'pages-blog/draw-canvas/draw-canvas',
   'pages/auth/wechat-bind',
   'pages-admin/my-profile/my-profile',
   'pages-admin/footprint/footprint',
-  'uni_modules/uh-upgrade/pages/upgrade-popup'
+  'uni_modules/uh-upgrade/pages/upgrade-popup',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]
 const visible = computed(() => {
-  return !balckList.includes(currentPage.route)
+  return !blackList.includes(currentPage.route)
 })
 
 const _customClass = computed(() => {

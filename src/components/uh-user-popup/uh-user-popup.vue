@@ -78,6 +78,7 @@ const ADMIN_ENTRIES: IAdminEntry[] = [
   { key: 'daily', icon: 'subscribed', label: '恋爱清单管理', permission: 'LOVE_DAILY_MANAGE', url: '/pages-admin/love/daily-manage' },
   { key: 'story', icon: 'book', label: '恋爱故事管理', permission: 'LOVE_STORY_MANAGE', url: '/pages-admin/love/story-manage' },
   { key: 'album', icon: 'image', label: '恋爱相册管理', permission: 'LOVE_ALBUM_MANAGE', url: '/pages-admin/love/album-manage' },
+  { key: 'draw-manage', icon: 'bg-colors', label: '我的绘画管理', permission: 'DRAW_MANAGE', url: '/pages-admin/draw-manage/draw-manage' },
 ]
 
 /** 按权限过滤后的可见入口 */
@@ -230,18 +231,14 @@ function handleLogout() {
           class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 !bg-white/5 !shadow-none"
         >
           <wd-avatar
-            :src="checkAvatarUrl(userInfo.avatar)"
-            :text="getAvatarFallbackText(userInfo.nickname)"
+            :src="checkAvatarUrl(userInfo.avatar)" :text="getAvatarFallbackText(userInfo.nickname)"
             shape="round"
             custom-class="uh-global-card-glass uh-shadow-xs !h-12 !w-12 !shrink-0 !text-gray-900 !font-bold"
-            class="!rounded-full"
-            mode="aspectFill"
+            class="!rounded-full" mode="aspectFill"
           />
           <view class="flex-1">
             <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
-            <text
-              class="mt-1 inline-block text-xs text-gray-500"
-            >
+            <text class="mt-1 inline-block text-xs text-gray-500">
               @{{ userInfo.username }}
             </text>
           </view>
@@ -266,7 +263,10 @@ function handleLogout() {
                 v-if="entry.key === 'notifications' && unreadNotifyCount > 0"
                 class="absolute box-border h-4 min-w-4 flex items-center justify-center rounded-full bg-red-400 p-0.5 -right-1.5 -top-1.5"
               >
-                <text class="text-11px text-white leading-none">{{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount }}</text>
+                <text class="text-11px text-white leading-none">
+                  {{ unreadNotifyCount > 99 ? '99+' : unreadNotifyCount
+                  }}
+                </text>
               </view>
             </view>
             <text class="flex-1 text-xs text-gray-900">{{ entry.label }}</text>
@@ -277,23 +277,14 @@ function handleLogout() {
       <!-- 功能入口区域 -->
       <view class="w-full flex flex-1 flex-col">
         <uh-section-title>功能入口</uh-section-title>
-        <scroll-view
-          v-if="visibleAdminEntries.length !== 0 " scroll-y :show-scrollbar="false"
-          class="mt-3 flex-1"
-        >
+        <scroll-view v-if="visibleAdminEntries.length !== 0" scroll-y :show-scrollbar="false" class="mt-3 flex-1">
           <view class="box-border flex flex-col gap-y-3">
-            <uh-permission
-              v-for="entry in visibleAdminEntries" :key="entry.key"
-              :permission="entry.permission"
-            >
+            <uh-permission v-for="entry in visibleAdminEntries" :key="entry.key" :permission="entry.permission">
               <view
                 class="uh-global-card-glass flex items-center gap-x-2 rounded-xl px-3 py-2.5 !shadow-none"
                 @click="handleToAdmin(entry.url)"
               >
-                <wd-icon
-                  :name="entry.icon" size="32rpx"
-                  custom-class="text-gray-900 dark:text-gray-100"
-                />
+                <wd-icon :name="entry.icon" size="32rpx" custom-class="text-gray-900 dark:text-gray-100" />
                 <text class="flex-1 text-3xs text-gray-900 dark:text-gray-100">{{ entry.label }}</text>
                 <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
               </view>

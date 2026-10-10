@@ -139,7 +139,7 @@ const configuredFeatures = computed(() => {
 
 /** 当前应用版本号 */
 function getAppVersion() {
-  return `检查更新 v${uni.getAppBaseInfo().appVersion || ''}`
+  return `v${uni.getAppBaseInfo().appVersion || ''}`
 }
 
 /** 应用版本固定项(点击检查更新) */
@@ -179,7 +179,7 @@ const featureMode = computed<'grid' | 'list'>(() =>
 
 /** 分组渲染(过滤后空组整组隐藏；组标题按常用功能/其他功能分组) */
 const calcNavGroups = computed(() => {
-  const visible = [...navList.value.filter(n => n.show), appVersionItem]
+  const visible = [...navList.value.filter(n => n.show)]
   const groupDefs: { key: 'blog' | 'more', title: string }[] = [
     { key: 'blog', title: '常用功能' },
     { key: 'more', title: '其他功能' },

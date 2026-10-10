@@ -39,6 +39,8 @@ export const API_GROUP = {
   STORAGE_UC: 'uc.api.storage.halo.run',
   /** uni-halo 插件管理端 API（管理 CRUD 挂 console 分组，需登录鉴权） */
   UNIHALO_CONSOLE: 'console.api.unihalo.ialley.cn',
+  /** uni-halo 插件 UC API（最终用户自助，如绘画） */
+  UNIHALO_UC: 'uc.api.unihalo.ialley.cn',
 } as const
 
 /**
@@ -88,6 +90,13 @@ export const PERMISSIONS = {
     apiGroup: API_GROUP.UNIHALO_CONSOLE,
     resource: 'love-info',
     verbs: ['update'],
+  },
+  /** 我的绘画（UC 自助发布/删除自己的画作，需 uc-draw-use 角色） */
+  DRAW_MANAGE: {
+    id: 'draw:manage',
+    apiGroup: API_GROUP.UNIHALO_UC,
+    resource: 'draws',
+    verbs: ['create', 'delete'],
   },
 } as const satisfies Record<string, IBizPermission>
 

@@ -17,6 +17,7 @@ export default defineUniPages({
       '^(?!z-paging-refresh|z-paging-load-more)z-paging(.*)':
         'z-paging/components/z-paging$1/z-paging$1.vue',
       '^wd-(.*)': '@wot-ui/ui/components/wd-$1/wd-$1.vue',
+      '^kex-(.*)': '@/uni_modules/kex-$1/components/kex-$1/kex-$1.vue',
       '^mp-html(.*)': '@/components/mp-html/components/mp-html/mp-html$1.vue',
     },
   },

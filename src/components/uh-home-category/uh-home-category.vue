@@ -20,7 +20,6 @@ async function handleGetCategoryList() {
   try {
     loading.value = 'loading'
     const configured = configs.value.featureConfig?.pages?.home?.categories
-    console.log('configured', configured)
     let categoryListRaw: ICategory[] = []
     if (configured && configured.length) {
       // 配置模式
