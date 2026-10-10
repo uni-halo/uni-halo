@@ -5,7 +5,7 @@
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { deleteMyDraw, getMyDrawList } from '@/api/draw'
+import { deleteMyDraw, getMyDrawList, setMyDrawHidden } from '@/api/draw'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -157,6 +157,21 @@ function handleGoDraw() {
   uni.navigateTo({ url: '/pages-blog/draw-canvas/draw-canvas' })
 }
 
+/** 切换显隐（仅已通过的画作可切换；隐藏后公开列表/详情不展示） */
+async function handleToggleHidden(draw: IDraw) {
+  const target = !draw.spec.hidden
+  try {
+    const res = await setMyDrawHidden(draw.metadata.name, target)
+    const idx = dataList.value.findIndex(x => x.metadata.name === draw.metadata.name)
+    if (idx > -1 && res.data)
+      dataList.value[idx] = res.data
+    uni.showToast({ title: target ? '已隐藏' : '已公开', icon: 'none' })
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
+  }
+}
+
 function handleDelete(draw: IDraw) {
   dialog.confirm({
     title: '删除绘画',
@@ -231,6 +246,15 @@ onPageScroll((option: Page.PageScrollOption) => {
               <text class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="statusClass(draw)">
                 {{ statusText(draw) }}
               </text>
+              <view
+                v-if="draw.spec.status === 'APPROVED'" class="shrink-0"
+                @click.stop="handleToggleHidden(draw)"
+              >
+                <wd-icon
+                  :name="draw.spec.hidden ? 'eye-invisible' : 'eye'" size="30rpx"
+                  :custom-class="draw.spec.hidden ? 'text-orange-400' : 'text-gray-400'"
+                />
+              </view>
             </view>
             <text class="text-3xs text-gray-400">
               日期：{{ formatTime(draw.metadata.creationTimestamp) }}

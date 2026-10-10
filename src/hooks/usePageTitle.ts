@@ -29,6 +29,7 @@ export type PageTitleKey
     | 'drawList'
     | 'drawCanvas'
     | 'drawManage'
+    | 'drawReview'
     | 'setting'
     | 'aboutProject'
     | 'disclaimer'

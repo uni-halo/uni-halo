@@ -9,6 +9,7 @@ import {
   deleteManageDraw,
   getManageDrawList,
   rejectDraw,
+  setManageDrawHidden,
 } from '@/api/draw'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
@@ -33,7 +34,7 @@ definePage({
 const tokenStore = useTokenStore()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认） */
-const pageTitle = usePageTitle('drawManage', '绘画审核')
+const pageTitle = usePageTitle('drawReview', '绘画审核')
 const { height: offsetTop } = useNavbarSticky()
 
 onPageScroll((option: Page.PageScrollOption) => {
@@ -220,6 +221,21 @@ async function submitReview(request: () => Promise<unknown>) {
   }
 }
 
+/** 切换显隐（仅已通过的画作可切换；隐藏后公开列表/详情不展示） */
+async function handleToggleHidden(draw: IDraw) {
+  const target = !draw.spec.hidden
+  try {
+    const res = await setManageDrawHidden(draw.metadata.name, target)
+    const idx = dataList.value.findIndex(x => x.metadata.name === draw.metadata.name)
+    if (idx > -1 && res.data)
+      dataList.value[idx] = res.data
+    uni.showToast({ title: target ? '已隐藏' : '已公开', icon: 'none' })
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
+  }
+}
+
 function handleDelete(draw: IDraw) {
   dialog.confirm({
     title: '删除绘画',
@@ -287,6 +303,15 @@ function handleDelete(draw: IDraw) {
               <text class="shrink-0 rounded-full px-2 py-0.5 text-3xs" :class="statusClass(draw)">
                 {{ statusText(draw) }}
               </text>
+              <view
+                v-if="draw.spec.status === 'APPROVED'" class="shrink-0"
+                @click.stop="handleToggleHidden(draw)"
+              >
+                <wd-icon
+                  :name="draw.spec.hidden ? 'eye-invisible' : 'eye'" size="28rpx"
+                  :custom-class="draw.spec.hidden ? 'text-orange-400' : 'text-gray-400'"
+                />
+              </view>
             </view>
             <text v-if="draw.spec.description" class="line-clamp-2 text-3xs text-gray-500 leading-relaxed">
               {{ draw.spec.description }}

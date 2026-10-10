@@ -17,6 +17,8 @@ export interface IDrawSpec {
   ownerName: string
   /** 审核状态 */
   status?: IDrawStatus
+  /** 是否隐藏（隐藏后公开列表/详情不展示，不影响作者本人查看） */
+  hidden?: boolean
   /** 审核说明（拒绝时为原因） */
   reason?: string
   /** 审核人用户名 */

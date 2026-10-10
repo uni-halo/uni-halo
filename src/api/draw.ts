@@ -109,3 +109,19 @@ export function deleteManageDraw(name: string) {
     },
   )
 }
+
+/** 切换我的绘画显隐（hidden=true 隐藏，公开列表/详情不展示） */
+export function setMyDrawHidden(name: string, hidden: boolean) {
+  return http.Put<IResponse<IDraw>>(`${UC_DRAW_BASE}/${name}/hidden`, { hidden }, {
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+  })
+}
+
+/** 切换绘画显隐（管理员） */
+export function setManageDrawHidden(name: string, hidden: boolean) {
+  return http.Put<IResponse<IDraw>>(`${CONSOLE_DRAW_BASE}/${name}/hidden`, { hidden }, {
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
+  })
+}
