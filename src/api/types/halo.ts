@@ -214,13 +214,41 @@ export interface ITagListReq {
 export type ITagListRes = IListResult<ITag>
 
 /* ---------- 评论 Comment ---------- */
+export interface ICommentConfig {
+  avatar?: {
+    enable?: boolean
+    policy?: 'noAvatarUser' | 'anonymousUser' | 'allUser'
+    provider?: 'custom' | 'gravatar'
+    providerMirror?: string
+  }
+  /** 服务端按当前登录态与 audience 计算的验证码开关(新版本插件) */
+  captchaRequired?: boolean
+  security?: {
+    captcha?: {
+      enable?: boolean
+      audience?: 'ALL' | 'ANONYMOUS' | 'ROLES' | string
+      roles?: string[]
+      includeAnonymous?: boolean
+      /** ALPHANUMERIC/ARITHMETIC 图片验证码;TURNSTILE/ALTCHA 为第三方方案 */
+      type?: 'ALPHANUMERIC' | 'ARITHMETIC' | 'TURNSTILE' | 'ALTCHA' | string
+      /** 旧版本字段:仅匿名评论需要验证码 */
+      anonymousCommentCaptcha?: boolean
+      [key: string]: unknown
+    }
+  }
+  editor?: {
+    placeholder?: string
+  }
+  [key: string]: unknown
+}
 
 export interface ICommentOwner {
-  kind: 'EMAIL' | 'PHONE' | 'GRAVATAR' | 'WEIXIN' | 'QQ'
+  kind: 'Email' | 'Phone' | 'User'
   displayName: string
   avatar?: string
   email?: string
   website?: string
+  annotations?: Record<string, string>
 }
 
 export interface IComment {
@@ -252,6 +280,7 @@ export interface IComment {
     visibleReplyCount?: number
     visibleTime?: string
   }
+  owner?: ICommentOwner
   replies?: IListResult<ICommentReply>
 }
 
@@ -277,6 +306,7 @@ export interface ICommentReply {
     lastReadTime?: string
     creationTime?: string
   }
+  owner?: ICommentOwner
 }
 
 /** 评论回复列表响应(分页) */

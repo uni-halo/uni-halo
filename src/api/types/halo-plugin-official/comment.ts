@@ -6,11 +6,12 @@
 import type { IListResult, IMetadata } from '../halo'
 
 export interface ICommentOwner {
-  kind: 'EMAIL' | 'PHONE' | 'GRAVATAR' | 'WEIXIN' | 'QQ'
+  kind: 'Email' | 'Phone' | 'User'
   displayName: string
   avatar?: string
   email?: string
   website?: string
+  annotations?: Record<string, string>
 }
 
 export interface IComment {

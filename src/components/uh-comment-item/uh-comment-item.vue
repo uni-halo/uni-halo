@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { useSettingStore } from '@/store/setting'
+import { useAppConfigStore } from '@/store/appConfig'
 import type { ICommentReply } from '@/api/types/halo'
 
 const props = withDefaults(defineProps<{
@@ -38,12 +39,38 @@ dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
 
 const { settings } = storeToRefs(useSettingStore())
+const { commentWidgetConfig } = storeToRefs(useAppConfigStore())
 
-const avatar = computed(() => checkAvatarUrl(props.comment.spec.owner.avatar))
+function resolveAvatarUrlHash(url: string, comment: ICommentReply) {
+  const hash = comment.spec.owner?.annotations?.['email-hash'] ?? Date.now().toString()
+  return url.replace('{hash}', hash)
+}
+
+const avatar = computed(() => {
+  const avatarConfig = commentWidgetConfig.value.avatar
+
+  if (avatarConfig.enable) {
+    // 所有头像
+    if (avatarConfig.policy === 'allUser') {
+      return resolveAvatarUrlHash(avatarConfig.providerMirror, props.comment)
+    }
+    // 匿名头像
+    if (avatarConfig.policy === 'anonymousUser' && props.comment.owner.kind === 'Email') {
+      return resolveAvatarUrlHash(avatarConfig.providerMirror, props.comment)
+    }
+    // 匿名且无头像
+    if (avatarConfig.policy === 'noAvatarUser' && props.comment.owner.kind === 'Email' && !props.comment.owner.avatar) {
+      return resolveAvatarUrlHash(avatarConfig.providerMirror, props.comment)
+    }
+  }
+
+  // 默认头像
+  return checkAvatarUrl(props.comment.owner.avatar)
+})
 
 /** 昵称首字(无头像/加载失败时 wd-avatar 回退占位) */
 const avatarText = computed(() =>
-  getAvatarFallbackText(props.comment.spec.owner.displayName, '?'))
+  getAvatarFallbackText(props.comment.owner.displayName, '?'))
 
 const avatarClass = computed(() => {
   if (settings.value.avatarShape === 'circle') {
@@ -55,8 +82,7 @@ const avatarClass = computed(() => {
 /** 引用回复标识(被引用人在父级已加载回复映射中可查到时显示) */
 const quoteReplyText = computed(() => {
   const quoteName = props.comment.spec.quoteReply
-  if (!quoteName)
-    return ''
+  if (!quoteName) { return '' }
   const displayName = props.quoteReplyMap[quoteName]
   return displayName ? `回复 @${displayName}` : ''
 })
@@ -93,12 +119,9 @@ function handleOnDetail() {
   >
     <view class="flex shrink-0">
       <wd-avatar
-        :src="avatar"
-        :text="avatarText"
-        :shape="settings.avatarShape === 'circle' ? 'round' : 'square'"
+        :src="avatar" :text="avatarText" :shape="settings.avatarShape === 'circle' ? 'round' : 'square'"
         custom-class="uh-global-card-glass uh-shadow-xs !bg-[#bbe52a6b] !h-10 !w-10 !text-sm !font-bold !text-gray-900"
-        :class="avatarClass"
-        mode="aspectFill"
+        :class="avatarClass" mode="aspectFill"
       />
     </view>
     <view class="box-border flex-1 pl-2">

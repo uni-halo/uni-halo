@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { getPostCommentList, getPostCommentReplyList } from '@/api/halo-plugin-official/comment'
 import { sleep } from '@/utils/common'
+import { useAppConfigStore } from '@/store/appConfig'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IComment, ICommentListRes, ICommentReply } from '@/api/types/halo'
 
@@ -21,6 +22,8 @@ const emit = defineEmits<{
   (e: 'on-comment-detail', data: { postName: string, comment: IComment }): void
   (e: 'on-loaded', list: IComment[]): void
 }>()
+
+const { fetchHaloCommentWidgetConfig } = useAppConfigStore()
 
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
@@ -57,6 +60,7 @@ const pendingExpandName = ref('')
 async function handleGetData() {
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
+    await fetchHaloCommentWidgetConfig()
     const res = await getPostCommentList({ ...queryParams.value })
     result.value = res.data
     dataList.value = res.data.items

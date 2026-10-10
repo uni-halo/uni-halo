@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/user'
 import { setCache } from '@/utils/storage'
 import { deepMerge } from '@/utils/merge'
 import type { UniHaloError } from '@/http/tools/exception'
+import type { ICommentConfig } from '@/api/types/halo'
 
 const props = withDefaults(defineProps<{
   show: boolean
@@ -40,28 +41,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 /** 网站地址格式(须以 http(s):// 开头) */
 const SITE_RE = /^https?:\/\/\S+\.\S+/i
 
-interface ICaptchaConfig {
-  /** 服务端按当前登录态与 audience 计算的验证码开关(新版本插件) */
-  captchaRequired?: boolean
-  security?: {
-    captcha?: {
-      enable?: boolean
-      audience?: 'ALL' | 'ANONYMOUS' | 'ROLES' | string
-      roles?: string[]
-      includeAnonymous?: boolean
-      /** ALPHANUMERIC/ARITHMETIC 图片验证码;TURNSTILE/ALTCHA 为第三方方案 */
-      type?: 'ALPHANUMERIC' | 'ARITHMETIC' | 'TURNSTILE' | 'ALTCHA' | string
-      /** 旧版本字段:仅匿名评论需要验证码 */
-      anonymousCommentCaptcha?: boolean
-      [key: string]: unknown
-    }
-  }
-  editor?: {
-    placeholder?: string
-  }
-  [key: string]: unknown
-}
-
 interface ICommentForm {
   allowNotification: boolean
   author: string
@@ -73,7 +52,7 @@ interface ICommentForm {
   captchaCode?: string
 }
 
-const config = ref<ICaptchaConfig>({
+const config = ref<ICommentConfig>({
   captchaRequired: false,
   security: {
     captcha: {
@@ -143,7 +122,7 @@ const isImageCaptcha = computed(() => {
 async function handleGetConfig() {
   try {
     const res = await getCommentWidgetConfig()
-    config.value = deepMerge(config.value as Record<string, unknown>, res.data as Record<string, unknown>) as ICaptchaConfig
+    config.value = deepMerge(config.value as Record<string, unknown>, res.data as Record<string, unknown>) as ICommentConfig
     if (isImageCaptcha.value) {
       handleGetCaptchaImage()
     }
@@ -353,15 +332,12 @@ watch(() => props.show, (newVal) => {
 <template>
   <uh-glass-popup
     v-model="isShow" position="bottom" custom-class="!border !rounded-2xl" :z-index="150"
-    :close-on-click-modal="false"
-    @close="handleOnChange(false)"
+    :close-on-click-modal="false" @close="handleOnChange(false)"
   >
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
-      <view
-        class="text-md relative box-border w-full flex items-center justify-around px-12 text-center font-bold"
-      >
+      <view class="text-md relative box-border w-full flex items-center justify-around px-12 text-center font-bold">
         <text>{{ calcTitle }} </text>
         <view
           class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
@@ -423,28 +399,25 @@ watch(() => props.show, (newVal) => {
             <view class="flex flex-1 items-center gap-3">
               <input
                 v-model="form.captchaCode"
-                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none"
-                placeholder="请输入验证码"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none" placeholder="请输入验证码"
               >
               <view class="h-10 w-29 flex shrink-0 items-center justify-center">
                 <uh-button
-                  v-if="captchaData.status === 'loading'"
-                  class="flex-1"
+                  v-if="captchaData.status === 'loading'" class="flex-1"
                   custom-class="uh-global-card-glass w-full border py-2.5 text-xs text-gray-900 shadow-none !rounded-xl !bg-primary"
                 >
                   获取中...
                 </uh-button>
                 <uh-button
-                  v-else-if="captchaData.status === 'fail'"
-                  class="flex-1"
+                  v-else-if="captchaData.status === 'fail'" class="flex-1"
                   custom-class="uh-global-card-glass w-full border py-2.5 text-xs text-red-400 shadow-none !rounded-xl !bg-primary"
                   @click="handleGetCaptchaImage()"
                 >
                   请重试
                 </uh-button>
                 <image
-                  v-else :src="captchaData.image" class="block h-full w-full rounded-xl"
-                  mode="aspectFit" @click="handleGetCaptchaImage()"
+                  v-else :src="captchaData.image" class="block h-full w-full rounded-xl" mode="aspectFit"
+                  @click="handleGetCaptchaImage()"
                 />
               </view>
             </view>
@@ -454,7 +427,8 @@ watch(() => props.show, (newVal) => {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
+          class="flex-1"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
           @click="handleHandle"
         >
           提交评论

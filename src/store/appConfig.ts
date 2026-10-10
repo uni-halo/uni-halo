@@ -8,6 +8,8 @@ import { DefaultAppConfigs } from '@/config/appConfig'
 import { deepMerge } from '@/utils/merge'
 import { setCache } from '@/utils/storage'
 import { useTokenStore } from '@/store/token'
+import { getCommentWidgetConfig } from '@/api/halo-plugin-official/comment'
+import type { ICommentConfig } from '@/api/types/halo'
 import type { IAppConfig, IAuditDataResult, IHaloGlobalConfig } from '@/api/types/uni-halo'
 
 /** 合并后配置缓存 key(与 utils/url.ts / api/uni-halo.ts 的 APP_GLOBAL_CONFIGS 读取保持一致) */
@@ -34,6 +36,9 @@ export const useAppConfigStore = defineStore(
       siteTitle: '',
       timeZone: '',
     })
+    /** 评论插件配置(与默认值深合并) */
+    const commentWidgetConfig = ref<ICommentConfig>({ })
+
     /** 审核模式数据(公开接口 /audit-data;enabled 联动设置页开关) */
     const auditData = ref<IAuditDataResult>({ enabled: false })
     /** 审核模式开关(单一数据源:公开接口返回的 enabled) */
@@ -64,6 +69,24 @@ export const useAppConfigStore = defineStore(
       catch (err) {
         console.error('获取 Halo 全局配置失败', err)
         return haloGlobalInfo.value
+      }
+    }
+
+    /** 获取评论插件配置(与默认值深合并) */
+    const fetchHaloCommentWidgetConfig = async () => {
+      try {
+        const res = await getCommentWidgetConfig()
+        const body = res.data as ICommentConfig | undefined
+        commentWidgetConfig.value = {
+          ...commentWidgetConfig.value,
+          ...body,
+        }
+        setCache(APP_HALO_GLOBAL_CONFIGS_KEY, configs.value)
+        return commentWidgetConfig.value
+      }
+      catch (err) {
+        console.error('获取评论插件配置失败', err)
+        return commentWidgetConfig.value
       }
     }
 
@@ -128,7 +151,7 @@ export const useAppConfigStore = defineStore(
         && Date.now() - fetchedAt.value < STATIC_TTL) {
         return { ok: true, fromCache: true }
       }
-      const [cfg] = await Promise.all([fetchHaloGlobalInfo(), fetchConfigs()])
+      const [cfg] = await Promise.all([fetchHaloGlobalInfo(), fetchConfigs(), fetchHaloCommentWidgetConfig()])
       fetchedAt.value = Date.now()
       return { ok: !!cfg, fromCache: false }
     }
@@ -142,6 +165,7 @@ export const useAppConfigStore = defineStore(
 
     return {
       configs,
+      commentWidgetConfig,
       auditData,
       auditModeEnabled,
       auditNamesOf,
@@ -149,6 +173,7 @@ export const useAppConfigStore = defineStore(
       fetchedAt,
       fetchConfigs,
       fetchHaloGlobalInfo,
+      fetchHaloCommentWidgetConfig,
       setDefaultAppSettings,
       fetchAuditData,
       bootstrap,
@@ -157,6 +182,6 @@ export const useAppConfigStore = defineStore(
   },
   {
     // 审核模式数据(auditData)不持久化:开关状态必须每次启动实时拉取,避免旧缓存误判
-    persist: { paths: ['configs', 'haloGlobalInfo', 'fetchedAt'] },
+    persist: { paths: ['configs', 'haloGlobalInfo', 'commentWidgetConfig', 'fetchedAt'] },
   },
 )
