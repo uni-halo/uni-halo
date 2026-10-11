@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useCanvasDraw } from '@/hooks/useCanvasDraw'
 import { useTokenStore } from '@/store/token'
+import { useAppConfigStore } from '@/store/appConfig'
 import { toLoginPage } from '@/utils/toLoginPage'
 import { getAttachmentPermalink, uploadAttachment } from '@/api/uni-admin'
 import { createMyDraw } from '@/api/draw'
@@ -118,6 +119,10 @@ const description = ref('')
 const publishing = ref(false)
 
 /* ---------------- 猜画设置（在原发布弹窗上扩展） ---------------- */
+const appConfigStore = useAppConfigStore()
+/** 猜画玩法总开关（插件端「绘画设置」下发；关闭时隐藏发布猜画设置，缺省开启） */
+const guessModeEnabled = computed(() =>
+  appConfigStore.configs?.featureConfig?.pages?.draw?.guessEnabled !== false)
 const guessEnabled = ref(false)
 /** 谜底（开启猜画时必填，≤20 字） */
 const puzzleAnswer = ref('')
@@ -142,7 +147,7 @@ function handlePublishValidatePuzzle(): string | null {
   if (!guessEnabled.value) { return null }
   const answer = puzzleAnswer.value.trim()
   if (!answer) {
-    return '开启猜画需要填写谜底'
+    return '开启画谜需要填写谜底'
   }
   if (answer.length > 20) {
     return '谜底不能超过 20 字'
@@ -392,37 +397,50 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
 
         <!-- 猜画设置（扩展在原发布弹窗上） -->
-        <view class="uh-global-card-glass w-full flex flex-col gap-y-3 border rounded-xl p-3 !shadow-none">
+        <!-- 猜画设置（扩展在原发布弹窗上；站点关闭猜画玩法时整块隐藏） -->
+        <view
+          v-if="guessModeEnabled"
+          class="uh-global-card-glass w-full flex flex-col gap-y-3 border rounded-xl p-3 !shadow-none"
+        >
           <view class="flex items-center justify-between">
             <view class="flex flex-col gap-y-0.5">
-              <text class="text-xs text-gray-900 font-medium">开启猜画模式</text>
-              <text class="text-3xs text-gray-400">其他用户可竞猜谜底，猜中积分排行榜 +1</text>
+              <text class="text-xs text-gray-900 font-medium">开启画谜</text>
+              <text class="text-3xs text-gray-400">其他用户可猜谜底，猜中画谜排行榜 +1</text>
             </view>
             <wd-switch v-model="guessEnabled" size="40rpx" />
           </view>
           <template v-if="guessEnabled">
-            <view
-              class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
-            >
-              <input
-                v-model="puzzleAnswer" placeholder="谜底（必填，≤20 字，猜中需完全一致）" placeholder-class="text-gray-400"
-                class="w-full text-3xs" :maxlength="20"
+            <view class="flex items-center gap-x-1">
+              <text class="text-3xs text-gray-500">谜底设置：</text>
+              <view
+                class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
               >
+                <input
+                  v-model="puzzleAnswer" placeholder="谜底（必填，≤20 字，猜中需完全一致）" placeholder-class="text-gray-400"
+                  class="w-full text-3xs" :maxlength="20"
+                >
+              </view>
             </view>
-            <view
-              class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
-            >
-              <input
-                v-model="puzzleHint" placeholder="提示语（选填，如：一种动物）" placeholder-class="text-gray-400"
-                class="w-full text-3xs" :maxlength="50"
+            <view class="flex items-center gap-x-1">
+              <text class="text-3xs text-gray-500">提示描述：</text>
+              <view
+                class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
               >
+                <input
+                  v-model="puzzleHint" placeholder="提示语（选填，如：一种动物）" placeholder-class="text-gray-400"
+                  class="w-full text-3xs" :maxlength="50"
+                >
+              </view>
             </view>
+
+            <text class="text-3xs text-gray-500">揭晓时间：</text>
             <view class="flex flex-wrap gap-x-4 gap-y-2">
               <view
                 v-for="(option, index) in autoRevealOptions" :key="option.hours"
                 class="box-border flex items-center gap-x-1" @click="autoRevealChoice = index"
               >
                 <view
+                  v-if="autoRevealChoice === index"
                   class="h-3 w-3 border rounded-full"
                   :class="autoRevealChoice === index ? 'border-primary bg-primary' : 'border-gray-300'"
                 />
@@ -443,7 +461,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80"
             :class="{ 'opacity-60': publishing }" @click="handlePublish"
           >
-            发布画作
+            确认发布画作
           </uh-button>
         </view>
       </view>

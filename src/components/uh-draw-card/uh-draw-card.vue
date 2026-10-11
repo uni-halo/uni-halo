@@ -28,7 +28,7 @@ const titleText = computed(() => {
   return props.draw.spec.title || '无题'
 })
 const puzzleLabel = computed(() =>
-  props.draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '猜画')
+  props.draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '画谜')
 const owner = computed(() => props.draw.owner)
 const ownerText = computed(() => owner.value?.displayName || owner.value?.username || '佚名')
 const ownerAvatar = computed(() => checkThumbnailUrl(owner.value?.avatar || ''))
@@ -41,7 +41,7 @@ const dateText = computed(() => {
 
 <template>
   <view
-    class="uh-global-card-glass uh-shadow-xs box-border w-full overflow-hidden rounded-xl"
+    class="uh-global-card-glass uh-shadow-xs box-border w-full overflow-hidden rounded-xl bg-white/80"
     @click="emit('tap')"
   >
     <view v-if="coverUrl" class="relative h-32 w-full">
@@ -52,9 +52,9 @@ const dateText = computed(() => {
       </wd-img>
       <view
         v-if="isPuzzle"
-        class="absolute right-2 top-2 flex items-center gap-x-0.5 rounded-full bg-black/50 px-2 py-0.5"
+        class="uh-global-card-glass absolute right-0 top-0 box-border flex items-center gap-x-0.5 rounded-lb-lg px-2 py-0.5 !border !bg-primary"
       >
-        <text class="text-xs text-white">{{ puzzleLabel }}</text>
+        <text class="text-xs text-gray-900">{{ puzzleLabel }}</text>
       </view>
     </view>
     <view class="box-border flex flex-col gap-y-1.5 overflow-hidden px-3 py-2.5">

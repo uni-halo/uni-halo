@@ -41,6 +41,11 @@ const loginEnabled = computed(() => {
   const client = appConfigStore.configs?.loginConfig?.client
   return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
 })
+
+/** 猜画玩法总开关（插件端「绘画设置」下发；关闭时隐藏竞猜入口，缺省开启） */
+const guessModeEnabled = computed(() =>
+  appConfigStore.configs?.featureConfig?.pages?.draw?.guessEnabled !== false)
+
 async function handleGoDraw() {
   if (!tokenStore.updateNowTime().hasLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
@@ -83,12 +88,18 @@ const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus
 const drawList = ref<IDraw[]>([])
 const queryParams = ref({ size: 10, page: 1, type: 'all' })
 
-/** 分类 tab：全部 / 普通作品 / 竞猜作品 */
-const typeTabs = [
-  { label: '全部', value: 'all' },
-  { label: '普通作品', value: 'normal' },
-  { label: '竞猜作品', value: 'puzzle' },
-] as const
+/** 分类 tab：全部 / 普通作品 / 竞猜作品（站点关闭猜画玩法时去掉竞猜项） */
+const typeTabs = computed(() => {
+  const tabs: { label: string, value: 'all' | 'normal' | 'puzzle' }[] = [
+    { label: '全部', value: 'all' },
+    { label: '普通作品', value: 'normal' },
+    { label: '画谜作品', value: 'puzzle' },
+  ]
+  if (!guessModeEnabled.value) {
+    return []
+  }
+  return tabs
+})
 const activeType = ref<'all' | 'normal' | 'puzzle'>('all')
 
 function handleSwitchType(value: 'all' | 'normal' | 'puzzle') {
@@ -110,6 +121,9 @@ async function handleGetData() {
     updateLoadingStatus(DataLoadingStatusEnum.Loading)
   }
   try {
+    if (!guessModeEnabled.value) {
+      queryParams.value.type = 'normal'
+    }
     const res = await getDrawList({ ...queryParams.value })
     const items = (res.data?.items || []).map((item) => {
       item.spec.cover = checkThumbnailUrl(item.spec.cover)
@@ -227,7 +241,7 @@ function handleGuessSolved() {
 
     <template v-else>
       <!-- 分类 tab（吸顶，样式对齐装备列表：横向滚动 + 胶囊） -->
-      <wd-sticky :offset-top="offsetTop">
+      <wd-sticky v-if="typeTabs.length !== 0" :offset-top="offsetTop">
         <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap">
           <view
             v-for="tab in typeTabs" :key="tab.value"
@@ -279,11 +293,12 @@ function handleGuessSolved() {
           <text class="shrink-0 text-3xs font-semibold">画一幅</text>
         </view>
         <view
+          v-if="guessModeEnabled"
           class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
           @click="rankVisible = true"
         >
           <wd-icon name="crown" size="28rpx" />
-          <text class="shrink-0 text-3xs font-semibold">猜画排行榜</text>
+          <text class="shrink-0 text-3xs font-semibold">画谜排行榜</text>
         </view>
       </view>
     </view>
