@@ -48,8 +48,11 @@ const countdown = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const feedback = ref<{ text: string, correct: boolean } | null>(null)
-/** 本人已猜中（本地记录 + 服务端榜单双重判定走 board 接口，此处为本次会话反馈态） */
-const solvedByMe = ref(false)
+/** 本人是否已猜中：以服务端猜中榜为准（榜单含猜中者 username），
+ * 弹窗重开/换设备/登录态变化都正确，避免会话态导致重开后又可竞猜 */
+const solvedByMe = computed(() =>
+  !!board.value?.board?.length
+  && board.value.board.some(item => item.username === userStore.userInfo?.username))
 
 watch(visible, (value) => {
   if (value && props.draw) {
@@ -112,7 +115,6 @@ async function handleGuess() {
     const res = await submitGuess(props.draw.metadata.name, answer)
     const result = res.data
     if (result?.result === 'CORRECT') {
-      solvedByMe.value = true
       feedback.value = { text: `恭喜，你猜对啦！谜底：${result.answer}`, correct: true }
       emit('solved')
       loadBoard()
