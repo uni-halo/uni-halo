@@ -231,7 +231,7 @@ function handleGuessSolved() {
 </script>
 
 <template>
-  <view class="min-h-screen w-screen flex flex-col bg-page">
+  <view class="min-h-screen w-screen flex flex-col bg-page pb-safe">
     <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-plugin-unavailable
@@ -242,41 +242,44 @@ function handleGuessSolved() {
     <template v-else>
       <!-- 分类 tab（吸顶，样式对齐装备列表：横向滚动 + 胶囊） -->
       <wd-sticky v-if="typeTabs.length !== 0" :offset-top="offsetTop">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap">
-          <view
-            v-for="tab in typeTabs" :key="tab.value"
-            class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-            :class="{ '!bg-primary text-gray-900 font-semibold': activeType === tab.value }"
-            @click="handleSwitchType(tab.value)"
-          >
-            {{ tab.label }}
-          </view>
-        </scroll-view>
+        <view class="w-screen overflow-hidden">
+          <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+            <view
+              v-for="tab in typeTabs" :key="tab.value"
+              class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+              :class="{ '!bg-primary text-gray-900 font-semibold': activeType === tab.value }"
+              @click="handleSwitchType(tab.value)"
+            >
+              {{ tab.label }}
+            </view>
+          </scroll-view>
+        </view>
       </wd-sticky>
 
       <uh-data-loading
         v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
         empty-text="啊偶，还没有任何画作哦~" min-height="75vh" @refresh="handleRetry"
       />
-
-      <view v-else class="box-border w-full flex gap-3 p-3">
-        <view class="flex flex-1 flex-col gap-3">
-          <uh-draw-card
-            v-for="draw in leftColumn" :key="draw.metadata.name" :draw="draw"
-            @tap="handleOpenDetail(draw)"
-          />
+      <view v-else class="box-border w-full flex flex-col pb-12">
+        <view class="box-border w-full flex gap-3 p-3">
+          <view class="flex flex-1 flex-col gap-3">
+            <uh-draw-card
+              v-for="draw in leftColumn" :key="draw.metadata.name" :draw="draw"
+              @tap="handleOpenDetail(draw)"
+            />
+          </view>
+          <view class="flex flex-1 flex-col gap-3">
+            <uh-draw-card
+              v-for="draw in rightColumn" :key="draw.metadata.name" :draw="draw"
+              @tap="handleOpenDetail(draw)"
+            />
+          </view>
         </view>
-        <view class="flex flex-1 flex-col gap-3">
-          <uh-draw-card
-            v-for="draw in rightColumn" :key="draw.metadata.name" :draw="draw"
-            @tap="handleOpenDetail(draw)"
-          />
-        </view>
+        <uh-data-loadmore
+          v-if="loadingStatus === DataLoadingStatusEnum.Success" :status="loadMoreStatus.status"
+          :text="loadMoreStatus.text" class="w-full"
+        />
       </view>
-      <uh-data-loadmore
-        v-if="loadingStatus === DataLoadingStatusEnum.Success" :status="loadMoreStatus.status"
-        :text="loadMoreStatus.text" class="w-full"
-      />
     </template>
 
     <!-- 底部悬浮：画一幅（登录 + 绘画权限） -->
