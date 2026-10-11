@@ -5,7 +5,7 @@
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { deleteMyDraw, getMyDrawList, setMyDrawHidden } from '@/api/draw'
+import { deleteMyDraw, getMyDrawList, getMyPuzzle, revealMyPuzzle, setMyDrawHidden } from '@/api/draw'
 import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { usePageScroll } from '@/hooks/usePageScroll'
@@ -14,7 +14,7 @@ import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { useTokenStore } from '@/store/token'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { checkThumbnailUrl } from '@/utils/url'
-import type { IDraw, IDrawStatus } from '@/api/types/draw'
+import type { IDraw, IDrawStatus, IPuzzleInfo } from '@/api/types/draw'
 
 const dialog = useDialog()
 
@@ -193,6 +193,53 @@ function handleDelete(draw: IDraw) {
   }).catch(() => { })
 }
 
+/* ---------------- 竞猜管理（仅竞猜作品） ---------------- */
+const isPuzzle = (draw: IDraw) => !!draw.spec.puzzleStatus
+
+const puzzleVisible = ref(false)
+const puzzleLoading = ref(false)
+const puzzleInfo = ref<IPuzzleInfo | null>(null)
+const puzzleDraw = ref<IDraw | null>(null)
+
+async function handleOpenPuzzle(draw: IDraw) {
+  puzzleDraw.value = draw
+  puzzleInfo.value = null
+  puzzleVisible.value = true
+  puzzleLoading.value = true
+  try {
+    const res = await getMyPuzzle(draw.metadata.name)
+    puzzleInfo.value = res.data || null
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '获取竞猜信息失败', icon: 'none' })
+  }
+  finally {
+    puzzleLoading.value = false
+  }
+}
+
+/** 手动揭晓（二次确认，幂等；揭晓后谜底公开、竞猜结束） */
+function handleReveal() {
+  if (!puzzleDraw.value) { return }
+  dialog.confirm({
+    title: '揭晓谜底',
+    msg: '揭晓后谜底公开、竞猜结束，不可恢复为竞猜中。确定揭晓吗？',
+    zIndex: 9999,
+    confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
+    cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
+  }).then(async () => {
+    try {
+      await revealMyPuzzle(puzzleDraw.value!.metadata.name)
+      uni.showToast({ title: '已揭晓', icon: 'none' })
+      handleOpenPuzzle(puzzleDraw.value!)
+      handleRetry()
+    }
+    catch (err: any) {
+      uni.showToast({ title: err?.message || '揭晓失败', icon: 'none' })
+    }
+  }).catch(() => { })
+}
+
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
 })
@@ -231,17 +278,23 @@ onPageScroll((option: Page.PageScrollOption) => {
       >
         <view class="box-border flex gap-3 p-3">
           <wd-img
-            :src="checkThumbnailUrl(draw.spec.cover)" mode="aspectFill" class="h-24 w-24 shrink-0 rounded-xl"
+            :src="checkThumbnailUrl(draw.spec.cover)" mode="aspectFill" class="h-16 w-16 shrink-0 rounded-xl"
             :radius="8" @click="handlePreview(draw)"
           >
             <template #loading>
               <wd-loading size="64rpx" custom-class="text-primary" />
             </template>
           </wd-img>
-          <view class="box-border flex flex-1 flex-col justify-between gap-y-1.5">
+          <view class="box-border flex flex-1 flex-col justify-between gap-y-1">
             <view class="flex items-center justify-between gap-2">
               <text class="min-w-0 flex-1 truncate text-sm text-gray-900 font-medium">
                 {{ draw.spec.title || '没有作品描述' }}
+              </text>
+              <text
+                v-if="isPuzzle(draw)"
+                class="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-500"
+              >
+                {{ draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
               </text>
               <text class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="statusClass(draw)">
                 {{ statusText(draw) }}
@@ -256,24 +309,32 @@ onPageScroll((option: Page.PageScrollOption) => {
                 />
               </view>
             </view>
-            <text class="text-3xs text-gray-400">
-              日期：{{ formatTime(draw.metadata.creationTimestamp) }}
-            </text>
-            <text class="truncate text-3xs text-gray-500 leading-relaxed">
+            <text class="truncate text-xs text-gray-500 leading-relaxed">
               审核：{{ draw.spec.reason ?? '暂无结果' }}
             </text>
-            <view class="flex items-center justify-between gap-2 text-xs">
-              <text class="text-3xs text-gray-400">
-                操作：
-              </text>
-              <uh-button
-                custom-class="uh-global-card-glass flex items-center gap-1 !shadow-none !border !rounded-lg !bg-red !text-white !py-1 !px-1 !text-sm !text-gray-900 active:opacity-80"
-                class="" @click="handleDelete(draw)"
-              >
-                <wd-icon name="delete" size="24rpx" />
-              </uh-button>
-            </view>
+            <text class="text-xs text-gray-400">
+              日期：{{ formatTime(draw.metadata.creationTimestamp) }}
+            </text>
           </view>
+        </view>
+        <view class="box-border w-full flex items-center gap-2 overflow-hidden p-3 pt-0">
+          <uh-button
+            v-if="isPuzzle(draw)"
+            class="flex-1"
+            custom-class="uh-global-card-glass flex items-center gap-1 !shadow-none !border !rounded-lg !bg-orange-100 !py-1.5 !px-2 !text-sm !text-orange-500 active:opacity-80"
+            @click="handleOpenPuzzle(draw)"
+          >
+            <wd-icon name="user" size="24rpx" />
+            <text class="text-xs">竞猜管理</text>
+          </uh-button>
+          <uh-button
+            class="flex-1"
+            custom-class="uh-global-card-glass flex items-center gap-1 !shadow-none !border !rounded-lg !bg-red-100 !py-1.5 !px-2 !text-sm !text-red-500 active:opacity-80"
+            @click="handleDelete(draw)"
+          >
+            <wd-icon name="delete" size="24rpx" />
+            <text class="text-xs">删除</text>
+          </uh-button>
         </view>
       </view>
       <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
@@ -291,6 +352,78 @@ onPageScroll((option: Page.PageScrollOption) => {
         <text class="shrink-0 text-3xs font-semibold">画一幅</text>
       </view>
     </view>
+
+    <!-- 竞猜管理弹层（谜底 / 竞猜记录 / 手动揭晓） -->
+    <uh-glass-popup v-model="puzzleVisible" position="bottom" custom-class="rounded-2xl" :z-index="120">
+      <view class="box-border flex flex-col gap-y-3 p-3">
+        <view class="relative box-border w-full flex items-center justify-center">
+          <text class="text-md font-bold">竞猜管理</text>
+          <view
+            class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
+            @click="puzzleVisible = false"
+          >
+            <wd-icon name="close" size="28rpx" class="text-gray-500" />
+          </view>
+        </view>
+
+        <wd-loading v-if="puzzleLoading" size="64rpx" custom-class="text-primary py-8" />
+        <template v-else-if="puzzleInfo">
+          <!-- 谜底信息 -->
+          <view class="uh-global-card-glass flex flex-col gap-y-1.5 rounded-xl p-3 !border !shadow-none">
+            <view class="flex items-center justify-between">
+              <text class="text-sm text-gray-900 font-bold">谜底：{{ puzzleInfo.puzzleAnswer }}</text>
+              <text class="text-3xs text-gray-400">
+                {{ puzzleInfo.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
+              </text>
+            </view>
+            <text v-if="puzzleInfo.puzzleHint" class="text-xs text-gray-400">
+              提示内容：{{ puzzleInfo.puzzleHint }}
+            </text>
+            <text class="text-xs text-gray-400">
+              自动揭晓：{{ puzzleInfo.autoRevealAt ? formatTime(puzzleInfo.autoRevealAt) : '手动揭晓' }}
+            </text>
+            <text class="text-xs text-gray-400">
+              数据统计：{{ puzzleInfo.guessCount }} 人参与 · {{ puzzleInfo.solvedCount }} 人猜中
+            </text>
+          </view>
+
+          <!-- 竞猜记录 -->
+          <scroll-view :scroll-y="true" :show-scrollbar="false" class="h-[40vh] flex-1">
+            <view
+              v-for="record in puzzleInfo.records" :key="record.username"
+              class="box-border flex items-center gap-x-2 border-b border-gray-100 px-1 py-2 last:border-b-0"
+            >
+              <wd-avatar
+                :src="checkThumbnailUrl(record.avatar || '')"
+                :text="(record.displayName || record.username || '?').slice(0, 1).toUpperCase()"
+                shape="round" size="44rpx"
+                custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+              />
+              <text class="min-w-0 flex-1 truncate text-xs text-gray-700">
+                {{ record.displayName || record.username }}
+              </text>
+              <text class="text-3xs text-gray-400">“{{ record.answer }}”</text>
+              <text class="shrink-0 text-3xs font-semibold" :class="record.correct ? 'text-green-500' : 'text-gray-400'">
+                {{ record.correct ? '猜中' : '未中' }}
+              </text>
+            </view>
+            <uh-data-loading
+              v-if="puzzleInfo.records.length === 0" size="small" min-height="30vh"
+              loading-status="empty" :use-refresh-button="false" empty-text="暂无竞猜记录" empty-sub-text=" 还没有人来猜，快分享给小伙伴吧～"
+            />
+          </scroll-view>
+
+          <!-- 手动揭晓 -->
+          <uh-button
+            v-if="puzzleInfo.puzzleStatus !== 'REVEALED'"
+            custom-class="uh-global-card-glass !shadow-none !border !rounded-xl !bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80"
+            @click="handleReveal"
+          >
+            手动揭晓
+          </uh-button>
+        </template>
+      </view>
+    </uh-glass-popup>
   </view>
 </template>
 

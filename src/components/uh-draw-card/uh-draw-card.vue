@@ -19,7 +19,16 @@ const emit = defineEmits<{
 }>()
 
 const coverUrl = computed(() => checkThumbnailUrl(props.draw.spec.cover))
-const titleText = computed(() => props.draw.spec.title || '无题')
+/** 竞猜作品未揭晓时隐藏标题，防止标题泄露谜底 */
+const isPuzzle = computed(() => !!props.draw.spec.puzzleStatus)
+const titleText = computed(() => {
+  if (isPuzzle.value && props.draw.spec.puzzleStatus !== 'REVEALED') {
+    return '作品标题已隐藏'
+  }
+  return props.draw.spec.title || '无题'
+})
+const puzzleLabel = computed(() =>
+  props.draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '猜画')
 const owner = computed(() => props.draw.owner)
 const ownerText = computed(() => owner.value?.displayName || owner.value?.username || '佚名')
 const ownerAvatar = computed(() => checkThumbnailUrl(owner.value?.avatar || ''))
@@ -35,12 +44,18 @@ const dateText = computed(() => {
     class="uh-global-card-glass uh-shadow-xs box-border w-full overflow-hidden rounded-xl"
     @click="emit('tap')"
   >
-    <view v-if="coverUrl" class="h-32 w-full">
+    <view v-if="coverUrl" class="relative h-32 w-full">
       <wd-img :src="coverUrl" mode="aspectFill" lazy-load class="h-full w-full">
         <template #loading>
           <wd-loading size="64rpx" custom-class="text-primary" />
         </template>
       </wd-img>
+      <view
+        v-if="isPuzzle"
+        class="absolute right-2 top-2 flex items-center gap-x-0.5 rounded-full bg-black/50 px-2 py-0.5"
+      >
+        <text class="text-xs text-white">{{ puzzleLabel }}</text>
+      </view>
     </view>
     <view class="box-border flex flex-col gap-y-1.5 overflow-hidden px-3 py-2.5">
       <text class="w-full truncate text-xs text-gray-900">{{ titleText }}</text>

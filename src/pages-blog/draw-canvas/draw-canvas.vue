@@ -24,8 +24,6 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('drawCanvas', '画一幅')
 
 /* ---------------- 画布 ---------------- */
-const textInputVisible = ref(false)
-
 const {
   currentColor,
   currentLineWidth,
@@ -40,7 +38,6 @@ const {
   onTouchStart,
   onTouchMove,
   onTouchEnd,
-  commitText,
   undo,
   redo,
   clear,
@@ -48,9 +45,6 @@ const {
   exportImage,
 } = useCanvasDraw({
   canvasId: 'draw-canvas',
-  onTextRequest: () => {
-    textInputVisible.value = true
-  },
 })
 
 const canvasReady = ref(false)
@@ -91,7 +85,6 @@ const tools: { key: DrawTool, label: string, icon: string }[] = [
   { key: 'brush', label: '画笔', icon: 'edit-outline' },
   { key: 'eraser', label: '橡皮', icon: 'delete' },
   { key: 'fill', label: '填充', icon: 'fill' },
-  { key: 'text', label: '文字', icon: 'font' },
   { key: 'line', label: '直线', icon: 'arrow-right' },
   { key: 'rect', label: '矩形', icon: 'stop' },
   { key: 'circle', label: '圆形', icon: 'circle' },
@@ -99,9 +92,6 @@ const tools: { key: DrawTool, label: string, icon: string }[] = [
 
 function selectTool(tool: DrawTool) {
   currentTool.value = tool
-  if (tool === 'text') {
-    textInputVisible.value = true
-  }
 }
 
 /** 画笔样式选项 */
@@ -115,17 +105,6 @@ function selectBrushStyle(style: BrushStyle) {
   currentBrushStyle.value = style
 }
 
-/* ---------------- 文字工具 ---------------- */
-const textInputValue = ref('')
-
-function confirmText() {
-  commitText(textInputValue.value)
-  textInputValue.value = ''
-  textInputVisible.value = false
-  // 文字落笔后回到画笔工具
-  currentTool.value = 'brush'
-}
-
 const releasePopupVisible = ref(false)
 
 function handleShowReleasePopup() {
@@ -137,6 +116,42 @@ const tokenStore = useTokenStore()
 const title = ref('')
 const description = ref('')
 const publishing = ref(false)
+
+/* ---------------- 猜画设置（在原发布弹窗上扩展） ---------------- */
+const guessEnabled = ref(false)
+/** 谜底（开启猜画时必填，≤20 字） */
+const puzzleAnswer = ref('')
+/** 提示语（选填） */
+const puzzleHint = ref('')
+/** 自动揭晓预设（0 = 不自动揭晓，仅手动） */
+const autoRevealOptions = [
+  { label: '手动揭晓', hours: 0 },
+  { label: '1 小时后', hours: 1 },
+  { label: '1 天后', hours: 24 },
+  { label: '3 天后', hours: 72 },
+] as const
+const autoRevealChoice = ref(0)
+
+/** 自动揭晓时间（RFC3339；不自动 = undefined） */
+function resolveAutoRevealAt(): string | undefined {
+  const hours = autoRevealOptions[autoRevealChoice.value]?.hours ?? 0
+  return hours > 0 ? new Date(Date.now() + hours * 3600_000).toISOString() : undefined
+}
+
+function handlePublishValidatePuzzle(): string | null {
+  if (!guessEnabled.value) { return null }
+  const answer = puzzleAnswer.value.trim()
+  if (!answer) {
+    return '开启猜画需要填写谜底'
+  }
+  if (answer.length > 20) {
+    return '谜底不能超过 20 字'
+  }
+  if (title.value.trim() && title.value.trim().includes(answer)) {
+    return '标题里不要包含谜底哦'
+  }
+  return null
+}
 
 /** 发布画作：导出图片 → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
 async function handlePublish() {
@@ -153,6 +168,11 @@ async function handlePublish() {
     toLoginPage()
     return
   }
+  const puzzleError = handlePublishValidatePuzzle()
+  if (puzzleError) {
+    uni.showToast({ title: puzzleError, icon: 'none' })
+    return
+  }
   publishing.value = true
   try {
     const tempPath = await exportImage()
@@ -166,9 +186,19 @@ async function handlePublish() {
       description: description.value.trim() || undefined,
       cover: permalink,
       attachmentName: attachment.metadata?.name,
+      // 竞猜字段（关闭猜画时不传，服务端强制清理）
+      puzzleAnswer: guessEnabled.value ? puzzleAnswer.value.trim() : undefined,
+      puzzleHint: guessEnabled.value && puzzleHint.value.trim()
+        ? puzzleHint.value.trim()
+        : undefined,
+      autoRevealAt: guessEnabled.value ? resolveAutoRevealAt() : undefined,
     })
     const approved = res.data?.spec?.status === 'APPROVED'
     uni.showToast({ title: approved ? '发布成功' : '已提交，等待审核', icon: 'none' })
+    guessEnabled.value = false
+    puzzleAnswer.value = ''
+    puzzleHint.value = ''
+    autoRevealChoice.value = 0
     setTimeout(() => uni.navigateBack(), 1200)
   }
   catch (err: any) {
@@ -350,7 +380,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
         <view class="uh-global-card-glass w-full flex items-center border rounded-xl px-4 py-2.5 !shadow-none">
           <input
-            v-model="title" placeholder="给画作起个标题（必填）" placeholder-class="text-gray-400"
+            v-model="title" placeholder="给画作起个标题（必填，别写谜底哦）" placeholder-class="text-gray-400"
             class="w-full text-sm" :maxlength="50"
           >
         </view>
@@ -360,6 +390,53 @@ onPageScroll((option: Page.PageScrollOption) => {
             class="h-20 w-full text-sm" :maxlength="200"
           />
         </view>
+
+        <!-- 猜画设置（扩展在原发布弹窗上） -->
+        <view class="uh-global-card-glass w-full flex flex-col gap-y-3 border rounded-xl p-3 !shadow-none">
+          <view class="flex items-center justify-between">
+            <view class="flex flex-col gap-y-0.5">
+              <text class="text-xs text-gray-900 font-medium">开启猜画模式</text>
+              <text class="text-3xs text-gray-400">其他用户可竞猜谜底，猜中积分排行榜 +1</text>
+            </view>
+            <wd-switch v-model="guessEnabled" size="40rpx" />
+          </view>
+          <template v-if="guessEnabled">
+            <view
+              class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
+            >
+              <input
+                v-model="puzzleAnswer" placeholder="谜底（必填，≤20 字，猜中需完全一致）" placeholder-class="text-gray-400"
+                class="w-full text-3xs" :maxlength="20"
+              >
+            </view>
+            <view
+              class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
+            >
+              <input
+                v-model="puzzleHint" placeholder="提示语（选填，如：一种动物）" placeholder-class="text-gray-400"
+                class="w-full text-3xs" :maxlength="50"
+              >
+            </view>
+            <view class="flex flex-wrap gap-x-4 gap-y-2">
+              <view
+                v-for="(option, index) in autoRevealOptions" :key="option.hours"
+                class="box-border flex items-center gap-x-1" @click="autoRevealChoice = index"
+              >
+                <view
+                  class="h-3 w-3 border rounded-full"
+                  :class="autoRevealChoice === index ? 'border-primary bg-primary' : 'border-gray-300'"
+                />
+                <text
+                  class="text-3xs"
+                  :class="autoRevealChoice === index ? 'text-gray-900 font-medium' : 'text-gray-400'"
+                >
+                  {{ option.label }}
+                </text>
+              </view>
+            </view>
+          </template>
+        </view>
+
         <view class="w-full">
           <uh-button
             class="w-full flex-1"
@@ -367,37 +444,6 @@ onPageScroll((option: Page.PageScrollOption) => {
             :class="{ 'opacity-60': publishing }" @click="handlePublish"
           >
             发布画作
-          </uh-button>
-        </view>
-      </view>
-    </uh-glass-popup>
-
-    <!-- 文字输入弹窗 -->
-    <uh-glass-popup v-model="textInputVisible" position="bottom" :z-index="110" custom-class="!rounded-2xl">
-      <view class="box-border flex flex-col gap-3 p-3">
-        <!-- 顶部 -->
-        <view class="relative box-border w-full flex items-center justify-center">
-          <view class="flex gap-y-1">
-            <text class="text-md font-bold">添加文字</text>
-          </view>
-          <view
-            class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
-            @click="releasePopupVisible = false"
-          >
-            <wd-icon name="close" size="28rpx" class="text-gray-500" />
-          </view>
-        </view>
-        <view class="uh-global-card-glass w-full flex flex-1 items-center border rounded-xl px-4 py-2.5 !shadow-none">
-          <textarea v-model="textInputValue" placeholder="请输入文字内容..." class="w-full text-sm" :maxlength="30" />
-        </view>
-
-        <view class="w-full">
-          <uh-button
-            class="w-full flex-1"
-            custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80"
-            @click="confirmText"
-          >
-            确认
           </uh-button>
         </view>
       </view>
