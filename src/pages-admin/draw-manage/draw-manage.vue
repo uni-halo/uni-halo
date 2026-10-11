@@ -211,7 +211,7 @@ async function handleOpenPuzzle(draw: IDraw) {
     puzzleInfo.value = res.data || null
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '获取竞猜信息失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none' })
   }
   finally {
     puzzleLoading.value = false
@@ -223,7 +223,7 @@ function handleReveal() {
   if (!puzzleDraw.value) { return }
   dialog.confirm({
     title: '揭晓谜底',
-    msg: '揭晓后谜底公开、竞猜结束，不可恢复为竞猜中。确定揭晓吗？',
+    msg: '揭晓后谜底公开、画谜结束，不可恢复为进行中。确定揭晓吗？',
     zIndex: 9999,
     confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
     cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
@@ -294,7 +294,7 @@ onPageScroll((option: Page.PageScrollOption) => {
                 v-if="isPuzzle(draw)"
                 class="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-500"
               >
-                {{ draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
+                {{ draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '进行中' }}
               </text>
               <text class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="statusClass(draw)">
                 {{ statusText(draw) }}
@@ -325,7 +325,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             @click="handleOpenPuzzle(draw)"
           >
             <wd-icon name="user" size="24rpx" />
-            <text class="text-xs">竞猜管理</text>
+            <text class="text-xs">画谜管理</text>
           </uh-button>
           <uh-button
             class="flex-1"
@@ -357,7 +357,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     <uh-glass-popup v-model="puzzleVisible" position="bottom" custom-class="rounded-2xl" :z-index="120">
       <view class="box-border flex flex-col gap-y-3 p-3">
         <view class="relative box-border w-full flex items-center justify-center">
-          <text class="text-md font-bold">竞猜管理</text>
+          <text class="text-md font-bold">画谜管理</text>
           <view
             class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
             @click="puzzleVisible = false"
@@ -373,7 +373,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             <view class="flex items-center justify-between">
               <text class="text-sm text-gray-900 font-bold">谜底：{{ puzzleInfo.puzzleAnswer }}</text>
               <text class="text-3xs text-gray-400">
-                {{ puzzleInfo.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
+                {{ puzzleInfo.puzzleStatus === 'REVEALED' ? '已揭晓' : '进行中' }}
               </text>
             </view>
             <text v-if="puzzleInfo.puzzleHint" class="text-xs text-gray-400">
@@ -409,7 +409,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             </view>
             <uh-data-loading
               v-if="puzzleInfo.records.length === 0" size="small" min-height="30vh"
-              loading-status="empty" :use-refresh-button="false" empty-text="暂无竞猜记录" empty-sub-text=" 还没有人来猜，快分享给小伙伴吧～"
+              loading-status="empty" :use-refresh-button="false" empty-text="暂无画谜记录" empty-sub-text=" 还没有人来猜，快分享给小伙伴吧～"
             />
           </scroll-view>
 

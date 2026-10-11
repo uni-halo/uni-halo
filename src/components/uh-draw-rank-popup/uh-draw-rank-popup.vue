@@ -91,7 +91,7 @@ function handleToLogin() {
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-center">
         <view class="flex gap-y-1">
-          <text class="text-md font-bold">猜画积分排行榜</text>
+          <text class="text-md font-bold">画谜排行榜</text>
         </view>
         <view
           class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
@@ -111,7 +111,7 @@ function handleToLogin() {
         <text v-if="myRank" class="text-xs text-gray-900 font-semibold">
           第 {{ myRank.rank }}名 · 共 {{ myRank.score }} 分
         </text>
-        <text v-else class="text-xs text-gray-400">暂未上榜，快去竞猜一幅画吧</text>
+        <text v-else class="text-xs text-gray-400">暂未上榜，快去猜一幅画吧</text>
       </view>
 
       <!-- 榜单（加载/空/错误态复用 uh-data-loading） -->
@@ -125,7 +125,7 @@ function handleToLogin() {
         <scroll-view v-else :scroll-y="true" :show-scrollbar="false" class="h-[50vh] w-full flex-1">
           <view class="w-full flex flex-col gap-y-1.5">
             <view
-              v-for="(item, index) in [...rankList, ...rankList]" :key="item.username"
+              v-for="(item, index) in rankList" :key="item.username"
               class="uh-global-card-glass box-border flex items-center gap-x-2 rounded-xl py-2 pl-1 pr-3 !border !shadow-none"
               :class="[index <= 2 ? 'bg-primary' : 'bg-white/80']"
             >

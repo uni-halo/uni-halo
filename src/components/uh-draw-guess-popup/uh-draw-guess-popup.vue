@@ -72,7 +72,7 @@ async function loadBoard() {
     board.value = res.data || null
   }
   catch (err) {
-    console.error('获取竞猜信息失败', err)
+    console.error('获取画谜信息失败', err)
     board.value = null
   }
   finally {
@@ -150,7 +150,7 @@ function handlePreviewCover() {
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-center">
         <view class="flex gap-y-1">
-          <text class="text-md font-bold">竞猜这幅画</text>
+          <text class="text-md font-bold">猜猜这幅画</text>
         </view>
         <view
           class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
@@ -201,7 +201,7 @@ function handlePreviewCover() {
         <template v-if="revealed">
           <view class="flex flex-col gap-y-1">
             <text class="text-sm text-primary font-bold">已揭晓 · 谜底：{{ board?.answer }}</text>
-            <text class="text-xs text-gray-400">竞猜已结束，感谢参与</text>
+            <text class="text-xs text-gray-400">画谜已揭晓，感谢参与</text>
           </view>
         </template>
 
@@ -216,8 +216,8 @@ function handlePreviewCover() {
         <!-- 态 3：出题人本人 -->
         <template v-else-if="isMine">
           <view class="flex flex-col gap-y-1">
-            <text class="text-xs text-gray-500">这是你的竞猜作品，快去分享给小伙伴来猜吧～</text>
-            <text class="text-xs text-gray-400">可在「我的绘画」中查看竞猜记录或手动揭晓</text>
+            <text class="text-xs text-gray-500">这是你的画谜作品，快去分享给小伙伴来猜吧～</text>
+            <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
           </view>
         </template>
 
@@ -242,7 +242,7 @@ function handlePreviewCover() {
           >
             {{ feedback.text }}
           </text>
-          <text v-else class="w-full text-center text-xs text-gray-400">竞猜提示：猜中需与谜底完全一致</text>
+          <text v-else class="w-full text-center text-xs text-gray-400">猜谜提示：猜中需与谜底完全一致</text>
         </template>
 
         <!-- 猜中榜 -->

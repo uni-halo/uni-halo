@@ -208,6 +208,13 @@ export interface IPageConfig {
     showCommentList?: boolean
     enableComment?: boolean
   }
+  /** 绘画配置（绘画作品管理-设置弹窗维护；服务端发布/竞猜流程消费） */
+  draw?: {
+    /** 发布绘画需要审核（缺省 true） */
+    auditEnabled?: boolean
+    /** 猜画玩法总开关（缺省 true）：关闭后 App 端隐藏竞猜入口与发布猜画设置 */
+    guessEnabled?: boolean
+  }
 }
 
 /** 审核模式数据(公开接口 GET /audit-data 返回) */

@@ -277,7 +277,7 @@ async function handleOpenPuzzle(draw: IDraw) {
     puzzleInfo.value = res.data || null
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '获取竞猜信息失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none' })
   }
   finally {
     puzzleLoading.value = false
@@ -289,7 +289,7 @@ function handleReveal() {
   if (!puzzleTarget.value) { return }
   dialog.confirm({
     title: '强制揭晓',
-    msg: '揭晓后谜底公开、竞猜结束。确定强制揭晓吗？',
+    msg: '揭晓后谜底公开、画谜结束。确定强制揭晓吗？',
     zIndex: 9999,
     confirmButtonProps: DIALOG_CONFIRM_BUTTON_PROPS,
     cancelButtonProps: DIALOG_CANCEL_BUTTON_PROPS,
@@ -352,7 +352,7 @@ function handleReveal() {
                 v-if="isPuzzle(draw)"
                 class="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-500"
               >
-                {{ draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
+                {{ draw.spec.puzzleStatus === 'REVEALED' ? '已揭晓' : '进行中' }}
               </text>
               <text class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="statusClass(draw)">
                 {{ statusText(draw) }}
@@ -409,7 +409,7 @@ function handleReveal() {
             @click="handleOpenPuzzle(draw)"
           >
             <wd-icon name="user" size="26rpx" />
-            <text>竞猜</text>
+            <text>画谜</text>
           </uh-button>
           <uh-button
             class="w-full" custom-class="flex items-center gap-1 !bg-red-100 px-3 py-1.5 !text-xs !text-red-500 "
@@ -462,7 +462,7 @@ function handleReveal() {
     <uh-glass-popup v-model="puzzleVisible" position="bottom" custom-class="rounded-2xl" :z-index="120">
       <view class="box-border flex flex-col gap-y-3 p-3">
         <view class="relative box-border w-full flex items-center justify-center">
-          <text class="text-md font-bold">竞猜信息</text>
+          <text class="text-md font-bold">画谜信息</text>
           <view
             class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
             @click="puzzleVisible = false"
@@ -477,7 +477,7 @@ function handleReveal() {
             <view class="flex items-center justify-between">
               <text class="text-sm text-gray-900 font-bold">谜底：{{ puzzleInfo.puzzleAnswer }}</text>
               <text class="text-3xs text-gray-400">
-                {{ puzzleInfo.puzzleStatus === 'REVEALED' ? '已揭晓' : '竞猜中' }}
+                {{ puzzleInfo.puzzleStatus === 'REVEALED' ? '已揭晓' : '进行中' }}
               </text>
             </view>
             <text v-if="puzzleInfo.puzzleHint" class="text-3xs text-gray-400">
@@ -490,7 +490,7 @@ function handleReveal() {
               {{ puzzleInfo.guessCount }} 人参与 · {{ puzzleInfo.solvedCount }} 人猜中
             </text>
           </view>
-          <uh-section-title>竞猜记录</uh-section-title>
+          <uh-section-title>画谜记录</uh-section-title>
           <scroll-view :scroll-y="true" class="h-[40vh] flex-1" :show-scrollbar="false">
             <view
               v-for="record in puzzleInfo.records" :key="record.username"
@@ -505,7 +505,7 @@ function handleReveal() {
               </text>
             </view>
             <view v-if="puzzleInfo.records.length === 0" class="py-6 text-center text-xs text-gray-400">
-              暂无竞猜记录
+              暂无画谜记录
             </view>
           </scroll-view>
 
