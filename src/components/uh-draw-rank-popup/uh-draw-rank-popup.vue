@@ -136,7 +136,7 @@ function handleToLogin() {
                 :src="avatarOf(item)" :text="initialOf(item)" shape="round" size="52rpx"
                 custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
               />
-              <text class="flex-1 truncate text-xs text-gray-900">{{ textOf(item) }}</text>
+              <text class="flex-1 truncate text-3xs text-gray-900">{{ textOf(item) }}</text>
               <text class="shrink-0 text-3xs text-gray-900">总分 {{ item.score }} 分</text>
             </view>
           </view>
@@ -145,7 +145,7 @@ function handleToLogin() {
 
       <!-- 底部：未登录且开启登录时为「登录后查看我的排名」引导按钮；已登录无底部按钮（右上角可关闭） -->
       <view v-if="showLoginEntry" class="pt-1">
-        <uh-button custom-class="!bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80" @click="handleToLogin">
+        <uh-button custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80" @click="handleToLogin">
           登录后查看我的排名
         </uh-button>
       </view>
