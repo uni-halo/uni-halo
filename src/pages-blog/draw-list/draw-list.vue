@@ -49,7 +49,7 @@ const guessModeEnabled = computed(() =>
 async function handleGoDraw() {
   if (!tokenStore.updateNowTime().hasLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
-    await sleep(2500)
+    await sleep(1500)
     uni.navigateTo({ url: '/pages/auth/login' })
     return
   }
