@@ -121,6 +121,8 @@ export interface IPageTitles {
   drawCanvas?: string
   drawManage?: string
   drawReview?: string
+  /** 恋爱日记页（插件端全局标题表 pages.titles.loveDiary） */
+  loveDiary?: string
   momentDetail?: string
   bannerDetail?: string
   userProfile?: string
@@ -131,6 +133,10 @@ export interface IPageTitles {
   // 认证页
   login?: string
   register?: string
+  /** 用户协议页 */
+  userAgreement?: string
+  /** 隐私政策页 */
+  privacyPolicy?: string
 }
 
 /** 首页分类栏分类引用快照（固定最多 3 个，数组顺序 = 展示顺序） */
@@ -562,9 +568,8 @@ export interface ILoveConfigGroup {
   lovePhoto?: ILoveModuleConfig
   /** 恋爱清单模块入口 */
   loveDaily?: ILoveModuleConfig
-  /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，留空客户端内置回退） */
+  /** 恋爱日记页面设置（恋爱页背景图；标题在全局标题表 pages.titles.loveDiary） */
   diaryPage?: {
-    pageTitle?: string
     bgImageUrl?: string
   }
   [key: string]: unknown

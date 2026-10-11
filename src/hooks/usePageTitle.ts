@@ -30,6 +30,7 @@ export type PageTitleKey
     | 'drawCanvas'
     | 'drawManage'
     | 'drawReview'
+    | 'loveDiary'
     | 'setting'
     | 'aboutProject'
     | 'disclaimer'
