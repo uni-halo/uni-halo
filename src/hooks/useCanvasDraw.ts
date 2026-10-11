@@ -4,12 +4,12 @@ import { computed, getCurrentInstance, ref } from 'vue'
 export type BrushStyle = 'round' | 'square' | 'crayon'
 
 /** 绘制工具 */
-export type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill' | 'text'
+export type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill'
 
 /** 单条笔画(自由绘制/橡皮/形状共用,shape 区分几何类型) */
 export interface IStroke {
-  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶 text=文字,其余按 shape 几何绘制 */
-  kind: 'free' | 'eraser' | 'fill' | 'text'
+  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶,其余按 shape 几何绘制 */
+  kind: 'free' | 'eraser' | 'fill'
   /** 几何形状(kind=free 且无 shape 时为普通笔画) */
   shape?: 'line' | 'rect' | 'circle'
   /** 颜色(完整 css color,含透明度) */
@@ -22,8 +22,6 @@ export interface IStroke {
   filled?: boolean
   /** 触点列表(canvas 逻辑坐标) */
   points: { x: number, y: number }[]
-  /** 文字内容(kind=text) */
-  text?: string
 }
 
 /** useCanvasDraw 配置 */
@@ -38,12 +36,10 @@ export interface IUseCanvasDrawOptions {
   brushStyle?: BrushStyle
   /** 初始背景色 */
   bgColor?: string
-  /** 文字工具拾点回调(点击画布后触发,页面据此弹输入框) */
-  onTextRequest?: (point: { x: number, y: number }) => void
 }
 
 /**
- * 画布绘制 hook:笔画管理、平滑绘制、形状/填充/文字/橡皮、撤销重做、背景色、导出
+ * 画布绘制 hook:笔画管理、平滑绘制、形状/填充/橡皮、撤销重做、背景色、导出
  * 兼容 H5 / 微信小程序 / APP(Canvas 2D 接口)
  */
 export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
@@ -53,7 +49,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     lineWidth = 14,
     brushStyle = 'round',
     bgColor: initialBg = '#FFFFFF',
-    onTextRequest,
   } = options
 
   /** 当前颜色 */
@@ -211,14 +206,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
   }
 
-  /** 绘制文字 */
-  function drawText(stroke: IStroke) {
-    const p = stroke.points[0]
-    ctx.font = `${stroke.width * 3}px sans-serif`
-    ctx.textBaseline = 'middle'
-    ctx.fillText(stroke.text || '', p.x, p.y)
-  }
-
   /** 油漆桶:从触点开始泛洪填充(基于像素扫描) */
   function floodFill(point: { x: number, y: number }, color: string) {
     if (!ctx || !canvasNode)
@@ -289,11 +276,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       floodFill(pts[0], stroke.color)
       return
     }
-    if (stroke.kind === 'text') {
-      applyStrokeStyle(stroke)
-      drawText(stroke)
-      return
-    }
     if (stroke.shape) {
       applyStrokeStyle(stroke)
       drawShape(stroke)
@@ -357,11 +339,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       commitStroke(fillStroke)
       return
     }
-    if (tool === 'text') {
-      pendingTextPoint = p
-      onTextRequest?.(p)
-      return
-    }
     const base = { color: currentColor.value, width: currentLineWidth.value, style: currentBrushStyle.value, points: [p] }
     if (tool === 'eraser') {
       activeStroke = { ...base, kind: 'eraser', style: 'round', width: currentLineWidth.value * 2 }
@@ -374,26 +351,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
     redrawAll()
     drawStroke(activeStroke)
-  }
-
-  /** 文字待落点(touchstart 拾取,确认后落笔) */
-  let pendingTextPoint: { x: number, y: number } | null = null
-
-  /** 确认文字输入并落到画布(供页面在输入完成后调用) */
-  function commitText(text: string) {
-    if (!pendingTextPoint || !text.trim())
-      return
-    const stroke: IStroke = {
-      kind: 'text',
-      color: currentColor.value,
-      width: currentLineWidth.value,
-      style: 'round',
-      points: [pendingTextPoint],
-      text,
-    }
-    commitStroke(stroke)
-    redrawAll()
-    pendingTextPoint = null
   }
 
   /** 触摸进行中:自由绘制增量画段,形状工具整笔预览 */
@@ -486,7 +443,6 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     onTouchStart,
     onTouchMove,
     onTouchEnd,
-    commitText,
     undo,
     redo,
     clear,

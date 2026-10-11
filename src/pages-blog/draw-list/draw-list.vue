@@ -8,6 +8,7 @@ import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessa
 import { getDrawList } from '@/api/draw'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { usePermission } from '@/hooks/usePermission'
 import { useTokenStore } from '@/store/token'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -16,7 +17,6 @@ import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoad
 import { sleep } from '@/utils/common'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { IDraw } from '@/api/types/draw'
-import { formatTime } from '@/utils/formatTime'
 
 definePage({
   style: {
@@ -27,6 +27,8 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 吸顶偏移（分类 tab 吸顶用，同装备列表） */
+const { height: offsetTop } = useNavbarSticky()
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('drawList', '绘画作品')
 
@@ -39,9 +41,11 @@ const loginEnabled = computed(() => {
   const client = appConfigStore.configs?.loginConfig?.client
   return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
 })
-function handleGoDraw() {
+async function handleGoDraw() {
   if (!tokenStore.updateNowTime().hasLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
+    await sleep(2500)
+    uni.navigateTo({ url: '/pages/auth/login' })
     return
   }
   if (!can('DRAW_MANAGE')) {
@@ -77,7 +81,29 @@ onShareTimeline(() => ({
 /* ---------------- 数据加载 ---------------- */
 const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus, resetLoadMoreStatus } = useDataLoadingStatus()
 const drawList = ref<IDraw[]>([])
-const queryParams = ref({ size: 10, page: 1 })
+const queryParams = ref({ size: 10, page: 1, type: 'all' })
+
+/** 分类 tab：全部 / 普通作品 / 竞猜作品 */
+const typeTabs = [
+  { label: '全部', value: 'all' },
+  { label: '普通作品', value: 'normal' },
+  { label: '竞猜作品', value: 'puzzle' },
+] as const
+const activeType = ref<'all' | 'normal' | 'puzzle'>('all')
+
+function handleSwitchType(value: 'all' | 'normal' | 'puzzle') {
+  if (activeType.value === value) { return }
+  activeType.value = value
+  queryParams.value.type = value
+  // 切换分类回到列表顶部（同装备列表）
+  uni.pageScrollTo({ scrollTop: 0, duration: 300 })
+  handleRetry()
+}
+
+/** 是否竞猜作品（公开数据无谜底，用竞猜状态判定） */
+function isPuzzleDraw(draw: IDraw) {
+  return !!draw.spec.puzzleStatus
+}
 
 async function handleGetData() {
   if (!loadMoreStatus.value.active) {
@@ -161,25 +187,32 @@ onPageScroll((option: Page.PageScrollOption) => {
 const leftColumn = computed(() => drawList.value.filter((_, i) => i % 2 === 0))
 const rightColumn = computed(() => drawList.value.filter((_, i) => i % 2 === 1))
 
-/* ---------------- 详情弹层 ---------------- */
+/* ---------------- 详情/竞猜弹层（组件化：uh-draw-detail-popup / uh-draw-guess-popup） ---------------- */
 const detailVisible = ref(false)
 const currentDraw = ref<IDraw | null>(null)
-/** 详情弹窗作者信息：头像相对路径补全 + 首字回退在数据层算好，模板不做判断 */
-const currentOwnerAvatar = computed(() => checkThumbnailUrl(currentDraw.value?.owner?.avatar || ''))
-const currentOwnerText = computed(() =>
-  currentDraw.value?.owner?.displayName || currentDraw.value?.owner?.username || '佚名')
-const currentOwnerInitial = computed(() => currentOwnerText.value.slice(0, 1).toUpperCase())
 const currentCover = ref('')
 
+/* ---------------- 竞猜弹层 ---------------- */
+const guessVisible = ref(false)
 function handleOpenDetail(draw: IDraw) {
+  // 竞猜作品打开竞猜弹窗，普通作品走原详情弹窗
   currentDraw.value = draw
   currentCover.value = draw.spec.cover || ''
+  if (isPuzzleDraw(draw)) {
+    guessVisible.value = true
+    return
+  }
   detailVisible.value = true
 }
 
-function handlePreviewCover() {
-  if (!currentCover.value) { return }
-  uni.previewImage({ urls: [currentCover.value] })
+/* ---------------- 排行榜弹层 ---------------- */
+const rankVisible = ref(false)
+
+/** 竞猜状态变化后静默刷新列表计数 */
+function handleGuessSolved() {
+  queryParams.value.page = 1
+  loadMoreStatus.value.active = false
+  handleGetData()
 }
 </script>
 
@@ -193,6 +226,20 @@ function handlePreviewCover() {
     />
 
     <template v-else>
+      <!-- 分类 tab（吸顶，样式对齐装备列表：横向滚动 + 胶囊） -->
+      <wd-sticky :offset-top="offsetTop">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap">
+          <view
+            v-for="tab in typeTabs" :key="tab.value"
+            class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+            :class="{ '!bg-primary text-gray-900 font-semibold': activeType === tab.value }"
+            @click="handleSwitchType(tab.value)"
+          >
+            {{ tab.label }}
+          </view>
+        </scroll-view>
+      </wd-sticky>
+
       <uh-data-loading
         v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
         empty-text="啊偶，还没有任何画作哦~" min-height="75vh" @refresh="handleRetry"
@@ -220,7 +267,9 @@ function handlePreviewCover() {
 
     <!-- 底部悬浮：画一幅（登录 + 绘画权限） -->
     <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 box-border w-fit pb-safe">
-      <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-1 items-center justify-center gap-x-3 border rounded-full p-1">
+      <view
+        class="uh-global-card-glass uh-shadow-xs box-border flex flex-1 items-center justify-center gap-x-3 border rounded-full p-1"
+      >
         <view
           v-if="loginEnabled"
           class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
@@ -231,63 +280,22 @@ function handlePreviewCover() {
         </view>
         <view
           class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
+          @click="rankVisible = true"
         >
-          <wd-icon name="eye" size="28rpx" />
-          <text class="shrink-0 text-3xs font-semibold">查看排行榜</text>
+          <wd-icon name="crown" size="28rpx" />
+          <text class="shrink-0 text-3xs font-semibold">猜画排行榜</text>
         </view>
       </view>
     </view>
 
-    <!-- 详情弹层 -->
-    <uh-glass-popup
-      v-model="detailVisible" position="bottom" custom-class="rounded-2xl" :z-index="110"
-      @close="detailVisible = false"
-    >
-      <view v-if="currentDraw" class="box-border flex flex-col gap-y-3 p-3">
-        <!-- 顶部 -->
-        <view class="relative box-border w-full flex items-center justify-center">
-          <view class="flex gap-y-1">
-            <text class="text-md font-bold">作品详情</text>
-          </view>
-          <view
-            class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
-            @click="detailVisible = false"
-          >
-            <wd-icon name="close" size="28rpx" class="text-gray-500" />
-          </view>
-        </view>
-        <view
-          class="uh-global-card-glass h-64 flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
-        >
-          <wd-img :src="currentCover" mode="widthFix" class="w-full" @click="handlePreviewCover">
-            <template #loading>
-              <wd-loading size="64rpx" custom-class="text-primary" />
-            </template>
-          </wd-img>
-        </view>
-        <view class="flex flex-col gap-y-1.5">
-          <text class="text-sm text-gray-900 font-medium">{{ currentDraw.spec.title || '无题' }}</text>
-          <text v-if="currentDraw.spec.description" class="text-xs text-gray-500 leading-relaxed">
-            {{ currentDraw.spec.description }}
-          </text>
-          <view class="flex items-center justify-between text-xs text-gray-400">
-            <view class="w-full flex items-center gap-x-2">
-              <wd-avatar
-                :src="currentOwnerAvatar"
-                :text="currentOwnerInitial"
-                shape="round" size="42rpx"
-                custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
-              />
-              <text>{{ currentOwnerText }}</text>
-            </view>
-            <text class="shrink-0">
-              {{ formatTime({ d: currentDraw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' })
-              }}
-            </text>
-          </view>
-        </view>
-      </view>
-    </uh-glass-popup>
+    <!-- 详情弹层（普通作品，抽离组件） -->
+    <uh-draw-detail-popup v-model="detailVisible" :draw="currentDraw" />
+
+    <!-- 竞猜弹层（独立弹窗，复制详情结构 + 竞猜面板） -->
+    <uh-draw-guess-popup v-model="guessVisible" :draw="currentDraw" @solved="handleGuessSolved" />
+
+    <!-- 猜画积分排行榜弹层（匿名可看） -->
+    <uh-draw-rank-popup v-model="rankVisible" />
   </view>
 </template>
 
