@@ -26,6 +26,7 @@ export type PageTitleKey
     | 'portfolioDetail'
     | 'douban'
     | 'footprint'
+    | 'equipment'
     | 'drawList'
     | 'drawCanvas'
     | 'drawManage'
