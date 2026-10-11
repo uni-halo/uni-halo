@@ -34,20 +34,20 @@ const tokenStore = useTokenStore()
 const appConfigStore = useAppConfigStore()
 const { can } = usePermission()
 
-/** 悬浮绘画入口（登录且具备绘画权限才显示） */
-const showDrawAction = computed(() =>
-  tokenStore.updateNowTime().hasLogin && can('DRAW_MANAGE'))
-
 /** 应用登录整体开关（与登录页同语义：密码/微信两开关全关 = 登录不可用） */
 const loginEnabled = computed(() => {
   const client = appConfigStore.configs?.loginConfig?.client
   return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
 })
-
-/** 「登录后，可以参与画作提交」提示：未满足入口条件且应用开启了登录才显示 */
-const showLoginTip = computed(() => !showDrawAction.value && loginEnabled.value)
-
 function handleGoDraw() {
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  if (!can('DRAW_MANAGE')) {
+    uni.showToast({ title: '您没有权限', icon: 'none' })
+    return
+  }
   uni.navigateTo({ url: '/pages-blog/draw-canvas/draw-canvas' })
 }
 
@@ -219,21 +219,22 @@ function handlePreviewCover() {
     </template>
 
     <!-- 底部悬浮：画一幅（登录 + 绘画权限） -->
-    <view v-if="showDrawAction || showLoginTip" class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 pb-safe">
-      <view
-        v-if="showDrawAction"
-        class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-primary"
-        @click="handleGoDraw"
-      >
-        <wd-icon name="plus" size="28rpx" />
-        <text class="shrink-0 text-3xs font-semibold">画一幅</text>
-      </view>
-
-      <view
-        v-else-if="showLoginTip"
-        class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-primary"
-      >
-        <text class="text-3xs font-semibold">登录后，可以参与画作提交</text>
+    <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 box-border w-fit pb-safe">
+      <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-1 items-center justify-center gap-x-3 border rounded-full p-1">
+        <view
+          v-if="loginEnabled"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
+          @click="handleGoDraw"
+        >
+          <wd-icon name="plus" size="28rpx" />
+          <text class="shrink-0 text-3xs font-semibold">画一幅</text>
+        </view>
+        <view
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
+        >
+          <wd-icon name="eye" size="28rpx" />
+          <text class="shrink-0 text-3xs font-semibold">查看排行榜</text>
+        </view>
       </view>
     </view>
 

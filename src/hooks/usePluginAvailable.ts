@@ -31,6 +31,7 @@ export const NeedPluginIds = Object.freeze({
   PluginPortfolio: 'portfolio',
   PluginDouban: 'plugin-douban',
   PluginFootprint: 'footprint',
+  PluginEquipment: 'equipment',
 })
 
 interface IPluginAvailableOption {
@@ -163,6 +164,16 @@ export const NeedPlugins = new Map<string, IPluginInfo>([
       desc: '足迹模块所需要的插件，用于展示去过地方的足迹记录（基于高德地图）',
       logo: checkUrl('/plugins/footprint/logo.svg'),
       url: 'https://github.com/acanyo/halo-plugin-footprint',
+    },
+  ],
+  [
+    NeedPluginIds.PluginEquipment,
+    {
+      id: 'equipment',
+      name: '装备管理',
+      desc: '装备管理模块所需要的插件，用于展示博主装备清单（支持分组）',
+      logo: checkUrl('/plugins/equipment/logo.svg'),
+      url: 'https://github.com/chengzhongxue/plugin-equipment',
     },
   ],
 ])
