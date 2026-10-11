@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onPageScroll, onShareAppMessage, onShareTimeline, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -68,6 +68,12 @@ interface ILoveNavRenderItem {
 }
 
 const navList = ref<ILoveNavRenderItem[]>([])
+
+/** 页面标题：全局标题表 titles.loveDiary，留空回退内置默认 */
+const pageTitle = computed(() => {
+  const title = configs.value.featureConfig?.pages?.titles?.loveDiary?.trim()
+  return title || '恋爱日记'
+})
 
 /* ---------------- 分享 ---------------- */
 
@@ -246,7 +252,7 @@ onBeforeUnmount(() => {
 <template>
   <view class="min-h-screen w-screen bg-pink-50">
     <uh-navbar
-      :scroll-y="scrollY" default-title="恋爱日记" :bg-blur="2" :need-placeholder="false" back-class="text-love"
+      :scroll-y="scrollY" :default-title="pageTitle" :bg-blur="2" :need-placeholder="false" back-class="text-love"
       title-color="!text-love"
     />
 
