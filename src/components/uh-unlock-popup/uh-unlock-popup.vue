@@ -168,6 +168,16 @@ async function handleOnConfirm() {
     loading.value = false
   }
 }
+
+// 如果当前是分享进来的，需要显示一个返回首页的按钮
+const pages = getCurrentPages()
+const currentPage = pages[pages.length - 1]
+const isVisibleBackHome = computed(() => {
+  return currentPage.route === 'pages-blog/love/love'
+})
+function handleBackHome() {
+  uni.reLaunch({ url: '/pages/index/index' })
+}
 </script>
 
 <template>
@@ -222,6 +232,13 @@ async function handleOnConfirm() {
           @click="handleOnCancel"
         >
           取消
+        </uh-button>
+        <uh-button
+          v-if="isVisibleBackHome" class="flex-1"
+          custom-class="flex-1 uh-global-card-glass box-border !border-none uh-shadow-xs text-xs border !py-2.5 !rounded-xl !bg-white/90"
+          @click="handleBackHome"
+        >
+          返回首页
         </uh-button>
         <uh-button
           class="flex-1"
