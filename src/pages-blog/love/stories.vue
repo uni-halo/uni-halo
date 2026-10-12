@@ -297,7 +297,7 @@ onReachBottom(() => {
 
     <!-- 日期排序条 -->
     <wd-sticky v-if="loadingStatus !== DataLoadingStatusEnum.Error" :offset-top="offsetTop">
-      <view class="box-border w-screen flex items-center gap-x-2 overflow-hidden px-3 py-2">
+      <view class="box-border w-screen flex items-center gap-x-2 overflow-hidden px-3 pt-2">
         <view
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-full px-4 py-1.5 text-xs shadow-none"
           :class="sortDir === 'desc' ? '!bg-love/90 text-white font-bold' : 'text-gray-600'"

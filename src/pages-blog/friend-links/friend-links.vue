@@ -454,10 +454,10 @@ onReachBottom(() => {
 
     <!-- 顶部 -->
     <wd-sticky :offset-top="offsetTop">
-      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap pt-2">
         <view
           v-for="(tab, index) in friendLinkTabs" :key="tab.key"
-          class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+          class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
           :class="{ '!bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
           @click="handleOnTabChange({ index })"
         >
@@ -473,16 +473,15 @@ onReachBottom(() => {
         :error-text="siteTips" :checking="siteChecking" @on-refresh="handleSitePluginRefresh"
       />
       <template v-else>
-        <view v-if="siteLoadingStatus !== 'success'">
-          <uh-data-loading
-            :loading-status="siteLoadingStatus" empty-text="啊偶,博主还没有朋友呢~"
-            @refresh="handleGetData"
-          />
-        </view>
+        <uh-data-loading
+          v-if="siteLoadingStatus !== 'success'"
+          :loading-status="siteLoadingStatus" min-height="60vh" empty-text="啊偶,博主还没有朋友呢~"
+          @refresh="handleGetData"
+        />
 
-        <view v-else class="box-border pt-4">
+        <view v-else class="box-border w-full">
           <!-- 友链分组列表(参考小程序 tab 分组展示) -->
-          <view class="box-border px-4 pb-4">
+          <view class="box-border w-full p-3">
             <view v-for="group in siteGroups" :key="group.groupName" class="group-item mb-4">
               <view class="mb-3 flex items-center">
                 <text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />
@@ -625,11 +624,11 @@ onReachBottom(() => {
       <template v-else>
         <uh-data-loading
           v-if="miniLoadingStatus !== 'success'" :loading-status="miniLoadingStatus"
-          empty-text="还没有收录的小程序呢~" @refresh="handleGetMiniProgramLinks"
+          min-height="60vh" empty-text="还没有收录的小程序呢~" @refresh="handleGetMiniProgramLinks"
         />
-        <view v-else class="box-border flex flex-1 flex-col pt-4">
+        <view v-else class="box-border flex flex-1 flex-col">
           <!-- 分组列表 -->
-          <view class="box-border flex-1 px-4 pb-4">
+          <view class="box-border flex-1 p-3">
             <view v-for="group in miniGroups" :key="group.groupName || 'ungrouped'" class="group-item mb-4">
               <view class="mb-3 flex items-center">
                 <text class="mr-2 inline-block h-4 w-1 rounded-full bg-secondary" />

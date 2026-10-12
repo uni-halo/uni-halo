@@ -235,8 +235,8 @@ onReachBottom(() => {
     />
 
     <wd-sticky v-if="uniHaloPluginAvailable" :offset-top="offsetTop">
-      <view class="w-screen overflow-hidden">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pb-1.5">
+      <view class="box-border w-screen overflow-hidden pt-2">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="mb-2 box-border w-screen whitespace-nowrap">
           <view
             v-for="opt in typeOptions" :key="opt.value"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
@@ -246,8 +246,8 @@ onReachBottom(() => {
             {{ opt.label }}
           </view>
         </scroll-view>
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-          <view class="box-border flex gap-2 px-3 pb-1.5">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap">
+          <view class="box-border flex gap-2 px-3">
             <view
               v-for="opt in statusOptions" :key="opt.value"
               class="uh-global-card-glass inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"

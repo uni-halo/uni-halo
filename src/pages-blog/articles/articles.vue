@@ -233,8 +233,8 @@ onReachBottom(() => {
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <wd-sticky :offset-top="offsetTop">
-      <view class="w-screen overflow-hidden">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pb-1.5">
+      <view class="box-border w-screen overflow-hidden pt-2">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="mb-1 w-screen whitespace-nowrap">
           <view
             v-for="cate in categoryOptions" :key="cate.value"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
@@ -244,7 +244,7 @@ onReachBottom(() => {
             {{ cate.label }}
           </view>
         </scroll-view>
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap">
           <view class="box-border flex gap-2 px-3 pb-1.5">
             <view
               v-for="opt in sortOptions" :key="opt.value"

@@ -250,7 +250,7 @@ onReachBottom(() => {
 
     <template v-else>
       <wd-sticky v-if="category.list.length !== 0" :offset-top="offsetTop">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap pt-2">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap pt-2">
           <view
             v-for="(cate, index) in category.list" :key="cate.spec.displayName"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"

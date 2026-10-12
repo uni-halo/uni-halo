@@ -313,18 +313,16 @@ function handleReveal() {
 
     <!-- 状态筛选(吸顶，默认待审核) -->
     <wd-sticky :offset-top="offsetTop">
-      <view class="w-screen overflow-hidden">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap pb-1.5">
-          <view
-            v-for="tab in STATUS_TABS" :key="tab.label"
-            class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
-            :class="activeStatus === tab.value ? '!bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
-            @click="handleSelectStatus(tab.value)"
-          >
-            {{ tab.label }}
-          </view>
-        </scroll-view>
-      </view>
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap pt-2">
+        <view
+          v-for="tab in STATUS_TABS" :key="tab.label"
+          class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+          :class="activeStatus === tab.value ? '!bg-primary text-gray-900 font-semibold' : 'text-gray-500'"
+          @click="handleSelectStatus(tab.value)"
+        >
+          {{ tab.label }}
+        </view>
+      </scroll-view>
     </wd-sticky>
 
     <uh-data-loading

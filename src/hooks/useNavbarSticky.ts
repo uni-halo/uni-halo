@@ -13,7 +13,7 @@ export function useNavbarSticky(customNavbarHeight?: number) {
 
     height.value += statusBarHeight
     // #ifdef H5
-    height.value += 10
+    height.value += 0
     // #endif
     // #ifndef H5
     height.value += customNavbarHeight ?? 46

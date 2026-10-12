@@ -356,7 +356,7 @@ onReachBottom(() => {
     <uh-navbar :scroll-y="scrollY" default-title="恋爱清单" title-color="text-love" back-class="text-love" />
 
     <wd-sticky :offset-top="offsetTop">
-      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-full whitespace-nowrap pt-2">
         <view
           v-for="f in filterConfig" :key="f.key"
           class="uh-global-card-glass mb-3 ml-3 inline-flex items-center gap-1 border rounded-2xl px-4 py-1.5 text-xs shadow-none"

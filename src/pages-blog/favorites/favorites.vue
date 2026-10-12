@@ -91,10 +91,10 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 顶部类型 Tab(与图库页同款:吸顶玻璃胶囊 chip) -->
     <wd-sticky :offset-top="offsetTop">
-      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-full whitespace-nowrap pt-2">
         <view
           v-for="tab in tabList" :key="tab.key"
-          class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+          class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
           :class="{ '!bg-primary text-gray-900 font-semibold': tab.key === activeKind }"
           @click="handleSwitchTab(tab.key)"
         >
@@ -105,7 +105,7 @@ onPageScroll((option: Page.PageScrollOption) => {
     </wd-sticky>
 
     <!-- 状态舞台 + 列表 -->
-    <view class="flex flex-col gap-3 px-3 pt-2">
+    <view class="box-border flex flex-col gap-3 p-3">
       <!-- 空态(当前 Tab 无收藏):uh-data-loading 统一渲染,视觉与 tabbar 页一致 -->
       <uh-data-loading
         v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" min-height="65vh"
@@ -118,21 +118,23 @@ onPageScroll((option: Page.PageScrollOption) => {
         <template v-if="activeKind === 'post'">
           <view
             v-for="item in currentItems" :key="item.id"
-            class="uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white" @click="handleToDetail(item)"
+            class="uh-shadow-xs overflow-hidden rounded-xl bg-white" @click="handleToDetail(item)"
           >
             <view class="flex gap-3 p-4 pb-3">
               <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
               <wd-img
                 v-if="item.cover" :src="item.cover" mode="aspectFill"
-                class="h-[128rpx] w-[176rpx] shrink-0" :radius="8"
+                class="h-16 w-22 shrink-0" :radius="8"
               >
                 <template #loading>
                   <wd-loading size="64rpx" custom-class="text-primary" />
                 </template>
               </wd-img>
               <!-- 无图 -->
-              <view v-else
-                class="h-[128rpx] w-[176rpx] shrink-0 flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400">
+              <view
+                v-else
+                class="h-16 w-22 flex shrink-0 items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400"
+              >
                 <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
               </view>
               <view class="min-w-0 flex-1">
@@ -151,11 +153,11 @@ onPageScroll((option: Page.PageScrollOption) => {
                   :src="item.owner.avatar"
                   :text="getAvatarFallbackText(item.owner.displayName)"
                   shape="round"
-                  custom-class="!h-[36rpx] !w-[36rpx] !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
+                  custom-class="!h-4 !w-4 !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
                   class="!rounded-full"
                   mode="aspectFill"
                 />
-                <text class="max-w-[220rpx] truncate">{{ item.owner.displayName }}</text>
+                <text class="max-w-28 truncate">{{ item.owner.displayName }}</text>
                 <text class="shrink-0">· 收藏于 {{ formatCollectTime(item.createTime) }}</text>
               </view>
               <view class="flex shrink-0 items-center gap-1">
@@ -170,7 +172,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         <template v-else>
           <view
             v-for="item in currentItems" :key="item.id"
-            class="uh-shadow-xs overflow-hidden rounded-[24rpx] bg-white" @click="handleToDetail(item)"
+            class="uh-shadow-xs overflow-hidden rounded-xl bg-white" @click="handleToDetail(item)"
           >
             <view class="p-4 pb-3">
               <view class="line-clamp-3 text-sm text-gray-800 leading-relaxed">
@@ -183,11 +185,11 @@ onPageScroll((option: Page.PageScrollOption) => {
                   :src="item.owner.avatar"
                   :text="getAvatarFallbackText(item.owner.displayName)"
                   shape="round"
-                  custom-class="!h-[36rpx] !w-[36rpx] !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
+                  custom-class="!h-4 !w-4 !shrink-0 !text-[8px] !leading-none !text-gray-900 !font-bold"
                   class="!rounded-full"
                   mode="aspectFill"
                 />
-                <text class="max-w-[220rpx] truncate">{{ item.owner.displayName }}</text>
+                <text class="max-w-28 truncate">{{ item.owner.displayName }}</text>
                 <text class="shrink-0">· 收藏于 {{ formatCollectTime(item.createTime) }}</text>
               </view>
               <view class="flex shrink-0 items-center gap-1">

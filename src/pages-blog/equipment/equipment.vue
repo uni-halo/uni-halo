@@ -226,7 +226,7 @@ onReachBottom(() => {
 
     <template v-else>
       <wd-sticky v-if="category.list.length !== 0" :offset-top="offsetTop">
-        <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-screen whitespace-nowrap">
+        <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap pt-2">
           <view
             v-for="(cate, index) in category.list" :key="index"
             class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
@@ -246,7 +246,7 @@ onReachBottom(() => {
         :loading-status="loadingStatus" @refresh="handleGetCategory"
       />
 
-      <view v-else class="box-border w-full p-3 pb-0 pt-3">
+      <view v-else class="box-border w-full p-3 pb-0">
         <view class="grid grid-cols-2 gap-2.5">
           <view
             v-for="(item, index) in dataList" :key="index"

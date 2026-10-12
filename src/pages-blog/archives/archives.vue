@@ -280,10 +280,10 @@ onReachBottom(() => {
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <wd-sticky :offset-top="offsetTop">
-      <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+      <scroll-view :scroll-x="true" :show-scrollbar="false" class="box-border w-screen whitespace-nowrap pt-2">
         <view
           v-for="(tab, index) in archiveTabs" :key="tab.key"
-          class="uh-global-card-glass mb-2 ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
+          class="uh-global-card-glass ml-3 inline-flex border rounded-2xl px-4 py-1.5 text-xs shadow-none"
           :class="{ '!bg-primary text-gray-900 font-semibold': activeTabIndex === index }"
           @click="handleOnTabChange({ index })"
         >
@@ -299,7 +299,7 @@ onReachBottom(() => {
 
     <!-- 内容区域 -->
     <template v-else>
-      <view class="box-border px-3 pt-4">
+      <view class="box-border w-full p-3">
         <view v-for="item in dataList" :key="item.key" class="flex">
           <view class="flex-1 pb-4">
             <view class="mb-3 flex items-center gap-1">
