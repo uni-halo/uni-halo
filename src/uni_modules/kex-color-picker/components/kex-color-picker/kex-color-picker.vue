@@ -123,8 +123,8 @@
 					</template>
 				</view>
 
-				<!-- 预览：原色 / 新色 -->
-				<view class="kex-cp__preview-row">
+				<!-- 预览：原色 / 新色（绘画画布场景隐藏，保留代码：v-if="false"） -->
+				<view v-if="false" class="kex-cp__preview-row">
 					<view class="kex-cp__preview-card">
 						<view class="kex-cp__checker kex-cp__preview-board">
 							<view class="kex-cp__preview-half" :style="{ backgroundColor: originCss }" />
@@ -172,7 +172,7 @@
 					<view v-if="clearable" class="kex-cp__chip kex-cp__chip--ghost" @click="onClear">
 						<text class="kex-cp__chip-text">清空</text>
 					</view>
-					<view class="kex-cp__chip" @click="copyColor">
+					<view class="kex-cp__chip kex-cp__chip--ghost" @click="copyColor">
 						<text class="kex-cp__chip-text">复制</text>
 					</view>
 					<view class="kex-cp__chip " @click="onConfirm">
@@ -1167,7 +1167,6 @@
 	.kex-cp__chip-text {
 		font-size: 28rpx;
 		color: #111827;
-		font-weight: 500;
 	}
 
 	.kex-cp__sv {
@@ -1176,9 +1175,6 @@
 		border-radius: 18rpx;
 		overflow: hidden;
 		margin-bottom: 28rpx;
-		border-width: 1px;
-		border-style: solid;
-		border-color: rgba(28, 25, 23, 0.06);
 	}
 
 	.kex-cp__sv-white,

@@ -8,12 +8,12 @@ import { checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import type { IDraw } from '@/api/types/draw'
 
-const visible = defineModel<boolean>({ default: false })
-
 const props = defineProps<{
   /** 画作数据（公开数据，不含谜底） */
   draw: IDraw | null
 }>()
+
+const visible = defineModel<boolean>({ default: false })
 
 const ownerAvatar = computed(() => checkThumbnailUrl(props.draw?.owner?.avatar || ''))
 const ownerText = computed(() =>
@@ -67,6 +67,7 @@ function handlePreviewCover() {
         </text>
         <view class="flex items-center justify-between text-xs text-gray-400">
           <view class="w-full flex items-center gap-x-2">
+            <text class="text-xs text-gray-500">作者：</text>
             <wd-avatar
               :src="ownerAvatar"
               :text="ownerInitial"

@@ -35,7 +35,8 @@ const entering = ref(false)
 
 /** 初始化并进入应用(启动页加载与"进入应用"按钮共用) */
 async function enterApp() {
-  if (entering.value) return
+  if (entering.value)
+    return
   entering.value = true
   try {
     // 有升级时等升级弹窗关闭后再继续
@@ -125,7 +126,7 @@ onLoad(async () => {
     </view>
 
     <uh-button
-      custom-class="mt-10 !rounded-full text-sm !px-6 !border !py-2 !bg-primary !text-gray-900 uh-shadow-xs"
+      custom-class="mt-6 uh-global-button-glass !shadow-none !border !rounded-full text-sm !px-6 !border !py-2 !bg-primary !text-gray-900"
       @click="enterApp"
     >
       进入应用
