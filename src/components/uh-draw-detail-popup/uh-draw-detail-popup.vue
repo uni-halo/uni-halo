@@ -66,7 +66,7 @@ function handlePreviewCover() {
           {{ draw.spec.description }}
         </text>
         <view class="flex items-center justify-between text-xs text-gray-400">
-          <view class="w-full flex items-center gap-x-2">
+          <view class="w-full flex items-center gap-x-1">
             <text class="text-xs text-gray-500">作者：</text>
             <wd-avatar
               :src="ownerAvatar"

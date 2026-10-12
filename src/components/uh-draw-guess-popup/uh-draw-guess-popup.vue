@@ -167,7 +167,7 @@ function handlePreviewCover() {
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-center">
         <view class="flex gap-y-1">
-          <text class="text-md font-bold">{{ loginEnabled ? '猜猜这幅画' : '作品详情' }}</text>
+          <text class="text-md font-bold">{{ !loginEnabled || revealed ? '作品详情' : '猜猜这幅画' }}</text>
         </view>
         <view
           class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
@@ -188,9 +188,16 @@ function handlePreviewCover() {
         </wd-img>
       </view>
 
+      <view v-if="revealed" class="w-full flex flex-col gap-y-1.5">
+        <text class="text-sm text-gray-900 font-semibold">{{ draw.spec.title || '无题' }}</text>
+        <text v-if="draw.spec.description" class="text-xs text-gray-500 leading-relaxed">
+          {{ draw.spec.description }}
+        </text>
+      </view>
+
       <!-- 作者信息 -->
       <view class="flex items-center justify-between text-xs text-gray-600">
-        <view class="w-full flex items-center gap-x-2">
+        <view class="w-full flex items-center gap-x-1">
           <text class="text-xs text-gray-500">作者：</text>
           <wd-avatar
             :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
@@ -207,7 +214,7 @@ function handlePreviewCover() {
       <view v-if="loginEnabled" class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
         <!-- 提示语与统计 -->
         <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
-          作品提示：{{ draw.spec.puzzleHint }}
+          谜底提示：{{ draw.spec.puzzleHint }}
         </view>
         <view class="flex items-center text-xs text-gray-400">
           <text>统计数据： {{ board?.guessCount ?? 0 }} 人参与</text>
@@ -218,8 +225,8 @@ function handlePreviewCover() {
         <!-- 态 1：已揭晓 -->
         <template v-if="revealed">
           <view class="flex flex-col gap-y-1">
-            <text class="text-sm text-primary font-bold">已揭晓 · 谜底：{{ board?.answer }}</text>
-            <text class="text-xs text-gray-400">画谜已揭晓，感谢参与</text>
+            <text class="text-sm text-primary font-bold">画谜谜底：{{ board?.answer }}</text>
+            <text class="text-xs text-gray-500">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
           </view>
         </template>
 
