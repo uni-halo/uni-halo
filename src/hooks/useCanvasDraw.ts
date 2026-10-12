@@ -1,4 +1,4 @@
-import { computed, getCurrentInstance, ref } from 'vue'
+import { computed, getCurrentInstance, ref, shallowRef } from 'vue'
 
 /** 画笔样式 */
 export type BrushStyle = 'round' | 'square' | 'crayon'
@@ -26,7 +26,7 @@ export interface IStroke {
 
 /** useCanvasDraw 配置 */
 export interface IUseCanvasDrawOptions {
-  /** canvas id(页面内唯一) */
+  /** 主 canvas id(预览层,页面内唯一;烘焙层 id 为 `${canvasId}-base`) */
   canvasId?: string
   /** 初始默认颜色 */
   color?: string
@@ -41,6 +41,15 @@ export interface IUseCanvasDrawOptions {
 /**
  * 画布绘制 hook:笔画管理、平滑绘制、形状/填充/橡皮、撤销重做、背景色、导出
  * 兼容 H5 / 微信小程序 / APP(Canvas 2D 接口)
+ *
+ * 性能架构(双层 canvas,画多不卡):
+ * - 烘焙层 `${canvasId}-base`(底层):背景色 + 已完成笔画。一笔结束时增量烘焙,
+ *   绘制过程的成本与笔画总数无关;
+ * - 预览层 `canvasId`(顶层,承载触摸事件):正在绘制的笔画/形状预览,拖动中只清除
+ *   本层重画当前形状,不再全量重放历史;
+ * - 撤销/重做/清空/换纸张属低频操作,退化为一次性全量重放(仅此时 O(N));
+ * - 烘焙层缺失时(页面未配置双 canvas)自动降级为单画布全量重放旧模式。
+ * 橡皮直接画在烘焙层(destination-out),油漆桶直接改烘焙层像素,均为终态操作。
  */
 export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
   const {
@@ -63,31 +72,55 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
   const shapeFilled = ref(false)
   /** 背景色 */
   const bgColor = ref(initialBg)
-  /** 笔画历史(撤销/重绘依据) */
-  const strokes = ref<IStroke[]>([])
-  /** 重做栈(撤销时压入,新笔画时清空) */
-  const redoStack = ref<IStroke[]>([])
-  /** 是否可以撤销 */
-  const canUndo = computed(() => strokes.value.length > 0)
-  /** 是否可以重做 */
-  const canRedo = computed(() => redoStack.value.length > 0)
-  /** 是否为空画布 */
-  const isEmpty = computed(() => strokes.value.length === 0)
 
-  /** canvas 节点 */
+  // 笔画历史为纯数据(退出 Vue 深度代理,避免上千坐标点被逐层 Proxy 拖慢重放),
+  // 可撤销/可重做/是否为空用计数 ref 驱动视图
+  /** 笔画历史(撤销/重绘依据,非响应式) */
+  const strokes: IStroke[] = []
+  /** 重做栈(撤销时压入,新笔画时清空) */
+  const redoStack: IStroke[] = []
+  /** 笔画计数(驱动 canUndo/canRedo/isEmpty) */
+  const strokeCount = ref(0)
+  const redoCount = ref(0)
+  /** 是否可以撤销 */
+  const canUndo = computed(() => strokeCount.value > 0)
+  /** 是否可以重做 */
+  const canRedo = computed(() => redoCount.value > 0)
+  /** 是否为空画布 */
+  const isEmpty = computed(() => strokeCount.value === 0)
+
+  /** 预览层(顶层)canvas 节点与上下文,承载触摸事件 */
   let canvasNode: any = null
-  /** 绘制上下文 */
   let ctx: any = null
+  /** 烘焙层(底层)canvas 节点与上下文,背景 + 已完成笔画;null = 降级单画布模式 */
+  let baseNode: any = null
+  let baseCtx: any = null
   /** 画布逻辑尺寸(css 像素) */
   let canvasWidth = 0
   let canvasHeight = 0
-  /** 画布相对视口偏移(H5 触摸坐标为 clientX/Y,需扣除) */
+  /** 画布相对视口偏移(H5 触摸坐标为 clientX/Y 需扣视口偏移) */
   let canvasOffsetX = 0
   let canvasOffsetY = 0
   /** 当前正在绘制的笔画 */
   let activeStroke: IStroke | null = null
+  /** 当前增量绘制目标(brush/形状=预览层,eraser/fill=烘焙层) */
+  let activeCtx: any = null
 
-  /** 获取 2d 上下文并初始化画布尺寸(统一走 uni-app createSelectorQuery,各端通用) */
+  /** 初始化单个 canvas 节点(物理分辨率放大,锁定 css 尺寸) */
+  function setupCanvas(node: any, width: number, height: number): any {
+    const dpr = Math.min(uni.getSystemInfoSync().pixelRatio || 2, 2)
+    node.width = width * dpr
+    node.height = height * dpr
+    if (node.style) {
+      node.style.width = `${width}px`
+      node.style.height = `${height}px`
+    }
+    const context = node.getContext('2d')
+    context.scale(dpr, dpr)
+    return context
+  }
+
+  /** 获取 2d 上下文并初始化双层画布(统一走 uni-app createSelectorQuery,各端通用) */
   function init(): Promise<void> {
     return new Promise((resolve, reject) => {
       const instance = getCurrentInstance()
@@ -107,18 +140,20 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
           // 记录视口偏移(H5 触摸坐标为 clientX/Y,需扣除)
           canvasOffsetX = info.left || 0
           canvasOffsetY = info.top || 0
-          // 物理分辨率放大,避免导出模糊
-          const dpr = uni.getSystemInfoSync().pixelRatio || 2
-          canvasNode.width = info.width * dpr
-          canvasNode.height = info.height * dpr
-          // 锁定 css 尺寸,防止属性变化带动布局尺寸跳变
-          if (canvasNode.style) {
-            canvasNode.style.width = `${info.width}px`
-            canvasNode.style.height = `${info.height}px`
-          }
-          ctx = canvasNode.getContext('2d')
-          ctx.scale(dpr, dpr)
-          resolve()
+          ctx = setupCanvas(canvasNode, canvasWidth, canvasHeight)
+          // 烘焙层可选:节点缺失时降级为单画布全量重放旧模式
+          const sub = uni.createSelectorQuery().in(instance?.proxy)
+          sub.select(`#${canvasId}-base`)
+            .fields({ node: true, size: true }, () => {})
+            .exec((subRes: any[]) => {
+              const baseInfo = subRes?.[0]
+              if (baseInfo?.node) {
+                baseNode = baseInfo.node
+                baseCtx = setupCanvas(baseNode, canvasWidth, canvasHeight)
+              }
+              redrawAll()
+              resolve()
+            })
         })
     })
   }
@@ -143,46 +178,52 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
   }
 
   /** 按样式应用描边参数(eraser 使用 destination-out 实现真擦除) */
-  function applyStrokeStyle(stroke: IStroke) {
-    ctx.globalCompositeOperation = stroke.kind === 'eraser' ? 'destination-out' : 'source-over'
-    ctx.strokeStyle = stroke.color
-    ctx.fillStyle = stroke.color
-    ctx.lineWidth = stroke.width
-    ctx.lineJoin = 'round'
+  function applyStrokeStyle(context: any, stroke: IStroke) {
+    context.globalCompositeOperation = stroke.kind === 'eraser' ? 'destination-out' : 'source-over'
+    context.strokeStyle = stroke.color
+    context.fillStyle = stroke.color
+    context.lineWidth = stroke.width
+    context.lineJoin = 'round'
     if (stroke.style === 'square') {
-      ctx.lineCap = 'square'
+      context.lineCap = 'square'
     }
     else {
       // round / crayon 均用圆头,蜡笔质感靠多次抖动叠加
-      ctx.lineCap = 'round'
+      context.lineCap = 'round'
     }
   }
 
-  /** 蜡笔纹理:沿主线多次低透明度抖动重绘,叠加出颗粒质感 */
-  function drawCrayonSegment(from: { x: number, y: number }, to: { x: number, y: number }, stroke: IStroke) {
+  /** 确定性伪随机(0..1,以序号+笔画起点为种子):蜡笔抖动用,整笔重画/重放时纹理稳定不闪变 */
+  function jitterAt(stroke: IStroke, index: number): number {
+    const s = Math.sin(index * 127.1 + stroke.points[0].x * 0.13 + stroke.points[0].y * 0.17) * 43758.5453
+    return s - Math.floor(s)
+  }
+
+  /** 蜡笔纹理:沿主线低透明度抖动重绘,叠加出颗粒质感(index 为段序号,决定确定性抖动) */
+  function drawCrayonSegment(context: any, from: { x: number, y: number }, to: { x: number, y: number }, stroke: IStroke, index: number) {
     const w = stroke.width
-    ctx.save()
-    ctx.globalAlpha = 0.28
-    for (let i = 0; i < 4; i++) {
-      const jx = (Math.random() - 0.5) * w * 0.36
-      const jy = (Math.random() - 0.5) * w * 0.36
-      ctx.beginPath()
-      ctx.moveTo(from.x + jx, from.y + jy)
-      ctx.lineTo(to.x + jx, to.y + jy)
-      ctx.lineWidth = w * (i === 0 ? 1 : 0.5)
-      ctx.stroke()
+    context.save()
+    context.globalAlpha = 0.28
+    for (let i = 0; i < 2; i++) {
+      const jx = (jitterAt(stroke, index * 2 + i) - 0.5) * w * 0.36
+      const jy = (jitterAt(stroke, index * 2 + i + 0.5) - 0.5) * w * 0.36
+      context.beginPath()
+      context.moveTo(from.x + jx, from.y + jy)
+      context.lineTo(to.x + jx, to.y + jy)
+      context.lineWidth = w * (i === 0 ? 1 : 0.5)
+      context.stroke()
     }
-    ctx.restore()
+    context.restore()
   }
 
   /** 绘制几何形状 */
-  function drawShape(stroke: IStroke) {
+  function drawShape(context: any, stroke: IStroke) {
     const [a, b] = [stroke.points[0], stroke.points[stroke.points.length - 1]]
-    ctx.beginPath()
+    context.beginPath()
     if (stroke.shape === 'line') {
-      ctx.moveTo(a.x, a.y)
-      ctx.lineTo(b.x, b.y)
-      ctx.stroke()
+      context.moveTo(a.x, a.y)
+      context.lineTo(b.x, b.y)
+      context.stroke()
     }
     else if (stroke.shape === 'rect') {
       const x = Math.min(a.x, b.x)
@@ -190,32 +231,34 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       const w = Math.abs(b.x - a.x)
       const h = Math.abs(b.y - a.y)
       if (stroke.filled)
-        ctx.fillRect(x, y, w, h)
+        context.fillRect(x, y, w, h)
       else
-        ctx.strokeRect(x, y, w, h)
+        context.strokeRect(x, y, w, h)
     }
     else if (stroke.shape === 'circle') {
       const cx = (a.x + b.x) / 2
       const cy = (a.y + b.y) / 2
       const r = Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y)) / 2
-      ctx.arc(cx, cy, r, 0, Math.PI * 2)
+      context.arc(cx, cy, r, 0, Math.PI * 2)
       if (stroke.filled)
-        ctx.fill()
+        context.fill()
       else
-        ctx.stroke()
+        context.stroke()
     }
   }
 
-  /** 油漆桶:从触点开始泛洪填充(基于像素扫描) */
+  /** 油漆桶:从触点开始泛洪填充(基于像素扫描,直接改烘焙层像素;降级模式改主画布) */
   function floodFill(point: { x: number, y: number }, color: string) {
-    if (!ctx || !canvasNode)
+    const targetNode = baseNode || canvasNode
+    const targetCtx = baseCtx || ctx
+    if (!targetCtx || !targetNode)
       return
-    const dpr = uni.getSystemInfoSync().pixelRatio || 2
+    const dpr = Math.min(uni.getSystemInfoSync().pixelRatio || 2, 2)
     const px = Math.round(point.x * dpr)
     const py = Math.round(point.y * dpr)
-    const W = canvasNode.width
-    const H = canvasNode.height
-    const img = ctx.getImageData(0, 0, W, H)
+    const W = targetNode.width
+    const H = targetNode.height
+    const img = targetCtx.getImageData(0, 0, W, H)
     const data = img.data
     const idx = (py * W + px) * 4
     const target = [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]]
@@ -246,7 +289,7 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       if (cur >= W) stack.push(cur - W)
       if (cur < W * (H - 1)) stack.push(cur + W)
     }
-    ctx.putImageData(img, 0, 0)
+    targetCtx.putImageData(img, 0, 0)
   }
 
   /** css color 转 rgba 数组(支持 #rgb/#rrggbb/#rrggbbaa/rgba()) */
@@ -267,26 +310,29 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     return [r, g, b, a]
   }
 
-  /** 用中点二次贝塞尔平滑绘制一条完整笔画(重绘/撤销用) */
+  /** 用中点二次贝塞尔平滑重放一条完整笔画(撤销/重做/清空/换纸/导出的全量重放用) */
   function drawStroke(stroke: IStroke) {
     const pts = stroke.points
-    if (!ctx || pts.length === 0)
+    const target = baseCtx || ctx
+    if (!target || pts.length === 0)
       return
-    if (stroke.kind === 'fill') {
-      floodFill(pts[0], stroke.color)
+    if (stroke.kind === 'fill')
       return
-    }
+    applyStrokeStyle(target, stroke)
     if (stroke.shape) {
-      applyStrokeStyle(stroke)
-      drawShape(stroke)
+      drawShape(target, stroke)
       return
     }
-    // 橡皮经 applyStrokeStyle 走 destination-out 真擦除,颜色无关
-    applyStrokeStyle(stroke)
+    drawSmoothStroke(target, stroke)
+  }
+
+  /** 中点二次贝塞尔平滑绘制整条笔画(单条 path,预览整笔重画与重放共用) */
+  function drawSmoothStroke(context: any, stroke: IStroke) {
+    const pts = stroke.points
     if (pts.length === 1) {
-      ctx.beginPath()
-      ctx.arc(pts[0].x, pts[0].y, stroke.width / 2, 0, Math.PI * 2)
-      ctx.fill()
+      context.beginPath()
+      context.arc(pts[0].x, pts[0].y, stroke.width / 2, 0, Math.PI * 2)
+      context.fill()
       return
     }
     for (let i = 0; i < pts.length - 1; i++) {
@@ -295,85 +341,145 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       const midX = (a.x + b.x) / 2
       const midY = (a.y + b.y) / 2
       if (i === 0) {
-        ctx.beginPath()
-        ctx.moveTo(a.x, a.y)
+        context.beginPath()
+        context.moveTo(a.x, a.y)
       }
-      ctx.quadraticCurveTo(a.x, a.y, midX, midY)
-      ctx.stroke()
+      context.quadraticCurveTo(a.x, a.y, midX, midY)
+      context.stroke()
       if (stroke.style === 'crayon')
-        drawCrayonSegment({ x: midX, y: midY }, b, stroke)
+        drawCrayonSegment(context, a, b, stroke, i)
     }
   }
 
-  /** 清空画布并重放全部笔画(橡皮 destination-out 擦除笔画后,背景用 destination-over 垫底) */
+  /** 清空烘焙层并重放全部笔画 + 垫底背景色(仅撤销/重做/清空/换纸/导出等低频操作) */
   function redrawAll() {
-    if (!ctx)
+    const target = baseCtx || ctx
+    if (!target || !canvasNode)
       return
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-    strokes.value.forEach(drawStroke)
-    ctx.save()
-    ctx.globalCompositeOperation = 'destination-over'
-    ctx.globalAlpha = 1
-    ctx.fillStyle = bgColor.value
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
-    ctx.restore()
-    ctx.globalCompositeOperation = 'source-over'
+    target.globalCompositeOperation = 'source-over'
+    target.clearRect(0, 0, canvasWidth, canvasHeight)
+    strokes.forEach(drawStroke)
+    target.save()
+    target.globalCompositeOperation = 'destination-over'
+    target.globalAlpha = 1
+    target.fillStyle = bgColor.value
+    target.fillRect(0, 0, canvasWidth, canvasHeight)
+    target.restore()
+    target.globalCompositeOperation = 'source-over'
   }
 
-  /** 记录一笔并清空重做栈 */
+  /** 记录一笔并清空重做栈;预览层上的笔画随即增量烘焙到烘焙层 */
   function commitStroke(stroke: IStroke) {
-    strokes.value.push(stroke)
-    redoStack.value = []
+    strokes.push(stroke)
+    redoStack.length = 0
+    strokeCount.value = strokes.length
+    redoCount.value = 0
+    if (baseCtx && (stroke.kind === 'free' || stroke.shape)) {
+      // 该笔画此前画在预览层:整体合成到烘焙层后清空预览层
+      baseCtx.save()
+      baseCtx.globalCompositeOperation = 'source-over'
+      baseCtx.drawImage(canvasNode, 0, 0, canvasWidth, canvasHeight)
+      baseCtx.restore()
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+    }
   }
 
-  /** 触摸开始:创建笔画或执行填充/文字拾点 */
+  /** 触摸开始:创建笔画或执行填充(橡皮直接画在烘焙层,其余画在预览层) */
   function onTouchStart(e: any) {
     if (!ctx)
+      return
+    // 多指保护:已有笔画未结束时忽略新按下的手指,避免轨迹串线
+    if (activeStroke)
       return
     const p = getPoint(e)
     const tool = currentTool.value
     if (tool === 'fill') {
+      activeCtx = baseCtx || ctx
       const fillStroke: IStroke = { kind: 'fill', color: currentColor.value, width: 0, style: 'round', points: [p] }
       floodFill(p, fillStroke.color)
       commitStroke(fillStroke)
+      activeCtx = null
       return
     }
     const base = { color: currentColor.value, width: currentLineWidth.value, style: currentBrushStyle.value, points: [p] }
     if (tool === 'eraser') {
+      // 橡皮为终态操作:直接作用于烘焙层(destination-out),所见即所得
+      activeCtx = baseCtx || ctx
       activeStroke = { ...base, kind: 'eraser', style: 'round', width: currentLineWidth.value * 2 }
     }
     else if (tool === 'line' || tool === 'rect' || tool === 'circle') {
+      activeCtx = ctx
       activeStroke = { ...base, kind: 'free', shape: tool, filled: shapeFilled.value }
     }
     else {
+      activeCtx = ctx
       activeStroke = { ...base, kind: 'free' }
     }
-    redrawAll()
-    drawStroke(activeStroke)
+    applyStrokeStyle(activeCtx, activeStroke)
+    if (activeCtx === ctx && baseCtx) {
+      // 双层模式:预览层只保留当前笔画,绘制前清一次(形状拖动也走这里逐帧重画);
+      // 降级单画布模式不清屏,历史笔画保留在主画布上
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+    }
+    // 形状笔画不画定位点(拖动预览从触点开始即可);自由/橡皮单点起笔需留痕
+    if (activeStroke.kind === 'free' && !activeStroke.shape)
+      drawActiveDot()  }
+
+  /** 单点起笔留痕(跟随笔头形状:方头为方形点,其余圆点) */
+  function drawActiveDot() {
+    const stroke = activeStroke!
+    const r = stroke.width / 2
+    activeCtx.beginPath()
+    if (stroke.style === 'square') {
+      activeCtx.rect(stroke.points[0].x - r, stroke.points[0].y - r, stroke.width, stroke.width)
+    }
+    else {
+      activeCtx.arc(stroke.points[0].x, stroke.points[0].y, r, 0, Math.PI * 2)
+    }
+    activeCtx.fill()
   }
 
-  /** 触摸进行中:自由绘制增量画段,形状工具整笔预览 */
+  /** 触摸进行中:自由绘制增量画段,形状工具整笔预览(只重画预览层,不碰历史) */
   function onTouchMove(e: any) {
-    if (!activeStroke || !ctx)
+    if (!activeStroke || !activeCtx)
       return
     const c = getPoint(e)
     const pts = activeStroke.points
     if (activeStroke.shape) {
       pts.splice(1, pts.length - 1, c)
-      redrawAll()
-      drawStroke(activeStroke)
+      if (baseCtx) {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+      }
+      else {
+        // 降级模式:形状预览需重放历史(旧路径)
+        redrawAll()
+      }
+      applyStrokeStyle(ctx, activeStroke)
+      drawShape(ctx, activeStroke)
       return
     }
     const b = pts[pts.length - 1]
+    // 触点采样:位移过小丢弃,控制 points 规模(降低重放与内存成本)
+    if (Math.abs(c.x - b.x) + Math.abs(c.y - b.y) < 2)
+      return
     pts.push(c)
-    applyStrokeStyle(activeStroke)
-    ctx.beginPath()
-    ctx.moveTo(b.x, b.y)
-    ctx.quadraticCurveTo(c.x, c.y, (b.x + c.x) / 2, (b.y + c.y) / 2)
-    ctx.stroke()
-    if (activeStroke.style === 'crayon')
-      drawCrayonSegment(b, c, activeStroke)
+    if (baseCtx) {
+      // 双层模式:预览层整笔重画(单条 path 无接缝,半透明色不在段接合处叠加变深;
+      // 蜡笔抖动为确定性纹理,逐帧重画不闪变;成本仅当前笔画,与历史无关)
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+      applyStrokeStyle(ctx, activeStroke)
+      drawSmoothStroke(ctx, activeStroke)
+    }
+    else {
+      // 降级模式:增量画段(历史在主画布上,不能清屏重画)
+      applyStrokeStyle(activeCtx, activeStroke)
+      activeCtx.beginPath()
+      activeCtx.moveTo(b.x, b.y)
+      activeCtx.quadraticCurveTo(c.x, c.y, (b.x + c.x) / 2, (b.y + c.y) / 2)
+      activeCtx.stroke()
+      if (activeStroke.style === 'crayon')
+        drawCrayonSegment(activeCtx, b, c, activeStroke, pts.length - 2)
+    }
   }
 
   /** 结束笔画 */
@@ -381,30 +487,37 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     if (activeStroke && activeStroke.points.length > 0)
       commitStroke(activeStroke)
     activeStroke = null
+    activeCtx = null
   }
 
-  /** 撤销上一笔 */
+  /** 撤销上一笔(低频:全量重放到烘焙层) */
   function undo() {
     if (!canUndo.value)
       return
-    const stroke = strokes.value.pop()!
-    redoStack.value.push(stroke)
+    const stroke = strokes.pop()!
+    redoStack.push(stroke)
+    strokeCount.value = strokes.length
+    redoCount.value = redoStack.length
     redrawAll()
   }
 
-  /** 重做上一笔 */
+  /** 重做上一笔(低频:全量重放到烘焙层) */
   function redo() {
     if (!canRedo.value)
       return
-    const stroke = redoStack.value.pop()!
-    strokes.value.push(stroke)
+    const stroke = redoStack.pop()!
+    strokes.push(stroke)
+    strokeCount.value = strokes.length
+    redoCount.value = redoStack.length
     redrawAll()
   }
 
   /** 清空画布 */
   function clear() {
-    strokes.value = []
-    redoStack.value = []
+    strokes.length = 0
+    redoStack.length = 0
+    strokeCount.value = 0
+    redoCount.value = 0
     redrawAll()
   }
 
@@ -414,13 +527,14 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     redrawAll()
   }
 
-  /** 导出为临时图片路径(先重放规范化位图,确保橡皮擦除区域垫底背景色) */
+  /** 导出为临时图片路径(先重放规范化位图,确保橡皮擦除区域垫底背景色;双层模式导出烘焙层) */
   function exportImage(): Promise<string> {
     redrawAll()
+    const targetNode = baseNode || canvasNode
     return new Promise((resolve, reject) => {
       uni.canvasToTempFilePath({
-        canvas: canvasNode,
-        canvasId,
+        canvas: targetNode,
+        canvasId: targetNode === baseNode ? `${canvasId}-base` : canvasId,
         fileType: 'png',
         success: res => resolve(res.tempFilePath),
         fail: reject,

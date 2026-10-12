@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useCanvasDraw } from '@/hooks/useCanvasDraw'
 import { useTokenStore } from '@/store/token'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -75,8 +75,36 @@ function openColorPicker() {
   colorPickerRef.value?.open()
 }
 
+/* ---------------- 颜色 + 透明度(统一在外合成,取色器不带 alpha 通道) ---------------- */
+/** 基础色(不含透明度,hex) */
+const baseColor = ref('#1E293B')
+/** 画笔不透明度(%,0-100) */
+const colorOpacity = ref(100)
+
+/** hex + 不透明度 → 绘制用颜色(不透明直接用 hex,半透明转 rgba) */
+function withAlpha(hex: string, opacity: number): string {
+  const value = hex.trim()
+  if (opacity >= 100) {
+    return value
+  }
+  const raw = value.replace('#', '')
+  const full = raw.length === 3 ? raw.split('').map(s => s + s).join('') : raw.slice(0, 6)
+  if (full.length !== 6) {
+    return value
+  }
+  const r = Number.parseInt(full.slice(0, 2), 16)
+  const g = Number.parseInt(full.slice(2, 4), 16)
+  const b = Number.parseInt(full.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${(opacity / 100).toFixed(2)})`
+}
+
+// 基础色或透明度变化时统一合成绘制色(hook 内笔画/橡皮/形状均消费 currentColor)
+watch([baseColor, colorOpacity], () => {
+  currentColor.value = withAlpha(baseColor.value, colorOpacity.value)
+}, { immediate: true })
+
 function selectColor(color: string) {
-  currentColor.value = color
+  baseColor.value = color
 }
 
 function selectPaper(color: string) {
@@ -224,10 +252,14 @@ onPageScroll((option: Page.PageScrollOption) => {
   <view class="box-border min-h-screen w-screen flex flex-col gap-y-3 bg-page p-3 pt-0">
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :use-back="true" title-color="text-gray-900" />
 
-    <!-- 画布(固定高度,背景色动态跟随纸张) -->
-    <view class="uh-shadow-xs h-[750rpx] overflow-hidden rounded-xl" :style="{ backgroundColor: bgColor }">
+    <!-- 画布(固定高度;双层 canvas:底层烘焙已完成笔画,顶层预览当前笔画,画多不卡) -->
+    <view class="uh-shadow-xs relative h-[750rpx] overflow-hidden rounded-xl" :style="{ backgroundColor: bgColor }">
       <canvas
-        id="draw-canvas" canvas-id="draw-canvas" type="2d" class="h-full w-full" @touchstart="onTouchStart"
+        id="draw-canvas-base" canvas-id="draw-canvas-base" type="2d"
+        class="absolute left-0 top-0 h-full w-full"
+      />
+      <canvas
+        id="draw-canvas" canvas-id="draw-canvas" type="2d" class="relative h-full w-full" @touchstart="onTouchStart"
         @touchmove.stop.prevent="onTouchMove" @touchend="onTouchEnd"
       />
     </view>
@@ -287,7 +319,7 @@ onPageScroll((option: Page.PageScrollOption) => {
               class="h-6.5 w-6.5 flex items-center justify-center rounded-full transition-transform"
               :style="{ backgroundColor: color }" @click="selectColor(color)"
             >
-              <wd-icon v-if="currentColor === color" name="check" size="20rpx" class="text-white" />
+              <wd-icon v-if="baseColor === color" name="check" size="20rpx" class="text-white" />
             </view>
             <view
               class="uh-shadow-xs h-6.5 w-6.5 flex items-center justify-center gap-x-2 rounded-full bg-white/60"
@@ -326,6 +358,15 @@ onPageScroll((option: Page.PageScrollOption) => {
           </view>
         </view>
 
+        <!-- 透明度(统一设置,作用于画笔/形状;取色器不含 alpha 通道) -->
+        <view class="flex flex-wrap items-center gap-2">
+          <text class="w-10 shrink-0 text-xs text-gray-500">透明度</text>
+          <view class="flex flex-1 items-center gap-3">
+            <wd-slider v-model="colorOpacity" :min="10" :max="100" hide-label custom-class="flex-1" />
+            <text class="w-6 text-right text-xs text-gray-500">{{ colorOpacity }}%</text>
+          </view>
+        </view>
+
         <!-- 操作按钮(图标+文字) -->
         <view class="flex flex-wrap gap-2">
           <text class="box-border w-10 shrink-0 pt-2 text-xs text-gray-500">操作</text>
@@ -334,14 +375,14 @@ onPageScroll((option: Page.PageScrollOption) => {
               class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
               :class="{ 'opacity-40': !canUndo }" @click="undo"
             >
-              <wd-icon name="redo" size="28rpx" />
+              <wd-icon name="undo" size="28rpx" />
               <text class="text-xs">撤销</text>
             </view>
             <view
               class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
               :class="{ 'opacity-40': !canRedo }" @click="redo"
             >
-              <wd-icon name="refresh" size="28rpx" />
+              <wd-icon name="redo" size="28rpx" />
               <text class="text-xs">重做</text>
             </view>
             <view
@@ -468,8 +509,8 @@ onPageScroll((option: Page.PageScrollOption) => {
     </uh-glass-popup>
 
     <kex-color-picker
-      ref="colorPickerRef" v-model="currentColor" title="画笔颜色" size="small" :show-trigger="false"
-      :show-alpha="true" :presets="palette" :realtime="true"
+      ref="colorPickerRef" v-model="baseColor" title="画笔颜色" size="small" :show-trigger="false"
+      :show-alpha="false" :presets="palette" :realtime="true"
     />
   </view>
 </template>

@@ -2,7 +2,7 @@
 /**
  * 竞猜弹窗（独立弹窗，复制自画作详情弹窗结构）：
  * 详情画面 + 竞猜面板四态（竞猜中 / 本人已猜中 / 已揭晓 / 出题人视角）。
- * 提交 10s 节流；未登录引导登录；竞猜信息经 guess-board 接口加载（未揭晓不含谜底）。
+ * 提交节流；未登录引导登录；竞猜信息经 guess-board 接口加载（未揭晓不含谜底）。
  */
 import { computed, ref, watch } from 'vue'
 import { getGuessBoard, submitGuess } from '@/api/draw'
@@ -174,8 +174,9 @@ function handlePreviewCover() {
       <!-- 作者信息 -->
       <view class="flex items-center justify-between text-xs text-gray-600">
         <view class="w-full flex items-center gap-x-2">
+          <text class="text-xs text-gray-500">作者：</text>
           <wd-avatar
-            :src="ownerAvatar" :text="ownerInitial" shape="round" size="42rpx"
+            :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
             custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
           />
           <text>{{ ownerText }}</text>
@@ -232,17 +233,17 @@ function handlePreviewCover() {
                 class="w-full text-3xs text-gray-500"
               >
             </view>
+            <text
+              v-if="feedback" class="w-full text-xs"
+              :class="feedback.correct ? 'text-primary font-bold' : 'text-gray-400'"
+            >
+              {{ feedback.text }}
+            </text>
+            <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
             <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
               {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
             </uh-button>
           </view>
-          <text
-            v-if="feedback" class="w-full text-center text-xs"
-            :class="feedback.correct ? 'text-primary font-bold' : 'text-gray-400'"
-          >
-            {{ feedback.text }}
-          </text>
-          <text v-else class="w-full text-center text-xs text-gray-400">猜谜提示：猜中需与谜底完全一致</text>
         </template>
 
         <!-- 猜中榜 -->
