@@ -436,7 +436,7 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight)
     }
     // 形状笔画不画定位点(拖动预览从触点开始即可);自由/橡皮单点起笔需留痕
-    if (activeStroke.kind === 'free' && !activeStroke.shape)
+    if ((activeStroke.kind === 'free' && !activeStroke.shape) || activeStroke.kind === 'eraser')
       drawActiveDot()  }
 
   /** 单点起笔留痕(跟随笔头形状:方头为方形点,其余圆点) */
@@ -477,9 +477,10 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     if (Math.abs(c.x - b.x) + Math.abs(c.y - b.y) < 2)
       return
     pts.push(c)
-    if (baseCtx) {
+    if (baseCtx && activeStroke.kind !== 'eraser') {
       // 双层模式:预览层整笔重画(单条 path 无接缝,半透明色不在段接合处叠加变深;
       // 蜡笔抖动为确定性纹理,逐帧重画不闪变;成本仅当前笔画,与历史无关)
+      // 橡皮除外:终态操作必须直接增量作用在烘焙层,擦预览层无效
       ctx.clearRect(0, 0, canvasWidth, canvasHeight)
       applyStrokeStyle(ctx, activeStroke)
       drawSmoothStroke(ctx, activeStroke)
