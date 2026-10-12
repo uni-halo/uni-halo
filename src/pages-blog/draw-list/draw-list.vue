@@ -212,7 +212,7 @@ function handleOpenDetail(draw: IDraw) {
   // 竞猜作品打开竞猜弹窗，普通作品走原详情弹窗
   currentDraw.value = draw
   currentCover.value = draw.spec.cover || ''
-  if (isPuzzleDraw(draw)) {
+  if (loginEnabled.value && isPuzzleDraw(draw)) {
     guessVisible.value = true
     return
   }

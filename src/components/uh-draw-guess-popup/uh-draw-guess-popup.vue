@@ -10,6 +10,8 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
+import { useAppConfigStore } from '@/store/appConfig'
+import { sleep } from '@/utils/common'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
 
 const props = defineProps<{
@@ -24,8 +26,17 @@ const emit = defineEmits<{
 
 const visible = defineModel<boolean>({ default: false })
 
+const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
+
+/** 应用登录整体开关（与登录页同语义：密码/微信两开关全关 = 登录不可用） */
+const loginEnabled = computed(() => {
+  const client = appConfigStore.configs?.loginConfig?.client
+  return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
+})
+
+const isLogin = computed(() => tokenStore.updateNowTime().hasLogin)
 
 const cover = computed(() => props.draw?.spec.cover || '')
 const ownerText = computed(() =>
@@ -102,6 +113,8 @@ async function handleGuess() {
   if (!props.draw || submitting.value || countdown.value > 0) { return }
   if (!tokenStore.updateNowTime().hasLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
+    await sleep(1500)
+    uni.navigateTo({ url: '/pages/auth/login' })
     return
   }
   const answer = myAnswer.value.trim()
@@ -135,6 +148,10 @@ async function handleGuess() {
   }
 }
 
+function handleToLogin() {
+  uni.navigateTo({ url: '/pages/auth/login' })
+}
+
 function handlePreviewCover() {
   if (!cover.value) { return }
   uni.previewImage({ urls: [cover.value] })
@@ -150,7 +167,7 @@ function handlePreviewCover() {
       <!-- 顶部 -->
       <view class="relative box-border w-full flex items-center justify-center">
         <view class="flex gap-y-1">
-          <text class="text-md font-bold">猜猜这幅画</text>
+          <text class="text-md font-bold">{{ loginEnabled ? '猜猜这幅画' : '作品详情' }}</text>
         </view>
         <view
           class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg shadow-none"
@@ -187,7 +204,7 @@ function handlePreviewCover() {
       </view>
 
       <!-- 竞猜面板 -->
-      <view class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
+      <view v-if="loginEnabled" class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
         <!-- 提示语与统计 -->
         <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
           作品提示：{{ draw.spec.puzzleHint }}
@@ -224,25 +241,34 @@ function handlePreviewCover() {
 
         <!-- 态 4：竞猜中 -->
         <template v-else>
-          <view class="flex flex flex-col items-center gap-2">
-            <view
-              class="uh-global-card-glass w-full flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none !shadow-none"
-            >
-              <input
-                v-model="myAnswer" placeholder="输入你的答案" :disabled="submitting"
-                class="w-full text-3xs text-gray-500"
+          <view v-if="loginEnabled" class="flex flex flex-col items-center gap-2">
+            <template v-if="isLogin">
+              <view
+                class="uh-global-card-glass w-full flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none !shadow-none"
               >
-            </view>
-            <text
-              v-if="feedback" class="w-full text-xs"
-              :class="feedback.correct ? 'text-primary font-bold' : 'text-gray-400'"
-            >
-              {{ feedback.text }}
-            </text>
-            <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
-            <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
-              {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
+                <input
+                  v-model="myAnswer" placeholder="输入你的答案" :disabled="submitting"
+                  class="w-full text-3xs text-gray-500"
+                >
+              </view>
+              <text
+                v-if="feedback" class="w-full text-xs"
+                :class="feedback.correct ? 'text-primary font-bold' : 'text-gray-400'"
+              >
+                {{ feedback.text }}
+              </text>
+              <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
+              <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
+                {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
+              </uh-button>
+            </template>
+            <uh-button v-else class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleToLogin">
+              请先登录
             </uh-button>
+          </view>
+
+          <view v-else class="box-border">
+            <text class="text-xs text-orange-500">暂时无法使用猜画谜功能，请稍后再来</text>
           </view>
         </template>
 

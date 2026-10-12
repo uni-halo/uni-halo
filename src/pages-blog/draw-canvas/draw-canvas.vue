@@ -185,6 +185,16 @@ function handlePublishValidatePuzzle(): string | null {
   return null
 }
 
+function resetPublishForm() {
+  clear()
+  guessEnabled.value = false
+  title.value = ''
+  description.value = ''
+  puzzleAnswer.value = ''
+  puzzleHint.value = ''
+  autoRevealChoice.value = 0
+}
+
 /** 发布画作：导出图片 → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
 async function handlePublish() {
   if (isEmpty.value) {
@@ -227,11 +237,8 @@ async function handlePublish() {
     })
     const approved = res.data?.spec?.status === 'APPROVED'
     uni.showToast({ title: approved ? '发布成功' : '已提交，等待审核', icon: 'none' })
-    guessEnabled.value = false
-    puzzleAnswer.value = ''
-    puzzleHint.value = ''
-    autoRevealChoice.value = 0
-    setTimeout(() => uni.navigateBack(), 1200)
+    releasePopupVisible.value = false
+    resetPublishForm()
   }
   catch (err: any) {
     console.error('发布失败', err)
@@ -258,8 +265,8 @@ onPageScroll((option: Page.PageScrollOption) => {
         class="absolute left-0 top-0 h-full w-full"
       />
       <canvas
-        id="draw-canvas" canvas-id="draw-canvas" type="2d" class="relative h-full w-full" @touchstart="onTouchStart"
-        @touchmove.stop.prevent="onTouchMove" @touchend="onTouchEnd"
+        id="draw-canvas" canvas-id="draw-canvas" type="2d" class="relative h-full w-full"
+        @touchstart="onTouchStart" @touchmove.stop.prevent="onTouchMove" @touchend="onTouchEnd"
       />
     </view>
 
@@ -349,7 +356,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
 
         <!-- 笔触粗细 -->
-        <view class="flex flex-wrap items-center gap-2">
+        <view class="box-border flex flex-wrap items-center gap-2 pr-12">
           <text class="w-10 shrink-0 text-xs text-gray-500">笔触</text>
           <view class="flex flex-1 items-center gap-3">
             <wd-slider v-model="currentLineWidth" :min="2" :max="40" hide-label custom-class="flex-1" />
@@ -358,7 +365,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
 
         <!-- 透明度(统一设置,作用于画笔/形状;取色器不含 alpha 通道) -->
-        <view class="flex flex-wrap items-center gap-2">
+        <view class="box-border flex flex-wrap items-center gap-2 pr-12">
           <text class="w-10 shrink-0 text-xs text-gray-500">透明度</text>
           <view class="flex flex-1 items-center gap-3">
             <wd-slider v-model="colorOpacity" :min="10" :max="100" hide-label custom-class="flex-1" />
@@ -397,7 +404,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         <view class="box-border w-full pt-1">
           <uh-button
             class="w-full flex-1"
-            custom-class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-2 !bg-primary !rounded-full active:opacity-70 !shadow-none"
+            custom-class="uh-global-card-glass flex items-center gap-1 !border  px-3 py-2 !bg-primary !rounded-full active:opacity-70 !shadow-none"
             @click="handleShowReleasePopup"
           >
             <wd-icon name="send" size="28rpx" />
@@ -445,48 +452,46 @@ onPageScroll((option: Page.PageScrollOption) => {
           <view class="flex items-center justify-between">
             <view class="flex flex-col gap-y-0.5">
               <text class="text-xs text-gray-900 font-medium">开启画谜</text>
-              <text class="text-3xs text-gray-400">其他用户可猜谜底，猜中画谜排行榜 +1</text>
+              <text class="text-xs text-gray-400">其他用户可猜谜底，猜中画谜排行榜 +1</text>
             </view>
             <wd-switch v-model="guessEnabled" size="40rpx" />
           </view>
           <template v-if="guessEnabled">
-            <view class="flex items-center gap-x-1">
-              <text class="text-3xs text-gray-500">谜底设置：</text>
+            <view class="w-full flex items-center gap-x-1">
+              <text class="shrink-0 text-xs text-gray-500">谜底设置：</text>
               <view
-                class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
+                class="uh-global-card-glass flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
               >
                 <input
                   v-model="puzzleAnswer" placeholder="谜底（必填，≤20 字，猜中需完全一致）" placeholder-class="text-gray-400"
-                  class="w-full text-3xs" :maxlength="20"
+                  class="w-full text-xs" :maxlength="20"
                 >
               </view>
             </view>
-            <view class="flex items-center gap-x-1">
-              <text class="text-3xs text-gray-500">提示描述：</text>
+            <view class="w-full flex items-center gap-x-1">
+              <text class="shrink-0 text-xs text-gray-500">提示描述：</text>
               <view
-                class="uh-global-card-glass flex items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
+                class="uh-global-card-glass flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
               >
                 <input
                   v-model="puzzleHint" placeholder="提示语（选填，如：一种动物）" placeholder-class="text-gray-400"
-                  class="w-full text-3xs" :maxlength="50"
+                  class="w-full text-xs" :maxlength="50"
                 >
               </view>
             </view>
 
-            <text class="text-3xs text-gray-500">揭晓时间：</text>
+            <text class="text-xs text-gray-500">揭晓时间：</text>
             <view class="flex flex-wrap gap-x-4 gap-y-2">
               <view
                 v-for="(option, index) in autoRevealOptions" :key="option.hours"
-                class="box-border flex items-center gap-x-1" @click="autoRevealChoice = index"
+                class="box-border flex items-center gap-x-1 border rounded-full border-solid px-2 py-0.5"
+                :class="[
+                  autoRevealChoice === index ? 'border-primary bg-primary' : 'bg-gray-50 border-gray-100',
+                ]" @click="autoRevealChoice = index"
               >
-                <view
-                  v-if="autoRevealChoice === index"
-                  class="h-3 w-3 border rounded-full"
-                  :class="autoRevealChoice === index ? 'border-primary bg-primary' : 'border-gray-300'"
-                />
                 <text
-                  class="text-3xs"
-                  :class="autoRevealChoice === index ? 'text-gray-900 font-medium' : 'text-gray-400'"
+                  class="text-xs"
+                  :class="autoRevealChoice === index ? 'text-gray-900' : 'text-gray-500'"
                 >
                   {{ option.label }}
                 </text>
