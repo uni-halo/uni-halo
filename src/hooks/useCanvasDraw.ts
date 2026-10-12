@@ -254,11 +254,11 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
 
   /** 油漆桶:从触点开始泛洪填充(基于像素扫描,直接改烘焙层像素;降级模式改主画布) */
   function floodFill(point: { x: number, y: number }, color: string) {
-    floodFillOn(baseCtx || ctx, baseNode || canvasNode, point, color)
+    floodFillOn(baseCtx || ctx, baseNode || canvasNode, point, color, bgColor.value)
   }
 
-  /** 在指定画布上泛洪填充(起点像素收敛到画布内,避免点在边缘时越界失效) */
-  function floodFillOn(targetCtx: any, targetNode: any, point: { x: number, y: number }, color: string) {
+  /** 在指定画布上泛洪填充(起点像素收敛到画布内;橡皮擦出的透明空洞等价为当前纸色,避免填充被擦除区隔断) */
+  function floodFillOn(targetCtx: any, targetNode: any, point: { x: number, y: number }, color: string, paperColor: string) {
     if (!targetCtx || !targetNode)
       return
     const dpr = Math.min(uni.getSystemInfoSync().pixelRatio || 2, 2)
@@ -269,16 +269,24 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     const img = targetCtx.getImageData(0, 0, W, H)
     const data = img.data
     const idx = (py * W + px) * 4
-    const target = [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]]
+    const bgRgba = hexToRgba(paperColor) || [255, 255, 255, 255]
+    // 透明像素(橡皮擦除区)视作纸色,与不透明背景连通
+    const pixelAt = (i: number) => {
+      const a = data[i + 3]
+      return a < 8 ? bgRgba : [data[i], data[i + 1], data[i + 2], a]
+    }
+    const target = pixelAt(idx)
     // 解析填充色为 rgba
     const rgba = hexToRgba(color)
     if (!rgba)
       return
-    const near = (i: number) =>
-      Math.abs(data[i] - target[0]) < FILL_TOLERANCE
-      && Math.abs(data[i + 1] - target[1]) < FILL_TOLERANCE
-      && Math.abs(data[i + 2] - target[2]) < FILL_TOLERANCE
-      && Math.abs(data[i + 3] - target[3]) < FILL_TOLERANCE
+    const near = (i: number) => {
+      const p = pixelAt(i)
+      return Math.abs(p[0] - target[0]) < FILL_TOLERANCE
+        && Math.abs(p[1] - target[1]) < FILL_TOLERANCE
+        && Math.abs(p[2] - target[2]) < FILL_TOLERANCE
+        && Math.abs(p[3] - target[3]) < FILL_TOLERANCE
+    }
     // 起点颜色与填充色一致时无需填充
     if (Math.abs(target[0] - rgba[0]) < FILL_TOLERANCE && Math.abs(target[1] - rgba[1]) < FILL_TOLERANCE && Math.abs(target[2] - rgba[2]) < FILL_TOLERANCE && Math.abs(target[3] - rgba[3]) < FILL_TOLERANCE)
       return
@@ -367,10 +375,14 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       return
     target.globalCompositeOperation = 'source-over'
     target.clearRect(0, 0, canvasWidth, canvasHeight)
+    // 重放期间追踪当前纸色(换纸项更新),供填充的透明等价判定与实时绘制保持一致
+    let replayBg = initialBg
     strokes.forEach((stroke) => {
       if (stroke.kind === 'fill')
-        floodFillOn(target, baseNode || canvasNode, stroke.points[0], stroke.color)
-      else if (stroke.kind !== 'bg')
+        floodFillOn(target, baseNode || canvasNode, stroke.points[0], stroke.color, replayBg)
+      else if (stroke.kind === 'bg')
+        replayBg = stroke.color
+      else
         drawStroke(stroke)
     })
     target.save()
