@@ -83,12 +83,14 @@ function handleScan() {
   <view class="fixed left-0 top-0 z-100 box-border w-full" :class="customClass" :style="[customStyle]">
     <view class="box-border h-[46px] w-full flex items-center gap-x-4 px-4">
       <view class="min-w-18 flex shrink-0 items-center">
+        <!-- #ifdef APP || MP -->
         <view
           class="uh-global-card-glass uh-shadow-xs h-7 w-7 flex items-center justify-center gap-x-2 border rounded-full text-primary"
           @click="handleScan()"
         >
           <wd-icon name="scan" size="28rpx" />
         </view>
+        <!-- #endif -->
       </view>
       <!-- 中间 -->
       <view class="flex-1 truncate text-center font-bold transition-colors duration-300">
