@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { getAuthProfile } from '@/api/auth'
+import { clearVerifyTicket, getAuthProfile, saveVerifyTicket } from '@/api/auth'
 import type { IUserInfoRes } from '@/api/types/login'
 import type { ILoginResult, ILoginUser } from '@/api/types/uni-halo'
 
@@ -47,6 +47,8 @@ export const useUserStore = defineStore(
     // 删除用户信息
     const clearUserInfo = () => {
       userInfo.value = { ...DefaultUserInfo }
+      // 验证票据存独立缓存(带过期),不随 store 持久化
+      clearVerifyTicket()
       uni.removeStorageSync('user')
     }
 
@@ -68,6 +70,7 @@ export const useUserStore = defineStore(
 
     /**
      * 登录结果直接写入(登录接口已一并返回用户信息与权限,无需再调 profile)
+     * 验证票据写入独立缓存(带过期时间,不随 store 持久化)
      */
     const setUserInfoFromLoginResult = (result: ILoginResult) => {
       const info: IUserInfoRes = {
@@ -76,6 +79,7 @@ export const useUserStore = defineStore(
         permissions: result.permissions || [],
       }
       setUserInfo(info)
+      saveVerifyTicket(result.verifyTicket || '')
       return info
     }
 

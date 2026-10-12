@@ -934,4 +934,12 @@ export interface ILoginResult {
   user?: ILoginUser
   roles?: string[]
   permissions?: ILoginPermissionRule[]
+  /** 邮箱是否已验证（Halo 平台 PAT 校验依据；false 时 verifyTicket 必发） */
+  emailVerified?: boolean
+  /**
+   * 邮箱验证票据（仅 emailVerified=false 时下发）：
+   * 凭票据走自建验证闭环 auth/-/send-email-verification（发码）→
+   * auth/-/verify-email（验码写库），绕开 PAT 的 email-not-set 拦截。
+   */
+  verifyTicket?: string
 }

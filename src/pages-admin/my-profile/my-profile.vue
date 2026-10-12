@@ -6,11 +6,17 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import {
   bindMyWechat,
+  clearVerifyTicket,
   getAuthProfile,
+  getEmailVerifyTicket,
   getMyWechatBinding,
   getWxCode,
+  readVerifyTicket,
+  saveVerifyTicket,
+  sendEmailVerification,
   setInitialPassword,
   unbindMyWechat,
+  verifyEmailWithTicket,
 } from '@/api/auth'
 import type { IMyWechatBinding } from '@/api/auth'
 import {
@@ -29,6 +35,7 @@ import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 import { isValidEmail } from '@/utils/validate'
+import { getEnvBaseUrl } from '@/utils'
 
 definePage({
   style: {
@@ -36,6 +43,8 @@ definePage({
     navigationStyle: 'custom',
   },
 })
+
+const question = ref('')
 
 const dialog = useDialog()
 const { scrollY, updatePageScrollValue } = usePageScroll()
@@ -290,9 +299,13 @@ function onForgotResetSuccess() {
 }
 
 /* ---------------- 邮箱验证/换绑 ---------------- */
-/* 官方链路：POST users/-/send-email-verification-code 把新邮箱暂存 EMAIL_TO_VERIFY
- * 注解并把验证码发往新邮箱；POST users/-/verify-email 以「当前密码 + 验证码」
- * 双重确认，成功后服务端才把新邮箱写入 spec.email 并置 emailVerified=true。 */
+/* 两条链路：
+ * ① 官方链路（已验证邮箱的换绑）：POST users/-/send-email-verification-code +
+ *    users/-/verify-email（当前密码 + 验证码双重确认）。
+ * ② 自建闭环（未验证邮箱，PAT 被 email-not-set 拦死时的通道）：凭验证票据走
+ *    auth/-/send-email-verification（发码）→ auth/-/verify-email（验码写库），
+ *    无需密码、不走 PAT。票据缓存过期时先凭当前密码调 auth/-/email-verify-ticket
+ *    重新获取（免重签 PAT，不触发互踢）。 */
 const emailSheet = ref(false)
 const emailInfo = ref({ email: '', verified: false })
 const emailDraft = ref('')
@@ -302,6 +315,17 @@ const emailSubmitting = ref(false)
 const emailCodeSending = ref(false)
 const emailCodeCountdown = ref(0)
 let emailCodeTimer: ReturnType<typeof setInterval> | null = null
+
+/** 发码成功时服务端换绑的票据（绑定目标邮箱，验码必传） */
+const emailBoundTicket = ref('')
+/** 票据流程中输入的当前密码（缓存票据过期时凭密码重新获取票据） */
+const ticketPassword = ref('')
+/** 打开弹层时缓存的验证票据（快照进 ref 保证模板响应性） */
+const cachedTicket = ref('')
+/** 未验证邮箱 → 一律走自建闭环（官方端点会被 email-not-set 拦截） */
+const useTicketFlow = computed(() => !emailInfo.value.verified)
+/** 票据流程但缓存票据缺失/过期 → 需输入当前密码换新票据 */
+const needTicketPassword = computed(() => useTicketFlow.value && !cachedTicket.value)
 
 async function fetchEmailInfo() {
   try {
@@ -320,7 +344,29 @@ function openEmailSheet() {
   emailDraft.value = emailInfo.value.email || userInfo.value.email || ''
   emailCode.value = ''
   emailPassword.value = ''
+  ticketPassword.value = ''
+  emailBoundTicket.value = ''
+  cachedTicket.value = readVerifyTicket()
   emailSheet.value = true
+}
+
+/** 确保拿到可用验证票据：优先缓存，过期则凭当前密码向服务端重取并回写缓存 */
+async function ensureVerifyTicket(): Promise<string> {
+  if (cachedTicket.value) {
+    return cachedTicket.value
+  }
+  if (!ticketPassword.value) {
+    uni.showToast({ icon: 'none', title: '请输入当前密码以获取验证票据' })
+    return ''
+  }
+  const res = await getEmailVerifyTicket(userInfo.value.username, ticketPassword.value)
+  const ticket = res.data?.ticket || ''
+  if (!ticket) {
+    throw new Error('服务端未返回验证票据')
+  }
+  saveVerifyTicket(ticket)
+  cachedTicket.value = ticket
+  return ticket
 }
 
 /** 发送验证码到新邮箱 */
@@ -335,7 +381,21 @@ async function sendEmailCode() {
   }
   emailCodeSending.value = true
   try {
-    await sendEmailVerificationCode(value)
+    if (useTicketFlow.value) {
+      // 自建闭环：先确保票据可用（缓存或密码重取），发码成功后保存换绑票据（验码必传）
+      const ticket = await ensureVerifyTicket()
+      if (!ticket) {
+        return
+      }
+      const res = await sendEmailVerification(ticket, value)
+      emailBoundTicket.value = res.data?.ticket || ''
+      if (!emailBoundTicket.value) {
+        throw new Error('服务端未返回验证票据')
+      }
+    }
+    else {
+      await sendEmailVerificationCode(value)
+    }
     uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱' })
     emailCodeCountdown.value = 60
     emailCodeTimer = setInterval(() => {
@@ -348,6 +408,13 @@ async function sendEmailCode() {
   }
   catch (error: any) {
     console.error('发送邮箱验证码失败:', error)
+    // 票据被服务端判无效（过期/密钥轮换）：清缓存，下次发码自动走密码换票，避免坏票据死循环
+    const detail = errText(error, '')
+    if (useTicketFlow.value && detail.includes('票据')
+      && (detail.includes('无效') || detail.includes('过期'))) {
+      clearVerifyTicket()
+      cachedTicket.value = ''
+    }
     uni.showToast({ icon: 'none', title: errText(error, '验证码发送失败，请稍后重试') })
   }
   finally {
@@ -355,7 +422,7 @@ async function sendEmailCode() {
   }
 }
 
-/** 验证新邮箱（当前密码 + 验证码双重确认） */
+/** 验证新邮箱：票据闭环（无需密码）或官方链路（当前密码 + 验证码双重确认） */
 async function submitEmailVerify() {
   const value = emailDraft.value.trim()
   if (!value || !isValidEmail(value)) {
@@ -366,13 +433,28 @@ async function submitEmailVerify() {
     uni.showToast({ icon: 'none', title: '请输入邮箱验证码' })
     return
   }
-  if (!emailPassword.value) {
+  if (useTicketFlow.value) {
+    // 自建闭环：必须先发码拿到换绑票据（绑定目标邮箱）
+    if (!emailBoundTicket.value) {
+      uni.showToast({ icon: 'none', title: '请先发送验证码' })
+      return
+    }
+  }
+  else if (!emailPassword.value) {
     uni.showToast({ icon: 'none', title: '请输入当前密码' })
     return
   }
   emailSubmitting.value = true
   try {
-    await verifyEmail(emailPassword.value, emailCode.value.trim())
+    if (useTicketFlow.value) {
+      await verifyEmailWithTicket(emailBoundTicket.value, value, emailCode.value.trim())
+      // 验证成功：清空票据缓存（此后登录响应不再下发），PAT 随服务端状态解除拦截
+      clearVerifyTicket()
+      cachedTicket.value = ''
+    }
+    else {
+      await verifyEmail(emailPassword.value, emailCode.value.trim())
+    }
     emailSheet.value = false
     uni.showToast({ icon: 'none', title: '邮箱验证成功' })
     await Promise.all([fetchEmailInfo(), userStore.fetchUserInfo()])
@@ -499,6 +581,15 @@ onShow(() => {
   // 邮箱与验证状态（store 摘要不含 emailVerified，走 console users/- 补齐）
   fetchEmailInfo()
 })
+
+function handleCopyWebsiteUrl() {
+  uni.setClipboardData({
+    data: getEnvBaseUrl(),
+    success: () => {
+      uni.showToast({ icon: 'none', title: '已复制到剪贴板，打开浏览器访问' })
+    },
+  })
+}
 </script>
 
 <template>
@@ -511,20 +602,16 @@ onShow(() => {
       <view class="uh-global-card-glass uh-shadow-xs flex flex-col items-center gap-y-2 rounded-2xl py-6">
         <!-- #ifdef MP-WEIXIN -->
         <button
-          class="avatar-trigger relative h-22 w-22" open-type="chooseAvatar"
-          :disabled="avatarUploading" @chooseavatar="onWxAvatarChosen"
+          class="avatar-trigger relative h-22 w-22" open-type="chooseAvatar" :disabled="avatarUploading"
+          @chooseavatar="onWxAvatarChosen"
         >
           <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
-            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)"
-            shape="round"
+            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)" shape="round"
             custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
-            class="!rounded-full"
-            mode="aspectFill"
+            class="!rounded-full" mode="aspectFill"
           />
-          <view
-            class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center"
-          >
+          <view class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center">
             <wd-icon name="camera" size="32rpx" custom-class="text-white" />
           </view>
           <view
@@ -539,15 +626,11 @@ onShow(() => {
         <view class="relative h-22 w-22" @click="chooseAvatar">
           <wd-avatar
             :src="checkAvatarUrl(userInfo.avatar)"
-            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)"
-            shape="round"
+            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)" shape="round"
             custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
-            class="!rounded-full"
-            mode="aspectFill"
+            class="!rounded-full" mode="aspectFill"
           />
-          <view
-            class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center"
-          >
+          <view class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center">
             <wd-icon name="camera" size="32rpx" custom-class="text-white" />
           </view>
           <view
@@ -567,10 +650,7 @@ onShow(() => {
         <uh-section-title>账号资料</uh-section-title>
         <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
           <!-- 昵称(整行可点进编辑) -->
-          <view
-            class="flex items-center gap-x-3 px-4 py-3"
-            :class="editingNickname ? '' : 'border-b border-black/5'"
-          >
+          <view class="flex items-center gap-x-3 px-4 py-3" :class="editingNickname ? '' : 'border-b border-black/5'">
             <wd-icon name="at" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">昵称</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
@@ -578,8 +658,7 @@ onShow(() => {
                 <wd-input
                   v-model="nicknameDraft" no-border
                   custom-class="flex-1 uh-profile-input uh-global-card-glass uh-shadow-xs border !rounded-lg !h-auto !py-1 !bg-gray-100 !text-xs"
-                  focus placeholder="请输入昵称" :disabled="nicknameSaving" :maxlength="20"
-                  @confirm="saveNickname"
+                  focus placeholder="请输入昵称" :disabled="nicknameSaving" :maxlength="20" @confirm="saveNickname"
                 />
                 <view class="flex shrink-0 items-center gap-x-1">
                   <uh-button
@@ -597,10 +676,7 @@ onShow(() => {
                 </view>
               </template>
               <template v-else>
-                <text
-                  class="truncate text-2xs text-gray-500"
-                  @click="!editingNickname && startEditNickname()"
-                >
+                <text class="truncate text-2xs text-gray-500" @click="!editingNickname && startEditNickname()">
                   {{ userInfo.nickname || '-' }}
                 </text>
                 <wd-icon
@@ -676,8 +752,7 @@ onShow(() => {
               解除绑定
             </uh-button>
             <uh-button
-              v-else-if="isWechat"
-              custom-class="!rounded-full !bg-green-500 px-4 py-1.5 !text-xs text-white"
+              v-else-if="isWechat" custom-class="!rounded-full !bg-green-500 px-4 py-1.5 !text-xs text-white"
               :class="bindSubmitting ? 'opacity-60' : ''" @action-click="handleBindWechat"
             >
               {{ bindSubmitting ? '绑定中' : '一键绑定' }}
@@ -709,7 +784,51 @@ onShow(() => {
           </view>
         </view>
       </view>
-
+      <view class="flex flex-col">
+        <uh-section-title>常见问题</uh-section-title>
+        <view class="question-collapse uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
+          <wd-collapse v-model="question" :accordion="true">
+            <wd-collapse-item :border="false" custom-body-class="px-3 py-1 !text-xs" title="无法验证邮箱？" name="verifyEmail">
+              <view class="w-full items-center leading-5.5">
+                <text>如果遇到无法验证邮箱的情况，请联系客服，或者尝试登录网页端进行操作。</text>
+                <!-- #ifdef MP-WEIXIN -->
+                <button
+                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                  open-type="contact"
+                >
+                  联系客服
+                </button>
+                <!-- #endif -->
+                <button
+                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                  @click="handleCopyWebsiteUrl"
+                >
+                  去网页端
+                </button>
+              </view>
+            </wd-collapse-item>
+            <wd-collapse-item custom-body-class="px-3 py-1 !text-xs" title="忘记密码无法找回？" name="forgotPassword">
+              <view class="w-full items-center leading-5.5">
+                <text>如果忘记密码，联系客服即可找回，或者尝试登录网页端进行操作。</text>
+                <!-- #ifdef MP-WEIXIN -->
+                <button
+                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                  open-type="contact"
+                >
+                  联系客服
+                </button>
+                <!-- #endif -->
+                <button
+                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                  @click="handleCopyWebsiteUrl"
+                >
+                  去网页端
+                </button>
+              </view>
+            </wd-collapse-item>
+          </wd-collapse>
+        </view>
+      </view>
       <!-- 退出登录 -->
       <view class="mt-2 box-border w-full pb-6">
         <uh-button
@@ -742,8 +861,8 @@ onShow(() => {
             no-border placeholder="请输入新密码(至少 6 位)" clearable :disabled="passwordSaving"
           />
           <wd-input
-            v-model="confirmPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
-            no-border placeholder="请再次输入新密码" clearable :disabled="passwordSaving"
+            v-model="confirmPassword" custom-class="uh-profile-input !rounded-lg" show-password
+            prefix-icon="lock" no-border placeholder="请再次输入新密码" clearable :disabled="passwordSaving"
           />
           <text v-if="!passwordSet" class="text-xs text-gray-600">
             微信自动注册的账号未自主设置过密码，无需原密码可直接设置，设置后请牢记新密码。
@@ -780,8 +899,8 @@ onShow(() => {
         </view>
         <view class="flex flex-col gap-y-3">
           <wd-input
-            v-model="emailDraft" custom-class="uh-profile-input !rounded-lg" prefix-icon="email"
-            no-border placeholder="请输入新邮箱" clearable :disabled="emailSubmitting || emailCodeSending"
+            v-model="emailDraft" custom-class="uh-profile-input !rounded-lg" prefix-icon="email" no-border
+            placeholder="请输入新邮箱" clearable :disabled="emailSubmitting || emailCodeSending"
           />
           <text v-if="isExampleEMail(emailDraft)" class="text-xs text-gray-600">
             说明：@example.com 是示例邮箱，请更换自己的邮箱。
@@ -794,18 +913,24 @@ onShow(() => {
             <uh-button
               class="shrink-0"
               custom-class="uh-global-card-glass uh-shadow-xs !bg-primary border shrink-0 !px-3 py-2.5 !text-xs text-gray-900"
-              :class="emailCodeCountdown > 0 || emailCodeSending ? 'opacity-60' : ''"
-              @action-click="sendEmailCode"
+              :class="emailCodeCountdown > 0 || emailCodeSending ? 'opacity-60' : ''" @action-click="sendEmailCode"
             >
               {{ emailCodeCountdown > 0 ? `${emailCodeCountdown}s 后重发` : (emailCodeSending ? '发送中' : '发送验证码') }}
             </uh-button>
           </view>
           <wd-input
-            v-model="emailPassword" custom-class="uh-profile-input !rounded-lg" show-password prefix-icon="lock"
-            no-border placeholder="请输入当前密码" clearable :disabled="emailSubmitting"
+            v-if="!useTicketFlow" v-model="emailPassword" custom-class="uh-profile-input !rounded-lg"
+            show-password prefix-icon="lock" no-border placeholder="请输入当前密码" clearable :disabled="emailSubmitting"
+          />
+          <wd-input
+            v-if="needTicketPassword" v-model="ticketPassword" custom-class="uh-profile-input !rounded-lg" placeholder-class="text-xs"
+            show-password prefix-icon="lock" no-border placeholder="验证票据已过期，请输入当前密码重新获取" clearable
+            :disabled="emailSubmitting || emailCodeSending"
           />
           <text class="text-xs text-gray-600">
-            验证码将发送到新邮箱，10 分钟内有效；验证需当前密码确认身份，未设置过密码的账号请先在「修改密码」中设置。
+            {{ useTicketFlow
+              ? '验证码将发送到新邮箱，10 分钟内有效；凭验证票据验证，票据过期时需输入当前密码重新获取。'
+              : '验证码将发送到新邮箱，10 分钟内有效；验证需当前密码确认身份，未设置过密码的账号请先在「修改密码」中设置。' }}
           </text>
         </view>
         <view class="box-border w-full flex items-center justify-center gap-x-3">
@@ -828,7 +953,10 @@ onShow(() => {
     </uh-glass-popup>
 
     <!-- 忘记密码/重置密码弹层(匿名两段式流程,重置成功引导重新登录) -->
-    <uh-forgot-password-sheet v-model="forgotSheet" :preset-username="userInfo.username" @success="onForgotResetSuccess" />
+    <uh-forgot-password-sheet
+      v-model="forgotSheet" :preset-username="userInfo.username"
+      @success="onForgotResetSuccess"
+    />
   </view>
 </template>
 
@@ -852,5 +980,18 @@ onShow(() => {
   background-color: rgb(255 255 255 / 65%);
   border-radius: 20rpx;
   width: 100%;
+}
+
+.question-collapse {
+  &:deep(.wd-collapse-item__header) {
+    padding: 16rpx 24rpx;
+  }
+
+  &:deep(.wd-collapse-item__title) {
+    font-size: 26rpx;
+  }
+  &:deep(.wd-collapse) {
+    background: transparent !important;
+  }
 }
 </style>

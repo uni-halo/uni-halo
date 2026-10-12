@@ -109,7 +109,7 @@ async function sendCode() {
   try {
     const res = await sendResetEmailCode(value, buildCaptcha())
     ticket.value = res.data?.ticket || ''
-    uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱' })
+    uni.showToast({ icon: 'none', title: '验证码已发送，请查收邮箱', duration: 2000 })
     resetCaptcha()
     startCountdown()
   }
@@ -118,15 +118,16 @@ async function sendCode() {
     if (err.code === 403 && err.data?.captcha) {
       // 需要/校验失败图形验证码:服务端附新码(一次性),展示并要求重试
       applyCaptcha(err.data.captcha)
-      uni.showToast({ icon: 'none', title: '请完成图形验证码后重新发送' })
+      uni.showToast({ icon: 'none', title: '请完成图形验证码后重新发送', duration: 2000 })
     }
     else if (err.code === 429) {
-      uni.showToast({ icon: 'none', title: '发送过于频繁，请稍后再试' })
+      uni.showToast({ icon: 'none', title: '发送过于频繁，请稍后再试', duration: 2000 })
     }
     else {
       uni.showToast({
         icon: 'none',
         title: err.data?.message || '验证码发送失败，请稍后重试',
+        duration: 2000,
       })
     }
   }

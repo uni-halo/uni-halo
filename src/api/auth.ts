@@ -7,6 +7,7 @@
 import { http } from '@/http/alova'
 import { RequestFrom } from '@/http/tools/enum'
 import type { IResponse } from '@/http/types'
+import { delCache, getCache, setCache } from '@/utils/storage'
 import type { ILoginResult, IProfileResult } from './types/uni-halo'
 import { buildCaptchaQuery } from './uni-halo'
 import type { ICaptchaQuery } from './uni-halo'
@@ -71,6 +72,77 @@ export function loginByPassword(username: string, password: string, captcha?: IC
     { username, password },
     {
       params: { ...buildCaptchaQuery(captcha) },
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/* ---------- 邮箱验证闭环（自建端点，凭登录票据，非 PAT） ---------- */
+
+/**
+ * 发送邮箱验证码(公开接口,凭登录响应下发的 verifyTicket)
+ * 服务端校验票据 → 邮箱唯一性 → 发码,成功返回绑定该邮箱的新票据
+ * (后续验码凭此票据)与验证码有效期
+ */
+export function sendEmailVerification(ticket: string, email: string) {
+  return http.Post<IResponse<{ ticket: string, expiresInMinutes: number }>>(
+    `${AUTH_API_BASE}/-/send-email-verification`,
+    { ticket, email },
+    {
+      cacheFor: 0,
+      // 匿名端点 + 票据认证,严禁携带 PAT(带了会被 email-not-set 拦死)
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/**
+ * 校验邮箱验证码并完成绑定(公开接口,凭发码时换绑的票据)
+ * 成功后服务端直写 spec.email + emailVerified=true,该用户 PAT 即解除 email-not-set 拦截
+ */
+export function verifyEmailWithTicket(ticket: string, email: string, code: string) {
+  return http.Post<IResponse<{ email: string, emailVerified: boolean }>>(
+    `${AUTH_API_BASE}/-/verify-email`,
+    { ticket, email, code },
+    {
+      cacheFor: 0,
+      meta: { requestFrom: RequestFrom.Halo },
+    },
+  )
+}
+
+/* ---------- 验证票据缓存与续期 ---------- */
+
+/** 验证票据缓存 key(有效期与服务端票据 TTL 对齐,过期即失效需重新获取) */
+const VERIFY_TICKET_KEY = 'uh-email-verify-ticket'
+const VERIFY_TICKET_TTL_SECONDS = 10 * 60
+
+/** 登录响应下发的验证票据写入缓存(带过期时间,不进 pinia 持久化) */
+export function saveVerifyTicket(ticket: string) {
+  setCache(VERIFY_TICKET_KEY, ticket, VERIFY_TICKET_TTL_SECONDS)
+}
+
+/** 读取未过期的验证票据,无/已过期返回空串 */
+export function readVerifyTicket(): string {
+  return getCache<string>(VERIFY_TICKET_KEY) || ''
+}
+
+/** 清除验证票据缓存(验证成功/退出登录时调用) */
+export function clearVerifyTicket() {
+  delCache(VERIFY_TICKET_KEY)
+}
+
+/**
+ * 重新获取邮箱验证票据(公开接口,凭用户名密码重认证)
+ * 登录票据过期后的续期通道:免重签 PAT(单活令牌不互踢当前设备);
+ * 密码认证与登录同源(锁定闸门 + 失败计数),仅未验证邮箱的启用账号可获取
+ */
+export function getEmailVerifyTicket(username: string, password: string) {
+  return http.Post<IResponse<{ ticket: string, expiresInMinutes: number }>>(
+    `${AUTH_API_BASE}/-/email-verify-ticket`,
+    { username, password },
+    {
       cacheFor: 0,
       meta: { requestFrom: RequestFrom.Halo },
     },
