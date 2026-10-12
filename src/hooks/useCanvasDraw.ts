@@ -8,8 +8,10 @@ export type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill'
 
 /** 单条笔画(自由绘制/橡皮/形状共用,shape 区分几何类型) */
 export interface IStroke {
-  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶,其余按 shape 几何绘制 */
-  kind: 'free' | 'eraser' | 'fill'
+  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶 bg=换纸张,其余按 shape 几何绘制 */
+  kind: 'free' | 'eraser' | 'fill' | 'bg'
+  /** 换纸张前的旧背景色(kind=bg 时有效) */
+  prevColor?: string
   /** 几何形状(kind=free 且无 shape 时为普通笔画) */
   shape?: 'line' | 'rect' | 'circle'
   /** 颜色(完整 css color,含透明度) */
@@ -247,15 +249,21 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
   }
 
+  /** 泛洪容差(容忍抗锯齿边缘像素,过小会导致采样到边缘时填不上) */
+  const FILL_TOLERANCE = 32
+
   /** 油漆桶:从触点开始泛洪填充(基于像素扫描,直接改烘焙层像素;降级模式改主画布) */
   function floodFill(point: { x: number, y: number }, color: string) {
-    const targetNode = baseNode || canvasNode
-    const targetCtx = baseCtx || ctx
+    floodFillOn(baseCtx || ctx, baseNode || canvasNode, point, color)
+  }
+
+  /** 在指定画布上泛洪填充(起点像素收敛到画布内,避免点在边缘时越界失效) */
+  function floodFillOn(targetCtx: any, targetNode: any, point: { x: number, y: number }, color: string) {
     if (!targetCtx || !targetNode)
       return
     const dpr = Math.min(uni.getSystemInfoSync().pixelRatio || 2, 2)
-    const px = Math.round(point.x * dpr)
-    const py = Math.round(point.y * dpr)
+    const px = Math.min(Math.max(Math.round(point.x * dpr), 0), targetNode.width - 1)
+    const py = Math.min(Math.max(Math.round(point.y * dpr), 0), targetNode.height - 1)
     const W = targetNode.width
     const H = targetNode.height
     const img = targetCtx.getImageData(0, 0, W, H)
@@ -266,18 +274,19 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     const rgba = hexToRgba(color)
     if (!rgba)
       return
-    if (Math.abs(target[0] - rgba[0]) < 8 && Math.abs(target[1] - rgba[1]) < 8 && Math.abs(target[2] - rgba[2]) < 8 && Math.abs(target[3] - rgba[3]) < 8)
+    const near = (i: number) =>
+      Math.abs(data[i] - target[0]) < FILL_TOLERANCE
+      && Math.abs(data[i + 1] - target[1]) < FILL_TOLERANCE
+      && Math.abs(data[i + 2] - target[2]) < FILL_TOLERANCE
+      && Math.abs(data[i + 3] - target[3]) < FILL_TOLERANCE
+    // 起点颜色与填充色一致时无需填充
+    if (Math.abs(target[0] - rgba[0]) < FILL_TOLERANCE && Math.abs(target[1] - rgba[1]) < FILL_TOLERANCE && Math.abs(target[2] - rgba[2]) < FILL_TOLERANCE && Math.abs(target[3] - rgba[3]) < FILL_TOLERANCE)
       return
     const stack: number[] = [py * W + px]
-    const match = (i: number) =>
-      Math.abs(data[i] - target[0]) < 8
-      && Math.abs(data[i + 1] - target[1]) < 8
-      && Math.abs(data[i + 2] - target[2]) < 8
-      && Math.abs(data[i + 3] - target[3]) < 8
     while (stack.length) {
       const cur = stack.pop()!
       const i = cur * 4
-      if (!match(i))
+      if (!near(i))
         continue
       data[i] = rgba[0]
       data[i + 1] = rgba[1]
@@ -316,7 +325,7 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     const target = baseCtx || ctx
     if (!target || pts.length === 0)
       return
-    if (stroke.kind === 'fill')
+    if (stroke.kind === 'fill' || stroke.kind === 'bg')
       return
     applyStrokeStyle(target, stroke)
     if (stroke.shape) {
@@ -358,7 +367,12 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
       return
     target.globalCompositeOperation = 'source-over'
     target.clearRect(0, 0, canvasWidth, canvasHeight)
-    strokes.forEach(drawStroke)
+    strokes.forEach((stroke) => {
+      if (stroke.kind === 'fill')
+        floodFillOn(target, baseNode || canvasNode, stroke.points[0], stroke.color)
+      else if (stroke.kind !== 'bg')
+        drawStroke(stroke)
+    })
     target.save()
     target.globalCompositeOperation = 'destination-over'
     target.globalAlpha = 1
@@ -495,6 +509,8 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     if (!canUndo.value)
       return
     const stroke = strokes.pop()!
+    if (stroke.kind === 'bg')
+      bgColor.value = stroke.prevColor ?? stroke.color
     redoStack.push(stroke)
     strokeCount.value = strokes.length
     redoCount.value = redoStack.length
@@ -506,6 +522,8 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     if (!canRedo.value)
       return
     const stroke = redoStack.pop()!
+    if (stroke.kind === 'bg')
+      bgColor.value = stroke.color
     strokes.push(stroke)
     strokeCount.value = strokes.length
     redoCount.value = redoStack.length
@@ -521,8 +539,14 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     redrawAll()
   }
 
-  /** 切换背景色并重绘(保留笔画) */
+  /** 切换背景色并重绘(保留笔画;换纸计入撤销历史) */
   function setBg(color: string) {
+    if (color === bgColor.value)
+      return
+    strokes.push({ kind: 'bg', color, prevColor: bgColor.value, width: 0, style: 'round', points: [] })
+    redoStack.length = 0
+    strokeCount.value = strokes.length
+    redoCount.value = 0
     bgColor.value = color
     redrawAll()
   }
