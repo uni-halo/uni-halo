@@ -50,8 +50,9 @@ async function handleGetData() {
       ? DataLoadingStatusEnum.Empty
       : DataLoadingStatusEnum.Success
   }
-  catch (err) {
+  catch (err: any) {
     console.error('获取猜画排行榜失败', err)
+    uni.showToast({ title: err?.message || '获取猜画排行榜失败', icon: 'none', duration: 2000 })
     rankList.value = []
     loadingStatus.value = DataLoadingStatusEnum.Error
   }

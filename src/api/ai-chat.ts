@@ -74,6 +74,9 @@ export function friendlyChatError(raw: string): string {
     return '当前站点未授权此端访问 AI 助手'
   if (/401|Unauthorized|请登录/.test(text))
     return '请登录后再使用 AI 助手'
+  // Halo 平台拦截：登录账号未验证邮箱（RFC 7807 type=email-not-set）
+  if (/email-not-set|verified email|邮箱未验证/i.test(text))
+    return '请先验证邮箱后再使用 AI 助手（请到「个人资料」完成邮箱验证）'
   if (/429|TOO_MANY|limit exceeded/i.test(text))
     return 'AI 请求过于频繁，请稍后再试'
   // 插件已翻译的中文错误或未知错误原样透出

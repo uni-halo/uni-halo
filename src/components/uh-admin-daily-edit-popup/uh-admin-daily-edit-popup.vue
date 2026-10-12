@@ -139,7 +139,7 @@ async function handleSave() {
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '保存失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '保存失败', icon: 'none', duration: 2000 })
   }
   finally {
     saving.value = false

@@ -104,6 +104,15 @@ const alovaInstance = createAlova({
       // 2xx 均视为成功（如插件端异步端点返回 202 Accepted + 空响应体），
       // 非 2xx 才走错误出口
       if (statusCode < 200 || statusCode >= 300) {
+        const problem = rawData as { type?: string, title?: string, detail?: string } | null
+        // Halo 平台级拦截：PAT 所属用户未验证邮箱（RFC 7807 problem-detail，type=email-not-set），
+        if (statusCode === 403 && problem?.type === 'email-not-set') {
+          throw new UniHaloError({
+            message: '个人邮箱未验证，请先到 [我的资料] 验证邮箱',
+            data: rawData,
+            code: statusCode,
+          })
+        }
         const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
         throw new UniHaloError({
           message: errorMessage,

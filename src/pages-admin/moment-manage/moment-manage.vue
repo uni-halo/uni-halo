@@ -79,8 +79,9 @@ async function handleGetData() {
       hasNext: !!res.data?.hasNext,
     })
   }
-  catch (err) {
+  catch (err: any) {
     console.error(err)
+    uni.showToast({ title: err?.message || '获取瞬间列表失败', icon: 'none', duration: 2000 })
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({ active: false, status: 'error' })
     }
@@ -157,7 +158,7 @@ function handleDelete(item: MomentItem) {
       uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => {})
 }

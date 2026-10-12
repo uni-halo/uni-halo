@@ -59,7 +59,7 @@ async function openDetail(album: ILoveAlbum) {
     updateLoadingStatus(currentPhotos.value.length === 0 ? DataLoadingStatusEnum.Empty : DataLoadingStatusEnum.Success)
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '加载相册失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '加载相册失败', icon: 'none', duration: 2000 })
     isShow.value = false
   }
 }
@@ -85,7 +85,7 @@ async function commitPhotos() {
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '照片保存失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '照片保存失败', icon: 'none', duration: 2000 })
   }
 }
 
@@ -123,7 +123,7 @@ async function handleDeletePhoto(photo: ILovePhoto) {
     emit('on-close', { isSubmit: true, refresh: true })
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
   }
 }
 

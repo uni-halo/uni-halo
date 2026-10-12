@@ -76,12 +76,12 @@ async function handleGetData() {
   }
   catch (err: any) {
     console.error(err)
+    uni.showToast({ title: err?.message || '获取列表失败', icon: 'none', duration: 2000 })
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({ active: false, status: 'error' })
     }
     else {
       updateLoadingStatus(DataLoadingStatusEnum.Error)
-      uni.showToast({ title: err?.message || '加载失败', icon: 'none' })
     }
   }
   finally {
@@ -168,7 +168,7 @@ async function handleToggleHidden(draw: IDraw) {
     uni.showToast({ title: target ? '已隐藏' : '已公开', icon: 'none' })
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '操作失败', icon: 'none', duration: 2000 })
   }
 }
 
@@ -188,7 +188,7 @@ function handleDelete(draw: IDraw) {
       uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => { })
 }
@@ -211,7 +211,7 @@ async function handleOpenPuzzle(draw: IDraw) {
     puzzleInfo.value = res.data || null
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none', duration: 2000 })
   }
   finally {
     puzzleLoading.value = false
@@ -235,7 +235,7 @@ function handleReveal() {
       handleRetry()
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '揭晓失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '揭晓失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => { })
 }

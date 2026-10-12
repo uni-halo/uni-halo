@@ -39,6 +39,7 @@ async function fetchLoveInfo() {
   }
   catch (err: any) {
     console.error('获取恋爱信息失败:', err)
+    uni.showToast({ title: err?.message || '获取恋爱信息失败', icon: 'none', duration: 2000 })
     updateLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
@@ -111,7 +112,7 @@ async function handleSave() {
     girlUpload.reset()
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '保存失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '保存失败', icon: 'none', duration: 2000 })
   }
   finally {
     saving.value = false

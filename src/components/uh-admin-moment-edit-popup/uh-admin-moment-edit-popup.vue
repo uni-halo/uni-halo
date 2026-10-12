@@ -110,7 +110,7 @@ async function openEdit(name: string): Promise<boolean> {
     return true
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '加载瞬间失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '加载瞬间失败', icon: 'none', duration: 2000 })
     return false
   }
   finally {
@@ -168,7 +168,7 @@ async function handleSubmit() {
     handleClose(true)
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '发布失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '发布失败', icon: 'none', duration: 2000 })
   }
   finally {
     saving.value = false

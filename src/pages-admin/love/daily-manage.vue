@@ -63,8 +63,9 @@ async function handleGetData() {
       hasNext: !!res.data?.hasNext,
     })
   }
-  catch (err) {
+  catch (err: any) {
     console.error(err)
+    uni.showToast({ title: err?.message || '获取清单列表失败', icon: 'none', duration: 2000 })
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({ active: false, status: 'error' })
     }
@@ -131,7 +132,7 @@ async function handleToggleStatus(item: ILoveDailyItem) {
     item.spec = { ...item.spec, ...spec }
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '更新失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '更新失败', icon: 'none', duration: 2000 })
   }
 }
 
@@ -151,7 +152,7 @@ function handleDelete(item: ILoveDailyItem) {
       uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => {})
 }

@@ -284,7 +284,13 @@ async function handleHandle() {
         handleGetCaptchaImage()
       }
     }
-    uni.showToast({ icon: 'none', title: error?.data?.detail ?? '提交失败' })
+    uni.showToast({
+      icon: 'none',
+      duration: 2000,
+      title: error?.data?.type === 'email-not-set'
+        ? (error?.message || '请先验证邮箱后再使用该功能')
+        : (error?.data?.detail ?? '提交失败'),
+    })
   }
   finally {
     uni.hideLoading()

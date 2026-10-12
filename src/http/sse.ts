@@ -185,7 +185,14 @@ function requestByFetch(options: SseRequestOptions): SseHandle {
         credentials: 'include',
       })
       if (!response.ok || !response.body) {
-        options.onError(`请求失败(${response.status})`)
+        // 携带 Halo problem-detail 错误体信息（如 email-not-set），供业务层映射友好文案
+        let detail = ''
+        try {
+          const problem = await response.json() as { type?: string, detail?: string } | null
+          detail = [problem?.type, problem?.detail].filter(Boolean).join(':')
+        }
+        catch { /* 非 JSON 响应体忽略 */ }
+        options.onError(`请求失败(${response.status})${detail ? ` ${detail}` : ''}`)
         return
       }
       const parser = createSseParser(options.onMessage)
@@ -227,6 +234,19 @@ function requestByUni(options: SseRequestOptions): SseHandle {
     success: (res) => {
       if (aborted)
         return
+      // 非 2xx：响应体不是 SSE 流，提取错误信息（如 Halo problem-detail）后走错误出口
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let detail = ''
+        const problem = res.data as { type?: string, detail?: string } | null
+        if (problem && typeof problem === 'object') {
+          detail = [problem.type, problem.detail].filter(Boolean).join(':')
+        }
+        else if (typeof res.data === 'string' && res.data.trim()) {
+          detail = res.data.trim().slice(0, 200)
+        }
+        options.onError(`请求失败(${res.statusCode})${detail ? ` ${detail}` : ''}`)
+        return
+      }
       // 已流式消费过分片则不再重复喂入; 降级场景一次性喂入完整响应体
       if (!chunkReceived && res.data != null) {
         parser.feed(typeof res.data === 'string' ? res.data : JSON.stringify(res.data))

@@ -82,8 +82,9 @@ async function loadBoard() {
     const res = await getGuessBoard(props.draw.metadata.name)
     board.value = res.data || null
   }
-  catch (err) {
+  catch (err: any) {
     console.error('获取画谜信息失败', err)
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none', duration: 2000 })
     board.value = null
   }
   finally {
@@ -141,7 +142,7 @@ async function handleGuess() {
     startTimer()
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '提交失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '提交失败', icon: 'none', duration: 2000 })
   }
   finally {
     submitting.value = false
@@ -241,7 +242,7 @@ function handlePreviewCover() {
         <!-- 态 3：出题人本人 -->
         <template v-else-if="isMine">
           <view class="flex flex-col gap-y-1">
-            <text class="text-xs text-gray-500">这是你的画谜作品，快去分享给小伙伴来猜吧～</text>
+            <text class="text-xs text-gray-500">这是你的画谜作品，你自己无法参与！</text>
             <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
           </view>
         </template>

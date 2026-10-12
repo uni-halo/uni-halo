@@ -242,7 +242,7 @@ async function handlePublish() {
   }
   catch (err: any) {
     console.error('发布失败', err)
-    uni.showToast({ title: err?.message || '发布失败，请稍后重试', icon: 'none' })
+    uni.showToast({ title: err?.message || '发布失败，请稍后重试', icon: 'none', duration: 2000 })
   }
   finally {
     publishing.value = false

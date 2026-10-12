@@ -157,8 +157,9 @@ async function handleGetData() {
       })
       uni.stopPullDownRefresh()
     }
-    catch (err) {
+    catch (err: any) {
       console.error(err)
+      uni.showToast({ title: err?.message || '获取瞬间失败', icon: 'none', duration: 2000 })
       updateLoadingStatus(DataLoadingStatusEnum.Error)
       updateLoadMoreStatus({
         active: false,
@@ -193,8 +194,9 @@ async function handleGetData() {
       hasNext: res.data.hasNext,
     })
   }
-  catch (err) {
+  catch (err: any) {
     console.error(err)
+    uni.showToast({ title: err?.message || '获取瞬间失败', icon: 'none', duration: 2000 })
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({
         active: false,

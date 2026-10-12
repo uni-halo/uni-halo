@@ -195,7 +195,7 @@ function handleDone() {
       class="pointer-events-none fixed left-0 top-0 z-0 h-[46vh] w-full from-[#d9f77f] via-[#e8fbaf] to-[#f5fae8] bg-gradient-to-b"
     />
 
-    <view class="relative z-10 box-border w-full flex flex-1 flex-col items-center justify-center px-4">
+    <view class="relative z-10 box-border w-full flex flex-1 flex-col items-center justify-center px-6 pt-12">
       <view class="uh-global-card-glass uh-shadow-xs box-border w-full border rounded-2xl p-6">
         <!-- 绑定成功 -->
         <view v-if="bindResult === 'success'" class="w-full flex flex-col items-center">
@@ -240,7 +240,7 @@ function handleDone() {
         <!-- 已扫码,等电脑端确认 -->
         <view v-else-if="bindResult === 'waiting'" class="w-full flex flex-col items-center">
           <view class="mb-4 h-16 w-16 flex items-center justify-center rounded-full bg-green-500/10">
-            <wd-icon name="chat" size="64rpx" class="text-green-500" />
+            <wd-icon name="message" size="64rpx" class="text-green-500" />
           </view>
           <view class="text-lg font-bold">
             等待确认
@@ -253,7 +253,7 @@ function handleDone() {
         <!-- 等待确认 -->
         <view v-else class="w-full flex flex-col items-center">
           <view class="mb-4 h-16 w-16 flex items-center justify-center rounded-full bg-green-500/10">
-            <wd-icon name="chat" size="64rpx" class="text-green-500" />
+            <wd-icon name="message" size="64rpx" class="text-green-500" />
           </view>
           <view class="text-lg font-bold">
             确认绑定微信

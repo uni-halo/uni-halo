@@ -142,7 +142,7 @@ async function handleGetData() {
       hasNext: !!res.data?.hasNext,
     })
   }
-  catch (err) {
+  catch (err: any) {
     console.error('获取画作列表失败', err)
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({ active: false, status: 'error' })

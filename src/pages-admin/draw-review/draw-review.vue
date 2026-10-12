@@ -85,12 +85,12 @@ async function handleGetData() {
   }
   catch (err: any) {
     console.error(err)
+    uni.showToast({ title: err?.message || '获取审核列表失败', icon: 'none', duration: 2000 })
     if (loadMoreStatus.value.active) {
       updateLoadMoreStatus({ active: false, status: 'error' })
     }
     else {
       updateLoadingStatus(DataLoadingStatusEnum.Error)
-      uni.showToast({ title: err?.message || '加载失败', icon: 'none' })
     }
   }
   finally {
@@ -216,7 +216,7 @@ async function submitReview(request: () => Promise<unknown>) {
     handleRetry()
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '操作失败', icon: 'none', duration: 2000 })
   }
   finally {
     submitting.value = false
@@ -234,7 +234,7 @@ async function handleToggleHidden(draw: IDraw) {
     uni.showToast({ title: target ? '已隐藏' : '已公开', icon: 'none' })
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '操作失败', icon: 'none', duration: 2000 })
   }
 }
 
@@ -254,7 +254,7 @@ function handleDelete(draw: IDraw) {
       uni.showToast({ title: '已删除', icon: 'none' })
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '删除失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => { })
 }
@@ -277,7 +277,7 @@ async function handleOpenPuzzle(draw: IDraw) {
     puzzleInfo.value = res.data || null
   }
   catch (err: any) {
-    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none' })
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none', duration: 2000 })
   }
   finally {
     puzzleLoading.value = false
@@ -300,7 +300,7 @@ function handleReveal() {
       handleOpenPuzzle(puzzleTarget.value!)
     }
     catch (err: any) {
-      uni.showToast({ title: err?.message || '揭晓失败', icon: 'none' })
+      uni.showToast({ title: err?.message || '揭晓失败', icon: 'none', duration: 2000 })
     }
   }).catch(() => { })
 }
@@ -447,8 +447,8 @@ function handleReveal() {
         </view>
         <uh-button
           class="w-full flex-1"
-          custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !py-2 !text-sm !text-white active:opacity-80"
-          :class="[reviewMode === 'approve' ? '!bg-green-500' : '!bg-orange-500', { 'opacity-60': submitting }]"
+          custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !py-2 !text-sm !text-gray-900 active:opacity-80"
+          :class="[{ 'opacity-60': submitting }]"
           @click="handleConfirmReview"
         >
           {{ reviewButtonText() }}
