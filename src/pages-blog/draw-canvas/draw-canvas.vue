@@ -16,7 +16,6 @@ definePage({
   style: {
     navigationBarTitleText: '画一幅',
     navigationStyle: 'custom',
-    disableScroll: true,
   },
 })
 
