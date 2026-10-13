@@ -58,7 +58,6 @@ const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: chec
 /* ---------------- 数据加载 ---------------- */
 const drawName = ref('')
 const draw = ref<IDraw | null>(null)
-const loadFailed = ref(false)
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 const cover = computed(() => draw.value?.spec.cover || '')
@@ -155,6 +154,7 @@ onShareAppMessage(() => {
   return {
     title: `${title || '画谜详情'} - ${siteName.value}`,
     path: `/pages-blog/draw-detail/draw-detail?name=${drawName.value}`,
+    imageUrl: cover.value,
   }
 })
 
@@ -163,6 +163,7 @@ onShareTimeline(() => {
   return {
     title: `${title || '画谜详情'} - ${siteName.value}`,
     query: `name=${drawName.value}`,
+    imageUrl: cover.value,
   }
 })
 
@@ -419,7 +420,7 @@ onPageScroll(({ scrollTop }) => {
           </template>
         </template>
         <!-- #ifdef MP -->
-        <view class="box-border w-full flex items-center px-6 pt-2">
+        <view class="box-border w-full flex items-center px-4 pt-2">
           <button
             class="uh-button-native uh-global-card-glass w-full flex-1 !border !rounded-full !bg-primary !py-2 !text-sm !text-gray-900 !shadow-none"
             open-type="share"

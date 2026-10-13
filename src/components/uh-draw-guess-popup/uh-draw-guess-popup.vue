@@ -168,6 +168,9 @@ function handlePreviewCover() {
 function handleToDetailPage(draw: IDraw) {
   uni.navigateTo({
     url: `/pages-blog/draw-detail/draw-detail?name=${draw.metadata.name}`,
+    success: () => {
+      visible.value = false
+    },
   })
 }
 </script>
