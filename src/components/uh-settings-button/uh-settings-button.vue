@@ -21,7 +21,6 @@ const whiteList = [
   'pages-blog/articles/articles',
   'pages-blog/article-detail/article-detail',
   'pages-blog/archives/archives',
-  'pages-blog/friend-links/friend-links',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]

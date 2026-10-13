@@ -253,13 +253,15 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
       </view>
 
-      <uh-button
-        class="mt-3 flex-1"
-        custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full py-2.5 !text-white !bg-love shadow-none !text-3xs"
-        :class="saving ? 'opacity-60' : ''" @click="handleSave"
-      >
-        {{ saving ? '保存中' : '保存' }}
-      </uh-button>
+      <view class="mt-3 w-full flex items-center">
+        <uh-button
+          class="flex-1"
+          custom-class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border !rounded-full !py-2.5 !text-white !bg-love shadow-none !text-3xs"
+          :class="saving ? 'opacity-60' : ''" @click="handleSave"
+        >
+          {{ saving ? '保存中' : '保存' }}
+        </uh-button>
+      </view>
 
       <wd-datetime-picker
         v-model="dateTs" v-model:visible="dateShow" :z-index="999" root-portal type="date"

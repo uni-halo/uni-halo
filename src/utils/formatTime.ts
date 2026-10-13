@@ -12,56 +12,62 @@ export type FormatTimeInput = string | number | Date | { d: string | number | Da
  * @returns 格式化后的时间字符串
  */
 export function formatTime(data: FormatTimeInput): string {
-  let dateTime = new Date(data as string | number | Date)
-  let fmt = 'yyyy-MM-dd HH:mm:ss'
+  try {
+    let dateTime = new Date(data as string | number | Date)
+    let fmt = 'yyyy-MM-dd HH:mm:ss'
 
-  // 对象形式传参
-  if (dateTime.toString() === 'Invalid Date') {
-    if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
-      const { d, f } = data
-      if (d == null || d === '') {
+    // 对象形式传参
+    if (dateTime.toString() === 'Invalid Date') {
+      if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
+        const { d, f } = data
+        if (d == null || d === '') {
+          console.error('日期参数不正确，传入的参数列表：', data)
+          return ''
+        }
+        dateTime = new Date(d)
+        if (dateTime.toString() === 'Invalid Date') {
+          console.error('日期参数不正确，传入的参数列表：', data)
+          return ''
+        }
+        if (Object.prototype.hasOwnProperty.call(data, 'f')) {
+          fmt = f || fmt
+        }
+      }
+      else {
         console.error('日期参数不正确，传入的参数列表：', data)
         return ''
       }
-      dateTime = new Date(d)
-      if (dateTime.toString() === 'Invalid Date') {
-        console.error('日期参数不正确，传入的参数列表：', data)
-        return ''
-      }
-      if (Object.prototype.hasOwnProperty.call(data, 'f')) {
-        fmt = f || fmt
-      }
     }
-    else {
-      console.error('日期参数不正确，传入的参数列表：', data)
-      return ''
-    }
-  }
 
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六']
-  const seasons = ['冬', '春', '夏', '秋']
-  const o: Record<string, number | string> = {
-    'M+': dateTime.getMonth() + 1, // 月份
-    'd+': dateTime.getDate(), // 日
-    'H+': dateTime.getHours(), // 小时
-    'm+': dateTime.getMinutes(), // 分
-    's+': dateTime.getSeconds(), // 秒
-    'w+': weekDays[dateTime.getDay()], // 星期几
-    'q+': seasons[Math.floor((dateTime.getMonth() + 3) / 3)], // 季度
-    'S': dateTime.getMilliseconds(), // 毫秒
-  }
-
-  const yMatch = fmt.match(/(y+)/)
-  if (yMatch) {
-    fmt = fmt.replace(yMatch[0], (`${dateTime.getFullYear()}`).substr(4 - yMatch[0].length))
-  }
-  for (const k in o) {
-    const match = fmt.match(new RegExp(`(?:${k})`))
-    if (match) {
-      fmt = fmt.replace(match[0], match[0].length === 1
-        ? String(o[k])
-        : (`00${o[k]}`).substr(String(o[k]).length))
+    const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+    const seasons = ['冬', '春', '夏', '秋']
+    const o: Record<string, number | string> = {
+      'M+': dateTime.getMonth() + 1, // 月份
+      'd+': dateTime.getDate(), // 日
+      'H+': dateTime.getHours(), // 小时
+      'm+': dateTime.getMinutes(), // 分
+      's+': dateTime.getSeconds(), // 秒
+      'w+': weekDays[dateTime.getDay()], // 星期几
+      'q+': seasons[Math.floor((dateTime.getMonth() + 3) / 3)], // 季度
+      'S': dateTime.getMilliseconds(), // 毫秒
     }
+
+    const yMatch = fmt.match(/(y+)/)
+    if (yMatch) {
+      fmt = fmt.replace(yMatch[0], (`${dateTime.getFullYear()}`).substr(4 - yMatch[0].length))
+    }
+    for (const k in o) {
+      const match = fmt.match(new RegExp(`(?:${k})`))
+      if (match) {
+        fmt = fmt.replace(match[0], match[0].length === 1
+          ? String(o[k])
+          : (`00${o[k]}`).substr(String(o[k]).length))
+      }
+    }
+    return fmt
   }
-  return fmt
+  catch (e: any) {
+    console.error('日期参数不正确：', e)
+    return ''
+  }
 }

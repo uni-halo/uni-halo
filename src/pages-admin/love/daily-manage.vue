@@ -209,15 +209,17 @@ onShow(() => {
           <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
           <wd-img
             v-if="item.spec?.images?.[0]" :src="checkThumbnailUrl(item.spec.images[0], true)"
-            mode="aspectFill" class="h-16 w-16 shrink-0" :radius="8"
+            mode="aspectFill" class="h-16 w-16 shrink-0 rounded-lg" :radius="8"
           >
             <template #loading>
               <wd-loading size="64rpx" custom-class="!text-love" />
             </template>
           </wd-img>
           <!-- 无图 -->
-          <view v-else
-            class="h-16 w-16 shrink-0 flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400">
+          <view
+            v-else
+            class="h-16 w-16 flex shrink-0 items-center justify-center rounded-lg from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400"
+          >
             <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
           </view>
         </view>
@@ -261,7 +263,7 @@ onShow(() => {
 </template>
 
 <style scoped lang="scss">
-	.uh-translate-x-center {
+.uh-translate-x-center {
   transform: translateX(-50%);
 }
 </style>

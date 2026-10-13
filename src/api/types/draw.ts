@@ -101,8 +101,10 @@ export interface IGuessBoardItem {
   username: string
   displayName?: string
   avatar?: string
-  /** 猜中时刻（RFC3339） */
+  /** 猜中时刻 */
   solvedAt?: string
+  /** 是否是当前用户 */
+  _isMe?: boolean
 }
 
 /** 竞猜信息合一（未揭晓不含谜底，已揭晓附谜底） */

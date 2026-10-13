@@ -24,7 +24,6 @@ definePage({
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const appConfigStore = useAppConfigStore()
-const { auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 const siteName = computed(() => appConfigStore.configs.featureConfig?.profile?.appInfo?.name || 'uni-halo')
 
 const slug = ref('')
@@ -139,7 +138,7 @@ function handleOpenLink(url: string | undefined, label: string) {
       </view>
 
       <view
-        class="uh-global-card-glass uh-content-lift box-border overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-8"
+        class="uh-global-card-glass uh-content-lift box-border min-h-[calc(100vh-300rpx)] w-full overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-8"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
@@ -206,12 +205,12 @@ function handleOpenLink(url: string | undefined, label: string) {
       <!-- 悬浮操作：仓库/演示/文档外链 -->
       <view
         v-if="linkButtons.length"
-        class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe"
+        class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 w-fit flex items-center justify-center pb-safe"
       >
         <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
           <view
             v-for="btn in linkButtons" :key="btn.label"
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full shadow-none !px-6"
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full shadow-none !border !bg-primary !px-3"
             @click="handleOpenLink(btn.url, btn.label)"
           >
             <wd-icon name="link" size="32rpx" />

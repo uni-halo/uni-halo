@@ -17,6 +17,7 @@ import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { sleep } from '@/utils/common'
+import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
 
 definePage({
@@ -32,7 +33,8 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('drawDetail', '画谜详情')
 
 const tokenStore = useTokenStore()
-const userStore = useUserStore()
+const { userInfo } = storeToRefs(useUserStore())
+
 const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
 
 /** 应用登录整体开关（与登录页同语义） */
@@ -57,6 +59,7 @@ const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: chec
 const drawName = ref('')
 const draw = ref<IDraw | null>(null)
 const loadFailed = ref(false)
+const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
 const cover = computed(() => draw.value?.spec.cover || '')
 const ownerText = computed(() =>
@@ -65,37 +68,39 @@ const ownerAvatar = computed(() => checkThumbnailUrl(draw.value?.owner?.avatar |
 const ownerInitial = computed(() => ownerText.value.slice(0, 1).toUpperCase())
 
 const board = ref<IGuessBoard | null>(null)
-const boardLoading = ref(false)
 
 /** 已揭晓 */
 const revealed = computed(() => board.value?.revealed === true)
 /** 出题人本人：不能猜自己的画 */
 const isMine = computed(() =>
-  !!draw.value && draw.value.spec.ownerName === userStore.userInfo?.username)
+  !!draw.value && draw.value.spec.ownerName === userInfo.value?.username)
 /** 本人已猜中 */
 const solvedByMe = computed(() =>
   !!board.value?.board?.length
-  && board.value.board.some(item => item.username === userStore.userInfo?.username))
+  && board.value.board.some(item => item.username === userInfo.value?.username))
 const isPuzzle = computed(() => !!draw.value?.spec?.puzzleStatus)
+
 async function handleLoad() {
-  if (!drawName.value) { return }
-  loadFailed.value = false
+  if (!drawName.value) {
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
+    return
+  }
+  updateLoadingStatus(DataLoadingStatusEnum.Loading)
   try {
     const res = await getDrawByName(drawName.value)
-    const data = res.data
-    if (data) {
-      data.spec.cover = checkThumbnailUrl(data.spec.cover)
-    }
-    draw.value = data || null
-    if (!draw.value) {
-      loadFailed.value = true
+    const data = res.data || null
+    if (!data) {
+      updateLoadingStatus(DataLoadingStatusEnum.Empty)
       return
     }
+    data.spec.cover = checkThumbnailUrl(data.spec.cover)
+    draw.value = data
+    updateLoadingStatus(DataLoadingStatusEnum.Success)
     loadBoard()
   }
   catch (err: any) {
     console.error('获取画谜详情失败', err)
-    loadFailed.value = true
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
   }
   finally {
     uni.stopPullDownRefresh()
@@ -104,25 +109,27 @@ async function handleLoad() {
 
 async function loadBoard() {
   if (!draw.value) { return }
-  boardLoading.value = true
   try {
     const res = await getGuessBoard(draw.value.metadata.name)
     board.value = res.data || null
+    if (!board.value) { return }
+    board.value?.board.map((item) => {
+      item.avatar = checkAvatarUrl(item.avatar || '')
+      item._isMe = item.username === userInfo.value?.username
+      return item
+    })
   }
   catch (err: any) {
     console.error('获取画谜信息失败', err)
     uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none', duration: 2000 })
     board.value = null
   }
-  finally {
-    boardLoading.value = false
-  }
 }
 
 onLoad(async (query) => {
   drawName.value = query?.name || ''
   if (!drawName.value) {
-    loadFailed.value = true
+    updateLoadingStatus(DataLoadingStatusEnum.Error)
     return
   }
   await checkPluginAvailable()
@@ -243,7 +250,7 @@ onPageScroll(({ scrollTop }) => {
 </script>
 
 <template>
-  <view class="min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
     <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-plugin-unavailable
@@ -254,11 +261,11 @@ onPageScroll(({ scrollTop }) => {
     <template v-else>
       <!-- 加载中 / 失败占位 -->
       <uh-data-loading
-        v-if="!draw" :loading-status="loadFailed ? 'error' : 'loading'"
-        empty-text="啊偶，画谜不见了或已下架~" min-height="75vh" @refresh="handleRetry"
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus" empty-text="啊偶，画谜不见了或已下架~" min-height="75vh"
+        @refresh="handleRetry"
       />
 
-      <view v-else class="box-border w-full flex flex-col gap-y-3 p-3 pb-24">
+      <view v-else class="box-border w-full flex flex-col gap-y-3 p-3">
         <!-- 画面大图 -->
         <view
           class="uh-global-card-glass flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
@@ -286,12 +293,12 @@ onPageScroll(({ scrollTop }) => {
             <view class="w-full flex items-center gap-x-1">
               <text class="text-xs text-gray-500">作者：</text>
               <wd-avatar
-                :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
+                :src="ownerAvatar" :text="ownerInitial" shape="round" size="42rpx"
                 custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
               />
-              <text>{{ ownerText }}</text>
+              <text class="text-xs">{{ ownerText }}</text>
             </view>
-            <text class="shrink-0">
+            <text class="shrink-0 text-xs text-gray-500">
               {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
             </text>
           </view>
@@ -302,12 +309,15 @@ onPageScroll(({ scrollTop }) => {
           <uh-section-title v-if="loginEnabled">
             竞猜面板
           </uh-section-title>
-          <view v-if="loginEnabled" class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
+          <view
+            v-if="loginEnabled"
+            class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none"
+          >
             <!-- 提示语与统计 -->
-            <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
+            <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-900">
               谜底提示：{{ draw.spec.puzzleHint }}
             </view>
-            <view class="flex items-center text-xs text-gray-400">
+            <view class="flex items-center text-xs text-gray-600">
               <text>统计数据： {{ board?.guessCount ?? 0 }} 人参与</text>
               <text>丨</text>
               <text> {{ board?.solvedCount ?? 0 }} 人猜中</text>
@@ -323,17 +333,19 @@ onPageScroll(({ scrollTop }) => {
 
             <!-- 态 2：本人已猜中 -->
             <template v-else-if="solvedByMe">
-              <view class="flex flex-col gap-y-1">
-                <text class="text-sm text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
-                <text v-if="board?.answer" class="text-sm text-primary font-bold">画谜谜底：{{ board.answer }}</text>
-                <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+              <view class="flex flex-col gap-y-1.5">
+                <text class="text-xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+                <template v-if="!revealed">
+                  <text v-if="board?.answer" class="text-xs text-gray-900 font-semibold">画谜谜底：{{ board.answer }}</text>
+                  <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+                </template>
               </view>
             </template>
 
             <!-- 态 3：出题人本人 -->
             <template v-else-if="isMine">
               <view class="flex flex-col gap-y-1">
-                <text class="text-xs text-gray-500">这是你的画谜作品，你自己无法参与！</text>
+                <text class="text-xs text-gray-900">这是你的画谜作品，你自己无法参与！</text>
                 <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
               </view>
             </template>
@@ -369,24 +381,36 @@ onPageScroll(({ scrollTop }) => {
           </view>
 
           <!-- 猜中榜 -->
-          <uh-section-title v-if="board?.board?.length">
-            竞猜榜单
-          </uh-section-title>
-          <scroll-view v-if="board?.board?.length" :scroll-y="true" :show-scrollbar="false" class="max-h-[40vh]">
-            <text class="text-xs text-gray-600 font-bold">   猜中榜（按猜中时间） </text>
-            <view class="mt-3 w-full flex flex-wrap gap-x-3 gap-y-1">
-              <view v-for="item in board.board" :key="item.username" class="w-full flex items-center justify-between gap-x-2">
-                <view class="flex shrink-0 items-center gap-x-1.5">
-                  <wd-avatar
-                    :src="checkAvatarUrl(item.avatar || '')" :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
-                    custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
-                  />
-                  <text class="text-xs text-gray-600"> {{ item.displayName || item.username }}</text>
+          <template v-if="board && board?.board?.length !== 0">
+            <uh-section-title>
+              竞猜榜单
+            </uh-section-title>
+            <view class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
+              <view class="w-full flex flex-wrap gap-x-3 gap-y-2">
+                <view
+                  v-for="item in board.board" :key="item.username"
+                  class="w-full flex items-center justify-between gap-x-2"
+                >
+                  <view class="flex shrink-0 items-center gap-x-1.5">
+                    <wd-avatar
+                      :src="item.avatar" :text="(item.displayName || item.username).charAt(0)" shape="round"
+                      size="46rpx" custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+                    />
+                    <text class="text-xs" :class="[item._isMe ? 'text-primary' : 'text-gray-600']">
+                      {{ item.displayName || item.username }}
+                    </text>
+                    <text v-if="item._isMe" class="text-xs text-primary">(我)</text>
+                  </view>
+                  <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">
+                    {{ formatTime({
+                      d: item.solvedAt,
+                      f:
+                        'yyyy年MM月dd日' }) }}
+                  </text>
                 </view>
-                <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">{{ formatTime({ d: item.solvedAt, f: 'yyyy年MM月dd日 HH时mm分ss秒' }) }}</text>
               </view>
             </view>
-          </scroll-view>
+          </template>
         </template>
         <!-- #ifdef MP -->
         <view class="box-border w-full flex items-center pt-2">

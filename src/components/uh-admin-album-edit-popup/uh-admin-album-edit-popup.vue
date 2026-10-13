@@ -166,19 +166,19 @@ defineExpose({ openEdit })
         <!-- 滚动内部容器 -->
         <view class="w-full flex flex-col gap-y-3">
           <view class="flex items-center">
-            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">名称 *</text>
+            <text class="w-12 shrink-0 text-3xs text-gray-600">名称 *</text>
             <input v-model="form.displayName" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="请输入相册名称">
           </view>
           <view class="flex items-start">
-            <text class="w-[140rpx] shrink-0 pt-2.5 text-3xs text-gray-600">描述</text>
+            <text class="w-12 shrink-0 pt-2.5 text-3xs text-gray-600">描述</text>
             <textarea v-model="form.description" class="uh-global-card-glass box-border h-24 flex-1 border rounded-xl p-3 text-3xs shadow-none" placeholder="请输入相册描述(选填)" :maxlength="200" />
           </view>
           <view class="flex items-center">
-            <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">排序</text>
+            <text class="w-12 shrink-0 text-3xs text-gray-600">排序</text>
             <input v-model="form.priority" type="number" class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none" placeholder="数字越大越靠前，默认 0">
           </view>
           <view class="flex items-start">
-            <text class="w-[140rpx] shrink-0 pt-1 text-3xs text-gray-600">封面</text>
+            <text class="w-12 shrink-0 pt-1 text-3xs text-gray-600">封面</text>
             <view class="grid grid-cols-4 flex-1 gap-2">
               <view v-for="img in coverList" :key="img.tempPath" class="relative aspect-square overflow-hidden rounded-lg">
                 <image :src="img.tempPath" mode="aspectFill" class="h-full w-full" />
@@ -191,10 +191,10 @@ defineExpose({ openEdit })
               </view>
             </view>
           </view>
-          <text v-if="coverUploading" class="block pl-[140rpx] text-3xs text-gray-400">封面上传中…</text>
+          <text v-if="coverUploading" class="block pl-12 text-3xs text-gray-400">封面上传中…</text>
           <view>
             <view class="flex items-center">
-              <text class="w-[140rpx] shrink-0 text-3xs text-gray-600">查看密码</text>
+              <text class="w-12 shrink-0 text-3xs text-gray-600">密码</text>
               <input
                 v-model="form.password"
                 class="uh-global-card-glass h-9 flex-1 border rounded-xl px-4 text-3xs shadow-none"
@@ -203,7 +203,7 @@ defineExpose({ openEdit })
               >
             </view>
             <!-- 密码状态与操作：单独一行在输入框下方 -->
-            <view v-if="formMode === 'edit'" class="mt-2 flex items-center gap-4 pl-[140rpx]">
+            <view v-if="formMode === 'edit'" class="mt-2 flex items-center gap-4 pl-12">
               <text class="text-3xs" :class="form.passwordRemoved ? 'text-orange-500' : form.passwordEnabled ? 'text-green-600' : 'text-gray-400'">
                 {{ form.passwordRemoved ? '保存后清除' : form.passwordEnabled ? '已启用' : '未设置' }}
               </text>

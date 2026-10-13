@@ -7,7 +7,7 @@ defineOptions({
   },
 })
 const props = withDefaults(defineProps<IProps>(), {
-  whenCountShowCollapsedButton: 2,
+  whenCountShowCollapsedButton: 3,
   defaultCollapsed: true,
 })
 

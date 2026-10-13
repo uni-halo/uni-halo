@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { checkImageUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { copyToClipboard } from '@/utils/clipboard'
+import { imagePreview } from '@/utils/image'
 import type { IFootprint } from '@/api/types/halo-plugin-third/footprint'
 import FootprintItem from './footprint-item.vue'
 
@@ -78,9 +79,9 @@ function handleCopyArticle() {
     custom-class="!rounded-2xl"
     @close="emit('close')"
   >
-    <view class="box-border flex flex-col gap-y-3 overflow-hidden p-3" :class="props.mode === 'list' ? 'h-[70vh]' : ''">
+    <view class="box-border flex flex-col gap-y-3 overflow-hidden p-3" :class="props.mode === 'list' ? 'max-h-[70vh]' : ''">
       <!-- 顶部 -->
-      <view class="relative mb-2 box-border w-full flex items-center justify-around">
+      <view class="relative mb-2 box-border w-full flex shrink-0 items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">
           <text class="text-md font-bold">{{ props.mode === 'list' ? '足迹' : '足迹详情' }}</text>
         </view>
@@ -106,7 +107,7 @@ function handleCopyArticle() {
       <!-- list 模式 -->
       <template v-if="props.mode === 'list'">
         <!-- 统计条 -->
-        <view class="uh-global-card-glass mt-1 flex flex-shrink-0 border rounded-2xl !shadow-none">
+        <view class="uh-global-card-glass mt-1 flex flex-shrink-0 shrink-0 border rounded-2xl !shadow-none">
           <view class="flex-1 py-2.5 text-center">
             <text class="text-base text-gray-900 font-bold">{{ props.stats.count }}</text>
             <view class="mt-0.5 text-3xs text-gray-500">
@@ -152,22 +153,31 @@ function handleCopyArticle() {
       <!-- detail 模式 -->
       <template v-else-if="props.selected">
         <scroll-view class="min-h-0 flex-1" scroll-y :show-scrollbar="false">
-          <view class="pb-4">
-            <image
-              v-if="detailImage && !detailImageError"
-              :src="detailImage"
-              class="h-[150px] w-full rounded-xl"
-              mode="aspectFill"
-              @error="detailImageError = true"
-            />
+          <view class="w-full">
+            <wd-img
+              v-if="detailImage"
+              custom-class="h-38 w-full" radius="24rpx" :src="detailImage" mode="aspectFill" lazy-load
+              @click="imagePreview(detailImage)"
+            >
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="!text-primary" />
+              </template>
+            </wd-img>
+
             <view class="mt-3 flex items-start justify-between gap-2">
               <text class="min-w-0 flex-1 text-sm text-gray-900 font-semibold">{{ spec?.name }}</text>
               <text
                 v-if="spec?.footprintType"
-                class="flex-shrink-0 rounded-xl bg-primary px-2 py-0.5 text-xs text-gray-700"
+                class="flex-shrink-0 rounded-xl bg-orange-500 px-2 py-0.5 text-xs text-white"
               >
                 {{ spec.footprintType }}
               </text>
+            </view>
+            <view v-if="spec?.description" class="my-2">
+              <rich-text
+                class="whitespace-pre-wrap text-3xs text-gray-700 leading-5 leading-relaxed"
+                :nodes="spec.description"
+              />
             </view>
             <view v-if="spec?.address" class="mt-2 flex items-center gap-1">
               <wd-icon name="location" size="28rpx" class="flex-shrink-0 text-gray-400" />
@@ -177,19 +187,13 @@ function handleCopyArticle() {
               <wd-icon name="clock-circle" size="28rpx" class="flex-shrink-0 text-gray-400" />
               <text class="block text-3xs text-gray-400">{{ detailDate }}</text>
             </view>
-            <view v-if="spec?.description" class="mt-3">
-              <rich-text
-                class="whitespace-pre-wrap text-3xs text-gray-700 leading-5 leading-relaxed"
-                :nodes="spec.description"
-              />
-            </view>
           </view>
         </scroll-view>
-        <view class="w-full flex items-center gap-x-3 pt-2">
-          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-full !py-2.5 !text-3xs" @click="handleLocateMap">
+        <view class="box-border w-full flex shrink-0 items-center gap-x-3">
+          <uh-button class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-xl !py-2.5 !text-3xs" @click="handleLocateMap">
             定位到地图
           </uh-button>
-          <uh-button v-if="spec?.article" class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-full !py-2.5 !text-3xs" @click="handleCopyArticle">
+          <uh-button v-if="spec?.article" class="w-full flex-1" custom-class="uh-global-card-glass !bg-primary !text-gray-900 !border !rounded-xl !py-2.5 !text-3xs" @click="handleCopyArticle">
             复制笔记链接
           </uh-button>
         </view>

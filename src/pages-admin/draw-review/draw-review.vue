@@ -387,14 +387,14 @@ function handleReveal() {
         <view class="box-border w-full flex items-center justify-center gap-3 overflow-hidden">
           <template v-if="draw.spec.status === 'PENDING'">
             <uh-button
-              class="w-full" custom-class="flex items-center gap-1 !bg-green-600 px-3 py-1.5 !text-xs !text-white "
+              class="w-full" custom-class="flex items-center gap-1 !bg-green-100 !px-3 !py-1.5 !text-xs !text-green-500"
               @click="handleOpenReview(draw, 'approve')"
             >
               <wd-icon name="check" size="26rpx" />
               <text>通过</text>
             </uh-button>
             <uh-button
-              class="w-full" custom-class="flex items-center gap-1 !bg-orange-500 px-3 py-1.5 !text-xs !text-white "
+              class="w-full" custom-class="flex items-center gap-1 !bg-orange-100 !px-3 !py-1.5 !text-xs !text-orange-500"
               @click="handleOpenReview(draw, 'reject')"
             >
               <wd-icon name="close" size="26rpx" />
@@ -403,14 +403,14 @@ function handleReveal() {
           </template>
           <uh-button
             v-if="isPuzzle(draw)"
-            class="w-full" custom-class="flex items-center gap-1 !bg-orange-100 px-3 py-1.5 !text-xs !text-orange-500"
+            class="w-full" custom-class="flex items-center gap-1 !bg-orange-100 !px-3 !py-1.5 !text-xs !text-orange-500"
             @click="handleOpenPuzzle(draw)"
           >
             <wd-icon name="user" size="26rpx" />
             <text>画谜</text>
           </uh-button>
           <uh-button
-            class="w-full" custom-class="flex items-center gap-1 !bg-red-100 px-3 py-1.5 !text-xs !text-red-500 "
+            class="w-full" custom-class="flex items-center gap-1 !bg-red-100 !px-3 !py-1.5 !text-xs !text-red-500 "
             @click="handleDelete(draw)"
           >
             <wd-icon name="delete" size="26rpx" />
@@ -445,14 +445,16 @@ function handleReveal() {
             class="h-20 w-full text-sm" :maxlength="200"
           />
         </view>
-        <uh-button
-          class="w-full flex-1"
-          custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !py-2 !text-sm !text-gray-900 active:opacity-80"
-          :class="[{ 'opacity-60': submitting }]"
-          @click="handleConfirmReview"
-        >
-          {{ reviewButtonText() }}
-        </uh-button>
+        <view class="w-full flex items-center">
+          <uh-button
+            class="w-full flex-1"
+            custom-class="uh-global-card-glass uh-shadow-xs !border !rounded-xl !py-2.5 !text-3xs !text-gray-900 active:opacity-80"
+            :class="[{ 'opacity-60': submitting }]"
+            @click="handleConfirmReview"
+          >
+            {{ reviewButtonText() }}
+          </uh-button>
+        </view>
       </view>
     </uh-glass-popup>
 
@@ -507,13 +509,16 @@ function handleReveal() {
             </view>
           </scroll-view>
 
-          <uh-button
-            v-if="puzzleInfo.puzzleStatus !== 'REVEALED'"
-            custom-class="!bg-orange-500 !py-2  !text-white active:opacity-80"
-            @click="handleReveal"
-          >
-            强制揭晓
-          </uh-button>
+          <view class="w-full flex items-center">
+            <uh-button
+              v-if="puzzleInfo.puzzleStatus !== 'REVEALED'"
+              class="w-full flex-1"
+              custom-class="!bg-orange-500 !py-2.5 !text-3xs !rounded-xl !text-white active:opacity-80"
+              @click="handleReveal"
+            >
+              直接揭晓
+            </uh-button>
+          </view>
         </template>
       </view>
     </uh-glass-popup>

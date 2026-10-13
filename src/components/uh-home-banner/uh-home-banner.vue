@@ -29,7 +29,6 @@ const currentBanner = ref<IBannerItem | null>(null)
 /** 公开 Banner 条目 → 轮播展示项 */
 function mapBanners(items: IBannerPublicItem[]): IBannerItem[] {
   return items.map((item) => {
-    item.date = item.date || Date.now().toString()
     return {
       id: item.name,
       name: item.name,
@@ -40,7 +39,7 @@ function mapBanners(items: IBannerPublicItem[]): IBannerItem[] {
       postId: item.postId,
       url: item.link,
       date: formatTime({
-        d: item.date,
+        d: item.date || Date.now(),
         f: 'yyyy年MM月dd日 星期w',
       }),
       authorName: item.authorName,

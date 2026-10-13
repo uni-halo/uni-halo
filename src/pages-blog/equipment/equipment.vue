@@ -315,7 +315,7 @@ onReachBottom(() => {
         <view class="box-border w-full flex items-center pt-2">
           <uh-button
             v-if="currentEquipmentUrl"
-            class="w-full flex-1" custom-class="w-full uh-global-card-glass !border !shadow-none !rounded-xl !py-2" @click="handleCopyEquipmentUrl"
+            class="w-full flex-1" custom-class="w-full !text-3xs uh-global-card-glass !border !shadow-none !rounded-xl !py-2.5" @click="handleCopyEquipmentUrl"
           >
             复制装备地址
           </uh-button>

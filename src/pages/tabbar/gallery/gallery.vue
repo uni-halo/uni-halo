@@ -274,7 +274,7 @@ onReachBottom(() => {
         <view class="grid grid-cols-2 gap-2.5">
           <view
             v-for="(item, index) in dataList" :key="index"
-            class="uh-global-card-glass relative h-38 w-full overflow-hidden rounded-xl"
+            class="uh-global-card-glass uh-shadow-xs relative h-38 w-full overflow-hidden rounded-xl"
             @click="handlePreview(item)"
           >
             <wd-img class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load>

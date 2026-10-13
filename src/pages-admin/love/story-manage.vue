@@ -178,8 +178,10 @@ onShow(() => {
             </template>
           </wd-img>
           <!-- 无图 -->
-          <view v-else
-            class="h-20 w-20 shrink-0 flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400">
+          <view
+            v-else
+            class="h-20 w-20 flex shrink-0 items-center justify-center rounded-lg from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400"
+          >
             <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
           </view>
           <view class="flex flex-1 flex-col justify-between gap-y-1">
@@ -201,8 +203,13 @@ onShow(() => {
           class="box-border flex items-center justify-end gap-4 text-xs"
         >
           <view class="flex flex-1 items-center gap-x-2">
-            <view v-if="item.spec?.date" class="flex items-center gap-x-1 text-3xs text-love font-bold">
-              <text>{{ item.spec.date }}</text>
+            <view class="flex items-center gap-x-1">
+              <text
+                class="text-3xs"
+                :class="[item.spec.date ? 'text-love font-bold' : 'text-gray-500 !text-xs']"
+              >
+                {{ item.spec.date || '未设置日期' }}
+              </text>
             </view>
           </view>
           <view class="flex shrink-0 items-center justify-end gap-x-4">

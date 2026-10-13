@@ -101,8 +101,7 @@ onPullDownRefresh(() => {
 })
 
 onReachBottom(() => {
-  if (loadMoreStatus.value.active)
-    return
+  if (loadMoreStatus.value.active) { return }
   if (loadMoreStatus.value.hasNext) {
     queryParams.value.page += 1
     updateLoadMoreStatus({ active: true, status: 'loading' })
@@ -412,13 +411,16 @@ onPageScroll((option: Page.PageScrollOption) => {
           </scroll-view>
 
           <!-- 手动揭晓 -->
-          <uh-button
-            v-if="puzzleInfo.puzzleStatus !== 'REVEALED'"
-            custom-class="uh-global-card-glass !shadow-none !border !rounded-xl !bg-primary !py-2 !text-sm !text-gray-900 active:opacity-80"
-            @click="handleReveal"
-          >
-            手动揭晓
-          </uh-button>
+          <view class="w-full flex items-center">
+            <uh-button
+              v-if="puzzleInfo.puzzleStatus !== 'REVEALED'"
+              class="w-full flex-1"
+              custom-class="uh-global-card-glass !shadow-none !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900 active:opacity-80"
+              @click="handleReveal"
+            >
+              手动揭晓
+            </uh-button>
+          </view>
         </template>
       </view>
     </uh-glass-popup>

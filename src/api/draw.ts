@@ -144,11 +144,11 @@ export function submitGuess(name: string, answer: string) {
   })
 }
 
-/** 竞猜信息合一（匿名可看：榜单+统计；已揭晓时附谜底） */
+/** 竞猜信息合一（匿名可看：榜单+统计；已揭晓全员附谜底，未揭晓仅猜中者本人可见） */
 export function getGuessBoard(name: string) {
   return http.Get<IResponse<IGuessBoard>>(`${PUBLIC_DRAW_BASE}/${name}/guess-board`, {
     cacheFor: 0,
-    meta: { requestFrom: RequestFrom.Halo },
+    meta: { requestFrom: RequestFrom.Halo, needAuthToken: true },
   })
 }
 

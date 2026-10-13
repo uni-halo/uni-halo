@@ -214,7 +214,7 @@ async function saveNickname() {
 /* ---------------- 修改密码（UC 端点） ---------------- */
 const passwordSheet = ref(false)
 const passwordSet = ref(true)
-/** 忘记密码/重置密码弹层(匿名两段式流程,与登录页共用同一组件) */
+/** 忘记密码/重置密码弹层 */
 const forgotSheet = ref(false)
 const oldPassword = ref('')
 const newPassword = ref('')
@@ -226,9 +226,6 @@ async function openPasswordSheet() {
   newPassword.value = ''
   confirmPassword.value = ''
   passwordSheet.value = true
-  // 判定「是否自主设置过密码」：必须用插件 profile 的 passwordSetByUser（注解），
-  // 不能用 UC 的 passwordSet——后者只看密码哈希是否存在，插件代生成的随机/固定
-  // 密码用户注册起就是 true，会被误判为已设置而要求输入无人知晓的旧密码。
   try {
     const res = await getAuthProfile()
     passwordSet.value = res.data?.user?.passwordSetByUser !== false
@@ -255,21 +252,17 @@ async function savePassword() {
   passwordSaving.value = true
   try {
     if (passwordSet.value) {
-      // 已自主设置过密码：走 Halo UC 端点，需旧密码验证
       await changeMyPassword(oldPassword.value, pwd)
       passwordSheet.value = false
       uni.showToast({ icon: 'none', title: '密码修改成功' })
     }
     else {
-      // 从未自主设置过密码（微信自动注册的随机密码用户）：走插件端首次设密接口，
-      // 免旧密码；服务端打 password-set-by-user 注解后此通道关闭。
       await setInitialPassword(pwd)
       passwordSheet.value = false
       uni.showToast({ icon: 'none', title: '密码设置成功' })
     }
   }
   catch (error: any) {
-    // 插件端判定已设置过（403 PASSWORD_ALREADY_SET）：切回「已设置」模式，提示补旧密码
     if (error?.data?.code === 'PASSWORD_ALREADY_SET') {
       passwordSet.value = true
       uni.showToast({ icon: 'none', title: '密码已设置，请输入原密码修改' })
@@ -594,7 +587,7 @@ function handleCopyWebsiteUrl() {
 
 <template>
   <wd-dialog />
-  <view class="box-border min-h-screen bg-page">
+  <view class="box-border box-border min-h-screen bg-page pb-safe">
     <uh-navbar :scroll-y="scrollY" default-title="我的资料" title-color="text-gray-900" :need-placeholder="true" />
 
     <view class="box-border flex flex-col gap-y-5 px-4 py-3">
@@ -778,7 +771,7 @@ function handleCopyWebsiteUrl() {
             <wd-icon name="lock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
             <text class="shrink-0 text-sm text-gray-900">修改密码</text>
             <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-3xs text-gray-400">{{ passwordSet ? '已设置密码' : '未设置密码' }}</text>
+              <text class="text-3xs text-gray-400">修改/设置密码</text>
               <wd-icon name="edit" size="28rpx" custom-class="text-gray-400" />
             </view>
           </view>
@@ -830,9 +823,9 @@ function handleCopyWebsiteUrl() {
         </view>
       </view>
       <!-- 退出登录 -->
-      <view class="mt-2 box-border w-full pb-6">
+      <view class="mt-2 box-border w-full">
         <uh-button
-          custom-class="uh-global-card-glass w-full border border-red-400/30 !bg-red-400/80 !py-2 text-white !rounded-full !text-sm"
+          custom-class="uh-global-card-glass w-full border border-red-400/30 !bg-red-400/80 !py-2.5 text-white !rounded-full !text-3xs"
           @action-click="handleLogout()"
         >
           退出登录

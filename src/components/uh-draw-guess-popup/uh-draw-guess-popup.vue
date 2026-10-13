@@ -13,6 +13,7 @@ import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
 import { sleep } from '@/utils/common'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
+import { storeToRefs } from 'pinia'
 
 const props = defineProps<{
   /** 竞猜画作（公开数据，不含谜底） */
@@ -27,7 +28,7 @@ const visible = defineModel<boolean>({ default: false })
 
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
-const userStore = useUserStore()
+const { userInfo } = storeToRefs(useUserStore())
 
 const isCollapsedBoardUsers = ref(false)
 
@@ -47,7 +48,7 @@ const ownerInitial = computed(() => ownerText.value.slice(0, 1).toUpperCase())
 
 /** 出题人本人：不能猜自己的画 */
 const isMine = computed(() =>
-  !!props.draw && props.draw.spec.ownerName === userStore.userInfo?.username)
+  !!props.draw && props.draw.spec.ownerName === userInfo.value?.username)
 
 const board = ref<IGuessBoard | null>(null)
 const boardLoading = ref(false)
@@ -63,7 +64,7 @@ const feedback = ref<{ text: string, correct: boolean } | null>(null)
 
 const solvedByMe = computed(() =>
   !!board.value?.board?.length
-  && board.value.board.some(item => item.username === userStore.userInfo?.username))
+  && board.value.board.some(item => item.username === userInfo.value?.username))
 
 watch(visible, (value) => {
   if (value && props.draw) {
@@ -82,6 +83,11 @@ async function loadBoard() {
   try {
     const res = await getGuessBoard(props.draw.metadata.name)
     board.value = res.data || null
+    board.value?.board.map((item) => {
+      item.avatar = checkAvatarUrl(item.avatar || '')
+      item._isMe = item.username === userInfo.value?.username
+      return item
+    })
   }
   catch (err: any) {
     console.error('获取画谜信息失败', err)
@@ -94,7 +100,7 @@ async function loadBoard() {
 }
 
 function startTimer() {
-  countdown.value = 6
+  countdown.value = 3
   stopTimer()
   timer = setInterval(() => {
     countdown.value -= 1
@@ -244,9 +250,11 @@ function handleToDetailPage(draw: IDraw) {
         <!-- 态 2：本人已猜中 -->
         <template v-else-if="solvedByMe">
           <view class="flex flex-col gap-y-1">
-            <text class="text-sm text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
-            <text v-if="board?.answer" class="text-sm text-primary font-bold">画谜谜底：{{ board.answer }}</text>
-            <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+            <text class="text-xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+            <template v-if="!revealed">
+              <text v-if="board?.answer" class="text-xs text-gray-900 font-semibold">画谜谜底：{{ board.answer }}</text>
+              <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+            </template>
           </view>
         </template>
 
@@ -309,11 +317,19 @@ function handleToDetailPage(draw: IDraw) {
               >
                 <view class="flex shrink-0 items-center gap-x-1.5">
                   <wd-avatar
-                    :src="checkAvatarUrl(item.avatar || '')"
+                    :src="item.avatar"
                     :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
                     custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
                   />
-                  <text class="text-xs text-gray-600"> {{ item.displayName || item.username }}</text>
+                  <text
+                    class="text-xs"
+                    :class="[
+                      item._isMe ? 'text-primary' : 'text-gray-600',
+                    ]"
+                  >
+                    {{ item.displayName || item.username }}
+                  </text>
+                  <text v-if="item._isMe" class="text-xs text-primary">(我)</text>
                 </view>
                 <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">
                   {{ formatTime({
@@ -326,6 +342,14 @@ function handleToDetailPage(draw: IDraw) {
           </scroll-view>
         </view>
       </view>
+
+      <uh-button
+        class="w-full flex-1"
+        custom-class="uh-global-card-glass !border !shadow-none !text-3xs !rounded-xl !bg-primary !py-2.5 !text-gray-900"
+        @action-click="handleToDetailPage(draw)"
+      >
+        去分享
+      </uh-button>
 
       <!-- #ifdef MP -->
       <view class="box-border w-full flex items-center gap-x-2 pt-2">

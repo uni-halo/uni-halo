@@ -347,7 +347,7 @@ onReachBottom(() => {
               </view>
               <uh-button
                 class="shrink-0"
-                custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 !text-xs !rounded-md"
+                custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 !text-xs !rounded-lg"
                 @click="handleOnStoryClick(story)"
               >
                 详情
