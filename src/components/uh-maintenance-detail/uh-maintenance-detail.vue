@@ -41,7 +41,7 @@ function close() {
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
       <view class="text-center">
-        <text class="text-sm text-gray-900 font-bold">
+        <text class="text-gray-900 font-bold">
           维护详情
         </text>
       </view>
@@ -59,7 +59,7 @@ function close() {
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button class="w-full flex-1" custom-class="w-full flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-white text-primary !text-3xs" @click="close()">
+        <uh-button class="w-full flex-1" custom-class="w-full flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-white text-gray-900 !text-3xs" @click="close()">
           关闭
         </uh-button>
       </view>

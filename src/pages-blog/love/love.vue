@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
       <view class="title text-xl text-love font-bold">
         {{ loveConfig.loveDateTitle }}
       </view>
-      <view class="uh-global-card-glass relative mt-2.5 box-border flex items-center justify-center gap-x-2 rounded-xl bg-love/5 px-4 py-1.5 text-love !border">
+      <view class="uh-global-card-glass uh-shadow-love-xs relative mt-2.5 box-border flex items-center justify-center gap-x-2 rounded-xl bg-love/5 px-4 py-1.5 text-love !border">
         <wd-icon name="heart-fill" size="28rpx" />
         <text class="text-sm font-semibold"> {{ loveConfig.loveDate }} </text>
         <wd-icon name="heart-fill" size="28rpx" />

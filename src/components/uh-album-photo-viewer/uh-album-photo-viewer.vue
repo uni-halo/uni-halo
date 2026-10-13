@@ -165,7 +165,7 @@ function handlePreview(url?: string) {
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs !text-3xs border !py-2.5 !rounded-xl !bg-love/90 text-white"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs !text-3xs border !py-2.5 !rounded-xl !bg-love/90 !text-white"
           @click="handleLoadPhotos"
         >
           刷新

@@ -300,14 +300,14 @@ onReachBottom(() => {
       <view class="box-border w-screen flex items-center gap-x-2 overflow-hidden px-3 pt-2">
         <view
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-full px-4 py-1.5 text-xs shadow-none"
-          :class="sortDir === 'desc' ? '!bg-love/90 text-white font-bold' : 'text-gray-600'"
+          :class="sortDir === 'desc' ? '!bg-love/90 !text-white font-bold' : '!text-gray-600'"
           @click="handleSelectSortDir('desc')"
         >
           最新在前
         </view>
         <view
           class="uh-global-card-glass inline-flex items-center gap-1 border rounded-full px-4 py-1.5 text-xs shadow-none"
-          :class="sortDir === 'asc' ? '!bg-love/90 text-white font-bold' : 'text-gray-600'"
+          :class="sortDir === 'asc' ? '!bg-love/90 !text-white font-bold' : '!text-gray-600'"
           @click="handleSelectSortDir('asc')"
         >
           最早在前
@@ -347,7 +347,7 @@ onReachBottom(() => {
               </view>
               <uh-button
                 class="shrink-0"
-                custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 !text-xs !rounded-lg"
+                custom-class="uh-global-card-glass shadow-none !bg-love/90 border !text-white !py-1 px-2 !text-xs !rounded-lg"
                 @click="handleOnStoryClick(story)"
               >
                 详情
@@ -462,7 +462,7 @@ onReachBottom(() => {
         <view class="box-border w-full flex items-center">
           <uh-button
             class="flex-1"
-            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love/90 text-white !text-3xs"
+            custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love/90 !text-white !text-3xs"
             @click="showDetail = false"
           >
             关闭

@@ -190,7 +190,7 @@ onShow(() => {
         <view class="flex items-start gap-3 p-4">
           <!-- 勾选完成状态 -->
           <view
-            class="uh-global-card-glass mt-1 h-6 w-6 flex shrink-0 items-center justify-center rounded-full bg-love text-xs text-white"
+            class="uh-global-card-glass mt-1 h-6 w-6 flex shrink-0 items-center justify-center rounded-full bg-love text-xs !text-white"
             @click="handleToggleStatus(item)"
           >
             {{ index + 1 }}

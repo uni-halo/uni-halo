@@ -192,7 +192,7 @@ async function handleOnConfirm() {
           取消
         </uh-button>
         <uh-button
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-love/90 text-white"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-love/90 !text-white"
           @click="handleOnConfirm"
         >
           {{ loading ? '解锁中...' : '解锁' }}

@@ -242,7 +242,7 @@ function handleBackHome() {
         </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border !py-2.5 !rounded-xl !bg-love/90 text-white"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs text-xs border !py-2.5 !rounded-xl !bg-love/90 !text-white"
           @click="handleOnConfirm"
         >
           {{ loading ? '解锁中...' : confirmText }}

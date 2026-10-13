@@ -219,7 +219,7 @@ defineExpose({ openEdit })
               <text
                 v-for="s in [{ v: 'wait', t: '未开始' }, { v: 'doing', t: '进行中' }, { v: 'complete', t: '已完成' }]"
                 :key="s.v" class="rounded-full px-3 py-1 text-xs"
-                :class="form.status === s.v ? 'bg-love text-white' : 'bg-page text-gray-500'"
+                :class="form.status === s.v ? 'bg-love !text-white' : 'bg-page text-gray-500'"
                 @click="handleStatusChange(s.v as ILoveDailyItemSpec['status'])"
               >
                 {{ s.t }}
@@ -301,7 +301,7 @@ defineExpose({ openEdit })
       </scroll-view>
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
-        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love text-white !text-3xs" :loading="saving" @click="handleSave">
+        <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !bg-love !text-white !text-3xs" :loading="saving" @click="handleSave">
           保存
         </uh-button>
       </view>
