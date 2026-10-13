@@ -52,7 +52,7 @@ const dateText = computed(() => {
       </wd-img>
       <view
         v-if="isPuzzle"
-        class="uh-global-card-glass absolute right-0 top-0 box-border flex items-center gap-x-0.5 rounded-lb-lg px-2 py-0.5 !border !border-r-none !border-t-none !bg-primary"
+        class="uh-global-card-glass absolute right-0 top-0 box-border flex items-center gap-x-0.5 rounded-lb-lg px-2 py-0.5 !border !border-r-none !border-t-none !bg-secondary"
       >
         <text class="text-xs text-gray-900">{{ puzzleLabel }}</text>
       </view>

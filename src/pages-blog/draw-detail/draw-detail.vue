@@ -314,7 +314,7 @@ onPageScroll(({ scrollTop }) => {
         <template v-if="isPuzzle">
           <!-- 竞猜面板 -->
           <uh-section-title v-if="loginEnabled">
-            竞猜面板
+            画谜信息
           </uh-section-title>
           <view
             v-if="loginEnabled"
@@ -390,7 +390,7 @@ onPageScroll(({ scrollTop }) => {
           <!-- 猜中榜 -->
           <template v-if="board && board?.board?.length !== 0">
             <uh-section-title>
-              竞猜榜单
+              画谜榜单
             </uh-section-title>
             <view class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
               <view class="w-full flex flex-wrap gap-x-3 gap-y-2">

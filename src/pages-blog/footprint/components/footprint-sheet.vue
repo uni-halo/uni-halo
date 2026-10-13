@@ -37,7 +37,7 @@ const emit = defineEmits<{
 const spec = computed(() => props.selected?.spec)
 const detailImage = computed(() => checkImageUrl(spec.value?.image))
 const detailImageError = ref(false)
-const detailDate = computed(() => (spec.value?.createTime ? formatTime({ d: spec.value.createTime, f: 'yyyy/MM/dd' }) : ''))
+const detailDate = computed(() => (spec.value?.createTime ? formatTime({ d: spec.value.createTime, f: 'yyyy年MM月dd日 HH点mm分' }) : ''))
 const descExpanded = ref(false)
 
 watch(() => props.selected, () => {
@@ -92,7 +92,7 @@ function handleCopyArticle() {
               @click="emit('back-to-list')"
             >
               <wd-icon name="arrow-left" size="28rpx" class="text-gray-500" />
-              <text class="text-xs text-gray-500">返回列表</text>
+              <text class="text-xs text-gray-500">返回</text>
             </view>
           </view>
           <view
@@ -165,13 +165,19 @@ function handleCopyArticle() {
             </wd-img>
 
             <view class="mt-3 flex items-start justify-between gap-2">
-              <text class="min-w-0 flex-1 text-sm text-gray-900 font-semibold">{{ spec?.name }}</text>
               <text
                 v-if="spec?.footprintType"
                 class="flex-shrink-0 rounded-xl bg-orange-500 px-2 py-0.5 text-xs text-white"
               >
                 {{ spec.footprintType }}
               </text>
+              <text class="min-w-0 flex-1 text-sm text-gray-900 font-semibold">{{ spec?.name }}</text>
+              <!-- <text
+                v-if="spec?.footprintType"
+                class="flex-shrink-0 rounded-xl bg-orange-500 px-2 py-0.5 text-xs text-white"
+              >
+                {{ spec.footprintType }}
+              </text> -->
             </view>
             <view v-if="spec?.description" class="my-2">
               <rich-text
@@ -179,13 +185,13 @@ function handleCopyArticle() {
                 :nodes="spec.description"
               />
             </view>
-            <view v-if="spec?.address" class="mt-2 flex items-center gap-1">
+            <view v-if="spec?.address" class="mt-3 flex items-center gap-1">
               <wd-icon name="location" size="28rpx" class="flex-shrink-0 text-gray-400" />
               <text class="min-w-0 flex-1 truncate text-3xs text-gray-600">{{ spec.address }}</text>
             </view>
             <view v-if="detailDate" class="mt-1.5 flex items-center gap-1">
               <wd-icon name="clock-circle" size="28rpx" class="flex-shrink-0 text-gray-400" />
-              <text class="block text-3xs text-gray-400">{{ detailDate }}</text>
+              <text class="block text-3xs text-gray-600">{{ detailDate }}</text>
             </view>
           </view>
         </scroll-view>

@@ -82,7 +82,7 @@ function handleLocate() {
             <wd-icon name="clock-circle" size="24rpx" class="shrink-0 text-gray-100" />
             <text class="flex-1 text-xs text-gray-100">{{ dateText }}</text>
           </view>
-          <view class="flex shrink-0 items-end gap-1.5">
+          <view class="flex shrink-0 items-end gap-2">
             <view
               class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center gap-0.5 text-xs !border !rounded-lg !bg-primary !px-2 !py-0.5 !text-gray-900"
               @click.stop="emit('open')"

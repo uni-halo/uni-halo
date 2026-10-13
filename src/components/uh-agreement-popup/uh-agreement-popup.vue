@@ -57,7 +57,7 @@ function handleClose() {
 </script>
 
 <template>
-  <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="!rounded-2xl">
+  <uh-glass-popup v-model="popupVisible" position="bottom" :z-index="110" custom-class="!rounded-2xl">
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
@@ -74,8 +74,7 @@ function handleClose() {
       <view class="uh-global-card-glass flex rounded-xl p-1 shadow-none">
         <view
           v-for="tab in TABS" :key="tab.id" class="box-border flex-1 rounded-lg py-2 text-center text-3xs"
-          :class="activeTab === tab.id ? 'bg-primary' : 'text-gray-500'"
-          @click="activeTab = tab.id"
+          :class="activeTab === tab.id ? 'bg-primary' : 'text-gray-500'" @click="activeTab = tab.id"
         >
           {{ tab.label }}
         </view>
@@ -86,9 +85,8 @@ function handleClose() {
         <view class="h-full w-full text-3xs text-gray-900 leading-6">
           <mp-html
             v-if="activeContent" :content="activeContent" lazy-load :domain="markdownConfig.domain"
-            :loading-img="markdownConfig.loadingGif" scroll-table selectable
-            :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-            :markdown="true" :show-line-number="true"
+            :loading-img="markdownConfig.loadingGif" scroll-table selectable :tag-style="markdownConfig.tagStyle"
+            :container-style="markdownConfig.containStyle" :markdown="true" :show-line-number="true"
             :show-language-name="true" copy-by-long-press
           />
           <uh-data-loading

@@ -125,7 +125,7 @@ function handleClose() {
         <view
           v-for="tab in SETTING_TABS" :key="tab.key"
           class="box-border flex-1 rounded-lg py-2 text-center text-3xs"
-          :class="activeTab === tab.key ? 'bg-primary font-semibold' : 'text-gray-500'"
+          :class="activeTab === tab.key ? 'bg-primary' : 'text-gray-500'"
           @click="activeTab = tab.key"
         >
           {{ tab.label }}
