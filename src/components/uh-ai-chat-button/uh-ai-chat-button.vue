@@ -51,7 +51,7 @@ async function checkDialogAvailable(force = false) {
   dialogAvailable.value = !!config && (!dialogNeedLogin(config) || loginAvailable.value)
 }
 
-onMounted(() => { checkDialogAvailable() })
+onMounted(() => { checkDialogAvailable(true) })
 
 const visible = computed(() => {
   return assistantEnabled.value && dialogAvailable.value && !blackList.includes(currentPage.route)
