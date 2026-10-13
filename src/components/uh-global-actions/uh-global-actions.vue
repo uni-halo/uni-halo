@@ -7,7 +7,7 @@ defineOptions({
   },
 })
 const props = withDefaults(defineProps<IProps>(), {
-  whenCountShowCollapsedButton: 3,
+  whenCountShowCollapsedButton: 0,
   defaultCollapsed: true,
 })
 
@@ -65,8 +65,8 @@ function resolveRenderContent() {
   nextTick(() => {
     const query = uni.createSelectorQuery().in(instance.proxy)
     query.selectAll('.uhc-actions > *').boundingClientRect((res) => {
-      const childrenCount = (res as UniApp.NodeInfo[]).length + 1
-      if (childrenCount > props.whenCountShowCollapsedButton) {
+      const childrenCount = (res as UniApp.NodeInfo[]).length
+      if (childrenCount >= props.whenCountShowCollapsedButton) {
         isShowCollapsedButton.value = true
       }
       else {
@@ -97,7 +97,7 @@ onMounted(() => {
     </view>
     <view
       v-if="isShowCollapsedButton"
-      class="uh-global-card-glass h-11 w-11 flex origin-center items-center justify-center border rounded-full transition-all duration-300"
+      class="uh-global-card-glass h-10 w-10 flex origin-center items-center justify-center border rounded-full transition-all duration-300"
       :class="[toggleActionClass]"
       @click="toggleCollapsed"
     >

@@ -45,7 +45,7 @@ const _customClass = computed(() => {
 <template>
   <view v-if="visible" :class="[props.fixed ? 'fixed bottom-22 right-3 z-50 pb-safe' : '']">
     <view
-      class="uh-global-card-glass h-11 w-11 flex items-center justify-center border rounded-full"
+      class="uh-global-card-glass h-10 w-10 flex items-center justify-center border rounded-full"
       :class="_customClass" @click="handleScrollTop"
     >
       <wd-icon name="arrow-up" size="42rpx" />

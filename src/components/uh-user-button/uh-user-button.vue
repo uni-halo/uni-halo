@@ -63,7 +63,7 @@ function handleClick() {
     @click="handleClick"
   >
     <view
-      class="uh-global-card-glass h-11 w-11 flex items-center justify-center rounded-full"
+      class="uh-global-card-glass h-10 w-10 flex items-center justify-center rounded-full"
     >
       <wd-avatar
         v-if="hasLogin"
