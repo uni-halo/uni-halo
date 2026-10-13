@@ -177,13 +177,12 @@ function handleBackToList() {
 /**
  * 定位：地图聚焦该点
  * App 端弹层会盖住原生地图，需先关闭弹层，待地图重挂载后再聚焦
- * 非 App 端弹层与地图可共存，直接聚焦即可
  */
 function handleLocate(footprint: IFootprint) {
   // #ifdef APP
   pendingFocus = footprint
-  handleSheetClose()
   // #endif
+  handleSheetClose()
 
   // #ifndef APP
   mapRef.value?.focusOn(footprint)

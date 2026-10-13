@@ -224,13 +224,13 @@ function handleWechatEmailRequired(error: unknown): boolean {
   return true
 }
 
-/** 登录成功统一处理:返回来源页 */
-async function handleLoginSuccess() {
+/** 登录成功统一处理:提示展示完成后返回来源页,配置刷新并行执行 */
+function handleLoginSuccess() {
   // 登录成功需要重新拉取配置
-  await bootstrap({ force: true })
+  bootstrap({ force: true }).catch(() => {})
   setTimeout(() => {
     uni.navigateBack()
-  }, 600)
+  }, 1500)
 }
 </script>
 

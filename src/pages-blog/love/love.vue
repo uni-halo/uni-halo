@@ -257,8 +257,8 @@ onBeforeUnmount(() => {
     />
 
     <!-- 情侣信息 -->
-    <view class="relative z-10 box-border h-92 w-screen flex flex-col items-center justify-center pt-12">
-      <view class="relative z-10 box-border h-full w-full flex items-center justify-center rounded-xl pt-6">
+    <view class="relative z-10 box-border h-92 w-screen flex flex-col items-center justify-center pt-24">
+      <view class="relative z-10 box-border h-full w-full flex items-center justify-center rounded-xl">
         <view class="boy uh-boy-offset flex flex-col items-center justify-center">
           <wd-avatar
             :src="checkAvatarUrl(loveConfig.loveInfo?.boyAvatar)"
@@ -303,26 +303,34 @@ onBeforeUnmount(() => {
       />
     </view>
     <!-- 恋爱记时 -->
-    <view class="mt-8 w-screen flex flex-col items-center justify-center">
+    <view class="mt-4 w-screen flex flex-col items-center justify-center">
       <view class="title text-xl text-love font-bold">
         {{ loveConfig.loveDateTitle }}
       </view>
-      <view class="content mt-6 flex items-center justify-center">
+      <view class="uh-global-card-glass relative mt-2.5 box-border flex items-center justify-center gap-x-2 rounded-xl bg-love/5 px-4 py-1.5 text-love !border">
+        <wd-icon name="heart-fill" size="28rpx" />
+        <text class="text-sm font-semibold"> {{ loveConfig.loveDate }} </text>
+        <wd-icon name="heart-fill" size="28rpx" />
+        <!-- <view class="absolute left-4.5 top-0 h-2 w-2 border border-white rounded-full border-solid bg-love" /> -->
+        <!-- <view class="absolute right-4.5 top-0 h-2 w-2 border border-white rounded-full border-solid bg-white/65" /> -->
+      </view>
+
+      <view class="content mt-4 flex items-center justify-center">
         <text class="text text-sm">
           第
-          <text class="number mx-2 text-2xl text-love font-bold">{{ loveDayCount.d }}</text>
+          <text class="number mx-1 text-2xl text-love font-bold">{{ loveDayCount.d }}</text>
           天
         </text>
         <text class="text text-sm">
-          <text class="number mx-2 text-2xl text-blue-400 font-bold">{{ loveDayCount.h }}</text>
+          <text class="number mx-1 text-2xl text-blue-400 font-bold">{{ loveDayCount.h }}</text>
           小时
         </text>
         <text class="text text-sm">
-          <text class="number mx-2 text-2xl text-love font-bold">{{ loveDayCount.m }}</text>
+          <text class="number mx-1 text-2xl text-love font-bold">{{ loveDayCount.m }}</text>
           分钟
         </text>
         <text class="text text-sm">
-          <text class="number mx-2 text-2xl text-blue-400 font-bold">{{ loveDayCount.s }}</text>
+          <text class="number mx-1 text-2xl text-blue-400 font-bold">{{ loveDayCount.s }}</text>
           秒
         </text>
       </view>

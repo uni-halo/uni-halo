@@ -1,0 +1,382 @@
+<script lang="ts" setup>
+/**
+ * 画谜作品详情页：基于竞猜弹窗（uh-draw-guess-popup）设计改为整页形态。
+ * 画面大图预览 + 作者信息 + 竞猜面板四态（竞猜中 / 本人已猜中 / 已揭晓 / 出题人视角）+ 猜中榜。
+ * 数据经 onLoad 参数 name 加载（draw 详情 + guess-board 竞猜信息）。
+ */
+import { computed, ref } from 'vue'
+import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import { getDrawByName, getGuessBoard, submitGuess } from '@/api/draw'
+import { usePageScroll } from '@/hooks/usePageScroll'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
+import { useAppConfigStore } from '@/store/appConfig'
+import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
+import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { formatTime } from '@/utils/formatTime'
+import { sleep } from '@/utils/common'
+import type { IDraw, IGuessBoard } from '@/api/types/draw'
+import { storeToRefs } from 'pinia'
+
+definePage({
+  style: {
+    navigationBarTitleText: '画谜详情',
+    navigationStyle: 'custom',
+    enablePullDownRefresh: true,
+  },
+})
+
+const { scrollY, updatePageScrollValue } = usePageScroll()
+/** 页面标题 */
+const pageTitle = usePageTitle('drawDetail', '画谜详情')
+
+const tokenStore = useTokenStore()
+const userStore = useUserStore()
+const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
+
+/** 应用登录整体开关（与登录页同语义） */
+const loginEnabled = computed(() => {
+  const client = haloConfigs.value?.loginConfig?.client
+  return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
+})
+
+const isLogin = computed(() => tokenStore.updateNowTime().hasLogin)
+
+/** 依赖插件(uni-halo)，不可用时展示占位并可重试 */
+const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginUniHalo,
+  tips: '啊偶，功能正在维护中...',
+  callback: (isAvailable) => {
+    if (!isAvailable) { return }
+    handleLoad()
+  },
+})
+
+/* ---------------- 数据加载 ---------------- */
+const drawName = ref('')
+const draw = ref<IDraw | null>(null)
+const loadFailed = ref(false)
+
+const cover = computed(() => draw.value?.spec.cover || '')
+const ownerText = computed(() =>
+  draw.value?.owner?.displayName || draw.value?.owner?.username || '佚名')
+const ownerAvatar = computed(() => checkThumbnailUrl(draw.value?.owner?.avatar || ''))
+const ownerInitial = computed(() => ownerText.value.slice(0, 1).toUpperCase())
+
+const board = ref<IGuessBoard | null>(null)
+const boardLoading = ref(false)
+
+/** 已揭晓 */
+const revealed = computed(() => board.value?.revealed === true)
+/** 出题人本人：不能猜自己的画 */
+const isMine = computed(() =>
+  !!draw.value && draw.value.spec.ownerName === userStore.userInfo?.username)
+/** 本人已猜中 */
+const solvedByMe = computed(() =>
+  !!board.value?.board?.length
+  && board.value.board.some(item => item.username === userStore.userInfo?.username))
+
+async function handleLoad() {
+  if (!drawName.value) { return }
+  loadFailed.value = false
+  try {
+    const res = await getDrawByName(drawName.value)
+    const data = res.data
+    if (data) {
+      data.spec.cover = checkThumbnailUrl(data.spec.cover)
+    }
+    draw.value = data || null
+    if (!draw.value) {
+      loadFailed.value = true
+      return
+    }
+    loadBoard()
+  }
+  catch (err: any) {
+    console.error('获取画谜详情失败', err)
+    loadFailed.value = true
+  }
+  finally {
+    uni.stopPullDownRefresh()
+  }
+}
+
+async function loadBoard() {
+  if (!draw.value) { return }
+  boardLoading.value = true
+  try {
+    const res = await getGuessBoard(draw.value.metadata.name)
+    board.value = res.data || null
+  }
+  catch (err: any) {
+    console.error('获取画谜信息失败', err)
+    uni.showToast({ title: err?.message || '获取画谜信息失败', icon: 'none', duration: 2000 })
+    board.value = null
+  }
+  finally {
+    boardLoading.value = false
+  }
+}
+
+onLoad(async (query) => {
+  drawName.value = query?.name || ''
+  if (!drawName.value) {
+    loadFailed.value = true
+    return
+  }
+  await checkPluginAvailable()
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+  }
+})
+
+onPullDownRefresh(() => {
+  if (!uniHaloPluginAvailable.value) {
+    uni.stopPullDownRefresh()
+    return
+  }
+  handleLoad()
+})
+
+/* ---------------- 分享 ---------------- */
+const siteName = computed(() =>
+  haloConfigs.value?.featureConfig?.profile?.appInfo?.name || 'uni-halo')
+
+onShareAppMessage(() => ({
+  title: `${draw.value?.spec.title || '画谜详情'} - ${siteName.value}`,
+  path: `/pages-blog/draw-detail/draw-detail?name=${drawName.value}`,
+}))
+
+onShareTimeline(() => ({
+  title: `${draw.value?.spec.title || '画谜详情'} - ${siteName.value}`,
+  query: `name=${drawName.value}`,
+}))
+
+/* ---------------- 竞猜交互 ---------------- */
+const myAnswer = ref('')
+const submitting = ref(false)
+/** 10s 节流倒计时（秒） */
+const countdown = ref(0)
+let timer: ReturnType<typeof setInterval> | null = null
+
+const feedback = ref<{ text: string, correct: boolean } | null>(null)
+
+function startTimer() {
+  countdown.value = 6
+  stopTimer()
+  timer = setInterval(() => {
+    countdown.value -= 1
+    if (countdown.value <= 0) {
+      stopTimer()
+    }
+  }, 1000)
+}
+
+function stopTimer() {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
+async function handleGuess() {
+  if (!draw.value || submitting.value || countdown.value > 0) { return }
+  if (!tokenStore.updateNowTime().hasLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    await sleep(1500)
+    uni.navigateTo({ url: '/pages/auth/login' })
+    return
+  }
+  const answer = myAnswer.value.trim()
+  if (!answer) {
+    uni.showToast({ title: '先输入你的答案吧', icon: 'none' })
+    return
+  }
+  submitting.value = true
+  try {
+    const res = await submitGuess(draw.value.metadata.name, answer)
+    const result = res.data
+    if (result?.result === 'CORRECT') {
+      feedback.value = { text: `恭喜，你猜对啦！谜底：${result.answer}`, correct: true }
+      loadBoard()
+    }
+    else if (result?.result === 'CLOSE') {
+      feedback.value = { text: '“很接近了”，再想想～', correct: false }
+    }
+    else {
+      feedback.value = { text: '不对哦，再想想～', correct: false }
+    }
+    uni.showToast({ title: feedback.value?.text || '', icon: 'none' })
+    startTimer()
+  }
+  catch (err: any) {
+    uni.showToast({ title: err?.message || '提交失败', icon: 'none', duration: 2000 })
+  }
+  finally {
+    submitting.value = false
+  }
+}
+
+function handleToLogin() {
+  uni.navigateTo({ url: '/pages/auth/login' })
+}
+
+function handlePreviewCover() {
+  if (!cover.value) { return }
+  uni.previewImage({ urls: [cover.value] })
+}
+
+function handleRetry() {
+  if (!drawName.value) {
+    uni.showToast({ title: '缺少画谜标识', icon: 'none' })
+    return
+  }
+  handleLoad()
+}
+</script>
+
+<template>
+  <view class="min-h-screen w-screen flex flex-col bg-page pb-safe">
+    <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
+
+    <uh-plugin-unavailable
+      v-if="!uniHaloPluginAvailable" custom-class="h-[70vh]" :plugin-id="pluginId"
+      :error-text="tips" :checking="checking" @on-refresh="checkPluginAvailable"
+    />
+
+    <template v-else>
+      <!-- 加载中 / 失败占位 -->
+      <uh-data-loading
+        v-if="!draw" :loading-status="loadFailed ? 'error' : 'loading'"
+        empty-text="啊偶，画谜不见了或已下架~" min-height="75vh" @refresh="handleRetry"
+      />
+
+      <view v-else class="box-border w-full flex flex-col gap-y-3 p-3 pb-24">
+        <!-- 画面大图 -->
+        <view
+          class="uh-global-card-glass flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
+          @click="handlePreviewCover"
+        >
+          <wd-img :src="cover" mode="widthFix" class="w-full">
+            <template #loading>
+              <wd-loading size="64rpx" custom-class="text-primary" />
+            </template>
+          </wd-img>
+        </view>
+
+        <!-- 标题与简介（已揭晓或本人猜中时展示） -->
+        <view v-if="revealed || solvedByMe" class="w-full flex flex-col gap-y-1.5">
+          <text class="text-md text-gray-900 font-bold">{{ draw.spec.title || '无题' }}</text>
+          <text v-if="draw.spec.description" class="text-xs text-gray-500 leading-relaxed">
+            {{ draw.spec.description }}
+          </text>
+        </view>
+
+        <!-- 作者信息 -->
+        <view class="flex items-center justify-between text-xs text-gray-600">
+          <view class="w-full flex items-center gap-x-1">
+            <text class="text-xs text-gray-500">作者：</text>
+            <wd-avatar
+              :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
+              custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+            />
+            <text>{{ ownerText }}</text>
+          </view>
+          <text class="shrink-0">
+            {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
+          </text>
+        </view>
+
+        <!-- 竞猜面板 -->
+        <view v-if="loginEnabled" class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
+          <!-- 提示语与统计 -->
+          <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
+            谜底提示：{{ draw.spec.puzzleHint }}
+          </view>
+          <view class="flex items-center text-xs text-gray-400">
+            <text>统计数据： {{ board?.guessCount ?? 0 }} 人参与</text>
+            <text>丨</text>
+            <text> {{ board?.solvedCount ?? 0 }} 人猜中</text>
+          </view>
+
+          <!-- 态 1：已揭晓 -->
+          <template v-if="revealed">
+            <view class="flex flex-col gap-y-1">
+              <text class="text-sm text-primary font-bold">画谜谜底：{{ board?.answer }}</text>
+              <text class="text-xs text-gray-500">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
+            </view>
+          </template>
+
+          <!-- 态 2：本人已猜中 -->
+          <template v-else-if="solvedByMe">
+            <view class="flex flex-col gap-y-1">
+              <text class="text-sm text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+              <text v-if="board?.answer" class="text-sm text-primary font-bold">画谜谜底：{{ board.answer }}</text>
+              <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+            </view>
+          </template>
+
+          <!-- 态 3：出题人本人 -->
+          <template v-else-if="isMine">
+            <view class="flex flex-col gap-y-1">
+              <text class="text-xs text-gray-500">这是你的画谜作品，你自己无法参与！</text>
+              <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
+            </view>
+          </template>
+
+          <!-- 态 4：竞猜中 -->
+          <template v-else>
+            <view class="flex flex flex-col items-center gap-2">
+              <template v-if="isLogin">
+                <view
+                  class="uh-global-card-glass w-full flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
+                >
+                  <input
+                    v-model="myAnswer" placeholder="输入你的答案" :disabled="submitting"
+                    class="w-full text-3xs text-gray-500"
+                  >
+                </view>
+                <text
+                  v-if="feedback" class="w-full text-xs"
+                  :class="feedback.correct ? 'text-primary font-bold' : 'text-gray-400'"
+                >
+                  {{ feedback.text }}
+                </text>
+                <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
+                <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
+                  {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
+                </uh-button>
+              </template>
+              <uh-button v-else class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleToLogin">
+                请先登录
+              </uh-button>
+            </view>
+          </template>
+
+          <!-- 猜中榜 -->
+          <scroll-view v-if="board?.board?.length" :scroll-y="true" :show-scrollbar="false" class="max-h-[40vh]">
+            <text class="text-xs text-gray-600 font-bold">   猜中榜（按猜中时间） </text>
+            <view class="mt-3 w-full flex flex-wrap gap-x-3 gap-y-1">
+              <view v-for="item in board.board" :key="item.username" class="w-full flex items-center justify-between gap-x-2">
+                <view class="flex shrink-0 items-center gap-x-1.5">
+                  <wd-avatar
+                    :src="checkAvatarUrl(item.avatar || '')" :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
+                    custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+                  />
+                  <text class="text-xs text-gray-600"> {{ item.displayName || item.username }}</text>
+                </view>
+                <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">{{ formatTime({ d: item.solvedAt, f: 'yyyy年MM月dd日 HH时mm分ss秒' }) }}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 登录功能关闭时占位 -->
+        <view v-else class="uh-global-card-glass box-border rounded-xl p-3 !border !shadow-none">
+          <text class="text-xs text-orange-500">暂时无法使用猜画谜功能，请稍后再来</text>
+        </view>
+      </view>
+    </template>
+  </view>
+</template>

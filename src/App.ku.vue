@@ -10,6 +10,18 @@ const isCurrentPageTabbar = ref(true)
 const { popupVisible: settingsPopupVisible, openPopup: openSettingsPopup } = useOpenPopup()
 const { popupVisible: userPopupVisible, openPopup: openUserPopup } = useOpenPopup()
 const { popupVisible: chatPopupVisible, openPopup: openChatPopup } = useOpenPopup()
+
+function handleOnUserButtonClick(isLogin: boolean) {
+  if (isLogin) {
+    openUserPopup()
+  }
+  else {
+    uni.navigateTo({
+      url: '/pages/auth/login',
+    })
+  }
+}
+
 onShow(() => {
   const { path } = currRoute()
   if (path === '/') {
@@ -27,7 +39,7 @@ onShow(() => {
       <uh-scrolltop-button :fixed="false" />
       <uh-ai-chat-button :fixed="false" @action-click="openChatPopup()" />
       <uh-settings-button :fixed="false" @action-click="openSettingsPopup()" />
-      <uh-user-button :fixed="false" @action-click="openUserPopup()" />
+      <uh-user-button :fixed="false" @action-click="handleOnUserButtonClick" />
     </uh-global-actions>
 
     <uh-settings-popup v-model="settingsPopupVisible" />

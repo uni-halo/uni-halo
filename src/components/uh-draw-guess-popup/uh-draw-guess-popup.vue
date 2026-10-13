@@ -2,7 +2,7 @@
 /**
  * 竞猜弹窗（独立弹窗，复制自画作详情弹窗结构）：
  * 详情画面 + 竞猜面板四态（竞猜中 / 本人已猜中 / 已揭晓 / 出题人视角）。
- * 提交节流；未登录引导登录；竞猜信息经 guess-board 接口加载（未揭晓不含谜底）。
+ * 提交节流；未登录引导登录；竞猜信息经 guess-board 接口加载（未揭晓时谜底仅猜中者可见）。
  */
 import { computed, ref, watch } from 'vue'
 import { getGuessBoard, submitGuess } from '@/api/draw'
@@ -23,12 +23,13 @@ const emit = defineEmits<{
   /** 猜中后通知列表刷新（计数变化） */
   (event: 'solved'): void
 }>()
-
 const visible = defineModel<boolean>({ default: false })
 
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
+
+const isCollapsedBoardUsers = ref(false)
 
 /** 应用登录整体开关（与登录页同语义：密码/微信两开关全关 = 登录不可用） */
 const loginEnabled = computed(() => {
@@ -189,7 +190,7 @@ function handlePreviewCover() {
         </wd-img>
       </view>
 
-      <view v-if="revealed" class="w-full flex flex-col gap-y-1.5">
+      <view v-if="revealed || solvedByMe" class="w-full flex flex-col gap-y-1.5">
         <text class="text-sm text-gray-900 font-semibold">{{ draw.spec.title || '无题' }}</text>
         <text v-if="draw.spec.description" class="text-xs text-gray-500 leading-relaxed">
           {{ draw.spec.description }}
@@ -212,7 +213,10 @@ function handlePreviewCover() {
       </view>
 
       <!-- 竞猜面板 -->
-      <view v-if="loginEnabled" class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
+      <view
+        v-if="loginEnabled"
+        class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none"
+      >
         <!-- 提示语与统计 -->
         <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
           谜底提示：{{ draw.spec.puzzleHint }}
@@ -235,6 +239,7 @@ function handlePreviewCover() {
         <template v-else-if="solvedByMe">
           <view class="flex flex-col gap-y-1">
             <text class="text-sm text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+            <text v-if="board?.answer" class="text-sm text-primary font-bold">画谜谜底：{{ board.answer }}</text>
             <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
           </view>
         </template>
@@ -281,21 +286,39 @@ function handlePreviewCover() {
         </template>
 
         <!-- 猜中榜 -->
-        <scroll-view v-if="board?.board?.length" :scroll-y="true" :show-scrollbar="false" class="max-h-[30vh]">
-          <text class="text-xs text-gray-600 font-bold">   猜中榜（按猜中时间） </text>
-          <view class="mt-3 w-full flex flex-wrap gap-x-3 gap-y-1">
-            <view v-for="item in board.board" :key="item.username" class="w-full flex items-center justify-between gap-x-2">
-              <view class="flex shrink-0 items-center gap-x-1.5">
-                <wd-avatar
-                  :src="checkAvatarUrl(item.avatar || '')" :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
-                  custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
-                />
-                <text class="text-xs text-gray-600"> {{ item.displayName || item.username }}</text>
-              </view>
-              <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">{{ formatTime({ d: item.solvedAt, f: 'yyyy年MM月dd日 HH时mm分ss秒' }) }}</text>
+        <view v-if="board?.board?.length" class="mt-2 w-full flex flex-col gap-y-2">
+          <view class="w-full flex items-center justify-between">
+            <text class="text-xs text-gray-600 font-bold"> 猜中榜（按猜中时间） </text>
+            <view class="flex shrink-0 items-center gap-x-0.5 text-gray-400" @click="isCollapsedBoardUsers = !isCollapsedBoardUsers">
+              <wd-icon :name="isCollapsedBoardUsers ? 'down' : 'up'" size="28rpx" />
+              <text class="text-xs">{{ isCollapsedBoardUsers ? '收起' : '展开' }}</text>
             </view>
           </view>
-        </scroll-view>
+
+          <scroll-view v-if="isCollapsedBoardUsers" :scroll-y="true" :show-scrollbar="false" class="max-h-[15vh]">
+            <view class="w-full flex flex-wrap gap-x-3 gap-y-1">
+              <view
+                v-for="item in board.board" :key="item.username"
+                class="w-full flex items-center justify-between gap-x-2"
+              >
+                <view class="flex shrink-0 items-center gap-x-1.5">
+                  <wd-avatar
+                    :src="checkAvatarUrl(item.avatar || '')"
+                    :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
+                    custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+                  />
+                  <text class="text-xs text-gray-600"> {{ item.displayName || item.username }}</text>
+                </view>
+                <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">
+                  {{ formatTime({
+                    d: item.solvedAt,
+                    f:
+                      'yyyy年MM月dd日' }) }}
+                </text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
       </view>
     </view>
   </uh-glass-popup>

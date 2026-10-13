@@ -5,7 +5,10 @@ import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessa
 import { getFriendLinkGroupList, getFriendLinkList } from '@/api/halo-plugin-official/friend-links'
 import { getMiniProgramLinkGroupedList } from '@/api/uni-halo'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useSettingStore } from '@/store/setting'
 import { sleep } from '@/utils/common'
+import { copyToClipboard } from '@/utils/clipboard'
+import { buildMiniLinkText, buildSiteLinkText } from '@/utils/friendLinkText'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -34,6 +37,7 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('friendLinks', '友情链接')
 const appConfigStore = useAppConfigStore()
 const { configs, auditData, auditModeEnabled } = storeToRefs(appConfigStore)
+const { settings } = storeToRefs(useSettingStore())
 
 /* ---------------- 分享 ---------------- */
 
@@ -206,17 +210,18 @@ function handleOnLinkEvent(link: ILink) {
   detail.value = { show: true, data: link }
 }
 
+/** 复制友链信息（约定格式，供申请表单粘贴识别） */
 function handleCopyLink(link: ILink) {
-  uni.setClipboardData({
-    data: `${link.spec.displayName}:${link.spec.url}`,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '链接复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
+  copyToClipboard(buildSiteLinkText(link.spec), '友链信息复制成功！')
+}
+
+/** 单独复制一项友链信息 */
+function handleCopyField(value: string) {
+  if (!value) {
+    uni.showToast({ icon: 'none', title: '该信息为空' })
+    return
+  }
+  copyToClipboard(value)
 }
 
 /** 站点友链申请弹窗 */
@@ -258,6 +263,15 @@ const miniGroups = ref<IMiniProgramLinkGroupVo[]>([])
 const miniDetail = ref<{ show: boolean, data: IMiniProgramLink | null }>({ show: false, data: null })
 const applyShow = ref(false)
 
+/** 小程序分组显示名（详情标题右侧展示） */
+function findMiniGroupDisplayName(groupName?: string): string {
+  if (!groupName) {
+    return '未分组'
+  }
+  const found = miniGroups.value.find(item => item.groupName === groupName)
+  return found?.displayName || groupName
+}
+
 /* ---------------- 数据加载 ---------------- */
 async function handleGetMiniProgramLinks() {
   updateMiniLoadingStatus(DataLoadingStatusEnum.Loading)
@@ -291,23 +305,9 @@ function handleApplyClose(data: { isSubmit: boolean, refresh: boolean }) {
   if (data.refresh) { handleGetMiniProgramLinks() }
 }
 
-/** 复制小程序地址 */
-function handleCopyMiniProgramCode(link: IMiniProgramLink) {
-  const url = link.spec?.link
-  if (!url) {
-    uni.showToast({ icon: 'none', title: '该小程序未填写跳转地址' })
-    return
-  }
-  uni.setClipboardData({
-    data: url,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '地址复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
+/** 复制小程序友链信息（约定格式，供申请表单粘贴识别） */
+function handleCopyMiniLink(link: IMiniProgramLink) {
+  copyToClipboard(buildMiniLinkText(link.spec || {}), '友链信息复制成功！')
 }
 
 /** 预览太阳码(支持长按识别/保存) */
@@ -358,7 +358,7 @@ function handleSaveMiniProgramCode(link: IMiniProgramLink) {
 
 /** 小程序打开模式：fullscreen 全屏（navigateToMiniProgram，默认）/ halfScreen 半屏（openEmbeddedMiniProgram） */
 const miniProgramOpenMode = computed<'fullscreen' | 'halfScreen'>(() => {
-  const mode = configs.value.featureConfig?.preferences?.linkPage?.miniProgramOpenMode
+  const mode = settings.value.linkPage?.miniProgramOpenMode
   return mode === 'halfScreen' ? 'halfScreen' : 'fullscreen'
 })
 
@@ -540,7 +540,15 @@ onReachBottom(() => {
               <!-- 顶部 -->
               <view class="relative box-border w-full flex items-center justify-around">
                 <view class="w-full flex flex-col gap-y-1">
-                  <text class="text-md font-bold">站点详情</text>
+                  <view class="flex items-center gap-x-2">
+                    <text class="text-md font-bold">站点详情</text>
+                    <text
+                      v-if="detail.data"
+                      class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-900"
+                    >
+                      {{ detail.data.spec.groupName || '未分组' }}
+                    </text>
+                  </view>
                 </view>
                 <view
                   class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
@@ -577,20 +585,28 @@ onReachBottom(() => {
                       <view class="text-sm text-gray-900 font-semibold">
                         {{ detail.data.spec.displayName }}
                       </view>
-                      <view class="flex items-center gap-x-2">
-                        <text
-                          class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-500 text-gray-900"
-                        >
-                          {{ detail.data.spec.groupName }}
-                        </text>
-                      </view>
-                      <view @click="handleCopyLink(detail.data)">
-                        <text class="text-xs text-gray-900">{{ detail.data.spec.url }}</text>
-                      </view>
+                      <text class="text-xs text-gray-500 leading-5">
+                        {{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
+                      </text>
                     </view>
                   </view>
-                  <view class="poup-desc text-xs text-gray-600 leading-5">
-                    {{ detail.data.spec.description || '这个博主很懒，没写简介~' }}
+                  <!-- 信息逐项展示（行尾支持单独复制） -->
+                  <view class="flex flex-col gap-y-2">
+                    <view
+                      v-for="field in [
+                        { label: '名称', value: detail.data.spec.displayName },
+                        { label: '地址', value: detail.data.spec.url },
+                        { label: 'Logo', value: checkImageUrl(detail.data.spec.logo) },
+                        { label: '简介', value: detail.data.spec.description },
+                      ].filter(item => item.value)" :key="field.label"
+                      class="uh-global-card-glass flex items-center gap-x-2 border rounded-lg px-3 py-2 !shadow-none"
+                    >
+                      <text class="shrink-0 text-xs text-gray-400">{{ field.label }}</text>
+                      <text class="flex-1 truncate text-xs text-gray-600">{{ field.value }}</text>
+                      <view class="shrink-0" @click.stop="handleCopyField(field.value)">
+                        <wd-icon name="copy" size="26rpx" class="text-gray-500" />
+                      </view>
+                    </view>
                   </view>
                 </view>
               </scroll-view>
@@ -694,7 +710,15 @@ onReachBottom(() => {
             <!-- 顶部 -->
             <view class="relative box-border w-full flex items-center justify-around">
               <view class="w-full flex flex-col gap-y-1">
-                <text class="text-md font-bold">小程序详情</text>
+                <view class="flex items-center gap-x-2">
+                  <text class="text-md font-bold">小程序详情</text>
+                  <text
+                    v-if="miniDetail.data"
+                    class="uh-global-card-glass uh-shadow-xs border rounded-lg bg-secondary px-2 py-0.5 text-xs text-gray-900"
+                  >
+                    {{ findMiniGroupDisplayName(miniDetail.data.spec?.groupName) }}
+                  </text>
+                </view>
               </view>
               <view
                 class="uh-global-card-glass absolute right-0 top-0 h-6 w-6 flex items-center justify-center border rounded-lg text-gray-500 shadow-none !bg-white/5"
@@ -749,21 +773,23 @@ onReachBottom(() => {
                   <text class="text-xs text-gray-500">提示：点击预览，长按保存太阳码</text>
                 </view>
 
-                <!-- 小程序地址 -->
-                <view
-                  class="mini-link flex items-center justify-between rounded-xl bg-secondary p-4"
-                >
+                <!-- 小程序信息逐项展示（行尾支持单独复制） -->
+                <view class="flex flex-col gap-y-2">
                   <view
-                    class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-gray-900"
+                    v-for="field in [
+                      { label: '地址', value: miniDetail.data.spec?.link },
+                      { label: 'AppID', value: miniDetail.data.spec?.appId },
+                      { label: '路径', value: miniDetail.data.spec?.path },
+                      { label: '太阳码', value: checkImageUrl(miniDetail.data.spec?.miniProgramCode) },
+                    ].filter(item => item.value)" :key="field.label"
+                    class="uh-global-card-glass flex items-center gap-x-2 border rounded-lg px-3 py-2 !shadow-none"
                   >
-                    {{ miniDetail.data.spec.link || '暂无小程序地址~' }}
+                    <text class="shrink-0 text-xs text-gray-400">{{ field.label }}</text>
+                    <text class="flex-1 truncate text-xs text-gray-600">{{ field.value }}</text>
+                    <view class="shrink-0" @click.stop="handleCopyField(field.value)">
+                      <wd-icon name="copy" size="26rpx" class="text-gray-500" />
+                    </view>
                   </view>
-                  <text
-                    class="ml-3 shrink-0 text-3xs text-gray-600 font-semibold"
-                    @click="handleCopyMiniProgramCode(miniDetail.data)"
-                  >
-                    复制
-                  </text>
                 </view>
 
                 <!-- 预览图轮播 -->
@@ -805,7 +831,7 @@ onReachBottom(() => {
                     <text
                       v-if="miniDetail.data.spec?.website"
                       class="overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
-                      @click="handleCopyMiniProgramCode(miniDetail.data)"
+                      @click="handleCopyField(miniDetail.data.spec?.website || '')"
                     >
                       网站：{{ miniDetail.data.spec.website }}
                     </text>
@@ -813,9 +839,16 @@ onReachBottom(() => {
                 </view>
               </view>
             </scroll-view>
-            <!-- #ifdef MP-WEIXIN -->
             <!-- 底部固定操作区域 -->
-            <view class="box-border w-full flex items-center">
+            <view class="box-border w-full flex items-center gap-x-3">
+              <uh-button
+                class="flex-1"
+                custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+                @click="handleCopyMiniLink(miniDetail.data)"
+              >
+                复制信息
+              </uh-button>
+              <!-- #ifdef MP-WEIXIN -->
               <uh-button
                 class="flex-1"
                 custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
@@ -823,8 +856,8 @@ onReachBottom(() => {
               >
                 点击访问
               </uh-button>
+              <!-- #endif -->
             </view>
-            <!-- #endif -->
           </view>
         </uh-glass-popup>
 

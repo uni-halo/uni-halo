@@ -2,7 +2,9 @@
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
-import { checkAvatarUrl } from '@/utils/url'
+import { copyToClipboard } from '@/utils/clipboard'
+import { buildSiteLinkText } from '@/utils/friendLinkText'
+import { checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 
 defineOptions({
@@ -26,32 +28,36 @@ const { configs } = storeToRefs(useAppConfigStore())
 
 const blogDetail = computed(() => configs.value.featureConfig?.linkInfo?.siteInfo || {})
 
-/** 友链交换信息文案(复制用) */
-const calcBlogContent = computed(() => {
+/** 逐项友链信息（行尾支持单独复制） */
+const infoFields = computed(() => {
   const blogger = configs.value.featureConfig?.profile?.blogger || {}
   return [
-    `博客名称：${blogDetail.value.displayName || ''}`,
-    `博客地址：${blogDetail.value.url || ''}`,
-    `博客logo：${checkAvatarUrl(blogDetail.value.logo)}`,
-    `博客简介：${blogDetail.value.description || ''}`,
-    blogger.avatar ? `作者头像：${checkAvatarUrl(blogger.avatar)}` : '',
-    blogger.nickname ? `作者昵称：${blogger.nickname}` : '',
-    blogger.website ? `作者网站：${blogger.website}` : '',
-    blogger.email ? `通知邮箱：${blogger.email}` : '',
-  ].join('\n')
+    { label: '名称', value: blogDetail.value.displayName || '' },
+    { label: '地址', value: blogDetail.value.url || '' },
+    { label: 'Logo', value: checkImageUrl(blogDetail.value.logo) },
+    { label: '简介', value: blogDetail.value.description || '' },
+    { label: '作者昵称', value: blogger.nickname || '' },
+    { label: '作者头像', value: checkImageUrl(blogger.avatar || '') },
+    { label: '作者网站', value: blogger.website || '' },
+    { label: '通知邮箱', value: blogger.email || '' },
+  ].filter(item => item.value)
 })
 
+/** 复制友链信息（约定格式，供申请表单粘贴识别） */
 function handleCopyLink() {
-  uni.setClipboardData({
-    data: calcBlogContent.value,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
+  const blogger = configs.value.featureConfig?.profile?.blogger || {}
+  copyToClipboard(buildSiteLinkText({
+    ...blogDetail.value,
+    authorName: blogger.nickname || '',
+    avatar: blogger.avatar || '',
+    website: blogger.website || '',
+    email: blogger.email || '',
+  }), '友链信息复制成功！')
+}
+
+/** 单独复制一项友链信息 */
+function handleCopyField(value: string) {
+  copyToClipboard(value)
 }
 
 function handleClose() {
@@ -93,7 +99,7 @@ watch(() => props.show, (val) => {
             <wd-avatar
               custom-class="uh-global-card-glass shadow-none !text-xl !h-14 !w-14 !shrink-0 !text-primary !font-semibold"
               class="!rounded-2xl"
-              :src="checkAvatarUrl(blogDetail.logo)"
+              :src="checkImageUrl(blogDetail.logo)"
               :text="getAvatarFallbackText(blogDetail.displayName)"
               mode="aspectFill"
             />
@@ -107,9 +113,18 @@ watch(() => props.show, (val) => {
             </view>
           </view>
 
-          <!-- 交换信息文案 -->
-          <view class="whitespace-pre-wrap text-3xs text-gray-900 leading-6">
-            <text>{{ calcBlogContent }}</text>
+          <!-- 信息逐项展示（行尾支持单独复制） -->
+          <view class="flex flex-col gap-y-2">
+            <view
+              v-for="field in infoFields" :key="field.label"
+              class="uh-global-card-glass flex items-center gap-x-2 border rounded-lg px-3 py-2 !shadow-none"
+            >
+              <text class="shrink-0 text-xs text-gray-400">{{ field.label }}</text>
+              <text class="flex-1 truncate text-xs text-gray-600">{{ field.value }}</text>
+              <view class="shrink-0" @click.stop="handleCopyField(field.value)">
+                <wd-icon name="copy" size="26rpx" class="text-gray-500" />
+              </view>
+            </view>
           </view>
         </view>
       </scroll-view>
@@ -119,7 +134,7 @@ watch(() => props.show, (val) => {
           class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
           @click="handleCopyLink"
         >
-          复制友链交换信息
+          复制友链信息
         </uh-button>
       </view>
     </view>

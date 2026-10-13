@@ -128,7 +128,7 @@ function handleToLogin() {
             <view
               v-for="(item, index) in rankList" :key="item.username"
               class="uh-global-card-glass box-border flex items-center gap-x-2 rounded-xl py-2 pl-1 pr-3 !border !shadow-none"
-              :class="[index <= 2 ? 'bg-primary' : 'bg-white/80']"
+              :class="[index <= 2 ? 'bg-secondary' : 'bg-white/80']"
             >
               <text class="w-8 shrink-0 text-center text-sm font-semibold" :class="item.rank <= 3 ? '' : 'text-gray-400'">
                 {{ rankLabel(item.rank) }}

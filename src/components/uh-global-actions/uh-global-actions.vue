@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect } from 'vue'
+import { ref } from 'vue'
 
 defineOptions({
   options: {
@@ -19,17 +19,15 @@ interface IProps {
 }
 
 // 折叠状态
-const isToggle = ref(false)
-const isFirstToggle = ref(true)
 const isCollapsed = ref(props.defaultCollapsed)
 const isShowCollapsedButton = ref(true)
+// 用户点击过才使用动画，动画结束后复位避免页面切换时动画重播
+const hasToggled = ref(false)
+let animationTimer: ReturnType<typeof setTimeout> | null = null
 
 const toggleActionsClass = computed(() => {
-  if (isShowCollapsedButton.value && props.defaultCollapsed && isFirstToggle.value) {
-    return 'uhc-collapse-no-animation'
-  }
-  if (!isToggle.value || isFirstToggle.value) {
-    return 'uhc-expand-no-animation'
+  if (!hasToggled.value) {
+    return isCollapsed.value ? 'uhc-collapse-no-animation' : 'uhc-expand-no-animation'
   }
   return isCollapsed.value ? 'uhc-collapse' : 'uhc-expand'
 })
@@ -38,16 +36,29 @@ const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]
 
 const toggleActionClass = computed(() => {
-  return currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
+  const textColor = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
+  const rotate = isCollapsed.value ? 'uhc-rotate-0' : 'uhc-rotate-45'
+  return [textColor, rotate]
 })
 
 // 切换折叠状态
 function toggleCollapsed() {
-  if (isFirstToggle.value) {
-    isFirstToggle.value = false
+  if (animationTimer) {
+    clearTimeout(animationTimer)
   }
+  hasToggled.value = true
   isCollapsed.value = !isCollapsed.value
+  animationTimer = setTimeout(() => {
+    hasToggled.value = false
+    animationTimer = null
+  }, 300)
 }
+
+onUnmounted(() => {
+  if (animationTimer) {
+    clearTimeout(animationTimer)
+  }
+})
 
 // actions组件内，DOM查询函数
 function resolveRenderContent() {
@@ -57,10 +68,8 @@ function resolveRenderContent() {
       const childrenCount = (res as UniApp.NodeInfo[]).length + 1
       if (childrenCount > props.whenCountShowCollapsedButton) {
         isShowCollapsedButton.value = true
-        isToggle.value = true
       }
       else {
-        isToggle.value = false
         isShowCollapsedButton.value = false
         isCollapsed.value = false
       }
@@ -80,7 +89,7 @@ onMounted(() => {
 <template>
   <view class="fixed bottom-18 right-3 z-50 box-border flex flex-col gap-y-3 pb-safe">
     <view
-      class="uhc-actions box-border flex flex-col gap-y-3 transition-all duration-300" :class="[
+      class="uhc-actions box-border flex flex-col gap-y-3" :class="[
         toggleActionsClass,
       ]"
     >
@@ -88,16 +97,23 @@ onMounted(() => {
     </view>
     <view
       v-if="isShowCollapsedButton"
-      class="uh-global-card-glass h-11 w-11 flex items-center justify-center border rounded-full"
+      class="uh-global-card-glass h-11 w-11 flex origin-center items-center justify-center border rounded-full transition-all duration-300"
       :class="[toggleActionClass]"
       @click="toggleCollapsed"
     >
-      <wd-icon :name="isCollapsed ? 'up' : 'down'" size="42rpx" />
+      <!-- <wd-icon name="plus" size="42rpx" /> -->
+      <wd-icon :name="isCollapsed ? 'menu-unfold' : 'plus'" size="42rpx" />
     </view>
   </view>
 </template>
 
 <style scoped lang="scss">
+.uhc-rotate-45 {
+  transform: rotate(45deg);
+}
+.uhc-rotate-0 {
+  transform: rotate(0deg);
+}
 .uhc-expand-no-animation {
   transform: scale(1) !important;
 }

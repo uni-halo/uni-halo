@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/store/token'
+import { useAppConfigStore } from '@/store/appConfig'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
@@ -17,8 +18,14 @@ const props = withDefaults(defineProps<IProps>(), {
 })
 
 const emits = defineEmits<{
-  (e: 'action-click'): void
+  (e: 'action-click', isLogin: boolean): void
 }>()
+
+const { configs } = storeToRefs(useAppConfigStore())
+const loginConfig = computed(() => configs.value.loginConfig?.client)
+const loginEntryVisible = computed(() =>
+  loginConfig.value?.passwordLoginEnabled !== false
+  || loginConfig.value?.wechatLoginEnabled === true)
 
 const { hasLogin } = storeToRefs(useTokenStore())
 const { userInfo } = storeToRefs(useUserStore())
@@ -28,11 +35,13 @@ const blackList = [
   'pages/index/index',
   'pages/maintenance/maintenance',
   'pages/auth/wechat-bind',
+  'pages/auth/login',
+  'pages/auth/register',
 ]
 const pages = getCurrentPages()
 const currentPage = pages[pages.length - 1]
 const visible = computed(() => {
-  return hasLogin.value && !blackList.includes(currentPage.route)
+  return loginEntryVisible.value && !blackList.includes(currentPage.route)
 })
 
 const _customClass = computed(() => {
@@ -44,7 +53,7 @@ const avatarSrc = computed(() => checkAvatarUrl(userInfo.value.avatar || ''))
 const avatarText = computed(() => getAvatarFallbackText(userInfo.value.nickname || userInfo.value.username))
 
 function handleClick() {
-  emits('action-click')
+  emits('action-click', hasLogin.value)
 }
 </script>
 
@@ -57,6 +66,7 @@ function handleClick() {
       class="uh-global-card-glass h-11 w-11 flex items-center justify-center rounded-full"
     >
       <wd-avatar
+        v-if="hasLogin"
         :src="avatarSrc"
         :text="avatarText"
         shape="round"
@@ -66,6 +76,7 @@ function handleClick() {
         custom-class="!w-full !h-full"
         :class="_customClass"
       />
+      <wd-icon v-else name="user" size="42rpx" :class="_customClass" />
     </view>
   </view>
 </template>

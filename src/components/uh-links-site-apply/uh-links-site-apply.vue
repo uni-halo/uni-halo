@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
+import { parseSiteLinkText } from '@/utils/friendLinkText'
 
 defineOptions({
   options: {
@@ -80,6 +81,28 @@ function validateForm(): boolean {
     return false
   }
   return true
+}
+
+/** 粘贴识别：读取剪贴板约定格式回填表单 */
+function handlePaste() {
+  uni.getClipboardData({
+    success: (res) => {
+      const parsed = parseSiteLinkText(res.data || '')
+      if (!parsed) {
+        uni.showToast({ icon: 'none', title: '未识别到友链申请格式' })
+        return
+      }
+      ;(Object.keys(parsed) as (keyof IApplyForm)[]).forEach((key) => {
+        const value = parsed[key]
+        if (value)
+          form.value[key] = value
+      })
+      uni.showToast({ icon: 'none', title: '已填入识别内容' })
+    },
+    fail: () => {
+      uni.showToast({ icon: 'none', title: '读取剪贴板失败' })
+    },
+  })
 }
 
 /** 提交申请 */
@@ -202,7 +225,14 @@ watch(() => props.show, (val) => {
         </view>
       </scroll-view>
       <!-- 底部固定操作区域 -->
-      <view class="box-border w-full flex items-center">
+      <view class="box-border w-full flex items-center gap-x-3">
+        <uh-button
+          class="flex-1"
+          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs"
+          @click="handlePaste"
+        >
+          粘贴识别
+        </uh-button>
         <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary" :loading="submitting" @click="handleSubmit">
           提交申请
         </uh-button>

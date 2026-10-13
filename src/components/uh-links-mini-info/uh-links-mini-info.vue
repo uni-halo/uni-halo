@@ -2,8 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppConfigStore } from '@/store/appConfig'
-import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-import { getAvatarFallbackText } from '@/utils/avatar'
+import { copyToClipboard } from '@/utils/clipboard'
+import { buildMiniLinkText } from '@/utils/friendLinkText'
+import { checkImageUrl } from '@/utils/url'
 
 defineOptions({
   options: {
@@ -44,66 +45,30 @@ const miniInfo = computed(() => {
 
 const hasInfo = computed(() => !!(miniInfo.value.displayName || miniInfo.value.miniProgramCode))
 
-/** 复制任意文本 */
-function handleCopyText(text?: string) {
-  if (!text) {
-    return
-  }
-  uni.setClipboardData({
-    data: text,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
+/** 逐项友链信息（行尾支持单独复制） */
+const infoFields = computed(() => {
+  return [
+    { label: '名称', value: miniInfo.value.displayName },
+    { label: '地址', value: miniInfo.value.link },
+    { label: 'AppID', value: miniInfo.value.appId },
+    { label: '路径', value: miniInfo.value.path },
+    { label: '太阳码', value: checkImageUrl(miniInfo.value.miniProgramCode) },
+    { label: '描述', value: miniInfo.value.description },
+    { label: '申请说明', value: miniInfo.value.applyRemark },
+    { label: '作者昵称', value: miniInfo.value.authorName },
+    { label: '作者头像', value: checkImageUrl(miniInfo.value.avatar) },
+    { label: '作者网站', value: miniInfo.value.website },
+  ].filter(item => item.value)
+})
+
+/** 单独复制一项友链信息 */
+function handleCopyField(value: string) {
+  copyToClipboard(value)
 }
 
-/** 复制跳转地址 */
-function handleCopyLink() {
-  if (!miniInfo.value.link) {
-    uni.showToast({ icon: 'none', title: '暂未填写跳转地址' })
-    return
-  }
-  uni.setClipboardData({
-    data: miniInfo.value.link,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '地址复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
-}
-
-/** 复制小程序申请信息(拼接文案) */
+/** 复制小程序友链信息（约定格式，供申请表单粘贴识别） */
 function handleCopyInfo() {
-  const info = miniInfo.value
-  const text = [
-    info.miniProgramCode ? `小程序太阳码：${checkImageUrl(info.miniProgramCode)}` : '',
-    info.displayName ? `小程序名称：${info.displayName}` : '',
-    info.appId ? `小程序 AppID：${info.appId}` : '',
-    info.path ? `跳转页面路径：${info.path}` : '',
-    info.link ? `小程序地址：${info.link}` : '',
-    info.description ? `小程序描述：${info.description}` : '',
-    info.avatar ? `作者头像：${checkAvatarUrl(info.avatar)}` : '',
-    info.authorName ? `作者昵称：${info.authorName}` : '',
-    info.website ? `作者网站：${info.website}` : '',
-    info.applyRemark ? `申请说明：${info.applyRemark}` : '',
-  ].filter(Boolean).join('\n')
-  uni.setClipboardData({
-    data: text,
-    showToast: false,
-    success: () => {
-      uni.showToast({ icon: 'none', title: '复制成功！' })
-    },
-    fail: () => {
-      uni.showToast({ icon: 'none', title: '复制失败！' })
-    },
-  })
+  copyToClipboard(buildMiniLinkText(miniInfo.value), '友链信息复制成功！')
 }
 
 /** 预览太阳码 */
@@ -186,70 +151,17 @@ watch(() => props.show, (val) => {
               <text class="text-xs text-gray-400">温馨提示：点击图片可以预览太阳码</text>
             </view>
 
-            <!-- AppID / 页面路径 -->
-            <view
-              v-if="miniInfo.appId || miniInfo.path"
-              class="uh-global-card-glass flex flex-col gap-2 border rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500 shadow-none"
-            >
-              <view v-if="miniInfo.appId" class="flex items-center justify-between">
-                <view>
-                  <text class="text-gray-400">小程序 AppID：</text>{{ miniInfo.appId }}
-                </view>
-                <text class="shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyText(miniInfo.appId)">复制</text>
-              </view>
-              <view v-if="miniInfo.path" class="flex items-center justify-between">
-                <view class="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap">
-                  <text class="text-gray-400">跳转页面路径：</text>{{ miniInfo.path }}
-                </view>
-                <text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyText(miniInfo.path)">复制</text>
-              </view>
-            </view>
-
-            <!-- 跳转地址 -->
-            <view
-              v-if="miniInfo.link"
-              class="mini-link flex items-center justify-between rounded-xl bg-secondary p-4"
-            >
+            <!-- 信息逐项展示（行尾支持单独复制） -->
+            <view class="flex flex-col gap-y-2">
               <view
-                class="link-text flex-1 overflow-hidden truncate whitespace-nowrap text-[26rpx] text-[#4d7c0f]"
+                v-for="field in infoFields" :key="field.label"
+                class="uh-global-card-glass flex items-center gap-x-2 border rounded-lg px-3 py-2 !shadow-none"
               >
-                {{ miniInfo.link }}
-              </view>
-              <text class="ml-3 shrink-0 text-[26rpx] text-[#4d7c0f] font-bold" @click="handleCopyLink">复制</text>
-            </view>
-
-            <!-- 申请说明 -->
-            <view
-              v-if="miniInfo.applyRemark"
-              class="uh-global-card-glass flex flex-col gap-2 border rounded-xl bg-[#f6f3ee] p-4 text-xs text-gray-500 shadow-none"
-            >
-              <view v-if="miniInfo.applyRemark">
-                <text class="text-gray-400">申请说明：</text>{{ miniInfo.applyRemark }}
-              </view>
-            </view>
-
-            <!-- 作者信息 -->
-            <view
-              v-if="miniInfo.authorName || miniInfo.avatar || miniInfo.website"
-              class="uh-global-card-glass flex items-center border rounded-xl p-4 shadow-none"
-            >
-              <wd-avatar
-                :src="checkAvatarUrl(miniInfo.avatar)"
-                :text="getAvatarFallbackText(miniInfo.authorName)"
-                custom-class="!h-[72rpx] !w-[72rpx] !shrink-0 !text-gray-900 !font-bold"
-                class="!rounded-full"
-                mode="aspectFill"
-              />
-              <view class="author-detail ml-4 flex flex-1 flex-col">
-                <text v-if="miniInfo.authorName" class="author-name text-[28rpx] text-gray-900 font-medium">
-                  {{ miniInfo.authorName }}
-                </text>
-                <text
-                  v-if="miniInfo.website"
-                  class="author-website mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
-                >
-                  网站：{{ miniInfo.website }}
-                </text>
+                <text class="shrink-0 text-xs text-gray-400">{{ field.label }}</text>
+                <text class="flex-1 truncate text-xs text-gray-600">{{ field.value }}</text>
+                <view class="shrink-0" @click.stop="handleCopyField(field.value)">
+                  <wd-icon name="copy" size="26rpx" class="text-gray-500" />
+                </view>
               </view>
             </view>
           </template>
@@ -259,7 +171,7 @@ watch(() => props.show, (val) => {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center">
         <uh-button class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary" @click="handleCopyInfo">
-          复制小程序申请信息
+          复制友链信息
         </uh-button>
       </view>
     </view>

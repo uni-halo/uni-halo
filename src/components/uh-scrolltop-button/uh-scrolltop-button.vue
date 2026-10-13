@@ -25,9 +25,9 @@ const blackList = [
   'pages-blog/contact/contact',
   'pages-blog/about-project/about-project',
   'pages-blog/draw-canvas/draw-canvas',
+  'pages-blog/footprint/footprint',
   'pages/auth/wechat-bind',
   'pages-admin/my-profile/my-profile',
-  'pages-admin/footprint/footprint',
   'uni_modules/uh-upgrade/pages/upgrade-popup',
 ]
 const pages = getCurrentPages()

@@ -432,14 +432,15 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
         <view class="uh-global-card-glass w-full flex items-center border rounded-xl px-4 py-2.5 !shadow-none">
           <input
-            v-model="title" placeholder="给画作起个标题（必填，别写谜底哦）" placeholder-class="text-gray-400"
+            v-model="title" :placeholder="guessEnabled ? '给画作起个标题（必填，别写谜底哦）' : '给画作起个标题（必填）'"
+            placeholder-class="text-gray-400"
             class="w-full text-sm" :maxlength="50"
           >
         </view>
         <view class="uh-global-card-glass w-full flex items-start border rounded-xl px-4 py-2.5 !shadow-none">
           <textarea
             v-model="description" placeholder="介绍一下你的创作灵感（选填）" placeholder-class="text-gray-400"
-            class="h-20 w-full text-sm" :maxlength="200"
+            class="h-20 w-full p-0 text-sm" :maxlength="200"
           />
         </view>
 

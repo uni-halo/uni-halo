@@ -78,7 +78,7 @@ function handleCopyArticle() {
     custom-class="!rounded-2xl"
     @close="emit('close')"
   >
-    <view class="box-border h-[70vh] flex flex-col gap-y-3 overflow-hidden p-3">
+    <view class="box-border flex flex-col gap-y-3 overflow-hidden p-3" :class="props.mode === 'list' ? 'h-[70vh]' : ''">
       <!-- 顶部 -->
       <view class="relative mb-2 box-border w-full flex items-center justify-around">
         <view class="w-full flex flex-col gap-y-1">

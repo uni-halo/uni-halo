@@ -61,7 +61,10 @@ const vote = ref<(IVote & {
 const submitForm = ref<{ voteData: string[] }>({ voteData: [] })
 
 /* ---------------- 计算属性 ---------------- */
-const isVoted = computed(() => voteCacheUtil.has(name.value))
+/** 已投检查：模板/逻辑调用时实时读缓存（缓存为非响应式存储，不用 computed） */
+function handleHasVoted() {
+  return voteCacheUtil.has(name.value)
+}
 const isEnded = computed(() => vote.value?.spec?.hasEnded || false)
 
 /* ---------------- 工具 ---------------- */
@@ -93,8 +96,8 @@ async function handleGetData() {
       const typeKey = ((tempVote.spec?.type || 'single') as string).toLowerCase()
       pageTitle.value = `投票详情（${VOTE_TYPES[typeKey] || tempVote.spec?.type}）`
       tempVote.spec = tempVote.spec || {}
-      tempVote.spec.isVoted = isVoted.value
-      tempVote.spec.disabled = isVoted.value
+      tempVote.spec.isVoted = handleHasVoted()
+      tempVote.spec.disabled = handleHasVoted()
       tempVote.spec._uh_type = VOTE_TYPES[typeKey] || tempVote.spec.type
 
       // 计算状态(含 timeLimit 非 custom 时 hasEnded 兜底)
@@ -117,9 +120,9 @@ async function handleGetData() {
           value: option.id,
           label: option.title,
           count: countMap[option.id || ''] || 0,
-          isVoted: isVoted.value,
+          isVoted: handleHasVoted(),
           checked,
-          disabled: isVoted.value,
+          disabled: handleHasVoted(),
         }
         return {
           ...optionWithCount,
@@ -350,7 +353,7 @@ onShareTimeline(() => ({
               </view>
             </view>
 
-            <template v-if="isVoted || isEnded">
+            <template v-if="handleHasVoted() || isEnded">
               <view
                 v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
                 class="is-voted-item relative box-border overflow-hidden rounded-xl text-xs"
@@ -396,7 +399,7 @@ onShareTimeline(() => ({
         <view
           class="uh-global-card-glass mb-2 w-full flex items-center justify-center gap-x-2 border rounded-full"
         >
-          <uh-button v-if="isVoted" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs">
+          <uh-button v-if="handleHasVoted()" class="flex-1" custom-class="flex-1 py-2.5 !rounded-full !bg-primary !text-3xs">
             您已参与投票
           </uh-button>
           <uh-button

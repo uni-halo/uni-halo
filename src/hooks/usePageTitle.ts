@@ -28,6 +28,7 @@ export type PageTitleKey
     | 'footprint'
     | 'equipment'
     | 'drawList'
+    | 'drawDetail'
     | 'drawCanvas'
     | 'drawManage'
     | 'drawReview'
