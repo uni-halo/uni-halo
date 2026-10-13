@@ -150,15 +150,21 @@ onPullDownRefresh(() => {
 const siteName = computed(() =>
   haloConfigs.value?.featureConfig?.profile?.appInfo?.name || 'uni-halo')
 
-onShareAppMessage(() => ({
-  title: `${draw.value?.spec.title || '画谜详情'} - ${siteName.value}`,
-  path: `/pages-blog/draw-detail/draw-detail?name=${drawName.value}`,
-}))
+onShareAppMessage(() => {
+  const title = isPuzzle.value ? '我发现了一幅画作，快来猜猜看是什么？' : draw.value?.spec.title
+  return {
+    title: `${title || '画谜详情'} - ${siteName.value}`,
+    path: `/pages-blog/draw-detail/draw-detail?name=${drawName.value}`,
+  }
+})
 
-onShareTimeline(() => ({
-  title: `${draw.value?.spec.title || '画谜详情'} - ${siteName.value}`,
-  query: `name=${drawName.value}`,
-}))
+onShareTimeline(() => {
+  const title = isPuzzle.value ? '我发现了一幅画作，快来猜猜看是什么？' : draw.value?.spec.title
+  return {
+    title: `${title || '画谜详情'} - ${siteName.value}`,
+    query: `name=${drawName.value}`,
+  }
+})
 
 /* ---------------- 竞猜交互 ---------------- */
 const myAnswer = ref('')
