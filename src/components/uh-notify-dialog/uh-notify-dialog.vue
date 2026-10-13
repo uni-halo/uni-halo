@@ -127,11 +127,12 @@ onMounted(() => {
 
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center justify-between">
-        <view class="text-xs text-gray-600" @click="handleDismissForever">
+        <view class="flex-1 text-xs text-gray-600" @click="handleDismissForever">
           今日不再提醒
         </view>
         <uh-button
-          custom-class="uh-global-card-glass uh-shadow-xs text-xs border py-1.5 flex items-center justify-center gap-x-1 !rounded-lg !bg-primary"
+          class="shrink-0"
+          custom-class="uh-global-card-glass uh-shadow-xs !text-xs border !py-1 !px-2 flex items-center justify-center gap-x-1 !rounded-lg !bg-primary"
           @click="handleViewAll()"
         >
           查看全文 <wd-icon name="arrow-right" size="24rpx" />

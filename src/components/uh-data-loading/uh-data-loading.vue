@@ -138,7 +138,7 @@ const statusScene = computed(() => {
       </text>
       <view v-if="props.useRefreshButton" class="mt-4">
         <uh-button
-          :custom-class="`uh-global-card-glass !text-xs !rounded-full py-2 uh-shadow-xs border ${sizeClasses.button} ${customClasses.button}`"
+          :custom-class="`uh-global-card-glass !text-xs !rounded-full !py-2 uh-shadow-xs border ${sizeClasses.button} ${customClasses.button}`"
           @click="emit('refresh')"
         >
           刷新试试

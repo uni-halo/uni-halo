@@ -306,7 +306,10 @@ function handleApplyClose(data: { isSubmit: boolean, refresh: boolean }) {
 }
 
 /** 复制小程序友链信息（约定格式，供申请表单粘贴识别） */
-function handleCopyMiniLink(link: IMiniProgramLink) {
+function handleCopyMiniLink(link: IMiniProgramLink | null) {
+  if (!link) {
+    return
+  }
   copyToClipboard(buildMiniLinkText(link.spec || {}), '友链信息复制成功！')
 }
 

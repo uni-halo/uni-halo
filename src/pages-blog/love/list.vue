@@ -499,7 +499,7 @@ onReachBottom(() => {
           <view class="flex gap-2">
             <view
               v-for="dir in sortDirOptions" :key="dir.value"
-              class="uh-global-card-glass box-border flex-1 border rounded-xl px-5 py-2 text-center text-sm shadow-none"
+              class="uh-global-card-glass box-border flex-1 border rounded-xl px-5 py-2.5 text-center text-3xs shadow-none"
               :class="filterValues.sortDir === dir.value ? 'bg-love/90 text-white font-bold' : 'text-gray-700'"
               @click="handleSelectSortDir(dir)"
             >

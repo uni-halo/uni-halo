@@ -38,6 +38,8 @@ export function buildSiteLinkText(link: {
   url?: string
   logo?: string
   description?: string
+  linkPageUrl?: string
+  rssUrl?: string
   authorName?: string
   avatar?: string
   website?: string
@@ -50,6 +52,10 @@ export function buildSiteLinkText(link: {
     rows.push(`--地址：${link.url}`)
   if (link.logo)
     rows.push(`--Logo：${checkImageUrl(link.logo)}`)
+  if (link.linkPageUrl)
+    rows.push(`--链接页：${link.linkPageUrl}`)
+  if (link.rssUrl)
+    rows.push(`--RSS：${link.rssUrl}`)
   if (link.description)
     rows.push(`--描述：${link.description}`)
   if (link.authorName)

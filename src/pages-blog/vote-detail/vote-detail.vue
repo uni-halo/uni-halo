@@ -287,12 +287,12 @@ onShareTimeline(() => ({
         <view class="flex flex-col gap-2 rounded-xl bg-gray-100 px-4 py-3 text-xs text-gray-900">
           <view class="info-row">
             <text>投票类型：</text>
-            <text class="tag">{{ vote.spec?._uh_type }}</text>
+            <text class="tag box-border rounded-md px-1 py-0.5 text-xs">{{ vote.spec?._uh_type }}</text>
           </view>
           <view class="info-row">
             <text>投票状态：</text>
             <text
-              class="tag"
+              class="tag box-border rounded-md px-1 py-0.5 text-xs"
               :class="[vote.spec?._uh_state?.color, vote.spec?._uh_state?.bgColor]"
             >
               {{ vote.spec?._uh_state?.state }}
@@ -300,7 +300,7 @@ onShareTimeline(() => ({
           </view>
           <view class="info-row">
             <text>投票方式：</text>
-            <text class="tag" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-red-400'">
+            <text class="tag box-border rounded-md px-1 py-0.5 text-xs" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-red-400'">
               {{ vote.spec?.canAnonymously ? '匿名' : '不匿名' }}
             </text>
           </view>
@@ -444,7 +444,7 @@ onShareTimeline(() => ({
     left: 0;
     top: 0;
     bottom: 0;
-    background-color: #d0d0d0;
+    background-color: #e6e6e6;
     z-index: 0;
     border-radius: 6rpx;
   }

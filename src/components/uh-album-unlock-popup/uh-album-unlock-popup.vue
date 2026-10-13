@@ -3,10 +3,6 @@ import { computed, ref, watch } from 'vue'
 import { getPluginCaptcha, unlockAlbum } from '@/api/uni-halo'
 import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 
-interface IProps {
-  show: boolean
-}
-
 const props = withDefaults(defineProps<{
   show: boolean
   albumName?: string

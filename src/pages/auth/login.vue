@@ -227,7 +227,7 @@ function handleWechatEmailRequired(error: unknown): boolean {
 /** 登录成功统一处理:提示展示完成后返回来源页,配置刷新并行执行 */
 function handleLoginSuccess() {
   // 登录成功需要重新拉取配置
-  bootstrap({ force: true }).catch(() => {})
+  bootstrap({ force: true }).catch(err => console.error('登录后刷新配置失败', err))
   setTimeout(() => {
     uni.navigateBack()
   }, 1500)

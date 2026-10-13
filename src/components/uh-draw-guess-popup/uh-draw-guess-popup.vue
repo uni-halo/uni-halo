@@ -158,6 +158,12 @@ function handlePreviewCover() {
   if (!cover.value) { return }
   uni.previewImage({ urls: [cover.value] })
 }
+
+function handleToDetailPage(draw: IDraw) {
+  uni.navigateTo({
+    url: `/pages-blog/draw-detail/draw-detail?name=${draw.metadata.name}`,
+  })
+}
 </script>
 
 <template>
@@ -320,6 +326,25 @@ function handlePreviewCover() {
           </scroll-view>
         </view>
       </view>
+
+      <!-- #ifdef MP -->
+      <view class="box-border w-full flex items-center gap-x-2 pt-2">
+        <uh-button
+          class="w-full flex-1"
+          custom-class="uh-global-card-glass !border !shadow-none !text-3xs !rounded-xl !bg-white !py-2.5 !text-gray-900"
+          @action-click="visible = false"
+        >
+          关闭
+        </uh-button>
+        <uh-button
+          class="w-full flex-1"
+          custom-class="uh-global-card-glass !border !shadow-none !text-3xs !rounded-xl !bg-primary !py-2.5 !text-gray-900"
+          @action-click="handleToDetailPage(draw)"
+        >
+          去分享
+        </uh-button>
+      </view>
+      <!-- #endif -->
     </view>
   </uh-glass-popup>
 </template>

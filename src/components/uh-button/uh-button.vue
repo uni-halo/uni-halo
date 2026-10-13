@@ -11,6 +11,7 @@ const emits = defineEmits<IEmits>()
 
 interface IProps {
   customClass?: string | Array<string>
+  openType?: 'feedback' | 'share' | 'getUserInfo' | 'contact' | 'getPhoneNumber' | 'launchApp' | 'openSetting' | 'chooseAvatar' | 'getAuthorize' | 'lifestyle' | 'contactShare' | 'openGroupProfile' | 'openGuildProfile' | 'openPublicProfile' | 'shareMessageToFriend' | 'addFriend' | 'addColorSign' | 'addGroupApp' | 'addToFavorites' | 'chooseAddress' | 'chooseInvoiceTitle' | 'login' | 'subscribe' | 'favorite' | 'watchLater' | 'openProfile' | 'agreePrivacyAuthorization'
 }
 
 // 事件需透传给 emit：组件事件默认不带 DOM 事件对象，
@@ -28,10 +29,10 @@ function handleClick(e: any) {
 </script>
 
 <template>
-  <view
-    class="uh-shadow-xs box-border flex items-center justify-center rounded-lg bg-primary px-4 text-sm text-black"
-    :class="props.customClass" @click="handleClick"
+  <button
+    class="uh-button-native uh-shadow-xs box-border flex items-center justify-center rounded-lg bg-primary px-4 text-sm text-black"
+    :open-type="props.openType" :class="props.customClass" @click="handleClick"
   >
     <slot />
-  </view>
+  </button>
 </template>

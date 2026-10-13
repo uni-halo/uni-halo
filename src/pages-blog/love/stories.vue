@@ -341,17 +341,12 @@ onReachBottom(() => {
             </view>
           </view>
           <view class="uh-global-card-glass relative box-border flex-1 overflow-hidden rounded-xl p-3">
-            <text
-              v-if="false"
-              class="absolute right-2 top-1 z-10 text-6xl text-love font-bold opacity-5"
-            >
-              {{ story.day }}
-            </text>
             <view class="flex items-start justify-between gap-x-2">
-              <view class="text-md truncate text-gray-900 font-bold">
+              <view class="text-md flex-1 truncate text-gray-900 font-bold">
                 {{ story.title }}
               </view>
               <uh-button
+                class="shrink-0"
                 custom-class="uh-global-card-glass shadow-none !bg-love/90 border text-white !py-1 px-2 !text-xs !rounded-md"
                 @click="handleOnStoryClick(story)"
               >
