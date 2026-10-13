@@ -17,6 +17,7 @@ import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoad
 import { sleep } from '@/utils/common'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { IDraw } from '@/api/types/draw'
+import { storeToRefs } from 'pinia'
 
 definePage({
   style: {
@@ -27,24 +28,24 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
-/** 吸顶偏移（分类 tab 吸顶用，同装备列表） */
+/** 吸顶偏移 */
 const { height: offsetTop } = useNavbarSticky()
-/** 页面标题（插件端可配置，留空回退内置默认） */
+/** 页面标题 */
 const pageTitle = usePageTitle('drawList', '绘画作品')
 
 const tokenStore = useTokenStore()
-const appConfigStore = useAppConfigStore()
+const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
 const { can } = usePermission()
 
 /** 应用登录整体开关（与登录页同语义：密码/微信两开关全关 = 登录不可用） */
 const loginEnabled = computed(() => {
-  const client = appConfigStore.configs?.loginConfig?.client
+  const client = haloConfigs.value?.loginConfig?.client
   return client?.passwordLoginEnabled !== false || client?.wechatLoginEnabled === true
 })
 
 /** 猜画玩法总开关（插件端「绘画设置」下发；关闭时隐藏竞猜入口，缺省开启） */
 const guessModeEnabled = computed(() =>
-  appConfigStore.configs?.featureConfig?.pages?.draw?.guessEnabled !== false)
+  haloConfigs.value?.featureConfig?.pages?.draw?.guessEnabled !== false)
 
 async function handleGoDraw() {
   if (!tokenStore.updateNowTime().hasLogin) {
@@ -60,7 +61,8 @@ async function handleGoDraw() {
   uni.navigateTo({ url: '/pages-blog/draw-canvas/draw-canvas' })
 }
 
-const siteName = ref('uni-halo')
+const siteName = computed(() =>
+  haloConfigs.value?.featureConfig?.profile?.appInfo?.name || 'uni-halo')
 
 /** 依赖插件(uni-halo)，不可用时展示占位并可重试 */
 const { pluginId, checking, tips, available: uniHaloPluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
@@ -88,7 +90,7 @@ const { loadingStatus, loadMoreStatus, updateLoadingStatus, updateLoadMoreStatus
 const drawList = ref<IDraw[]>([])
 const queryParams = ref({ size: 10, page: 1, type: 'all' })
 
-/** 分类 tab：全部 / 普通作品 / 竞猜作品（站点关闭猜画玩法时去掉竞猜项） */
+/** 分类 tab */
 const typeTabs = computed(() => {
   const tabs: { label: string, value: 'all' | 'normal' | 'puzzle' }[] = [
     { label: '全部', value: 'all' },
@@ -111,7 +113,7 @@ function handleSwitchType(value: 'all' | 'normal' | 'puzzle') {
   handleRetry()
 }
 
-/** 是否竞猜作品（公开数据无谜底，用竞猜状态判定） */
+/** 是否为画谜作品 */
 function isPuzzleDraw(draw: IDraw) {
   return !!draw.spec.puzzleStatus
 }
