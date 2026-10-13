@@ -369,11 +369,11 @@ onPageScroll(({ scrollTop }) => {
                     {{ feedback.text }}
                   </text>
                   <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
-                  <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
+                  <uh-button class="w-full flex-1" custom-class="!py-2.5 text-3xs" @click="handleGuess">
                     {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
                   </uh-button>
                 </template>
-                <uh-button v-else class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleToLogin">
+                <uh-button v-else class="w-full flex-1" custom-class="!py-2.5 text-3xs" @click="handleToLogin">
                   请先登录
                 </uh-button>
               </view>
@@ -413,9 +413,9 @@ onPageScroll(({ scrollTop }) => {
           </template>
         </template>
         <!-- #ifdef MP -->
-        <view class="box-border w-full flex items-center pt-2">
+        <view class="box-border w-full flex items-center px-6 pt-2">
           <button
-            class="uh-button-native uh-global-card-glass w-full flex-1 !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900 !shadow-none"
+            class="uh-button-native uh-global-card-glass w-full flex-1 !border !rounded-full !bg-primary !py-2 !text-sm !text-gray-900 !shadow-none"
             open-type="share"
           >
             {{ isPuzzle ? '分享给朋友一起猜' : '分享给朋友' }}

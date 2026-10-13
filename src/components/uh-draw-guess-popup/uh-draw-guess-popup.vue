@@ -285,11 +285,11 @@ function handleToDetailPage(draw: IDraw) {
                 {{ feedback.text }}
               </text>
               <text v-else class="w-full text-xs text-gray-400">说明：猜中需与谜底完全一致，有点小难度哦~</text>
-              <uh-button class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleGuess">
+              <uh-button class="w-full flex-1" custom-class="!py-2.5 text-3xs" @click="handleGuess">
                 {{ submitting ? '提交中' : countdown > 0 ? `${countdown}s` : '猜一下' }}
               </uh-button>
             </template>
-            <uh-button v-else class="w-full flex-1" custom-class="!py-2 text-xs" @click="handleToLogin">
+            <uh-button v-else class="w-full flex-1" custom-class="!py-2.5 !text-3xs" @click="handleToLogin">
               请先登录
             </uh-button>
           </view>
@@ -343,16 +343,8 @@ function handleToDetailPage(draw: IDraw) {
         </view>
       </view>
 
-      <uh-button
-        class="w-full flex-1"
-        custom-class="uh-global-card-glass !border !shadow-none !text-3xs !rounded-xl !bg-primary !py-2.5 !text-gray-900"
-        @action-click="handleToDetailPage(draw)"
-      >
-        去分享
-      </uh-button>
-
       <!-- #ifdef MP -->
-      <view class="box-border w-full flex items-center gap-x-2 pt-2">
+      <view class="box-border w-full flex items-center gap-x-3 pt-2">
         <uh-button
           class="w-full flex-1"
           custom-class="uh-global-card-glass !border !shadow-none !text-3xs !rounded-xl !bg-white !py-2.5 !text-gray-900"
