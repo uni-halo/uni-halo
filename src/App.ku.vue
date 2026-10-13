@@ -11,6 +11,17 @@ const { popupVisible: settingsPopupVisible, openPopup: openSettingsPopup } = use
 const { popupVisible: userPopupVisible, openPopup: openUserPopup } = useOpenPopup()
 const { popupVisible: chatPopupVisible, openPopup: openChatPopup } = useOpenPopup()
 
+const actionsVisible = reactive({
+  scrollTop: false,
+  aiChat: false,
+  settings: false,
+  user: false,
+})
+
+const actionsVisibleCount = computed(() => {
+  return Object.values(actionsVisible).filter(visible => visible).length
+})
+
 function handleOnUserButtonClick(isLogin: boolean) {
   if (isLogin) {
     openUserPopup()
@@ -20,6 +31,10 @@ function handleOnUserButtonClick(isLogin: boolean) {
       url: '/pages/auth/login',
     })
   }
+}
+
+function onActionsVisible(visible: boolean, actionName: string) {
+  actionsVisible[actionName] = visible
 }
 
 onShow(() => {
@@ -35,11 +50,11 @@ onShow(() => {
 
 <template>
   <view>
-    <uh-global-actions>
-      <uh-scrolltop-button :fixed="false" />
-      <uh-ai-chat-button :fixed="false" @action-click="openChatPopup()" />
-      <uh-settings-button :fixed="false" @action-click="openSettingsPopup()" />
-      <uh-user-button :fixed="false" @action-click="handleOnUserButtonClick" />
+    <uh-global-actions :visible-count="actionsVisibleCount">
+      <uh-scrolltop-button :fixed="false" @is-visible="onActionsVisible($event, 'scrollTop')" />
+      <uh-ai-chat-button :fixed="false" @is-visible="onActionsVisible($event, 'aiChat')" @action-click="openChatPopup()" />
+      <uh-settings-button :fixed="false" @is-visible="onActionsVisible($event, 'settings')" @action-click="openSettingsPopup()" />
+      <uh-user-button :fixed="false" @is-visible="onActionsVisible($event, 'user')" @action-click="handleOnUserButtonClick" />
     </uh-global-actions>
 
     <uh-settings-popup v-model="settingsPopupVisible" />

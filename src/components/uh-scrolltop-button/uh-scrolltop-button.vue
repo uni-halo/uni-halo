@@ -9,6 +9,10 @@ const props = withDefaults(defineProps<IProps>(), {
   fixed: true,
 })
 
+const emits = defineEmits<{
+  'is-visible': [visible: boolean]
+}>()
+
 function handleScrollTop() {
   uni.pageScrollTo({ scrollTop: 0, duration: 500 })
 }
@@ -40,6 +44,10 @@ const _customClass = computed(() => {
   const colorClass = currentPage.route.includes('/love/') ? 'text-love' : 'text-primary'
   return `${props.customClass} ${colorClass}`
 })
+
+watch((visible), (newVal) => {
+  emits('is-visible', newVal)
+}, { immediate: true })
 </script>
 
 <template>

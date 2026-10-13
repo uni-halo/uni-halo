@@ -18,7 +18,8 @@ const props = withDefaults(defineProps<IProps>(), {
 })
 
 const emits = defineEmits<{
-  (e: 'action-click', isLogin: boolean): void
+  'action-click': [isLogin: boolean]
+  'is-visible': [visible: boolean]
 }>()
 
 const { configs } = storeToRefs(useAppConfigStore())
@@ -55,6 +56,9 @@ const avatarText = computed(() => getAvatarFallbackText(userInfo.value.nickname 
 function handleClick() {
   emits('action-click', hasLogin.value)
 }
+watch((visible), (newVal) => {
+  emits('is-visible', newVal)
+}, { immediate: true })
 </script>
 
 <template>
@@ -63,7 +67,7 @@ function handleClick() {
     @click="handleClick"
   >
     <view
-      class="uh-global-card-glass h-10 w-10 flex items-center justify-center rounded-full"
+      class="uh-global-card-glass h-10 w-10 flex items-center justify-center border rounded-full"
     >
       <wd-avatar
         v-if="hasLogin"
@@ -73,7 +77,7 @@ function handleClick() {
         bg-color="transparent"
         custom-style="font-size:32rpx"
         mode="aspectFill"
-        custom-class="!w-full !h-full"
+        custom-class="!w-full !h-full block"
         :class="_customClass"
       />
       <wd-icon v-else name="user" size="42rpx" :class="_customClass" />

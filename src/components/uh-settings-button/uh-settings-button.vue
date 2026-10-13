@@ -11,7 +11,8 @@ const props = withDefaults(defineProps<IProps>(), {
 })
 
 const emits = defineEmits<{
-  (e: 'action-click'): void
+  'action-click': []
+  'is-visible': [visible: boolean]
 }>()
 
 // 白名单模式
@@ -36,6 +37,10 @@ const _customClass = computed(() => {
 function handleClick() {
   emits('action-click')
 }
+
+watch((visible), (newVal) => {
+  emits('is-visible', newVal)
+}, { immediate: true })
 </script>
 
 <template>

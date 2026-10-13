@@ -15,7 +15,8 @@ const props = withDefaults(defineProps<IProps>(), {
 })
 
 const emits = defineEmits<{
-  (e: 'action-click'): void
+  'action-click': []
+  'is-visible': [visible: boolean]
 }>()
 
 // 黑名单模式：这些页面不显示入口
@@ -64,6 +65,10 @@ const _customClass = computed(() => {
 function handleClick() {
   emits('action-click')
 }
+
+watch((visible), (newVal) => {
+  emits('is-visible', newVal)
+}, { immediate: true })
 </script>
 
 <template>

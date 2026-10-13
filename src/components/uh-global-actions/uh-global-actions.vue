@@ -7,13 +7,15 @@ defineOptions({
   },
 })
 const props = withDefaults(defineProps<IProps>(), {
-  whenCountShowCollapsedButton: 0,
+  visibleCount: 0,
+  whenCountShowCollapsedButton: 3,
   defaultCollapsed: true,
 })
 
 const instance = getCurrentInstance()
 
 interface IProps {
+  visibleCount?: number
   defaultCollapsed?: boolean
   whenCountShowCollapsedButton?: number
 }
@@ -60,29 +62,19 @@ onUnmounted(() => {
   }
 })
 
-// actions组件内，DOM查询函数
-function resolveRenderContent() {
+watch(() => props.visibleCount, (val) => {
   nextTick(() => {
-    const query = uni.createSelectorQuery().in(instance.proxy)
-    query.selectAll('.uhc-actions > *').boundingClientRect((res) => {
-      const childrenCount = (res as UniApp.NodeInfo[]).length
-      if (childrenCount >= props.whenCountShowCollapsedButton) {
-        isShowCollapsedButton.value = true
-      }
-      else {
-        isShowCollapsedButton.value = false
-        isCollapsed.value = false
-      }
-    }).exec()
+    if (val >= props.whenCountShowCollapsedButton) {
+      isShowCollapsedButton.value = true
+      isCollapsed.value = true
+    }
+    else {
+      isShowCollapsedButton.value = false
+      isCollapsed.value = false
+    }
   })
-}
-
-watchEffect(() => {
-  resolveRenderContent()
-})
-
-onMounted(() => {
-  resolveRenderContent()
+}, {
+  immediate: true,
 })
 </script>
 
@@ -98,10 +90,8 @@ onMounted(() => {
     <view
       v-if="isShowCollapsedButton"
       class="uh-global-card-glass h-10 w-10 flex origin-center items-center justify-center border rounded-full transition-all duration-300"
-      :class="[toggleActionClass]"
-      @click="toggleCollapsed"
+      :class="[toggleActionClass]" @click="toggleCollapsed"
     >
-      <!-- <wd-icon name="plus" size="42rpx" /> -->
       <wd-icon :name="isCollapsed ? 'menu-unfold' : 'plus'" size="42rpx" />
     </view>
   </view>
@@ -111,15 +101,19 @@ onMounted(() => {
 .uhc-rotate-45 {
   transform: rotate(45deg);
 }
+
 .uhc-rotate-0 {
   transform: rotate(0deg);
 }
+
 .uhc-expand-no-animation {
   transform: scale(1) !important;
 }
+
 .uhc-collapse-no-animation {
   transform: scale(0) !important;
 }
+
 .uhc-collapse {
   animation: collapse 0.3s ease-in-out;
   animation-fill-mode: forwards;
