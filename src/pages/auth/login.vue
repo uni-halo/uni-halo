@@ -202,7 +202,7 @@ const forgotSheet = ref(false)
 
 /** 重置密码成功:匿名场景直接提示用新密码登录 */
 function onForgotResetSuccess() {
-  uni.showToast({ icon: 'none', title: '密码重置成功，请使用新密码登录！' })
+  uni.showToast({ icon: 'none', title: '密码重置成功，请使用新密码登录！', mask: true })
 }
 
 /**

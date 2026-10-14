@@ -155,6 +155,7 @@ export const useTokenStore = defineStore(
         uni.showToast({
           title: '登录成功',
           icon: 'none',
+          mask: true,
         })
         return result
       }
@@ -189,6 +190,7 @@ export const useTokenStore = defineStore(
         uni.showToast({
           title: '登录成功',
           icon: 'none',
+          mask: true,
         })
         return result
       }
@@ -223,6 +225,7 @@ export const useTokenStore = defineStore(
         uni.showToast({
           title: '注册成功',
           icon: 'none',
+          mask: true,
         })
         return result
       }
@@ -257,6 +260,7 @@ export const useTokenStore = defineStore(
         uni.showToast({
           title: '注册成功',
           icon: 'none',
+          mask: true,
         })
         return result
       }
@@ -299,6 +303,7 @@ export const useTokenStore = defineStore(
         uni.showToast({
           title: '注册成功',
           icon: 'none',
+          mask: true,
         })
         return result
       }
