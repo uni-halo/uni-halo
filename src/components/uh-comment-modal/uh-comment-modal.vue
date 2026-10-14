@@ -5,6 +5,7 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { setCache } from '@/utils/storage'
 import { deepMerge } from '@/utils/merge'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import type { UniHaloError } from '@/http/tools/exception'
 import type { ICommentConfig } from '@/api/types/halo'
 
@@ -32,6 +33,8 @@ const isShow = ref(false)
 
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
+
+const { openLoginPopup } = useLoginPopup()
 
 /** 是否登录态:登录时评论者由服务端依据 token 解析,不采集访客信息 */
 const isLoggedIn = computed(() => tokenStore.hasLogin)
@@ -232,6 +235,11 @@ function buildCaptchaCode() {
   return isImageCaptcha.value ? form.value.captchaCode : undefined
 }
 
+function handleLogin() {
+  openLoginPopup()
+  handleManualClose()
+}
+
 async function handleHandle() {
   if (!validateForm()) { return }
 
@@ -360,31 +368,26 @@ watch(() => props.show, (newVal) => {
           <view class="form-item flex items-center">
             <textarea
               v-model="form.content"
-              class="uh-global-card-glass box-border h-22 w-full border rounded-xl px-3 py-2 text-xs shadow-none"
+              class="uh-global-card-glass box-border h-22 w-full border rounded-xl px-3 py-2 text-3xs leading-4.5 shadow-none"
               :placeholder="config.editor?.placeholder || '请输入内容,不超过200字符...'" :maxlength="200"
             />
           </view>
 
-          <!-- 登录态:评论者由服务端依据 token 解析 -->
-          <view v-if="isLoggedIn" class="form-item text-xs text-gray-400">
-            将以当前登录账号「{{ userStore.userInfo.nickname || userStore.userInfo.username }}」的身份发表
-          </view>
-
-          <template v-else>
+          <template v-if="!isLoggedIn">
             <view class="form-item flex items-center">
-              <text class="label w-16 shrink-0 text-xs text-gray-500">我的昵称</text>
+              <text class="label w-16 shrink-0 text-3xs text-gray-500">我的昵称</text>
               <input
                 v-model="form.author"
-                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-3xs shadow-none"
                 placeholder="请输入您的昵称..."
               >
             </view>
 
             <view class="form-item flex items-center">
-              <text class="label w-16 shrink-0 text-sm text-gray-500">我的邮箱</text>
+              <text class="label w-16 shrink-0 text-3xs text-gray-500">我的邮箱</text>
               <input
                 v-model="form.email"
-                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-3xs shadow-none"
                 placeholder="请输入您的邮箱..."
               >
             </view>
@@ -393,7 +396,7 @@ watch(() => props.show, (newVal) => {
               <text class="label w-16 shrink-0 text-sm text-gray-500">我的网站</text>
               <input
                 v-model="form.authorUrl"
-                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-3xs shadow-none"
                 placeholder="[ 可选 ] 请输入您的网址..."
               >
             </view>
@@ -405,36 +408,55 @@ watch(() => props.show, (newVal) => {
             <view class="flex flex-1 items-center gap-3">
               <input
                 v-model="form.captchaCode"
-                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-xs shadow-none" placeholder="请输入验证码"
+                class="uh-global-card-glass h-9 flex-1 border rounded-xl px-3 text-3xs shadow-none" placeholder="请输入验证码"
               >
               <view class="h-10 w-29 flex shrink-0 items-center justify-center">
                 <uh-button
                   v-if="captchaData.status === 'loading'" class="flex-1"
-                  custom-class="uh-global-card-glass w-full border py-2.5 text-xs text-gray-900 shadow-none !rounded-xl !bg-primary"
+                  custom-class="uh-global-card-glass w-full border !py-2.5 !text-3xs !text-gray-900 shadow-none !rounded-xl !bg-white"
                 >
                   获取中...
                 </uh-button>
                 <uh-button
                   v-else-if="captchaData.status === 'fail'" class="flex-1"
-                  custom-class="uh-global-card-glass w-full border py-2.5 text-xs text-red-400 shadow-none !rounded-xl !bg-primary"
+                  custom-class="uh-global-card-glass w-full border !py-2.5 !text-3xs !text-red-500 shadow-none !rounded-xl !bg-white"
                   @click="handleGetCaptchaImage()"
                 >
-                  请重试
+                  点击刷新
                 </uh-button>
-                <image
-                  v-else :src="captchaData.image" class="block h-full w-full rounded-xl" mode="aspectFit"
-                  @click="handleGetCaptchaImage()"
-                />
+                <view v-else class="uh-global-card-glass h-9 w-full shrink-0 overflow-hidden rounded-xl !border !shadow-none">
+                  <image
+                    :src="captchaData.image" class="block h-full w-full" mode="aspectFit"
+                    @click="handleGetCaptchaImage()"
+                  />
+                </view>
               </view>
             </view>
+          </view>
+
+          <!-- 登录态:评论者由服务端依据 token 解析 -->
+          <view v-if="isLoggedIn" class="form-item text-xs text-gray-400">
+            提示：将以当前登录账号「{{ userStore.userInfo.nickname || userStore.userInfo.username }}」的身份发表
+          </view>
+          <!-- 未登录 -->
+          <view v-else class="form-item text-xs text-gray-400">
+            提示：当前未登录，将以匿名身份发表，可点击左下角登录
           </view>
         </view>
       </scroll-view>
       <!-- 底部固定操作区域 -->
-      <view class="box-border w-full flex items-center">
+      <view class="box-border w-full flex items-center gap-x-3">
+        <uh-button
+          v-if="!isLoggedIn"
+          class="shrink-0"
+          custom-class="uh-global-card-glass uh-shadow-xs !border !py-2.5 !rounded-xl !text-3xs !bg-white !text-gray-900"
+          @click="handleLogin"
+        >
+          登录
+        </uh-button>
         <uh-button
           class="flex-1"
-          custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-primary"
+          custom-class="uh-global-card-glass uh-shadow-xs !border !py-2.5 !rounded-xl !text-3xs !bg-primary !text-gray-900"
           @click="handleHandle"
         >
           提交评论

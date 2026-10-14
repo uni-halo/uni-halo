@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { isPageTabbar } from './tabbar/store'
 import { currRoute } from './utils'
 import { useOpenPopup } from '@/hooks/useOpenPopup'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
+
 import CustomTabbar from '@/tabbar/index.vue'
 
 const isCurrentPageTabbar = ref(true)
@@ -10,6 +12,9 @@ const isCurrentPageTabbar = ref(true)
 const { popupVisible: settingsPopupVisible, openPopup: openSettingsPopup } = useOpenPopup()
 const { popupVisible: userPopupVisible, openPopup: openUserPopup } = useOpenPopup()
 const { popupVisible: chatPopupVisible, openPopup: openChatPopup } = useOpenPopup()
+
+// 登录弹窗全局挂载:任意页面通过 useLoginPopup().openLoginPopup() 唤起
+const { loginPopupVisible, handleLoginSuccess } = useLoginPopup()
 
 const actionsVisible = reactive({
   scrollTop: true,
@@ -63,6 +68,7 @@ onShow(() => {
 
     <!-- ui 全局组件 -->
     <wd-dialog />
+    <uh-login-popup v-model="loginPopupVisible" @on-success="handleLoginSuccess" />
 
     <KuRootView />
 

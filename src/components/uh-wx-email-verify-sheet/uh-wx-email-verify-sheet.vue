@@ -81,8 +81,10 @@ function buildCaptcha(): ICaptchaQuery | undefined {
     : undefined
 }
 
-/** 弹层每次打开时重置验证码(邮箱保留,便于重试时不必重填);
- * 倒计时刻意不清零:关闭重开不能绕过 60s 重发间隔 */
+/**
+ * 弹层每次打开时重置验证码(邮箱保留,便于重试时不必重填);
+ * 倒计时刻意不清零:关闭重开不能绕过 60s 重发间隔
+ */
 watch(() => props.modelValue, (visible) => {
   if (visible) {
     emailCode.value = ''
@@ -187,7 +189,7 @@ function close() {
 <template>
   <uh-glass-popup
     :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="100"
-    :close-on-click-modal="false" custom-class="!rounded-2xl"
+    :close-on-click-modal="false" :root-portal="true" custom-class="!rounded-2xl"
     @update:model-value="value => emit('update:modelValue', value)"
   >
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
@@ -219,7 +221,7 @@ function close() {
             no-border placeholder="图形验证码" clearable :disabled="submitting || codeSending"
           />
           <image
-            :src="captchaSrc" class="h-9 w-24 shrink-0 rounded-lg border border-gray-200"
+            :src="captchaSrc" class="h-9 w-24 shrink-0 border border-gray-200 rounded-lg"
             mode="widthFix" @click="handleRefreshCaptcha"
           />
         </view>

@@ -98,7 +98,7 @@ const alovaInstance = createAlova({
         return response
       }
 
-      // 保存评论验证码 cookie
+      // 保存评论验证码 cookie(h5无法使用，app 小程序正常)
       saveCommentCookies(method.url, header as Record<string, string> | undefined)
 
       // 2xx 均视为成功（如插件端异步端点返回 202 Accepted + 空响应体），

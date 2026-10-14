@@ -5,15 +5,15 @@
  * 提交节流；未登录引导登录；竞猜信息经 guess-board 接口加载（未揭晓时谜底仅猜中者可见）。
  */
 import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { getGuessBoard, submitGuess } from '@/api/draw'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
-import { sleep } from '@/utils/common'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
-import { storeToRefs } from 'pinia'
 
 const props = defineProps<{
   /** 竞猜画作（公开数据，不含谜底） */
@@ -29,6 +29,8 @@ const visible = defineModel<boolean>({ default: false })
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
+
+const { openLoginPopup } = useLoginPopup()
 
 const isCollapsedBoardUsers = ref(false)
 
@@ -120,9 +122,7 @@ function stopTimer() {
 async function handleGuess() {
   if (!props.draw || submitting.value || countdown.value > 0) { return }
   if (!tokenStore.updateNowTime().hasLogin) {
-    uni.showToast({ title: '请先登录', icon: 'none' })
-    await sleep(1500)
-    uni.navigateTo({ url: '/pages/auth/login' })
+    openLoginPopup()
     return
   }
   const answer = myAnswer.value.trim()
@@ -157,7 +157,8 @@ async function handleGuess() {
 }
 
 function handleToLogin() {
-  uni.navigateTo({ url: '/pages/auth/login' })
+  openLoginPopup()
+  visible.value = false
 }
 
 function handlePreviewCover() {

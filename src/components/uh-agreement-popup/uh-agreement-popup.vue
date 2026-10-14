@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { markdownConfig } from '@/config/markdown'
+import { sleep } from '@/utils/common'
 
 defineOptions({
   options: {
@@ -43,8 +44,15 @@ const TABS = [
   { id: 'userAgreement' as const, label: '用户协议' },
   { id: 'privacyPolicy' as const, label: '隐私政策' },
 ]
-const activeContent = computed(() => (props.contents[activeTab.value] || '').trim())
+const activeContent = ref((props.contents[activeTab.value] || '').trim())
 const emptyText = computed(() => `暂未配置${activeTab.value === 'privacyPolicy' ? '隐私政策' : '用户协议'}内容`)
+
+async function handleSwitchTab(tab: AgreementType) {
+  activeTab.value = tab
+  activeContent.value = ''
+  await sleep(300)
+  activeContent.value = (props.contents[tab] || '').trim()
+}
 
 function handleAgree() {
   emits('agree')
@@ -57,7 +65,12 @@ function handleClose() {
 </script>
 
 <template>
-  <uh-glass-popup v-model="popupVisible" position="bottom" :z-index="110" custom-class="!rounded-2xl">
+  <uh-glass-popup
+    v-model="popupVisible"
+    position="bottom" :z-index="110"
+    :root-portal="true"
+    custom-class="!rounded-2xl"
+  >
     <!-- 弹窗容器 -->
     <view class="box-border w-full flex flex-col gap-y-3 p-3">
       <!-- 顶部 -->
@@ -74,7 +87,7 @@ function handleClose() {
       <view class="uh-global-card-glass flex rounded-xl p-1 shadow-none">
         <view
           v-for="tab in TABS" :key="tab.id" class="box-border flex-1 rounded-lg py-2 text-center text-3xs"
-          :class="activeTab === tab.id ? 'bg-primary' : 'text-gray-500'" @click="activeTab = tab.id"
+          :class="activeTab === tab.id ? 'bg-primary' : 'text-gray-500'" @click="handleSwitchTab(tab.id)"
         >
           {{ tab.label }}
         </view>
