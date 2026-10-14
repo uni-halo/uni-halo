@@ -10,7 +10,7 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
-import { checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import type { IGuessRankItem } from '@/api/types/draw'
 
@@ -60,7 +60,7 @@ async function handleGetData() {
 }
 
 function avatarOf(item: IGuessRankItem) {
-  return checkThumbnailUrl(item.avatar || '')
+  return checkAvatarUrl(item.avatar || '')
 }
 
 function textOf(item: IGuessRankItem) {
@@ -73,8 +73,17 @@ function initialOf(item: IGuessRankItem) {
 
 const medals = ['1', '2', '3'] as const
 
-function rankLabel(rank: number) {
-  return rank <= 3 ? medals[rank - 1] : `${rank}`
+function rankColorClass(index: number) {
+  switch (index) {
+    case 1:
+      return 'bg-yellow-400 text-white'
+    case 2:
+      return 'bg-blue-300 text-white'
+    case 3:
+      return 'bg-orange-300 text-white'
+    default:
+      return 'bg-gray-300 text-white'
+  }
 }
 
 /** 去登录(弹窗登录,成功后原地刷新排名) */
@@ -109,9 +118,20 @@ function handleToLogin() {
         v-if="tokenStore.updateNowTime().hasLogin"
         class="uh-global-card-glass box-border flex items-center justify-between rounded-xl px-3 py-2 !border !shadow-none"
       >
-        <text class="text-xs text-gray-500">我的排名</text>
-        <text v-if="myRank" class="text-xs text-gray-900 font-semibold">
-          第 {{ myRank.rank }}名 · 共 {{ myRank.score }} 分
+        <view class="flex shrink-0 items-center gap-x-1">
+          <text class="text-xs text-gray-400">我</text>
+
+          <wd-avatar
+            :src="avatarOf(myRank)" :text="initialOf(myRank)" shape="round" size="50rpx"
+            custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+          />
+          <view class="flex flex-col">
+            <!-- <text class="text-xs text-gray-400">我的排名</text> -->
+            <text class="text-xs text-gray-900 font-semibold">{{ myRank.displayName }}</text>
+          </view>
+        </view>
+        <text v-if="myRank" class="text-xs text-gray-900">
+          第 <text class="text-base text-primary font-semibold">{{ myRank.rank }}</text> 名 · 共 <text class="text-base text-primary font-semibold">{{ myRank.score }} </text> 分
         </text>
         <text v-else class="text-xs text-gray-400">暂未上榜，快去猜一幅画吧</text>
       </view>
@@ -119,27 +139,28 @@ function handleToLogin() {
       <!-- 榜单（加载/空/错误态复用 uh-data-loading） -->
       <view class="w-full flex-1">
         <uh-data-loading
-          v-if="loadingStatus !== DataLoadingStatusEnum.Success"
-          :loading-status="loadingStatus" size="small" min-height="50vh"
-          empty-text="还没有人上榜，抢占第一名！" :use-refresh-button="false"
+          v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+          size="small" min-height="50vh" empty-text="还没有人上榜，抢占第一名！" :use-refresh-button="false"
           @refresh="handleGetData"
         />
         <scroll-view v-else :scroll-y="true" :show-scrollbar="false" class="h-[50vh] w-full flex-1">
-          <view class="w-full flex flex-col gap-y-1.5">
+          <view class="w-full flex flex-col gap-y-2.5">
             <view
-              v-for="(item, index) in rankList" :key="item.username"
-              class="uh-global-card-glass box-border flex items-center gap-x-2 rounded-xl py-1.5 pl-1 pr-3 !border !shadow-none"
-              :class="[index <= 2 ? 'bg-secondary' : 'bg-white/80']"
+              v-for="item in rankList" :key="item.username"
+              class="box-border flex items-center gap-x-2.5 px-1"
             >
-              <text class="w-8 shrink-0 text-center text-sm font-semibold" :class="item.rank <= 3 ? '' : 'text-gray-400'">
-                {{ rankLabel(item.rank) }}
+              <text
+                class="h-6 min-w-6 flex shrink-0 items-center justify-center rounded-full text-xs"
+                :class="[rankColorClass(item.rank)]"
+              >
+                {{ item.rank }}
               </text>
               <wd-avatar
-                :src="avatarOf(item)" :text="initialOf(item)" shape="round" size="52rpx"
+                :src="avatarOf(item)" :text="initialOf(item)" shape="round" size="60rpx"
                 custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
               />
-              <text class="flex-1 truncate text-3xs text-gray-900">{{ textOf(item) }}</text>
-              <text class="shrink-0 text-3xs text-gray-900">总分 {{ item.score }} 分</text>
+              <text class="flex-1 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
+              <text class="shrink-0 text-3xs text-gray-500"> <text class="text-sm text-gray-900 font-bold"> {{ item.score }} </text>  分</text>
             </view>
           </view>
         </scroll-view>
@@ -147,7 +168,10 @@ function handleToLogin() {
 
       <!-- 底部：未登录且开启登录时为「登录后查看我的排名」引导按钮；已登录无底部按钮（右上角可关闭） -->
       <view v-if="showLoginEntry" class="pt-1">
-        <uh-button custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900 active:opacity-80" @click="handleToLogin">
+        <uh-button
+          custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900 active:opacity-80"
+          @click="handleToLogin"
+        >
           登录后查看我的排名
         </uh-button>
       </view>
