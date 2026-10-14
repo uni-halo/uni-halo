@@ -14,6 +14,7 @@ import { useTokenStore } from '@/store/token'
 import { useAppConfigStore } from '@/store/appConfig'
 import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { sleep } from '@/utils/common'
 import { checkThumbnailUrl } from '@/utils/url'
 import type { IDraw } from '@/api/types/draw'
@@ -34,6 +35,7 @@ const { height: offsetTop } = useNavbarSticky()
 const pageTitle = usePageTitle('drawList', '绘画作品')
 
 const tokenStore = useTokenStore()
+const { openLoginPopup } = useLoginPopup()
 const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
 const { can } = usePermission()
 
@@ -50,8 +52,7 @@ const guessModeEnabled = computed(() =>
 async function handleGoDraw() {
   if (!tokenStore.updateNowTime().hasLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
-    await sleep(1500)
-    uni.navigateTo({ url: '/pages/auth/login' })
+    openLoginPopup(() => handleGoDraw())
     return
   }
   if (!can('DRAW_MANAGE')) {

@@ -67,7 +67,7 @@ function handleClose() {
 <template>
   <uh-glass-popup
     v-model="popupVisible"
-    position="bottom" :z-index="110"
+    position="bottom" :z-index="112"
     :root-portal="true"
     custom-class="!rounded-2xl"
   >

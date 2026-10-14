@@ -9,7 +9,7 @@ import { getGuessRank } from '@/api/draw'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
-import { toLoginPage } from '@/utils/toLoginPage'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { checkThumbnailUrl } from '@/utils/url'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import type { IGuessRankItem } from '@/api/types/draw'
@@ -19,6 +19,7 @@ const visible = defineModel<boolean>({ default: false })
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
 const appConfigStore = useAppConfigStore()
+const { openLoginPopup } = useLoginPopup()
 
 /** 应用登录整体开关（与登录页同语义：密码/微信两开关全关 = 登录不可用） */
 const loginEnabled = computed(() => {
@@ -76,16 +77,16 @@ function rankLabel(rank: number) {
   return rank <= 3 ? medals[rank - 1] : `${rank}`
 }
 
-/** 去登录（登录成功返回后重开弹窗可见排名） */
+/** 去登录(弹窗登录,成功后原地刷新排名) */
 function handleToLogin() {
+  openLoginPopup(() => handleGetData())
   visible.value = false
-  toLoginPage()
 }
 </script>
 
 <template>
   <uh-glass-popup
-    v-model="visible" position="bottom" custom-class="rounded-2xl" :z-index="120"
+    v-model="visible" position="bottom" custom-class="rounded-2xl" :z-index="110"
     @close="visible = false"
   >
     <view class="box-border flex flex-col gap-y-3 p-3">

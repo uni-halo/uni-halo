@@ -188,7 +188,7 @@ function close() {
 
 <template>
   <uh-glass-popup
-    :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="100"
+    :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="112"
     :close-on-click-modal="false" :root-portal="true" custom-class="!rounded-2xl"
     @update:model-value="value => emit('update:modelValue', value)"
   >

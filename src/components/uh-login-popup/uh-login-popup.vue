@@ -260,7 +260,8 @@ async function doWechatLogin() {
 
 <template>
   <uh-glass-popup
-    :model-value="modelValue" :hide-when-close="true" position="bottom" :z-index="110"
+    :model-value="modelValue" :hide-when-close="true" position="bottom"
+    :z-index="111"
     :close-on-click-modal="false" custom-class="!rounded-2xl"
     @update:model-value="value => emit('update:modelValue', value)"
   >
@@ -321,7 +322,7 @@ async function doWechatLogin() {
               />
             </view>
           </view>
-          <view class="box-border w-full pl-2 text-left text-xs text-gray-500">
+          <view v-if="captchaSrc" class="box-border w-full pl-2 text-left text-xs text-gray-500">
             点击图片可刷新验证码
           </view>
           <uh-button

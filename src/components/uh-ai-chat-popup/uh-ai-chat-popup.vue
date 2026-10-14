@@ -14,6 +14,7 @@ import { useAppConfigStore } from '@/store/appConfig'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { checkAvatarUrl } from '@/utils/url'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import type { SseHandle } from '@/api/ai-chat'
 
 defineOptions({
@@ -122,6 +123,7 @@ watch(streaming, (val) => {
 const dialogConfig = ref<IDialogConfig>({ ...DEFAULT_DIALOG_CONFIG })
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
+const { openLoginPopup } = useLoginPopup()
 
 /** AI 助手头像与名称 */
 const assistantAvatar = computed(() => checkAvatarUrl(dialogConfig.value.assistantAvatar || ''))
@@ -327,14 +329,10 @@ function handleQuickAsk(question: string) {
   handleSend()
 }
 
-/** 前往登录页 */
+/** 登录弹窗登录(聊天弹窗保持打开,登录后自动恢复可对话) */
 function goLogin() {
-  uni.navigateTo({
-    url: '/pages/auth/login',
-    success: () => {
-      popupVisible.value = false
-    },
-  })
+  openLoginPopup()
+  popupVisible.value = false
 }
 
 /** 停止生成 */
@@ -377,7 +375,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="!rounded-2xl" :z-index="120" :close-on-click-modal="false">
+  <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="!rounded-2xl" :z-index="110" :close-on-click-modal="false">
     <view class="uh-ai-chat box-border flex flex-col gap-y-3 p-3">
       <!-- 顶部栏 -->
       <view class="flex items-center justify-between pb-3">

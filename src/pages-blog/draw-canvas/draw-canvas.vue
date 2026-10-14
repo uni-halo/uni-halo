@@ -3,10 +3,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCanvasDraw } from '@/hooks/useCanvasDraw'
 import { useTokenStore } from '@/store/token'
 import { useAppConfigStore } from '@/store/appConfig'
-import { toLoginPage } from '@/utils/toLoginPage'
 import { getAttachmentPermalink, uploadAttachment } from '@/api/uni-admin'
 import { createMyDraw } from '@/api/draw'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import type { BrushStyle, DrawTool } from '@/hooks/useCanvasDraw'
 
@@ -141,6 +141,7 @@ function handleShowReleasePopup() {
 
 /* ---------------- 发布 ---------------- */
 const tokenStore = useTokenStore()
+const { openLoginPopup } = useLoginPopup()
 const title = ref('')
 const description = ref('')
 const publishing = ref(false)
@@ -206,8 +207,7 @@ async function handlePublish() {
     return
   }
   if (!tokenStore.updateNowTime().hasLogin) {
-    uni.showToast({ title: '请先登录', icon: 'none' })
-    toLoginPage()
+    openLoginPopup(() => handlePublish())
     return
   }
   const puzzleError = handlePublishValidatePuzzle()

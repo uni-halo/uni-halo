@@ -14,9 +14,9 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
 import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
+import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
-import { sleep } from '@/utils/common'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
 
@@ -33,6 +33,7 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('drawDetail', '画谜详情')
 
 const tokenStore = useTokenStore()
+const { openLoginPopup } = useLoginPopup()
 const { userInfo } = storeToRefs(useUserStore())
 
 const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
@@ -199,9 +200,7 @@ onUnmounted(() => stopTimer())
 async function handleGuess() {
   if (!draw.value || submitting.value || countdown.value > 0) { return }
   if (!tokenStore.updateNowTime().hasLogin) {
-    uni.showToast({ title: '请先登录', icon: 'none' })
-    await sleep(1500)
-    uni.navigateTo({ url: '/pages/auth/login' })
+    openLoginPopup(() => handleGuess())
     return
   }
   const answer = myAnswer.value.trim()
@@ -235,7 +234,7 @@ async function handleGuess() {
 }
 
 function handleToLogin() {
-  uni.navigateTo({ url: '/pages/auth/login' })
+  openLoginPopup()
 }
 
 function handlePreviewCover() {
