@@ -119,7 +119,7 @@ function handleToLogin() {
         class="uh-global-card-glass box-border flex items-center justify-between rounded-xl px-3 py-2 !border !shadow-none"
       >
         <view class="flex shrink-0 items-center gap-x-1">
-          <text class="text-xs text-gray-400">我</text>
+          <text class="text-xs text-gray-400">我的排名</text>
 
           <wd-avatar
             :src="avatarOf(myRank)" :text="initialOf(myRank)" shape="round" size="50rpx"
@@ -127,10 +127,10 @@ function handleToLogin() {
           />
           <view class="flex flex-col">
             <!-- <text class="text-xs text-gray-400">我的排名</text> -->
-            <text class="text-xs text-gray-900 font-semibold">{{ myRank.displayName }}</text>
+            <text class="text-3xs text-gray-600">{{ myRank.displayName }}</text>
           </view>
         </view>
-        <text v-if="myRank" class="text-xs text-gray-900">
+        <text v-if="myRank" class="text-xs text-gray-600">
           第 <text class="text-base text-primary font-semibold">{{ myRank.rank }}</text> 名 · 共 <text class="text-base text-primary font-semibold">{{ myRank.score }} </text> 分
         </text>
         <text v-else class="text-xs text-gray-400">暂未上榜，快去猜一幅画吧</text>
