@@ -395,9 +395,9 @@ onShareTimeline(() => ({
       </view>
 
       <!-- 提交按钮 -->
-      <view class="fixed bottom-0 left-0 z-99 box-border w-screen px-3 pb-safe">
+      <view class="fixed bottom-0 left-0 z-99 box-border w-screen px-7 pb-safe">
         <view
-          class="uh-global-card-glass mb-2 w-full flex items-center justify-center gap-x-2 border rounded-full"
+          class="uh-global-card-glass w-full flex items-center justify-center gap-x-2 border rounded-full"
         >
           <uh-button v-if="handleHasVoted()" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm">
             您已参与投票

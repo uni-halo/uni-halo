@@ -298,14 +298,14 @@ onPageScroll(({ scrollTop }) => {
           <!-- 作者信息 -->
           <view class="flex items-center justify-between text-xs text-gray-600">
             <view class="w-full flex items-center gap-x-1">
-              <text class="text-xs text-gray-500">作者：</text>
+              <text class="text-3xs text-gray-500">作者：</text>
               <wd-avatar
                 :src="ownerAvatar" :text="ownerInitial" shape="round" size="42rpx"
                 custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
               />
-              <text class="text-xs">{{ ownerText }}</text>
+              <text class="text-3xs">{{ ownerText }}</text>
             </view>
-            <text class="shrink-0 text-xs text-gray-500">
+            <text class="shrink-0 text-3xs text-gray-500">
               {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
             </text>
           </view>
@@ -318,13 +318,13 @@ onPageScroll(({ scrollTop }) => {
           </uh-section-title>
           <view
             v-if="loginEnabled"
-            class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none"
+            class="uh-global-card-glass box-border flex flex-col gap-y-2.5 rounded-xl p-3 !border !shadow-none"
           >
             <!-- 提示语与统计 -->
-            <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-900">
+            <view v-if="draw.spec?.puzzleHint" class="text-3xs text-gray-900">
               谜底提示：{{ draw.spec.puzzleHint }}
             </view>
-            <view class="flex items-center text-xs text-gray-600">
+            <view class="flex items-center text-3xs text-gray-600">
               <text>统计数据： {{ board?.guessCount ?? 0 }} 人参与</text>
               <text>丨</text>
               <text> {{ board?.solvedCount ?? 0 }} 人猜中</text>
@@ -332,34 +332,34 @@ onPageScroll(({ scrollTop }) => {
 
             <!-- 态 1：已揭晓 -->
             <template v-if="revealed">
-              <view class="flex flex-col gap-y-1">
+              <view class="flex flex-col gap-y-2.5">
                 <text class="text-sm text-primary font-bold">画谜谜底：{{ board?.answer }}</text>
-                <text class="text-xs text-gray-500">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
+                <text class="text-3xs text-gray-500">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
               </view>
             </template>
 
             <!-- 态 2：本人已猜中 -->
             <template v-else-if="solvedByMe">
-              <view class="flex flex-col gap-y-1.5">
-                <text class="text-xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+              <view class="flex flex-col gap-y-2.5">
+                <text class="text-3xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
                 <template v-if="!revealed">
-                  <text v-if="board?.answer" class="text-xs text-gray-900 font-semibold">画谜谜底：{{ board.answer }}</text>
-                  <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+                  <text v-if="board?.answer" class="text-3xs text-gray-900 font-semibold">画谜谜底：{{ board.answer }}</text>
+                  <text class="text-3xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
                 </template>
               </view>
             </template>
 
             <!-- 态 3：出题人本人 -->
             <template v-else-if="isMine">
-              <view class="flex flex-col gap-y-1">
-                <text class="text-xs text-gray-900">这是你的画谜作品，你自己无法参与！</text>
-                <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
+              <view class="flex flex-col gap-y-2.5">
+                <text class="text-3xs text-gray-900">这是你的画谜作品，你自己无法参与！</text>
+                <text class="text-3xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
               </view>
             </template>
 
             <!-- 态 4：竞猜中 -->
             <template v-else>
-              <view class="flex flex flex-col items-center gap-2">
+              <view class="flex flex flex-col items-center gap-y-2.5">
                 <template v-if="isLogin">
                   <view
                     class="uh-global-card-glass w-full flex flex-1 items-center border border-gray-100 rounded-lg border-solid px-3 py-2 !shadow-none"
@@ -401,14 +401,14 @@ onPageScroll(({ scrollTop }) => {
                   <view class="flex shrink-0 items-center gap-x-1.5">
                     <wd-avatar
                       :src="item.avatar" :text="(item.displayName || item.username).charAt(0)" shape="round"
-                      size="46rpx" custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+                      size="52rpx" custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
                     />
-                    <text class="text-xs" :class="[item._isMe ? 'text-primary' : 'text-gray-600']">
+                    <text class="text-3xs" :class="[item._isMe ? 'text-primary' : 'text-gray-600']">
                       {{ item.displayName || item.username }}
                     </text>
-                    <text v-if="item._isMe" class="text-xs text-primary">(我)</text>
+                    <text v-if="item._isMe" class="text-3xs text-primary">(我)</text>
                   </view>
-                  <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">
+                  <text v-if="item.solvedAt" class="shrink-0 text-3xs text-gray-500">
                     {{ formatTime({
                       d: item.solvedAt,
                       f:
