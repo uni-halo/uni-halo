@@ -102,7 +102,7 @@ import { createNotificationProgress, cancelNotificationProgress, finishNotificat
 import { compare, platform_iOS, platform_Android, platform_Harmony, createUpgradeDownloadTask } from '../utils'
 const localFilePathKey = 'UNI_ADMIN_UPGRADE_CENTER_LOCAL_FILE_PATH';
 /** 应用 logo 兜底图（uni-halo-static 仓库 logo/logo-200.png 的 CDN 地址） */
-const FALLBACK_LOGO = 'https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static@main/logo/logo-200.png';
+const FALLBACK_LOGO = 'https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/logo/logo-200.png';
 /** Halo 插件公开的 getConfigs 接口路径（由 base_url 拼接） */
 const GET_CONFIGS_API = '/apis/api.unihalo.ialley.cn/v1alpha1/getConfigs';
 
