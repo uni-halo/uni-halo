@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { getLoveAlbumByName, getLoveAlbums, unlockAlbum } from '@/api/uni-halo'
@@ -24,8 +23,6 @@ definePage({
 })
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
-const { configs } = storeToRefs(useAppConfigStore())
-const loveConfig = computed(() => configs.value.featureConfig?.love)
 
 /** 已解锁相册本地缓存 key */
 const UNLOCKED_ALBUMS_CACHE_KEY = 'unlocked_albums'
@@ -262,16 +259,6 @@ function handleAlbumUnlockSuccess(data: { token?: string, photos?: unknown[] }) 
   }
 }
 
-function handleToTopPage(duration = 500) {
-  uni.pageScrollTo({
-    scrollTop: 0,
-    duration,
-    fail: (err) => {
-      console.error('回顶失败', err)
-    },
-  })
-}
-
 /* ---------------- 生命周期 ---------------- */
 onPageScroll((option: Page.PageScrollOption) => {
   updatePageScrollValue(option.scrollTop)
@@ -324,43 +311,46 @@ onReachBottom(() => {
       v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
       min-height="75vh" theme="love" empty-text="相册暂时还没有数据~" @refresh="handleGetData"
     />
-
-    <view v-else class="grid grid-cols-2 box-border gap-3 p-3 pt-2">
-      <view
-        v-for="(item) in dataList" :key="item.name"
-        class="uh-global-card-glass box-border overflow-hidden rounded-xl" @click="handleOnAlbumClick(item)"
-      >
-        <view class="relative h-36 w-full">
-          <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
-          <wd-img v-if="item.image" class="h-full w-full" :src="item.image" mode="aspectFill" lazy-load>
-            <template #loading>
-              <wd-loading size="64rpx" custom-class="!text-love" />
-            </template>
-          </wd-img>
-          <!-- 无图 -->
-          <view v-else
-            class="h-full w-full flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400">
-            <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
-          </view>
-          <view
-            v-if="item.locked && !unlockedAlbums[item.name]"
-            class="absolute right-0 top-0 flex items-center justify-center gap-1 rounded-lb-md bg-black/30 px-2 py-1"
-          >
-            <wd-icon name="lock" size="30rpx" class="text-white" />
-            <view class="text-xs text-white">
-              已加密
+    <view v-else class="box-border w-full flex flex-col gap-y-2 p-3 pt-2">
+      <view class="grid grid-cols-2 gap-3">
+        <view
+          v-for="(item) in dataList" :key="item.name"
+          class="uh-global-card-glass box-border overflow-hidden rounded-xl" @click="handleOnAlbumClick(item)"
+        >
+          <view class="relative h-36 w-full">
+            <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
+            <wd-img v-if="item.image" class="h-full w-full" :src="item.image" mode="aspectFill" lazy-load>
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="!text-love" />
+              </template>
+            </wd-img>
+            <!-- 无图 -->
+            <view
+              v-else
+              class="h-full w-full flex items-center justify-center from-[#fdeef1] to-[#fff8f9] bg-gradient-to-b text-gray-400"
+            >
+              <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
+            </view>
+            <view
+              v-if="item.locked && !unlockedAlbums[item.name]"
+              class="absolute right-0 top-0 flex items-center justify-center gap-1 rounded-lb-md bg-black/30 px-2 py-1"
+            >
+              <wd-icon name="lock" size="30rpx" class="text-white" />
+              <view class="text-xs text-white">
+                已加密
+              </view>
             </view>
           </view>
-        </view>
 
-        <view
-          class="absolute bottom-0 left-0 right-0 box-border from-white/0 to-white/60 bg-gradient-to-b p-3 pt-6"
-        >
-          <view class="truncate text-sm text-love font-bold">
-            {{ item.displayName }}
-          </view>
-          <view class="album-count mt-1 text-xs text-white">
-            {{ item.photoCount }} 张照片
+          <view
+            class="absolute bottom-0 left-0 right-0 box-border from-white/0 to-white/60 bg-gradient-to-b p-3 pt-6"
+          >
+            <view class="truncate text-sm text-love font-bold">
+              {{ item.displayName }}
+            </view>
+            <view class="album-count mt-1 text-xs text-white">
+              {{ item.photoCount }} 张照片
+            </view>
           </view>
         </view>
       </view>
@@ -368,7 +358,6 @@ onReachBottom(() => {
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
     </view>
-
     <!-- 相册密码解锁弹窗(通用解锁弹窗;解锁成功自动打开相册查看) -->
     <uh-unlock-popup
       v-if="currentUnlockAlbum" v-model:show="showUnlockModal" title="解锁相册" captcha-enabled
@@ -393,7 +382,7 @@ onReachBottom(() => {
 </template>
 
 <style scoped lang="scss">
-	.app-page {
+.app-page {
   background: linear-gradient(
     -135deg,
     rgb(247 149 51 / 10%),
