@@ -113,11 +113,11 @@ watch(isShowHitokoto, (value, oldValue) => {
     </view>
 
     <!-- 底部:作者 + 操作 -->
-    <view class="relative mt-3 flex items-center justify-between">
-      <text class="text-xs text-gray-400">
+    <view class="relative mt-3 flex items-center justify-between gap-x-3 overflow-hidden">
+      <text class="flex-1 truncate text-xs text-gray-400">
         {{ authorText }}
       </text>
-      <view class="flex items-center gap-3">
+      <view class="flex shrink-0 items-center gap-3">
         <text class="mr-1 text-xs text-gray-400">
           点赞 {{ likeCount }}
         </text>

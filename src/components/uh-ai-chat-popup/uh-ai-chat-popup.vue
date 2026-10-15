@@ -531,7 +531,7 @@ onUnmounted(() => {
                   </view>
                 </view>
               </template>
-              <text v-else class="whitespace-pre-wrap">{{ bubble.text }}</text>
+              <text v-else class="whitespace-pre-wrap leading-5">{{ bubble.text }}</text>
             </view>
           </view>
           <!-- 流式加载中：末尾跟随 loading 与趣味文案 -->

@@ -678,22 +678,29 @@ onReachBottom(() => {
                   >
                     <wd-icon class-prefix="uhemoji-icon" name="-injury" size="48rpx" />
                   </view>
-                  <view class="box-border flex flex-1 flex-col pl-4">
+                  <view class="box-border flex flex-1 flex-col gap-y-1 overflow-hidden pl-4">
                     <view
-                      class="overflow-hidden truncate whitespace-nowrap text-sm text-gray-900 font-bold"
+                      class="truncate whitespace-nowrap text-sm text-gray-900 font-bold"
                     >
                       {{ link.spec?.displayName }}
                     </view>
                     <view
-                      class="mini-desc mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500"
+                      class="truncate whitespace-nowrap text-xs text-gray-500"
                     >
                       {{ link.spec?.description || '暂无简介~' }}
                     </view>
                     <view
                       v-if="link.spec?.authorName"
-                      class="mini-author mt-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400"
+                      class="flex items-center gap-x-1.5 overflow-hidden"
                     >
-                      {{ link.spec.authorName }}
+                      <wd-avatar
+                        :src="checkAvatarUrl(link.spec.avatar)"
+                        :text="getAvatarFallbackText(link.spec.authorName)"
+                        custom-class="!h-4 !w-4 !shrink-0 !text-gray-900 !font-bold"
+                        class="!rounded-full"
+                        mode="aspectFill"
+                      />
+                      <text class="flex-1 truncate whitespace-nowrap text-xs text-gray-400">{{ link.spec.authorName }}</text>
                     </view>
                   </view>
                   <wd-icon name="arrow-right" size="36rpx" class="text-primary" />
@@ -795,21 +802,29 @@ onReachBottom(() => {
                   </view>
                 </view>
 
-                <!-- 预览图轮播 -->
-                <view v-if="miniDetail.data.spec?.screenshots?.length" class="mini-screenshots">
-                  <swiper class="screenshots-swiper h-[360rpx] w-full" indicator-dots circular>
-                    <swiper-item v-for="(img, idx) in miniDetail.data.spec.screenshots" :key="idx">
+                <view v-if="miniDetail.data.spec?.screenshots?.length !== 0" class="box-border w-full flex flex-col gap-y-2 pb-1">
+                  <text class="text-xs text-gray-500">
+                    预览图
+                    <text v-if="miniDetail.data.spec?.screenshots?.length <= 10" class="text-xs text-gray-500">（共{{ miniDetail.data.spec?.screenshots?.length }}张预览图）</text>
+                    <text v-if="miniDetail.data.spec?.screenshots?.length > 10" class="text-xs text-gray-500">（上下滑动查看更多预览图）</text>
+                  </text>
+                  <scroll-view
+                    :scroll-y="true" :show-scrollbar="false" class="max-h-36 w-full"
+                  >
+                    <view class="grid grid-cols-5 w-full gap-2">
                       <wd-img
-                        class="screenshot-img h-full w-full" :radius="12"
-                        :src="checkImageUrl(img)" mode="aspectFill"
-                        @click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: img } } as IMiniProgramLink)"
+                        v-for="screenshot in miniDetail.data.spec.screenshots"
+                        :key="screenshot"
+                        class="h-16 w-full shrink-0" :radius="8" :src="checkImageUrl(screenshot)"
+                        mode="aspectFill" lazy-load
+                        @click="handlePreviewMiniProgramCode({ spec: { miniProgramCode: screenshot } } as IMiniProgramLink)"
                       >
                         <template #loading>
                           <wd-loading size="64rpx" custom-class="text-primary" />
                         </template>
                       </wd-img>
-                    </swiper-item>
-                  </swiper>
+                    </view>
+                  </scroll-view>
                 </view>
 
                 <!-- 作者信息 -->

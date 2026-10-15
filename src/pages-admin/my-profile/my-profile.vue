@@ -739,13 +739,13 @@ function handleCopyWebsiteUrl() {
           <template v-if="!bindingLoading">
             <uh-button
               v-if="isBound"
-              custom-class="uh-global-card-glass border !rounded-full border-red-400/30 !bg-red-400/10 px-4 py-1.5 text-xs text-red-400 shadow-none"
+              custom-class="uh-global-card-glass !border !rounded-full !border-red-400/30 !bg-red-400/10 !px-4 !py-1.5 !text-xs !text-red-400 !shadow-none"
               @action-click="handleUnbindWechat"
             >
               解除绑定
             </uh-button>
             <uh-button
-              v-else-if="isWechat" custom-class="!rounded-full !bg-green-500 px-4 py-1.5 !text-xs text-white"
+              v-else-if="isWechat" custom-class="!rounded-full !bg-green-500 !px-4 !py-1.5 !text-xs !text-white"
               :class="bindSubmitting ? 'opacity-60' : ''" @action-click="handleBindWechat"
             >
               {{ bindSubmitting ? '绑定中' : '一键绑定' }}
