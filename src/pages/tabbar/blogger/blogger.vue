@@ -156,20 +156,6 @@ const appVersionItem: INavItem = {
   group: 'more',
 }
 
-/** 常见问题固定项(临时本地入口,待插件端 FAQ 模块上线后改为配置下发) */
-const faqEntryItem: INavItem = {
-  key: 'faq',
-  title: '常见问题',
-  icons: [{ key: 'ri', prefix: 'ri', iconName: 'question-line' }],
-  color: '#26a69a',
-  iconColor: '#26a69a',
-  bgColor: '#26a69a24',
-  subTitle: '',
-  path: '/pages-blog/faq/faq',
-  show: true,
-  group: 'more',
-}
-
 /** 解析条目当前生效的图标风格（iconMode 优先，缺省取 icons[0]） */
 function resolveNavItemIcon(item: INavItem): INavIconStyle | null {
   if (!item.icons?.length) {
@@ -208,7 +194,7 @@ const commonFeatures = computed(() => {
   return navList.value.filter(f => f.show && f.group === 'blog')
 })
 const otherFeatures = computed(() => {
-  return [...navList.value.filter(f => f.show && f.group === 'more'), faqEntryItem, appVersionItem]
+  return [...navList.value.filter(f => f.show && f.group === 'more'), appVersionItem]
 })
 
 /* ---------------- 功能导航 ---------------- */
@@ -419,7 +405,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             :class="index < otherFeatures.length - 1 ? 'border-b border-b-solid border-black/5' : ''"
             @click="handleNavGoTo(nav)"
           >
-            <view class="nav-left flex items-center gap-3 py-3">
+            <view class="nav-left flex items-center gap-3 py-2.5">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl text-gray-600"
                 :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"
@@ -454,7 +440,7 @@ onPageScroll((option: Page.PageScrollOption) => {
             :class="index < group.items.length - 1 ? 'border-b border-b-solid border-black/5' : ''"
             @click="nav.key === 'app-version' ? handleAppVersion() : handleNavGoTo(nav)"
           >
-            <view class="nav-left flex items-center gap-3 py-3">
+            <view class="nav-left flex items-center gap-3 py-2.5">
               <view
                 class="uh-global-card-glass uh-shadow-xs h-8 w-8 flex items-center justify-center border rounded-xl"
                 :style="{ backgroundColor: nav.bgColor, color: nav.iconColor || nav.color }"

@@ -21,6 +21,7 @@ export type PageTitleKey
     | 'noticeDetail'
     | 'votes'
     | 'voteDetail'
+    | 'faq'
     | 'contact'
     | 'portfolio'
     | 'portfolioDetail'

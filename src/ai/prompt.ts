@@ -50,6 +50,7 @@ export const APP_AGENT_PROMPT = [
   '- 免责声明（声明、免责声明页）：/pages-blog/disclaimer/disclaimer',
   '- 用户协议（协议、用户协议页）：/pages-blog/user-agreement/user-agreement',
   '- 隐私政策（隐私、隐私政策页）：/pages-blog/privacy-policy/privacy-policy',
+  '- 常见问题（FAQ、问题、问题管理、帮助、帮助中心）：/pages-blog/faq/faq',
   '',
   '### 带参数页面（type 固定为 navigateTo，url 必须携带参数）',
   '- 笔记详情（文章详情）：/pages-blog/article-detail/article-detail?name=<笔记的 metadata.name>',

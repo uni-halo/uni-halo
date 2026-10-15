@@ -488,9 +488,8 @@ export interface IFaqLink {
   url?: string
 }
 
-/** FAQ 公开列表项(完整 spec,含摘要/分类/链接) */
-export interface IFaqItem {
-  name?: string
+/** FAQ spec(完整内容,含摘要/分类/链接) */
+export interface IFaqSpec {
   title?: string
   /** 摘要描述(折叠展开时显示) */
   description?: string
@@ -502,6 +501,15 @@ export interface IFaqItem {
   visible?: boolean
   /** 排序权重(越小越靠前) */
   priority?: number
+}
+
+/** FAQ 公开列表项(Halo Extension 原始结构) */
+export interface IFaqItem {
+  apiVersion?: string
+  kind?: string
+  metadata?: { name?: string, [key: string]: unknown }
+  spec?: IFaqSpec
+  [key: string]: unknown
 }
 
 /** FAQ 公开列表响应(ListResult 形态;size=0 时返回全量) */
