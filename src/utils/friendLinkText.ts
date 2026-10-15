@@ -85,7 +85,7 @@ export function buildMiniLinkText(link: {
 }): string {
   const rows: string[] = [MINI_HEADER]
   if (link.displayName)
-    rows.push(`--小程序名称：${link.displayName}`)
+    rows.push(`--应用名称：${link.displayName}`)
   if (link.miniProgramCode)
     rows.push(`--太阳码：${checkImageUrl(link.miniProgramCode)}`)
   if (link.appId)
@@ -93,7 +93,7 @@ export function buildMiniLinkText(link: {
   if (link.path)
     rows.push(`--路径：${link.path}`)
   if (link.link)
-    rows.push(`--跳转地址：${link.link}`)
+    rows.push(`--应用地址：${link.link}`)
   if (link.authorName)
     rows.push(`--作者昵称：${link.authorName}`)
   if (link.avatar)
@@ -103,7 +103,7 @@ export function buildMiniLinkText(link: {
   if (link.email)
     rows.push(`--作者邮箱：${link.email}`)
   if (link.description)
-    rows.push(`--小程序描述：${link.description}`)
+    rows.push(`--应用简介：${link.description}`)
   if (link.applyRemark)
     rows.push(`--申请说明：${link.applyRemark}`)
   return rows.join('\n')
@@ -154,22 +154,22 @@ export function parseSiteLinkText(text: string): ISiteLinkText | null {
   }
 }
 
-/** 解析小程序友链申请文本（非约定格式返回 null） */
+/** 解析小程序友链申请文本（非约定格式返回 null；兼容旧版字段名 小程序名称/跳转地址/小程序描述） */
 export function parseMiniLinkText(text: string): IMiniLinkText | null {
   if (detectLinkTextKind(text) !== 'mini')
     return null
   const map = parseRows(text)
   return {
-    displayName: map['小程序名称'] || '',
+    displayName: map['应用名称'] || map['小程序名称'] || '',
     miniProgramCode: map['太阳码'] || '',
     appId: map.AppID || '',
     path: map['路径'] || '',
-    link: map['跳转地址'] || '',
+    link: map['应用地址'] || map['跳转地址'] || '',
     authorName: map['作者昵称'] || '',
     avatar: map['作者头像'] || '',
     website: map['作者网站'] || '',
     email: map['作者邮箱'] || '',
-    description: map['小程序描述'] || '',
+    description: map['应用简介'] || map['小程序描述'] || '',
     applyRemark: map['申请说明'] || '',
   }
 }

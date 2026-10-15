@@ -67,6 +67,27 @@ onShareTimeline(() => ({
 
 const isNotEmpty = computed(() => socialList.value.some(item => item.visible && item.content.trim()))
 
+/* ---------------- 平台图标映射（方案 A：按名称匹配，未命中平台回退首字色块） ---------------- */
+/**
+ * 常见平台 → remixicon 图标名（class-prefix="ri"）。
+ * 抖音无官方图标，取 ri-tiktok 近似；小红书等未收录平台回退首字色块。
+ */
+const SOCIAL_ICON_MAP: Array<{ keywords: string[], icon: string }> = [
+  { keywords: ['公众号', '微信'], icon: 'wechat-fill' },
+  { keywords: ['抖音'], icon: 'tiktok-fill' },
+  { keywords: ['B站', 'bilibili', '哔哩哔哩'], icon: 'bilibili-fill' },
+  { keywords: ['微博'], icon: 'weibo-fill' },
+  { keywords: ['QQ'], icon: 'qq-fill' },
+  { keywords: ['github', 'GitHub'], icon: 'github-fill' },
+]
+
+/** 按社交项名称匹配平台图标，未命中返回空串（模板回退首字色块） */
+function resolveSocialIcon(name?: string): string {
+  if (!name) { return '' }
+  const hit = SOCIAL_ICON_MAP.find(item => item.keywords.some(kw => name.toLowerCase().includes(kw.toLowerCase())))
+  return hit?.icon || ''
+}
+
 /** 信件正文打字机效果 */
 const { displayText: introDisplayText } = useTypewriter(() => bloggerInfo.value.intro, { speed: 30 })
 
@@ -188,7 +209,12 @@ onPageScroll((option: Page.PageScrollOption) => {
               class="uh-global-card-glass uh-shadow-xs h-11 w-11 flex shrink-0 items-center justify-center border rounded-xl"
               :style="{ backgroundColor: item.bgColor, color: item.color }"
             >
-              <text class="text-sm font-bold" :style="{ color: item.color }">
+              <wd-icon
+                v-if="resolveSocialIcon(item.name)" class-prefix="ri"
+                :name="resolveSocialIcon(item.name)" size="44rpx"
+                :custom-style="item.color ? `color:${item.color}` : ''"
+              />
+              <text v-else class="text-sm font-bold" :style="{ color: item.color }">
                 {{ item.name ? item.name.charAt(0) : '' }}
               </text>
             </view>

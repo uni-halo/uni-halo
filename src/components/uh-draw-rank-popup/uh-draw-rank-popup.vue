@@ -10,7 +10,7 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
-import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl } from '@/utils/url'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import type { IGuessRankItem } from '@/api/types/draw'
 
@@ -60,7 +60,7 @@ async function handleGetData() {
 }
 
 function avatarOf(item: IGuessRankItem) {
-  return checkAvatarUrl(item.avatar || '')
+  return checkAvatarUrl(item?.avatar || '')
 }
 
 function textOf(item: IGuessRankItem) {
@@ -71,16 +71,14 @@ function initialOf(item: IGuessRankItem) {
   return textOf(item).slice(0, 1).toUpperCase()
 }
 
-const medals = ['1', '2', '3'] as const
-
 function rankColorClass(index: number) {
   switch (index) {
     case 1:
       return 'bg-yellow-400 text-white'
     case 2:
-      return 'bg-blue-300 text-white'
+      return 'bg-blue-400 text-white'
     case 3:
-      return 'bg-orange-300 text-white'
+      return 'bg-orange-400 text-white'
     default:
       return 'bg-gray-300 text-white'
   }
@@ -115,7 +113,7 @@ function handleToLogin() {
 
       <!-- 我的排名（仅登录用户；未登录不展示该卡片） -->
       <view
-        v-if="tokenStore.updateNowTime().hasLogin"
+        v-if="myRank && tokenStore.updateNowTime().hasLogin"
         class="uh-global-card-glass box-border flex items-center justify-between rounded-xl px-3 py-2 !border !shadow-none"
       >
         <view class="flex shrink-0 items-center gap-x-1">

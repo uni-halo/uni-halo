@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { useCanvasDraw } from '@/hooks/useCanvasDraw'
 import { useTokenStore } from '@/store/token'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -8,6 +8,7 @@ import { createMyDraw } from '@/api/draw'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import type { BrushStyle, DrawTool } from '@/hooks/useCanvasDraw'
 
 import KexColorPicker from '@/uni_modules/kex-color-picker/components/kex-color-picker/kex-color-picker.vue'
@@ -22,6 +23,8 @@ definePage({
 const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认） */
 const pageTitle = usePageTitle('drawCanvas', '画一幅')
+/** 吸顶偏移（自定义导航栏高度） */
+const { height: offsetTop } = useNavbarSticky()
 
 /* ---------------- 画布 ---------------- */
 const {
@@ -43,6 +46,13 @@ const {
   clear,
   setBg,
   exportImage,
+  // 贴图(插入图片二创)
+  activeImage,
+  imagePlacement,
+  insertImage,
+  setImagePlacement,
+  commitActiveImage,
+  cancelActiveImage,
 } = useCanvasDraw({
   canvasId: 'draw-canvas',
 })
@@ -116,10 +126,210 @@ const tools: { key: DrawTool, label: string, icon: string }[] = [
   { key: 'line', label: '直线', icon: 'arrow-right' },
   { key: 'rect', label: '矩形', icon: 'stop' },
   { key: 'circle', label: '圆形', icon: 'circle' },
+  { key: 'image', label: '贴图', icon: 'picture' },
 ]
 
 function selectTool(tool: DrawTool) {
+  // 贴图不是绘制工具:点击直接进入选图流程,不切换当前工具
+  if (tool === 'image') {
+    handleInsertImage()
+    return
+  }
   currentTool.value = tool
+}
+
+/* ---------------- 贴图(插入图片二创) ---------------- */
+/** 贴图是否为置底层级 */
+const isBottomPlacement = computed(() => imagePlacement.value === 'bottom')
+
+/**
+ * 选择图片来源并插入画布;默认置顶,层级由画布上浮动工具条调整。
+ * 注意:直接调用 chooseImage(不经 showActionSheet 转发),否则 H5 端回调脱离用户激活,
+ * 浏览器会拦截文件选择器("只能在用户激活时显示");微信端 chooseImage 自带拍摄/相册选择 UI。
+ */
+function handleInsertImage() {
+  if (activeImage.value) {
+    uni.showToast({ title: '先完成或删除当前贴图', icon: 'none' })
+    return
+  }
+  uni.chooseImage({
+    count: 1,
+    sourceType: ['album', 'camera'],
+    success: (res) => {
+      const src = res.tempFilePaths?.[0]
+      if (src)
+        insertImage(src, 'top')
+    },
+  })
+}
+
+/** 浮动工具条:切换选中贴图层级 */
+function toggleImagePlacement() {
+  setImagePlacement(imagePlacement.value === 'bottom' ? 'top' : 'bottom')
+}
+
+/** 浮动工具条:删除选中贴图(不落版不计入历史) */
+function removeActiveImage() {
+  cancelActiveImage()
+}
+
+/** 浮动工具条:落版确认 */
+async function confirmActiveImage() {
+  await commitActiveImage()
+}
+
+/* ---------------- 顶部模式分段器:手绘 / 上传 ---------------- */
+/** 创作模式:draw=手绘画布(现有能力) upload=上传图片(直接作为作品) */
+const canvasMode = ref<'draw' | 'upload'>('draw')
+/** 上传模式选中的图片(临时路径) */
+const uploadSrc = ref('')
+/** 上传图片尺寸信息(原始宽高 + 预览区适配后的宽高,px) */
+const uploadImg = ref<{ w: number, h: number, fitW: number, fitH: number } | null>(null)
+/** movable-view 摆放状态(相对预览区左上角,px;scale 为双指缩放倍数) */
+const uploadTransform = ref({ x: 0, y: 0, scale: 1 })
+
+/** 切换创作模式;离开手绘态时放弃未落版的贴图选中 */
+function switchCanvasMode(mode: 'draw' | 'upload') {
+  if (mode === canvasMode.value)
+    return
+  if (activeImage.value)
+    cancelActiveImage()
+  canvasMode.value = mode
+}
+
+/** getImageInfo promise 封装 */
+function getImageInfoAsync(src: string): Promise<{ width: number, height: number }> {
+  return new Promise((resolve, reject) => {
+    uni.getImageInfo({
+      src,
+      success: info => resolve({ width: info.width, height: info.height }),
+      fail: reject,
+    })
+  })
+}
+
+/** 查询上传预览区尺寸(px) */
+function queryUploadArea(): Promise<{ width: number, height: number }> {
+  return new Promise((resolve, reject) => {
+    const instance = getCurrentInstance()
+    const query = instance ? uni.createSelectorQuery().in(instance.proxy) : uni.createSelectorQuery()
+    query.select('#upload-area').boundingClientRect((rect: any) => {
+      rect && rect.width > 0
+        ? resolve({ width: rect.width, height: rect.height })
+        : reject(new Error('预览区未就绪'))
+    }).exec()
+  })
+}
+
+/** 选图后计算预览适配尺寸并居中初始化摆放 */
+async function applyUploadSrc(src: string) {
+  try {
+    const [info, area] = await Promise.all([getImageInfoAsync(src), queryUploadArea()])
+    // 默认占满预览区:以最长边为准(cover),短边可超出,可拖动调整
+    const fit = Math.max(area.width / info.width, area.height / info.height)
+    const fitW = info.width * fit
+    const fitH = info.height * fit
+    uploadImg.value = { w: info.width, h: info.height, fitW, fitH }
+    uploadTransform.value = { x: (area.width - fitW) / 2, y: (area.height - fitH) / 2, scale: 1 }
+    uploadSrc.value = src
+  }
+  catch (err) {
+    console.error('【上传作品】图片读取失败', err)
+    uni.showToast({ title: '图片读取失败', icon: 'none' })
+  }
+}
+
+/** 上传模式:选择图片(直接 chooseImage 保持用户激活,同 handleInsertImage 的 H5 兼容说明) */
+function handleChooseUpload() {
+  uni.chooseImage({
+    count: 1,
+    sourceType: ['album', 'camera'],
+    success: (res) => {
+      const src = res.tempFilePaths?.[0]
+      if (src)
+        applyUploadSrc(src)
+    },
+  })
+}
+
+/** movable-view 拖动:记录摆放位置 */
+function handleUploadMove(e: any) {
+  uploadTransform.value.x = e.detail.x
+  uploadTransform.value.y = e.detail.y
+}
+
+/** movable-view 缩放:记录缩放倍数(事件同时带最新 x/y,一并同步) */
+function handleUploadScale(e: any) {
+  uploadTransform.value.scale = e.detail.scale
+  uploadTransform.value.x = e.detail.x
+  uploadTransform.value.y = e.detail.y
+}
+
+/** 上传模式:移除已选图片 */
+function handleRemoveUpload() {
+  uploadSrc.value = ''
+  uploadImg.value = null
+  uploadTransform.value = { x: 0, y: 0, scale: 1 }
+}
+
+/** 查询隐藏合成画布节点(canvas 2d) */
+function queryComposeNode(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const instance = getCurrentInstance()
+    const query = instance ? uni.createSelectorQuery().in(instance.proxy) : uni.createSelectorQuery()
+    query.select('#upload-compose').fields({ node: true, size: true }, () => {}).exec((res: any[]) => {
+      res?.[0]?.node ? resolve(res[0].node) : reject(new Error('合成画布未就绪'))
+    })
+  })
+}
+
+/**
+ * 合成上传作品:隐藏 canvas 以预览区同尺寸绘制(纸张底色 + 按摆放变换的图片),
+ * 导出比例与手绘画布一致,发布链路复用现有附件上传。
+ */
+async function composeUploadImage(): Promise<string> {
+  const src = uploadSrc.value
+  const img = uploadImg.value
+  if (!src || !img)
+    throw new Error('图片未就绪')
+  const [area, node] = await Promise.all([queryUploadArea(), queryComposeNode()])
+  const dpr = Math.min(uni.getSystemInfoSync().pixelRatio || 2, 2)
+  node.width = area.width * dpr
+  node.height = area.height * dpr
+  const ctx = node.getContext('2d')
+  ctx.scale(dpr, dpr)
+  // 底色与手绘纸张一致
+  ctx.fillStyle = bgColor.value
+  ctx.fillRect(0, 0, area.width, area.height)
+  // 加载图片(小程序 canvas 2d 用 createImage,H5 用 Image)
+  const drawable = await new Promise<any>((resolve, reject) => {
+    let image: any
+    if (typeof node.createImage === 'function') {
+      image = node.createImage()
+    }
+    else {
+      // #ifdef H5
+      image = new Image()
+      // #endif
+    }
+    if (!image) {
+      reject(new Error('当前环境不支持图片合成'))
+      return
+    }
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('图片加载失败'))
+    image.src = src
+  })
+  const t = uploadTransform.value
+  ctx.drawImage(drawable, t.x, t.y, img.fitW * t.scale, img.fitH * t.scale)
+  return new Promise((resolve, reject) => {
+    uni.canvasToTempFilePath({
+      canvas: node,
+      fileType: 'png',
+      success: (res: any) => resolve(res.tempFilePath),
+      fail: () => reject(new Error('作品合成失败')),
+    } as any)
+  })
 }
 
 /** 画笔样式选项 */
@@ -180,9 +390,7 @@ function handlePublishValidatePuzzle(): string | null {
   if (answer.length > 20) {
     return '谜底不能超过 20 字'
   }
-  if (title.value.trim() && title.value.trim().includes(answer)) {
-    return '标题里不要包含谜底哦'
-  }
+  // 标题可含谜底:竞猜期间公开接口不下发标题(服务端脱敏),揭晓后恢复,无需客户端限制
   return null
 }
 
@@ -194,11 +402,21 @@ function resetPublishForm() {
   puzzleAnswer.value = ''
   puzzleHint.value = ''
   autoRevealChoice.value = 0
+  uploadSrc.value = ''
+  uploadImg.value = null
+  uploadTransform.value = { x: 0, y: 0, scale: 1 }
 }
 
-/** 发布画作：导出图片 → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
+/** 发布画作：导出图片(手绘)或直用选图(上传) → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
 async function handlePublish() {
-  if (isEmpty.value) {
+  // 上传模式:必须已选图片;手绘模式:画布不能为空
+  if (canvasMode.value === 'upload') {
+    if (!uploadSrc.value) {
+      uni.showToast({ title: '请先选择图片', icon: 'none' })
+      return
+    }
+  }
+  else if (isEmpty.value) {
     uni.showToast({ title: '画布还是空的', icon: 'none' })
     return
   }
@@ -217,7 +435,19 @@ async function handlePublish() {
   }
   publishing.value = true
   try {
-    const tempPath = await exportImage()
+    let tempPath: string
+    if (canvasMode.value === 'upload') {
+      // 上传模式:按摆放变换合成作品(纸张底色 + 图片),导出比例与手绘画布一致
+      tempPath = await composeUploadImage()
+    }
+    else {
+      // 手绘模式:未落版的贴图在导出前自动合并,避免丢素材
+      if (activeImage.value) {
+        await commitActiveImage()
+        uni.showToast({ title: '已自动合并贴图', icon: 'none' })
+      }
+      tempPath = await exportImage()
+    }
     const attachment = await uploadAttachment(tempPath)
     const permalink = getAttachmentPermalink(attachment)
     if (!permalink) {
@@ -255,153 +485,280 @@ onPageScroll((option: Page.PageScrollOption) => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col gap-y-3 bg-page p-3 pt-0">
+  <view class="box-border min-h-screen w-screen bg-page">
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :use-back="true" title-color="text-gray-900" />
 
-    <!-- 画布(固定高度;双层 canvas:底层烘焙已完成笔画,顶层预览当前笔画,画多不卡) -->
-    <view class="uh-shadow-xs relative h-[750rpx] overflow-hidden rounded-xl" :style="{ backgroundColor: bgColor }">
-      <canvas
-        id="draw-canvas-base" canvas-id="draw-canvas-base" type="2d"
-        class="absolute left-0 top-0 h-full w-full"
-      />
-      <canvas
-        id="draw-canvas" canvas-id="draw-canvas" type="2d" class="relative h-full w-full"
-        @touchstart="onTouchStart" @touchmove.stop.prevent="onTouchMove" @touchend="onTouchEnd"
-      />
-    </view>
-
-    <view class="box-border">
-      <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-y-3 rounded-xl p-4 !border">
-        <!-- 工具选择(自动换行) -->
-        <view class="flex flex-wrap gap-2">
-          <text class="box-border w-10 shrink-0 pt-2 text-xs text-gray-500">工具</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              v-for="tool in tools" :key="tool.key"
-              class="box-border flex items-center border rounded-full border-solid px-2.5 py-1 !shadow-none"
-              :class="currentTool === tool.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
-              @click="selectTool(tool.key)"
-            >
-              <text class="text-xs">{{ tool.label }}</text>
-            </view>
+    <!-- 创作模式分段器:手绘 / 上传(吸顶,样式对齐偏好设置页分段器) -->
+    <wd-sticky :offset-top="offsetTop">
+      <view class="box-border w-screen px-3 pt-2">
+        <view class="uh-global-card-glass uh-shadow-xs flex rounded-xl p-1 !border">
+          <view
+            class="box-border flex-1 rounded-lg py-2 text-center text-3xs transition-colors"
+            :class="canvasMode === 'draw' ? 'bg-primary font-medium' : 'text-gray-500'"
+            @click="switchCanvasMode('draw')"
+          >
+            手绘创作
+          </view>
+          <view
+            class="box-border flex-1 rounded-lg py-2 text-center text-3xs transition-colors"
+            :class="canvasMode === 'upload' ? 'bg-primary font-medium' : 'text-gray-500'"
+            @click="switchCanvasMode('upload')"
+          >
+            选择作品
           </view>
         </view>
+      </view>
+    </wd-sticky>
 
-        <!-- 画笔样式(仅画笔工具时展示) -->
-        <view v-if="currentTool === 'brush'" class="flex flex-wrap items-center gap-2">
-          <text class="w-10 shrink-0 text-xs text-gray-500">笔头</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              v-for="style in brushStyles" :key="style.key"
-              class="box-border flex items-center border rounded-full border-solid px-2.5 py-1 !shadow-none"
-              :class="currentBrushStyle === style.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
-              @click="selectBrushStyle(style.key)"
-            >
-              <text class="text-xs">{{ style.label }}</text>
-            </view>
+    <view class="box-border flex flex-col gap-y-3 p-3">
+      <!-- 画布(固定高度;双层 canvas:底层烘焙已完成笔画,顶层预览当前笔画,画多不卡) -->
+      <view
+        v-show="canvasMode === 'draw'"
+        class="uh-shadow-xs relative h-76 overflow-hidden rounded-xl" :style="{ backgroundColor: bgColor }"
+      >
+        <canvas
+          id="draw-canvas-base" canvas-id="draw-canvas-base" type="2d"
+          class="absolute left-0 top-0 h-full w-full"
+        />
+        <canvas
+          id="draw-canvas" canvas-id="draw-canvas" type="2d" class="relative h-full w-full"
+          @touchstart="onTouchStart" @touchmove.stop.prevent="onTouchMove" @touchend="onTouchEnd"
+        />
+        <!-- 贴图选中态操作提示 -->
+        <view
+          v-if="activeImage"
+          class="absolute inset-x-0 top-2 z-10 text-center"
+        >
+          <text class="rounded-full bg-black/50 px-3 py-1 text-xs text-white">单指拖动 · 双指缩放旋转 · 点「完成」落版</text>
+        </view>
+        <!-- 贴图选中态浮动工具条(落版前可拖动/双指缩放旋转;与上传模式按钮位置一致) -->
+        <view
+          v-if="activeImage"
+          class="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2"
+        >
+          <view
+            class="flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 active:opacity-70"
+            @click="toggleImagePlacement"
+          >
+            <wd-icon :name="isBottomPlacement ? 'arrow-down' : 'arrow-up'" size="26rpx" class="text-white" />
+            <text class="text-xs text-white">{{ isBottomPlacement ? '置底' : '置顶' }}</text>
+          </view>
+          <view
+            class="flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 active:opacity-70"
+            @click="removeActiveImage"
+          >
+            <wd-icon name="delete" size="26rpx" class="text-white" />
+            <text class="text-xs text-white">删除</text>
+          </view>
+          <view
+            class="flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 active:opacity-70"
+            @click="confirmActiveImage"
+          >
+            <wd-icon name="check" size="26rpx" class="text-white" />
+            <text class="text-xs text-white">完成</text>
           </view>
         </view>
+      </view>
 
-        <!-- 形状填充(仅形状工具时展示) -->
-        <view v-else-if="['line', 'rect', 'circle'].includes(currentTool)" class="flex flex-wrap items-center gap-2">
-          <text class="w-10 shrink-0 text-xs text-gray-500">形状</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              class="box-border flex items-center border rounded-full px-2.5 py-1 !shadow-none"
-              :class="shapeFilled ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
-              @click="shapeFilled = !shapeFilled"
+      <!-- 上传模式:选图/预览区(可拖动/双指缩放摆放,发布时按变换合成) -->
+      <!-- upload-area 挂外层容器:空态/选图态都要可查询(选图流程先量尺寸再渲染 movable-view) -->
+      <view
+        v-if="canvasMode === 'upload'"
+        id="upload-area"
+        class="uh-shadow-xs relative h-76 overflow-hidden rounded-xl"
+        :class="uploadSrc ? '' : 'uh-global-card-glass border border-gray-100 border-dashed'"
+      >
+        <!-- 已选图:摆放区(movable-view 拖动 + 双指缩放,三端兼容) -->
+        <template v-if="uploadSrc && uploadImg">
+          <movable-area class="h-full w-full">
+            <movable-view
+              direction="all" :scale="true" :scale-min="0.5" :scale-max="3" :animation="false"
+              :x="uploadTransform.x" :y="uploadTransform.y"
+              :style="{ width: `${uploadImg.fitW}px`, height: `${uploadImg.fitH}px` }"
+              class="overflow-hidden"
+              @change="handleUploadMove" @scale="handleUploadScale"
             >
-              <text class="text-xs">{{ shapeFilled ? '填充' : '描边' }}</text>
+              <image :src="uploadSrc" mode="scaleToFill" class="h-full w-full" />
+            </movable-view>
+          </movable-area>
+          <view class="absolute inset-x-0 top-2 z-10 text-center">
+            <text class="rounded-full bg-black/50 px-3 py-1 text-xs text-white">单指拖动 · 双指缩放</text>
+          </view>
+          <view class="absolute inset-x-0 bottom-3 z-10 flex justify-center gap-3">
+            <view
+              class="box-border flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 active:opacity-70"
+              @click.stop="handleChooseUpload"
+            >
+              <wd-icon name="refresh" size="26rpx" class="text-white" />
+              <text class="text-xs text-white">换一张</text>
+            </view>
+            <view
+              class="box-border flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 active:opacity-70"
+              @click.stop="handleRemoveUpload"
+            >
+              <wd-icon name="delete" size="26rpx" class="text-white" />
+              <text class="text-xs text-white">移除</text>
             </view>
           </view>
-        </view>
-
-        <!-- 快捷色板 + 取色器 -->
-        <view class="flex flex-wrap items-center gap-2">
-          <text class="w-10 shrink-0 text-xs text-gray-500">颜色</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              v-for="color in palette" :key="color"
-              class="h-6.5 w-6.5 flex items-center justify-center rounded-full transition-transform"
-              :style="{ backgroundColor: color }" @click="selectColor(color)"
-            >
-              <wd-icon v-if="baseColor === color" name="check" size="20rpx" class="text-white" />
-            </view>
-            <view
-              class="uh-shadow-xs h-6.5 w-6.5 flex items-center justify-center gap-x-2 rounded-full bg-white/60"
-              :style="{ backgroundColor: currentColor }" @click="openColorPicker"
-            >
-              <wd-icon name="plus" size="24rpx" class="text-white" />
+        </template>
+        <!-- 空态:点击选图 -->
+        <template v-else>
+          <view class="h-full w-full flex items-center justify-center" @click="handleChooseUpload">
+            <view class="box-border flex flex-col items-center justify-center gap-y-2 border border-gray-300 rounded-xl border-dashed px-6 py-12">
+              <wd-icon name="image" size="60rpx" class="text-gray-400" />
+              <text class="text-3xs text-gray-500">点击从相册选择 / 拍照</text>
+              <text class="text-xs text-gray-400">选好的图片可拖动缩放摆放后发布</text>
             </view>
           </view>
-        </view>
+        </template>
+      </view>
 
-        <!-- 纸张背景 -->
-        <view class="flex flex-wrap items-center gap-2">
-          <text class="w-10 shrink-0 text-xs text-gray-500">纸张</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              v-for="paper in papers" :key="paper.key"
-              class="box-border flex items-center gap-1 border rounded-full px-2 py-1 !shadow-none"
-              :class="bgColor === paper.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass  border-gray-100 text-gray-700'"
-              @click="selectPaper(paper.key)"
-            >
+      <!-- 工具面板(仅手绘模式展示) -->
+      <view v-show="canvasMode === 'draw'" class="box-border">
+        <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-y-3 rounded-xl p-4 !border">
+          <!-- 工具选择(自动换行) -->
+          <view class="flex flex-wrap gap-2">
+            <text class="box-border w-10 shrink-0 pt-2 text-xs text-gray-500">工具</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
               <view
-                class="h-3 w-3 border border-gray-200 rounded-full border-solid"
-                :style="{ backgroundColor: paper.key }"
-              />
-              <text class="text-xs">{{ paper.label }}</text>
+                v-for="tool in tools" :key="tool.key"
+                class="box-border flex items-center border rounded-full border-solid px-2.5 py-1 !shadow-none"
+                :class="currentTool === tool.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
+                @click="selectTool(tool.key)"
+              >
+                <text class="text-xs">{{ tool.label }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 画笔样式(仅画笔工具时展示) -->
+          <view v-if="currentTool === 'brush'" class="flex flex-wrap items-center gap-2">
+            <text class="w-10 shrink-0 text-xs text-gray-500">笔头</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
+              <view
+                v-for="style in brushStyles" :key="style.key"
+                class="box-border flex items-center border rounded-full border-solid px-2.5 py-1 !shadow-none"
+                :class="currentBrushStyle === style.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
+                @click="selectBrushStyle(style.key)"
+              >
+                <text class="text-xs">{{ style.label }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 形状填充(仅形状工具时展示) -->
+          <view v-else-if="['line', 'rect', 'circle'].includes(currentTool)" class="flex flex-wrap items-center gap-2">
+            <text class="w-10 shrink-0 text-xs text-gray-500">形状</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
+              <view
+                class="box-border flex items-center border rounded-full px-2.5 py-1 !shadow-none"
+                :class="shapeFilled ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass border-gray-100 text-gray-700'"
+                @click="shapeFilled = !shapeFilled"
+              >
+                <text class="text-xs">{{ shapeFilled ? '填充' : '描边' }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 快捷色板 + 取色器 -->
+          <view class="flex flex-wrap items-center gap-2">
+            <text class="w-10 shrink-0 text-xs text-gray-500">颜色</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
+              <view
+                v-for="color in palette" :key="color"
+                class="h-6.5 w-6.5 flex items-center justify-center rounded-full transition-transform"
+                :style="{ backgroundColor: color }" @click="selectColor(color)"
+              >
+                <wd-icon v-if="baseColor === color" name="check" size="20rpx" class="text-white" />
+              </view>
+              <view
+                class="uh-shadow-xs h-6.5 w-6.5 flex items-center justify-center gap-x-2 rounded-full bg-white/60"
+                :style="{ backgroundColor: currentColor }" @click="openColorPicker"
+              >
+                <wd-icon name="plus" size="24rpx" class="text-white" />
+              </view>
+            </view>
+          </view>
+
+          <!-- 纸张背景 -->
+          <view class="flex flex-wrap items-center gap-2">
+            <text class="w-10 shrink-0 text-xs text-gray-500">纸张</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
+              <view
+                v-for="paper in papers" :key="paper.key"
+                class="box-border flex items-center gap-1 border rounded-full px-2 py-1 !shadow-none"
+                :class="bgColor === paper.key ? 'border-primary bg-primary text-gray-900' : 'uh-global-card-glass  border-gray-100 text-gray-700'"
+                @click="selectPaper(paper.key)"
+              >
+                <view
+                  class="h-3 w-3 border border-gray-200 rounded-full border-solid"
+                  :style="{ backgroundColor: paper.key }"
+                />
+                <text class="text-xs">{{ paper.label }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 笔触粗细 -->
+          <view class="box-border flex flex-wrap items-center gap-2 pr-12">
+            <text class="w-10 shrink-0 text-xs text-gray-500">笔触</text>
+            <view class="flex flex-1 items-center gap-3">
+              <wd-slider v-model="currentLineWidth" :min="2" :max="40" hide-label custom-class="flex-1" />
+              <text class="w-6 text-right text-xs text-gray-500">{{ currentLineWidth }}</text>
+            </view>
+          </view>
+
+          <!-- 透明度(统一设置,作用于画笔/形状;取色器不含 alpha 通道) -->
+          <view class="box-border flex flex-wrap items-center gap-2 pr-12">
+            <text class="w-10 shrink-0 text-xs text-gray-500">透明度</text>
+            <view class="flex flex-1 items-center gap-3">
+              <wd-slider v-model="colorOpacity" :min="10" :max="100" hide-label custom-class="flex-1" />
+              <text class="w-6 text-right text-xs text-gray-500">{{ colorOpacity }}%</text>
+            </view>
+          </view>
+
+          <!-- 操作按钮(图标+文字) -->
+          <view class="flex flex-wrap gap-2">
+            <text class="box-border w-10 shrink-0 pt-2 text-xs text-gray-500">操作</text>
+            <view class="flex flex-1 flex-wrap items-center gap-2">
+              <view
+                class="uh-global-card-glass box-border flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
+                :class="{ 'opacity-40': !canUndo }" @click="undo"
+              >
+                <wd-icon name="undo" size="28rpx" />
+                <text class="text-xs">撤销</text>
+              </view>
+              <view
+                class="uh-global-card-glass box-border flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
+                :class="{ 'opacity-40': !canRedo }" @click="redo"
+              >
+                <wd-icon name="redo" size="28rpx" />
+                <text class="text-xs">重做</text>
+              </view>
+              <view
+                class="uh-global-card-glass box-border flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
+                :class="{ 'opacity-40': isEmpty }" @click="clear"
+              >
+                <wd-icon name="delete" size="28rpx" />
+                <text class="text-xs">清空</text>
+              </view>
             </view>
           </view>
         </view>
+      </view>
 
-        <!-- 笔触粗细 -->
-        <view class="box-border flex flex-wrap items-center gap-2 pr-12">
-          <text class="w-10 shrink-0 text-xs text-gray-500">笔触</text>
-          <view class="flex flex-1 items-center gap-3">
-            <wd-slider v-model="currentLineWidth" :min="2" :max="40" hide-label custom-class="flex-1" />
-            <text class="w-6 text-right text-xs text-gray-500">{{ currentLineWidth }}</text>
-          </view>
+      <!-- 发布区(两种模式共用;上传模式在按钮上方展示介绍与说明) -->
+      <view class="box-border flex flex-col gap-y-3">
+        <view v-if="canvasMode === 'upload'" class="uh-global-card-glass flex flex-col gap-y-1.5 rounded-xl p-4 !border !shadow-none">
+          <text class="text-sm text-gray-900 font-medium">上传图片作品</text>
+          <text class="text-xs text-gray-500 leading-relaxed">
+            从相册选择或拍一张照片，直接作为绘画作品发布。发布后与其他手绘作品一样参与展示、点赞与画谜竞猜；若站点开启发布审核，需审核通过后才公开展示。
+          </text>
+          <text class="text-xs text-gray-400 leading-relaxed">
+            建议：图片请为自己原创或有权发布的内容，请勿上传违规图片。
+          </text>
         </view>
-
-        <!-- 透明度(统一设置,作用于画笔/形状;取色器不含 alpha 通道) -->
-        <view class="box-border flex flex-wrap items-center gap-2 pr-12">
-          <text class="w-10 shrink-0 text-xs text-gray-500">透明度</text>
-          <view class="flex flex-1 items-center gap-3">
-            <wd-slider v-model="colorOpacity" :min="10" :max="100" hide-label custom-class="flex-1" />
-            <text class="w-6 text-right text-xs text-gray-500">{{ colorOpacity }}%</text>
-          </view>
-        </view>
-
-        <!-- 操作按钮(图标+文字) -->
-        <view class="flex flex-wrap gap-2">
-          <text class="box-border w-10 shrink-0 pt-2 text-xs text-gray-500">操作</text>
-          <view class="flex flex-1 flex-wrap items-center gap-2">
-            <view
-              class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
-              :class="{ 'opacity-40': !canUndo }" @click="undo"
-            >
-              <wd-icon name="undo" size="28rpx" />
-              <text class="text-xs">撤销</text>
-            </view>
-            <view
-              class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
-              :class="{ 'opacity-40': !canRedo }" @click="redo"
-            >
-              <wd-icon name="redo" size="28rpx" />
-              <text class="text-xs">重做</text>
-            </view>
-            <view
-              class="uh-global-card-glass flex items-center gap-1 border border-gray-100 rounded-full border-solid px-3 py-1.5 active:opacity-70 !shadow-none"
-              :class="{ 'opacity-40': isEmpty }" @click="clear"
-            >
-              <wd-icon name="delete" size="28rpx" />
-              <text class="text-xs">清空</text>
-            </view>
-          </view>
-        </view>
-
-        <view class="box-border w-full pt-1">
+        <view class="box-border w-full">
           <uh-button
             class="w-full flex-1"
             custom-class="uh-global-card-glass flex items-center gap-1 !border  px-3 py-2 !bg-primary !rounded-full active:opacity-70 !shadow-none"
@@ -432,7 +789,7 @@ onPageScroll((option: Page.PageScrollOption) => {
         </view>
         <view class="uh-global-card-glass w-full flex items-center border rounded-xl px-4 py-2.5 !shadow-none">
           <input
-            v-model="title" :placeholder="guessEnabled ? '给画作起个标题（必填，别写谜底哦）' : '给画作起个标题（必填）'"
+            v-model="title" placeholder="给画作起个标题（必填）"
             placeholder-class="text-gray-400"
             class="w-full text-sm" :maxlength="50"
           >
@@ -516,6 +873,12 @@ onPageScroll((option: Page.PageScrollOption) => {
     <kex-color-picker
       ref="colorPickerRef" v-model="baseColor" title="画笔颜色" size="small" :show-trigger="false"
       :show-alpha="false" :presets="palette" :realtime="true"
+    />
+
+    <!-- 上传作品合成画布(隐藏,发布时按摆放变换绘制并导出) -->
+    <canvas
+      id="upload-compose" canvas-id="upload-compose" type="2d"
+      class="pointer-events-none fixed left-0 top-0 z--1 h-1 w-1 opacity-0"
     />
   </view>
 </template>

@@ -597,10 +597,10 @@ onReachBottom(() => {
                   <view class="flex flex-col gap-y-2">
                     <view
                       v-for="field in [
-                        { label: '名称', value: detail.data.spec.displayName },
-                        { label: '地址', value: detail.data.spec.url },
-                        { label: 'Logo', value: checkImageUrl(detail.data.spec.logo) },
-                        { label: '简介', value: detail.data.spec.description },
+                        { label: '站点名称', value: detail.data.spec.displayName },
+                        { label: '站点地址', value: detail.data.spec.url },
+                        { label: '站点头像', value: checkImageUrl(detail.data.spec.logo) },
+                        { label: '站点简介', value: detail.data.spec.description },
                       ].filter(item => item.value)" :key="field.label"
                       class="uh-global-card-glass flex items-center gap-x-2 border rounded-lg px-3 py-2 !shadow-none"
                     >
@@ -787,7 +787,7 @@ onReachBottom(() => {
                 <view class="flex flex-col gap-y-2">
                   <view
                     v-for="field in [
-                      { label: '地址', value: miniDetail.data.spec?.link },
+                      { label: '应用地址', value: miniDetail.data.spec?.link },
                       { label: 'AppID', value: miniDetail.data.spec?.appId },
                       { label: '路径', value: miniDetail.data.spec?.path },
                       { label: '太阳码', value: checkImageUrl(miniDetail.data.spec?.miniProgramCode) },

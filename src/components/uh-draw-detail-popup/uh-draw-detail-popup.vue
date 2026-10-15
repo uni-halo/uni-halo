@@ -60,36 +60,40 @@ function handleToDetailPage(draw: IDraw) {
           <wd-icon name="close" size="28rpx" class="text-gray-500" />
         </view>
       </view>
-      <view
-        class="uh-global-card-glass h-64 flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
-      >
-        <wd-img :src="cover" mode="widthFix" class="w-full" @click="handlePreviewCover">
-          <template #loading>
-            <wd-loading size="64rpx" custom-class="text-primary" />
-          </template>
-        </wd-img>
-      </view>
-      <view class="flex flex-col gap-y-1.5">
-        <text class="text-sm text-gray-900 font-medium">{{ draw.spec.title || '无题' }}</text>
-        <text v-if="draw.spec.description" class="text-xs text-gray-500 leading-relaxed">
-          {{ draw.spec.description }}
-        </text>
-        <view class="flex items-center justify-between text-xs text-gray-400">
-          <view class="w-full flex items-center gap-x-1">
-            <text class="text-xs text-gray-500">作者：</text>
-            <wd-avatar
-              :src="ownerAvatar"
-              :text="ownerInitial"
-              shape="round" size="42rpx"
-              custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
-            />
-            <text>{{ ownerText }}</text>
+      <scroll-view :scroll-y="true" :show-scrollbar="false" class="max-h-[70vh] w-full">
+        <view class="w-full flex flex-col gap-y-3">
+          <view
+            class="uh-global-card-glass flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
+          >
+            <wd-img :src="cover" mode="widthFix" custom-class="!block w-full" @click="handlePreviewCover">
+              <template #loading>
+                <wd-loading size="64rpx" custom-class="text-primary" />
+              </template>
+            </wd-img>
           </view>
-          <text class="shrink-0">
-            {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
-          </text>
+          <view class="flex flex-col gap-y-1.5">
+            <text class="text-sm text-gray-900 font-medium">{{ draw.spec.title || '无题' }}</text>
+            <text v-if="draw.spec.description" class="text-xs text-gray-500 leading-relaxed">
+              {{ draw.spec.description }}
+            </text>
+            <view class="flex items-center justify-between text-xs text-gray-400">
+              <view class="w-full flex items-center gap-x-1">
+                <text class="text-xs text-gray-500">作者：</text>
+                <wd-avatar
+                  :src="ownerAvatar"
+                  :text="ownerInitial"
+                  shape="round" size="42rpx"
+                  custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+                />
+                <text>{{ ownerText }}</text>
+              </view>
+              <text class="shrink-0">
+                {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
+              </text>
+            </view>
+          </view>
         </view>
-      </view>
+      </scroll-view>
       <!-- #ifdef MP -->
       <view class="w-full flex items-center">
         <uh-button

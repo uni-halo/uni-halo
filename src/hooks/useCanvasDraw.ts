@@ -4,12 +4,12 @@ import { computed, getCurrentInstance, ref, shallowRef } from 'vue'
 export type BrushStyle = 'round' | 'square' | 'crayon'
 
 /** 绘制工具 */
-export type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill'
+export type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill' | 'image'
 
 /** 单条笔画(自由绘制/橡皮/形状共用,shape 区分几何类型) */
 export interface IStroke {
-  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶 bg=换纸张,其余按 shape 几何绘制 */
-  kind: 'free' | 'eraser' | 'fill' | 'bg'
+  /** 笔画种类:free=自由绘制 eraser=橡皮 fill=油漆桶 bg=换纸张 image=贴图,其余按 shape 几何绘制 */
+  kind: 'free' | 'eraser' | 'fill' | 'bg' | 'image'
   /** 换纸张前的旧背景色(kind=bg 时有效) */
   prevColor?: string
   /** 几何形状(kind=free 且无 shape 时为普通笔画) */
@@ -22,8 +22,30 @@ export interface IStroke {
   style: BrushStyle
   /** 是否填充形状(矩形/圆形) */
   filled?: boolean
-  /** 触点列表(canvas 逻辑坐标) */
+  /** 触点列表(canvas 逻辑坐标);kind=image 时仅 points[0] 有效,表示贴图中心点 */
   points: { x: number, y: number }[]
+  /** 图片临时路径(kind=image 时有效) */
+  src?: string
+  /** 贴图显示宽高(逻辑像素,kind=image 时有效) */
+  imgWidth?: number
+  imgHeight?: number
+  /** 贴图旋转弧度(kind=image 时有效) */
+  rotation?: number
+  /** 贴图叠放层级:top=盖在已有笔画上(默认) bottom=垫在所有笔画之下(kind=image 时有效) */
+  placement?: 'top' | 'bottom'
+}
+
+/** 选中态贴图(落版前的活动对象,可拖动/缩放/旋转/删除) */
+export interface IActiveImage {
+  src: string
+  /** 中心点(canvas 逻辑坐标) */
+  x: number
+  y: number
+  /** 显示宽高(逻辑像素) */
+  w: number
+  h: number
+  /** 旋转弧度 */
+  rotation: number
 }
 
 /** useCanvasDraw 配置 */
@@ -107,6 +129,33 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
   let activeStroke: IStroke | null = null
   /** 当前增量绘制目标(brush/形状=预览层,eraser/fill=烘焙层) */
   let activeCtx: any = null
+
+  /** 选中态贴图(落版前活动对象;非空时画布触摸事件优先服务贴图变换) */
+  const activeImage = ref<IActiveImage | null>(null)
+  /** 贴图叠放层级(落版时写入笔画) */
+  const imagePlacement = ref<'top' | 'bottom'>('top')
+  /** 图片位图缓存(src → 可绘制对象),落版与重放共用,避免重复加载 */
+  const imageCache = new Map<string, any>()
+  /** 图片加载中计数:>0 期间重放跳过该笔画,全部加载完成后补一次 redrawAll */
+  let imageLoadingCount = 0
+  /** 图片加载完成后是否需要补重放 */
+  let imageNeedRedraw = false
+  /** 贴图手势状态(null = 未在变换贴图) */
+  let imageGesture: null | {
+    mode: 'drag' | 'transform'
+    /** drag:按点相对贴图中心的偏移 */
+    dx?: number
+    dy?: number
+    /** transform:双指初始距离/角度/贴图初始尺寸与旋转 */
+    dist0?: number
+    angle0?: number
+    w0?: number
+    h0?: number
+    rot0?: number
+  } = null
+  /** 贴图变换尺寸钳制(相对初始尺寸的倍数) */
+  const IMAGE_SCALE_MIN = 0.1
+  const IMAGE_SCALE_MAX = 4
 
   /** 初始化单个 canvas 节点(物理分辨率放大,锁定 css 尺寸) */
   function setupCanvas(node: any, width: number, height: number): any {
@@ -328,6 +377,172 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
   }
 
   /** 用中点二次贝塞尔平滑重放一条完整笔画(撤销/重做/清空/换纸/导出的全量重放用) */
+  // ===== 贴图(插入图片二创) =====
+
+  /** 加载图片为可绘制对象并写入缓存(微信 2d canvas 用 createImage,H5 用 Image) */
+  function loadImageDrawable(src: string): Promise<any> {
+    const cached = imageCache.get(src)
+    if (cached)
+      return Promise.resolve(cached)
+    const node = baseNode || canvasNode
+    let img: any
+    if (node && typeof node.createImage === 'function') {
+      img = node.createImage()
+    }
+    else {
+      // #ifdef H5
+      img = new Image()
+      // #endif
+    }
+    if (!img)
+      return Promise.reject(new Error('当前环境不支持贴图'))
+    imageLoadingCount++
+    return new Promise((resolve, reject) => {
+      img.onload = () => {
+        imageCache.set(src, img)
+        imageLoadingCount--
+        if (imageLoadingCount === 0 && imageNeedRedraw) {
+          imageNeedRedraw = false
+          redrawAll()
+        }
+        resolve(img)
+      }
+      img.onerror = (err: any) => {
+        imageLoadingCount--
+        if (imageLoadingCount === 0 && imageNeedRedraw) {
+          imageNeedRedraw = false
+          redrawAll()
+        }
+        reject(err)
+      }
+      img.src = src
+    })
+  }
+
+  /** 在指定上下文按中心点+宽高+旋转绘制图片对象 */
+  function renderImage(context: any, drawable: any, x: number, y: number, w: number, h: number, rotation: number) {
+    if (!context || !drawable)
+      return
+    context.save()
+    context.globalCompositeOperation = 'source-over'
+    context.translate(x, y)
+    context.rotate(rotation)
+    context.drawImage(drawable, -w / 2, -h / 2, w, h)
+    context.restore()
+  }
+
+  /** 画布坐标是否落在选中贴图内(旋转矩形命中,含 12px 容差便于点选边缘) */
+  function hitImage(p: { x: number, y: number }): boolean {
+    const img = activeImage.value
+    if (!img)
+      return false
+    const dx = p.x - img.x
+    const dy = p.y - img.y
+    const cos = Math.cos(-img.rotation)
+    const sin = Math.sin(-img.rotation)
+    const lx = dx * cos - dy * sin
+    const ly = dx * sin + dy * cos
+    return Math.abs(lx) <= img.w / 2 + 12 && Math.abs(ly) <= img.h / 2 + 12
+  }
+
+  /** 选中态贴图预览:双层模式清预览层重画贴图+选框;降级单画布模式重放历史后再叠贴图 */
+  function redrawImagePreview() {
+    const img = activeImage.value
+    if (!ctx)
+      return
+    if (!baseCtx) {
+      // 降级模式:历史就在主画布上,不能清屏,先全量重放再叠贴图
+      redrawAll()
+    }
+    else {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+    }
+    if (!img)
+      return
+    const drawable = imageCache.get(img.src)
+    if (drawable)
+      renderImage(ctx, drawable, img.x, img.y, img.w, img.h, img.rotation)
+    else
+      loadImageDrawable(img.src).then(() => redrawImagePreview()).catch(() => {})
+    // 选中框:随旋转的虚线矩形(主题色,与 UnoCSS theme.primary 的 #B9E424 回退值一致)
+    ctx.save()
+    ctx.translate(img.x, img.y)
+    ctx.rotate(img.rotation)
+    ctx.strokeStyle = '#B9E424'
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([6, 4])
+    ctx.strokeRect(-img.w / 2 - 4, -img.h / 2 - 4, img.w + 8, img.h + 8)
+    ctx.restore()
+  }
+
+  /** 插入贴图:按画布 60% 适配缩放并居中,进入选中态(等待落版/调整) */
+  function insertImage(src: string, placement: 'top' | 'bottom' = 'top') {
+    if (activeImage.value || !canvasNode)
+      return
+    imagePlacement.value = placement
+    uni.getImageInfo({
+      src,
+      success: (info) => {
+        // 适配缩放:不超过画布 60%,不放大原图
+        const scale = Math.min((canvasWidth * 0.6) / info.width, (canvasHeight * 0.6) / info.height, 1)
+        const w = Math.max(info.width * scale, 24)
+        const h = Math.max(info.height * scale, 24)
+        activeImage.value = { src, x: canvasWidth / 2, y: canvasHeight / 2, w, h, rotation: 0 }
+        redrawImagePreview()
+      },
+      fail: () => {
+        uni.showToast({ title: '图片读取失败', icon: 'none' })
+      },
+    })
+  }
+
+  /** 调整选中贴图叠放层级(仅影响落版结果) */
+  function setImagePlacement(placement: 'top' | 'bottom') {
+    imagePlacement.value = placement
+  }
+
+  /** 落版:选中贴图烘焙为笔画(计入撤销栈),层级按 placement 重放排定 */
+  async function commitActiveImage() {
+    const img = activeImage.value
+    if (!img)
+      return
+    try {
+      await loadImageDrawable(img.src)
+    }
+    catch {
+      uni.showToast({ title: '图片加载失败', icon: 'none' })
+      return
+    }
+    const stroke: IStroke = {
+      kind: 'image',
+      src: img.src,
+      color: '#000000',
+      width: 0,
+      style: 'round',
+      points: [{ x: img.x, y: img.y }],
+      imgWidth: img.w,
+      imgHeight: img.h,
+      rotation: img.rotation,
+      placement: imagePlacement.value,
+    }
+    strokes.push(stroke)
+    redoStack.length = 0
+    strokeCount.value = strokes.length
+    redoCount.value = 0
+    activeImage.value = null
+    imageGesture = null
+    // 层级由重放顺序决定(top=尾插垫顶/bottom=重放垫底),统一全量重放保证一致
+    redrawAll()
+  }
+
+  /** 放弃选中贴图(不落版,不计入历史) */
+  function cancelActiveImage() {
+    activeImage.value = null
+    imageGesture = null
+    if (ctx)
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+  }
+
   function drawStroke(stroke: IStroke) {
     const pts = stroke.points
     const target = baseCtx || ctx
@@ -368,6 +583,20 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
   }
 
+  /** 贴图重放:命中缓存直接画,未命中触发异步加载并在完成后补一次全量重放 */
+  function replayImage(target: any, stroke: IStroke) {
+    if (!stroke.src)
+      return
+    const drawable = imageCache.get(stroke.src)
+    if (drawable) {
+      renderImage(target, drawable, stroke.points[0].x, stroke.points[0].y,
+        stroke.imgWidth || 0, stroke.imgHeight || 0, stroke.rotation || 0)
+      return
+    }
+    imageNeedRedraw = true
+    loadImageDrawable(stroke.src).catch(() => {})
+  }
+
   /** 清空烘焙层并重放全部笔画 + 垫底背景色(仅撤销/重做/清空/换纸/导出等低频操作) */
   function redrawAll() {
     const target = baseCtx || ctx
@@ -377,11 +606,20 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     target.clearRect(0, 0, canvasWidth, canvasHeight)
     // 重放期间追踪当前纸色(换纸项更新),供填充的透明等价判定与实时绘制保持一致
     let replayBg = initialBg
+    // 先铺「置底」贴图(垫在所有笔画之下),再按时间线重放其余笔画
     strokes.forEach((stroke) => {
+      if (stroke.kind === 'image' && stroke.placement === 'bottom')
+        replayImage(target, stroke)
+    })
+    strokes.forEach((stroke) => {
+      if (stroke.kind === 'image' && stroke.placement === 'bottom')
+        return
       if (stroke.kind === 'fill')
         floodFillOn(target, baseNode || canvasNode, stroke.points[0], stroke.color, replayBg)
       else if (stroke.kind === 'bg')
         replayBg = stroke.color
+      else if (stroke.kind === 'image')
+        replayImage(target, stroke)
       else
         drawStroke(stroke)
     })
@@ -410,10 +648,49 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
   }
 
-  /** 触摸开始:创建笔画或执行填充(橡皮直接画在烘焙层,其余画在预览层) */
+  /** 多指坐标:单指对象转画布逻辑坐标(不收敛到画布内,供双指变换计算) */
+  function touchPoint(touch: any): { x: number, y: number } {
+    let rx = 0
+    let ry = 0
+    // #ifdef H5
+    rx = (touch.clientX ?? 0) - canvasOffsetX
+    ry = (touch.clientY ?? 0) - canvasOffsetY
+    // #endif
+    // #ifndef H5
+    rx = touch.x ?? 0
+    ry = touch.y ?? 0
+    // #endif
+    return { x: rx, y: ry }
+  }
+
+  /** 触摸开始:贴图变换优先 → 填充 → 笔画 */
   function onTouchStart(e: any) {
     if (!ctx)
       return
+    // 贴图选中态:触摸优先服务贴图(双指变换/单指拖动/点空白落版),落版前不响应绘画
+    if (activeImage.value) {
+      const touches = e.touches || []
+      if (touches.length >= 2) {
+        const a = touchPoint(touches[0])
+        const b = touchPoint(touches[1])
+        imageGesture = {
+          mode: 'transform',
+          dist0: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+          angle0: Math.atan2(b.y - a.y, b.x - a.x),
+          w0: activeImage.value.w,
+          h0: activeImage.value.h,
+          rot0: activeImage.value.rotation,
+        }
+        return
+      }
+      const p = getPoint(e)
+      if (hitImage(p)) {
+        imageGesture = { mode: 'drag', dx: p.x - activeImage.value.x, dy: p.y - activeImage.value.y }
+        return
+      }
+      // 点空白处:不响应(不落版不出笔,避免误触);落版仅经工具条「完成」
+      return
+    }
     // 多指保护:已有笔画未结束时忽略新按下的手指,避免轨迹串线
     if (activeStroke)
       return
@@ -465,8 +742,32 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     activeCtx.fill()
   }
 
-  /** 触摸进行中:自由绘制增量画段,形状工具整笔预览(只重画预览层,不碰历史) */
+  /** 触摸进行中:贴图变换优先 → 自由绘制增量画段/形状工具整笔预览(只重画预览层,不碰历史) */
   function onTouchMove(e: any) {
+    // 贴图选中态:拖动/双指缩放旋转,逐帧重画预览层
+    if (activeImage.value && imageGesture) {
+      const img = activeImage.value
+      if (imageGesture.mode === 'drag') {
+        const c = getPoint(e)
+        img.x = Math.min(Math.max(c.x - (imageGesture.dx || 0), 0), canvasWidth)
+        img.y = Math.min(Math.max(c.y - (imageGesture.dy || 0), 0), canvasHeight)
+      }
+      else if (imageGesture.mode === 'transform' && e.touches && e.touches.length >= 2) {
+        const a = touchPoint(e.touches[0])
+        const b = touchPoint(e.touches[1])
+        const dist = Math.hypot(b.x - a.x, b.y - a.y) || 1
+        const angle = Math.atan2(b.y - a.y, b.x - a.x)
+        const ratio = Math.min(Math.max(dist / (imageGesture.dist0 || 1), IMAGE_SCALE_MIN), IMAGE_SCALE_MAX)
+        img.w = Math.max((imageGesture.w0 || img.w) * ratio, 24)
+        img.h = Math.max((imageGesture.h0 || img.h) * ratio, 24)
+        img.rotation = (imageGesture.rot0 || 0) + (angle - (imageGesture.angle0 || 0))
+        // 双指中点作为贴图中心:边缩放边挪位
+        img.x = Math.min(Math.max((a.x + b.x) / 2, 0), canvasWidth)
+        img.y = Math.min(Math.max((a.y + b.y) / 2, 0), canvasHeight)
+      }
+      redrawImagePreview()
+      return
+    }
     if (!activeStroke || !activeCtx)
       return
     const c = getPoint(e)
@@ -509,8 +810,13 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     }
   }
 
-  /** 结束笔画 */
+  /** 结束触摸:贴图手势收尾(保持选中态,等待落版/删除);否则结束笔画 */
   function onTouchEnd() {
+    if (activeImage.value) {
+      imageGesture = null
+      redrawImagePreview()
+      return
+    }
     if (activeStroke && activeStroke.points.length > 0)
       commitStroke(activeStroke)
     activeStroke = null
@@ -599,5 +905,12 @@ export function useCanvasDraw(options: IUseCanvasDrawOptions = {}) {
     clear,
     setBg,
     exportImage,
+    // 贴图(插入图片二创)
+    activeImage,
+    imagePlacement,
+    insertImage,
+    setImagePlacement,
+    commitActiveImage,
+    cancelActiveImage,
   }
 }

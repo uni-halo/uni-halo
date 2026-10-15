@@ -277,7 +277,7 @@ onPageScroll(({ scrollTop }) => {
           class="uh-global-card-glass flex items-center justify-center overflow-hidden rounded-xl !border !shadow-none"
           @click="handlePreviewCover"
         >
-          <wd-img :src="cover" mode="widthFix" class="w-full">
+          <wd-img :src="cover" mode="widthFix" custom-class="!block w-full">
             <template #loading>
               <wd-loading size="64rpx" custom-class="text-primary" />
             </template>

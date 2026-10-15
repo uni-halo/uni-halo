@@ -26,6 +26,7 @@ import type {
   IMiniProgramLinkGroupOption,
   IMiniProgramLinkSubmissionForm,
   INoticeDetail,
+  IFaqListRes,
   INoticeListRes,
   INoticeListVo,
   INoticeTypeListRes,
@@ -169,6 +170,20 @@ export function getNoticeDetail(name: string) {
  */
 export function getNoticeTypes() {
   return http.Get<IResponse<INoticeTypeListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/notice-types', {
+    cacheFor: 0,
+    meta: { requestFrom: RequestFrom.Halo },
+  })
+}
+
+/* ==================== 常见问题(uni-halo) ==================== */
+
+/**
+ * 常见问题列表(公开,仅 visible;size 缺省 0 = 返回全量,一次取全部)。
+ * keyword 模糊匹配标题/摘要/分类;category 非空时按分类过滤。
+ */
+export function getFaqs(params: { keyword?: string, category?: string, page?: number, size?: number } = {}) {
+  return http.Get<IResponse<IFaqListRes>>('/apis/api.unihalo.ialley.cn/v1alpha1/faqs', {
+    params: { size: 0, ...params },
     cacheFor: 0,
     meta: { requestFrom: RequestFrom.Halo },
   })

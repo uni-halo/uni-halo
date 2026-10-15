@@ -48,12 +48,12 @@ const hasInfo = computed(() => !!(miniInfo.value.displayName || miniInfo.value.m
 /** 逐项友链信息（行尾支持单独复制） */
 const infoFields = computed(() => {
   return [
-    { label: '名称', value: miniInfo.value.displayName },
-    { label: '地址', value: miniInfo.value.link },
+    { label: '应用名称', value: miniInfo.value.displayName },
+    { label: '应用地址', value: miniInfo.value.link },
     { label: 'AppID', value: miniInfo.value.appId },
     { label: '路径', value: miniInfo.value.path },
     { label: '太阳码', value: checkImageUrl(miniInfo.value.miniProgramCode) },
-    { label: '描述', value: miniInfo.value.description },
+    { label: '应用简介', value: miniInfo.value.description },
     { label: '申请说明', value: miniInfo.value.applyRemark },
     { label: '作者昵称', value: miniInfo.value.authorName },
     { label: '作者头像', value: checkImageUrl(miniInfo.value.avatar) },

@@ -44,8 +44,8 @@ const dateText = computed(() => {
     class="uh-global-card-glass uh-shadow-xs box-border w-full overflow-hidden rounded-xl bg-white/80"
     @click="emit('tap')"
   >
-    <view v-if="coverUrl" class="relative h-32 w-full">
-      <wd-img :src="coverUrl" mode="aspectFill" lazy-load class="h-full w-full">
+    <view v-if="coverUrl" class="relative w-full">
+      <wd-img :src="coverUrl" mode="widthFix" lazy-load custom-class="!block h-full w-full">
         <template #loading>
           <wd-loading size="64rpx" custom-class="text-primary" />
         </template>

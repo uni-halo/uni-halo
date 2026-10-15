@@ -156,6 +156,20 @@ const appVersionItem: INavItem = {
   group: 'more',
 }
 
+/** 常见问题固定项(临时本地入口,待插件端 FAQ 模块上线后改为配置下发) */
+const faqEntryItem: INavItem = {
+  key: 'faq',
+  title: '常见问题',
+  icons: [{ key: 'ri', prefix: 'ri', iconName: 'question-line' }],
+  color: '#26a69a',
+  iconColor: '#26a69a',
+  bgColor: '#26a69a24',
+  subTitle: '',
+  path: '/pages-blog/faq/faq',
+  show: true,
+  group: 'more',
+}
+
 /** 解析条目当前生效的图标风格（iconMode 优先，缺省取 icons[0]） */
 function resolveNavItemIcon(item: INavItem): INavIconStyle | null {
   if (!item.icons?.length) {
@@ -194,7 +208,7 @@ const commonFeatures = computed(() => {
   return navList.value.filter(f => f.show && f.group === 'blog')
 })
 const otherFeatures = computed(() => {
-  return [...navList.value.filter(f => f.show && f.group === 'more'), appVersionItem]
+  return [...navList.value.filter(f => f.show && f.group === 'more'), faqEntryItem, appVersionItem]
 })
 
 /* ---------------- 功能导航 ---------------- */

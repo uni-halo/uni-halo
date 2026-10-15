@@ -9,6 +9,8 @@
 export interface IAppInfoConfig {
   name?: string
   logo?: string
+  /** 小程序资质类型：personal 个人资质 / enterprise 非个人（企业）资质；控制外部链接 webview 打开策略 */
+  qualification?: 'personal' | 'enterprise'
 }
 
 /** 博主资料（featureConfig.profile.blogger） */
@@ -472,6 +474,44 @@ export interface INoticeListRes {
   items: INoticeListVo[]
 }
 
+/* ---------- 常见问题(uni-halo faq) ---------- */
+
+/** FAQ 相关链接类型:external 外部链接 / internal 内部页面 / contact 客服按钮(无需 url) */
+export type FaqLinkType = 'external' | 'internal' | 'contact'
+
+/** FAQ 相关链接(详情弹窗底部按钮) */
+export interface IFaqLink {
+  /** 按钮标题 */
+  title?: string
+  type?: FaqLinkType
+  /** 外部链接 url / 内部页面路径;客服按钮无需填写 */
+  url?: string
+}
+
+/** FAQ 公开列表项(完整 spec,含摘要/分类/链接) */
+export interface IFaqItem {
+  name?: string
+  title?: string
+  /** 摘要描述(折叠展开时显示) */
+  description?: string
+  /** 分类(软分组) */
+  category?: string
+  /** 详细内容(富文本 HTML,详情弹窗展示) */
+  content?: string
+  links?: IFaqLink[]
+  visible?: boolean
+  /** 排序权重(越小越靠前) */
+  priority?: number
+}
+
+/** FAQ 公开列表响应(ListResult 形态;size=0 时返回全量) */
+export interface IFaqListRes {
+  page?: number
+  size?: number
+  total?: number
+  items: IFaqItem[]
+}
+
 /** 公告详情 spec(完整 Notice + 内嵌 typeDisplayName/typeColor) */
 export interface INoticeDetailSpec {
   title?: string
@@ -480,6 +520,12 @@ export interface INoticeDetailSpec {
   summary?: string
   cover?: string
   link?: string
+  /** 链接类型:none 无 / external 外部链接 / miniapp 小程序链接 / internal 内部页面 / wechat-mp 微信公众号文章;为空按 link 非空回退 external */
+  linkType?: 'none' | 'external' | 'miniapp' | 'internal' | 'wechat-mp'
+  /** 小程序 appId(仅 linkType=miniapp) */
+  linkAppId?: string
+  /** 小程序内页面路径(仅 linkType=miniapp,可空=首页) */
+  linkPath?: string
   typeName?: string
   status?: string
   priority?: number

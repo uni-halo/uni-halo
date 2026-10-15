@@ -32,10 +32,10 @@ const blogDetail = computed(() => configs.value.featureConfig?.linkInfo?.siteInf
 const infoFields = computed(() => {
   const blogger = configs.value.featureConfig?.profile?.blogger || {}
   return [
-    { label: '名称', value: blogDetail.value.displayName || '' },
-    { label: '地址', value: blogDetail.value.url || '' },
-    { label: 'Logo', value: checkImageUrl(blogDetail.value.logo) },
-    { label: '简介', value: blogDetail.value.description || '' },
+    { label: '站点名称', value: blogDetail.value.displayName || '' },
+    { label: '站点地址', value: blogDetail.value.url || '' },
+    { label: '站点头像', value: checkImageUrl(blogDetail.value.logo) },
+    { label: '站点简介', value: blogDetail.value.description || '' },
     { label: '作者昵称', value: blogger.nickname || '' },
     { label: '作者头像', value: checkImageUrl(blogger.avatar || '') },
     { label: '作者网站', value: blogger.website || '' },
