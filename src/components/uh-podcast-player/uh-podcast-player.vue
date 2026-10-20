@@ -4,6 +4,7 @@
  * 传入文章 postName,内部请求公开播客接口;无播客数据时整体不渲染
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { getArticlePodcast } from '@/api/halo-plugin-third/summaraid-gpt'
 import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { useAppConfigStore } from '@/store/appConfig'
@@ -30,12 +31,17 @@ const speedIndex = ref(0)
 const speeds = [1, 1.25, 1.5, 2, 0.75] as const
 
 const appConfigStore = useAppConfigStore()
+const { configs, auditModeEnabled } = storeToRefs(appConfigStore)
 const { available: pluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
   pluginId: NeedPluginIds.PluginSummaraidGPT,
 })
 
-/** 显示判定:插件启用 + 非审核模式 + 有已发布播客数据 */
-const isVisible = computed(() => pluginAvailable.value && !appConfigStore.auditModeEnabled && !!podcast.value)
+/** 显示判定:插件启用 + 非审核模式 + 插件端「显示播客听读」开关(未配置视为开启) + 有已发布播客数据 */
+const isVisible = computed(() =>
+  pluginAvailable.value
+  && !auditModeEnabled.value
+  && configs.value?.featureConfig?.pages?.postDetail?.podcastEnabled !== false
+  && !!podcast.value)
 
 watch(isVisible, (visible) => {
   if (visible) { emit('on-visible', visible) }

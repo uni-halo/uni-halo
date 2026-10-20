@@ -201,6 +201,8 @@ export interface IPageConfig {
     /** 启用评论（评论按钮显隐；插件端透传官方评论设置） */
     enableComment?: boolean
     copyrightEnabled?: boolean
+    /** 是否显示播客听读（未配置视为开启） */
+    podcastEnabled?: boolean
     copyrightAuthor?: string
     copyrightDesc?: string
     copyrightViolation?: string

@@ -56,7 +56,7 @@ const dialog = useDialog('user-popup')
 const windowInfo = uni.getWindowInfo()
 
 const containerStyle = computed(() => ({
-  paddingTop: `${windowInfo.statusBarHeight}px`,
+  // paddingTop: `${windowInfo.statusBarHeight}px`,
   paddingBottom: `${windowInfo.safeAreaInsets.bottom}px`,
 }))
 
@@ -217,6 +217,7 @@ function handleLogout() {
   >
     <view class="relative box-border h-full w-[70vw] flex flex-col gap-y-4 overflow-hidden" :style="[containerStyle]">
       <view
+        v-if="false"
         class="uh-global-card-glass absolute right-4 top-4 z-30 box-border h-6 w-6 flex items-center justify-center border rounded-lg bg-white/90 text-gray-900 !shadow-none"
         @click="handleClose()"
       >
@@ -234,7 +235,7 @@ function handleLogout() {
           style="background:linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.7));"
         />
       </view>
-      <!-- 用户信息卡片(方案 A:素材带+面纱+底部渐隐,头像骑带下缘;勋章贴昵称,称号独立第二行;整卡可点击跳「我的资料」) -->
+      <!-- 用户信息卡片 -->
       <view v-if="updateNowTime().hasLogin" class="box-border w-full flex shrink-0 px-4 pt-30">
         <view
           class="uh-global-card-glass relative w-full overflow-hidden rounded-xl bg-white/80 !shadow-none"
