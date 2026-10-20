@@ -9,6 +9,7 @@ import { getUnreadNotificationCount } from '@/api/notification'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { usePermission } from '@/hooks/usePermission'
+import { useWornSlots } from '@/hooks/useWornSlots'
 import type { PermissionKey } from '@/config/permissions'
 
 defineOptions({
@@ -41,6 +42,9 @@ interface IEmits {
 
 const { updateNowTime } = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
+
+/** 互动增强装饰槽位(登录用户自身;插件未启用/审核模式/站点开关关闭时全 invisible) */
+const wornSlots = useWornSlots(() => userInfo.value.username)
 
 const { can } = usePermission()
 
@@ -220,21 +224,44 @@ function handleLogout() {
       <!-- 用户信息卡片 -->
       <view v-if="updateNowTime().hasLogin" class="w-full flex shrink-0">
         <view
-          class="uh-global-card-glass w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 !bg-white/5 !shadow-none"
+          class="uh-global-card-glass relative w-full flex items-center gap-x-2 overflow-hidden border rounded-xl p-3 !bg-white/5 !shadow-none"
         >
-          <wd-avatar
-            :src="checkAvatarUrl(userInfo.avatar)" :text="getAvatarFallbackText(userInfo.nickname)"
-            shape="round"
-            custom-class="uh-global-card-glass uh-shadow-xs !h-12 !w-12 !shrink-0 !text-gray-900 !font-bold"
-            class="!rounded-full" mode="aspectFill"
+          <image
+            v-if="wornSlots.cardBackground.visible" :src="wornSlots.cardBackground.url"
+            class="pointer-events-none absolute left-0 top-0 h-16 w-full opacity-60" mode="aspectFill"
           />
-          <view class="flex-1">
-            <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
+          <view class="relative shrink-0">
+            <wd-avatar
+              :src="checkAvatarUrl(userInfo.avatar)" :text="getAvatarFallbackText(userInfo.nickname)"
+              shape="round"
+              custom-class="uh-global-card-glass uh-shadow-xs !h-12 !w-12 !shrink-0 !text-gray-900 !font-bold"
+              class="!rounded-full" mode="aspectFill"
+            />
+            <image
+              v-if="wornSlots.avatarFrame.visible" :src="wornSlots.avatarFrame.url"
+              class="pointer-events-none absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2"
+              mode="aspectFit"
+            />
+          </view>
+          <view class="min-w-0 flex-1">
+            <view class="flex items-center gap-x-1">
+              <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
+              <image
+                v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url"
+                class="h-4 w-4 shrink-0" mode="aspectFit"
+              />
+              <text
+                v-if="wornSlots.title.visible" class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+                :style="wornSlots.title.style"
+              >
+                {{ wornSlots.title.text }}
+              </text>
+            </view>
             <text class="mt-1 inline-block text-xs text-gray-500">
               @{{ userInfo.username }}
             </text>
           </view>
-          <view class="flex shrink-0 items-center justify-center" @click="handleToPage(PROFILE_ENTRIES[1])">
+          <view class="relative flex shrink-0 items-center justify-center" @click="handleToPage(PROFILE_ENTRIES[1])">
             <wd-icon name="edit" size="36rpx" custom-class="text-gray-400" />
           </view>
         </view>

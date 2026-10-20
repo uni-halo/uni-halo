@@ -4,6 +4,8 @@ import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getMomentByName } from '@/api/halo'
 import { useUpvote } from '@/hooks/useUpvote'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
@@ -86,6 +88,21 @@ function buildMomentCard(res: IMoment): MomentCard {
 /* ---------------- 数据加载(useDataLoadingStatus 状态机接管) ---------------- */
 const moment = ref<MomentCard | null>(null)
 const { loadingStatus: status, updateLoadingStatus } = useDataLoadingStatus()
+
+/** 作者互动增强装饰槽位(作者缺失/插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => moment.value?.owner?.name || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略) */
+function handleToAuthorCard() {
+  const owner = moment.value?.owner
+  if (!owner?.name) { return }
+  openUserProfilePopup({
+    username: owner.name,
+    nickname: owner.displayName,
+    avatar: owner.avatar,
+  })
+}
 
 async function loadMoment() {
   updateLoadingStatus(DataLoadingStatusEnum.Loading)
@@ -297,18 +314,36 @@ onShareTimeline(() => ({
         </view>
 
         <!-- 作者 -->
-        <view class="flex items-center px-4 pt-6">
-          <wd-avatar
-            class="!shrink-0"
-            custom-class="!h-[80rpx] !w-[80rpx] !text-gray-900 !font-bold"
-            :src="checkAvatarUrl(moment.owner?.avatar || '')"
-            :text="getAvatarFallbackText(moment.owner?.displayName || '')"
-            shape="round"
-            mode="aspectFill"
-          />
+        <view class="flex items-center px-4 pt-6" @click="handleToAuthorCard()">
+          <view class="relative shrink-0">
+            <wd-avatar
+              class="!shrink-0"
+              custom-class="!h-[80rpx] !w-[80rpx] !text-gray-900 !font-bold"
+              :src="checkAvatarUrl(moment.owner?.avatar || '')"
+              :text="getAvatarFallbackText(moment.owner?.displayName || '')"
+              shape="round"
+              mode="aspectFill"
+            />
+            <image
+              v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+              class="pointer-events-none absolute left-1/2 top-1/2 h-[104rpx] w-[104rpx] -translate-x-1/2 -translate-y-1/2"
+              mode="aspectFit"
+            />
+          </view>
           <view class="ml-3 flex flex-col">
-            <view class="text-md text-gray-600 font-medium">
-              {{ moment.owner?.displayName || '' }}
+            <view class="flex items-center gap-x-1">
+              <text class="text-md text-gray-600 font-medium">{{ moment.owner?.displayName || '' }}</text>
+              <image
+                v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+                class="h-4 w-4 shrink-0" mode="aspectFit"
+              />
+              <text
+                v-if="authorSlots.title.visible"
+                class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+                :style="authorSlots.title.style"
+              >
+                {{ authorSlots.title.text }}
+              </text>
             </view>
             <view class="mt-0.5 text-xs text-gray-400">
               记录了这美好的一刻

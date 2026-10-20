@@ -65,6 +65,8 @@ onShow(() => {
     <uh-settings-popup v-model="settingsPopupVisible" />
     <uh-user-popup v-model="userPopupVisible" />
     <uh-ai-chat-popup v-model="chatPopupVisible" />
+    <!-- 用户资料卡(经 useUserProfilePopup 唤起,审核模式下不展示) -->
+    <uh-user-profile-popup />
 
     <!-- ui 全局组件 -->
     <wd-dialog />

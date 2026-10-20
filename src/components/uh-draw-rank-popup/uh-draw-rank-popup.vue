@@ -9,7 +9,9 @@ import { getGuessRank } from '@/api/draw'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
+import { useIdentityStore } from '@/store/identity'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { checkAvatarUrl } from '@/utils/url'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import type { IGuessRankItem } from '@/api/types/draw'
@@ -33,6 +35,14 @@ const showLoginEntry = computed(() => loginEnabled.value && !tokenStore.updateNo
 const loadingStatus = ref<DataLoadingStatus>(DataLoadingStatusEnum.Loading)
 const rankList = ref<IGuessRankItem[]>([])
 
+/** 榜单用户互动增强身份(批量拉取 + TTL 缓存;统一走 store.slotsOf 门控,查无/门控未过返回全 invisible) */
+const identityStore = useIdentityStore()
+const myRankSlots = computed(() => identityStore.slotsOf(userStore.userInfo?.username || ''))
+
+function slotsOf(item: IGuessRankItem) {
+  return identityStore.slotsOf(item.username)
+}
+
 const myRank = computed(() =>
   rankList.value.find(item => item.username === userStore.userInfo?.username))
 
@@ -47,6 +57,8 @@ async function handleGetData() {
   try {
     const res = await getGuessRank({ top: 20 })
     rankList.value = res.data || []
+    // 榜单用户身份批量预取(与排名数据独立失败,不影响榜单展示)
+    identityStore.ensureMany(rankList.value.map(item => item.username))
     loadingStatus.value = rankList.value.length === 0
       ? DataLoadingStatusEnum.Empty
       : DataLoadingStatusEnum.Success
@@ -84,6 +96,17 @@ function rankColorClass(index: number) {
   }
 }
 
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击榜单用户:打开用户资料卡(审核模式下 hook 内直接忽略) */
+function handleToUserCard(item: IGuessRankItem) {
+  openUserProfilePopup({
+    username: item.username,
+    nickname: item.displayName,
+    avatar: item.avatar,
+  })
+}
+
 /** 去登录(弹窗登录,成功后原地刷新排名) */
 function handleToLogin() {
   openLoginPopup(() => handleGetData())
@@ -119,13 +142,23 @@ function handleToLogin() {
         <view class="flex shrink-0 items-center gap-x-1">
           <text class="text-xs text-gray-400">我的排名</text>
 
-          <wd-avatar
-            :src="avatarOf(myRank)" :text="initialOf(myRank)" shape="round" size="50rpx"
-            custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
-          />
-          <view class="flex flex-col">
-            <!-- <text class="text-xs text-gray-400">我的排名</text> -->
+          <view class="relative shrink-0">
+            <wd-avatar
+              :src="avatarOf(myRank)" :text="initialOf(myRank)" shape="round" size="50rpx"
+              custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+            />
+            <image
+              v-if="myRankSlots.avatarFrame.visible" :src="myRankSlots.avatarFrame.url"
+              class="pointer-events-none absolute left-1/2 top-1/2 h-[66rpx] w-[66rpx] -translate-x-1/2 -translate-y-1/2"
+              mode="aspectFit"
+            />
+          </view>
+          <view class="flex items-center gap-x-1">
             <text class="text-3xs text-gray-600">{{ myRank.displayName }}</text>
+            <image
+              v-if="myRankSlots.primaryBadge.visible" :src="myRankSlots.primaryBadge.url"
+              class="h-3 w-3 shrink-0" mode="aspectFit"
+            />
           </view>
         </view>
         <text v-if="myRank" class="text-xs text-gray-600">
@@ -146,6 +179,7 @@ function handleToLogin() {
             <view
               v-for="item in rankList" :key="item.username"
               class="box-border flex items-center gap-x-2.5 px-1"
+              @click="handleToUserCard(item)"
             >
               <text
                 class="h-6 min-w-6 flex shrink-0 items-center justify-center rounded-full text-xs"
@@ -153,11 +187,24 @@ function handleToLogin() {
               >
                 {{ item.rank }}
               </text>
-              <wd-avatar
-                :src="avatarOf(item)" :text="initialOf(item)" shape="round" size="60rpx"
-                custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
-              />
-              <text class="flex-1 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
+              <view class="relative shrink-0">
+                <wd-avatar
+                  :src="avatarOf(item)" :text="initialOf(item)" shape="round" size="60rpx"
+                  custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+                />
+                <image
+                  v-if="slotsOf(item).avatarFrame.visible" :src="slotsOf(item).avatarFrame.url"
+                  class="pointer-events-none absolute left-1/2 top-1/2 h-[78rpx] w-[78rpx] -translate-x-1/2 -translate-y-1/2"
+                  mode="aspectFit"
+                />
+              </view>
+              <view class="flex min-w-0 flex-1 items-center gap-x-1">
+                <text class="min-w-0 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
+                <image
+                  v-if="slotsOf(item).primaryBadge.visible" :src="slotsOf(item).primaryBadge.url"
+                  class="h-3 w-3 shrink-0" mode="aspectFit"
+                />
+              </view>
               <text class="shrink-0 text-3xs text-gray-500"> <text class="text-sm text-gray-900 font-bold"> {{ item.score }} </text>  分</text>
             </view>
           </view>

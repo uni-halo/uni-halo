@@ -7,6 +7,8 @@ import { storeToRefs } from 'pinia'
 import { useFavoritesStore } from '@/store/favorites'
 import { useSettingStore } from '@/store/setting'
 import { useUpvote } from '@/hooks/useUpvote'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
@@ -65,6 +67,20 @@ const displayName = computed(() => (props.moment.owner ? props.moment.owner.disp
 const avatarUrl = computed(() =>
   props.moment.owner ? checkAvatarUrl(props.moment.owner.avatar || '') : checkAvatarUrl(props.blogger.avatar || ''),
 )
+
+/** 作者互动增强装饰槽位(作者缺失/插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => props.moment.owner?.name || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击作者:打开用户资料卡(作者缺失时 hook 内因 username 为空直接忽略) */
+function handleToAuthorCard() {
+  const owner = props.moment.owner
+  openUserProfilePopup({
+    username: owner?.name || '',
+    nickname: owner?.displayName,
+    avatar: owner?.avatar,
+  })
+}
 /** 无头像时显示昵称首字(wd-avatar 回退) */
 const avatarText = computed(() => getAvatarFallbackText(displayName.value, '瞬'))
 
@@ -85,17 +101,35 @@ function handlePreview(index: number, list: { url: string }[]) {
   <view class="uh-global-card-glass uh-shadow-xs w-full flex-1 overflow-hidden rounded-xl">
     <view class="box-border flex items-center px-3 pt-3">
       <view class="flex flex-1 items-center">
-        <wd-avatar
-          :src="avatarUrl"
-          :text="avatarText"
-          :shape="avatarShape"
-          custom-class="!h-9 !w-9 !shrink-0 !text-primary !font-bold"
-          :class="avatarClass"
-          mode="aspectFill"
-        />
-        <view class="ml-2 flex flex-col gap-y-1">
-          <view class="text-3xs text-gray-900 font-bold">
-            {{ displayName }}
+        <view class="relative shrink-0">
+          <wd-avatar
+            :src="avatarUrl"
+            :text="avatarText"
+            :shape="avatarShape"
+            custom-class="!h-9 !w-9 !shrink-0 !text-primary !font-bold"
+            :class="avatarClass"
+            mode="aspectFill"
+          />
+          <image
+            v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+            class="pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
+            mode="aspectFit"
+          />
+        </view>
+        <view class="ml-2 flex flex-col gap-y-1" @click="handleToAuthorCard()">
+          <view class="flex items-center gap-x-1">
+            <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
+            <image
+              v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+              class="h-3 w-3 shrink-0" mode="aspectFit"
+            />
+            <text
+              v-if="authorSlots.title.visible"
+              class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-xs"
+              :style="authorSlots.title.style"
+            >
+              {{ authorSlots.title.text }}
+            </text>
           </view>
           <view class="text-xs text-gray-400">
             {{ formatMomentTime(moment.spec.releaseTime) }}

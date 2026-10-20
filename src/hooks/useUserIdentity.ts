@@ -1,28 +1,34 @@
 /**
  * 用户公开身份(互动增强插件 + 插件端公开资料兜底,均不可用时静默降级为空数据)
+ *
+ * 身份读取走 identity store(三重门控:插件可用/非审核模式/站点全局开关 + TTL 缓存);
+ * 公开资料(插件端 UserPublicEndpoint)不依赖互动增强插件,始终尝试拉取。
  */
 import { shallowRef, watch } from 'vue'
 import type { WatchSource } from 'vue'
 import { getUserPublicProfile } from '@/api/user'
-import { getDecorationWall, getPublicIdentity } from '@/api/halo-plugin-third/interaction-plus'
+import { getDecorationWall } from '@/api/halo-plugin-third/interaction-plus'
+import { useIdentityStore } from '@/store/identity'
 import type { DecorationType, IDecorationWallItem, IPublicIdentity } from '@/api/types/halo-plugin-third/interaction-plus'
 import type { IPublicUserProfile } from '@/api/user'
 
 export function useUserIdentity(username: WatchSource<string>) {
+  const identityStore = useIdentityStore()
   const identity = shallowRef<IPublicIdentity | null>(null)
   const profile = shallowRef<IPublicUserProfile | null>(null)
   const decorationWall = shallowRef<IDecorationWallItem[]>([])
 
-  watch(username, async (name) => {
+  watch([username, () => identityStore.enabled], async ([name]) => {
     identity.value = null
     profile.value = null
     decorationWall.value = []
     if (!name) { return }
-    await getUserProfile(name)
-    const [idRes, wallRes] = await Promise.allSettled([getPublicIdentity(name), getDecorationWall(name)])
+    getUserProfile(name)
+    await identityStore.checkAvailable()
+    if (!identityStore.enabled) { return }
+    const [idRes, wallRes] = await Promise.allSettled([identityStore.ensure(name), getDecorationWall(name)])
     if (idRes.status === 'fulfilled') {
-      identity.value = idRes.value.data
-      return
+      identity.value = idRes.value
     }
     if (wallRes.status === 'fulfilled') {
       decorationWall.value = wallRes.value.data || []

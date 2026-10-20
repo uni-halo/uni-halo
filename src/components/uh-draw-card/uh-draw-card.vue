@@ -5,6 +5,8 @@
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 import { checkThumbnailUrl } from '@/utils/url'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import type { IDraw } from '@/api/types/draw'
 
 interface IProps {
@@ -33,6 +35,19 @@ const owner = computed(() => props.draw.owner)
 const ownerText = computed(() => owner.value?.displayName || owner.value?.username || '佚名')
 const ownerAvatar = computed(() => checkThumbnailUrl(owner.value?.avatar || ''))
 const ownerFallbackText = computed(() => ownerText.value.slice(0, 1).toUpperCase())
+/** 作者互动增强装饰槽位(作者缺失/插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => owner.value?.username || props.draw.spec.ownerName || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击作者:打开用户资料卡(不开进详情;审核模式下 hook 内直接忽略) */
+function handleToAuthorCard() {
+  const username = owner.value?.username || props.draw.spec.ownerName || ''
+  openUserProfilePopup({
+    username,
+    nickname: owner.value?.displayName,
+    avatar: owner.value?.avatar,
+  })
+}
 const dateText = computed(() => {
   const time = props.draw.metadata?.creationTimestamp
   return time ? dayjs(time).format('YYYY年MM月DD日') : ''
@@ -60,16 +75,27 @@ const dateText = computed(() => {
     <view class="box-border flex flex-col gap-y-1.5 overflow-hidden px-3 py-2.5">
       <text class="w-full truncate text-xs text-gray-900">{{ titleText }}</text>
       <text class="text-xs text-gray-500">{{ dateText }}</text>
-      <view class="flex items-center gap-x-1 text-3xs text-gray-400">
-        <wd-avatar
-          :src="ownerAvatar"
-          :text="ownerFallbackText"
-          shape="round"
-          size="42rpx"
-          custom-class="uh-global-card-glass !shadow-none !border"
-          mode="aspectFill"
-        />
+      <view class="flex items-center gap-x-1 text-3xs text-gray-400" @click.stop="handleToAuthorCard()">
+        <view class="relative mr-1.5 shrink-0">
+          <wd-avatar
+            :src="ownerAvatar"
+            :text="ownerFallbackText"
+            shape="round"
+            size="42rpx"
+            custom-class="uh-global-card-glass !shadow-none !border"
+            mode="aspectFill"
+          />
+          <image
+            v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+            class="pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx] -translate-x-1/2 -translate-y-1/2"
+            mode="aspectFit"
+          />
+        </view>
         <text class="truncate text-3xs text-gray-400">{{ ownerText }}</text>
+        <image
+          v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+          class="h-3 w-3 shrink-0" mode="aspectFit"
+        />
       </view>
     </view>
   </view>

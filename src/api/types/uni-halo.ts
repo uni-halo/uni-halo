@@ -309,6 +309,8 @@ export interface IAppConfig {
       articlesCardType?: string
       /** 内容页摘要打字机效果（笔记详情摘要卡逐字打字；未配置视为开启） */
       articlesSummaryTypewriterEnabled?: boolean
+      /** 互动增强展示（依赖第三方插件 interaction-plus；插件未启用或审核模式下无论本开关如何均隐藏；未配置视为开启） */
+      interactionPlusEnabled?: boolean
       archivesListLayout?: 'single' | 'double' | string
       archivesCardType?: string
       /** 分类笔记页布局（single/double）与卡片样式（image_*） */

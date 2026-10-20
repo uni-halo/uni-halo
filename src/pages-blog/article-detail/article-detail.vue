@@ -11,6 +11,8 @@ import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
 import { useSettingStore } from '@/store/setting'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildPostFavoriteItem } from '@/utils/favorite'
@@ -89,6 +91,21 @@ const avatarClass = computed(() => {
   }
   return '!rounded-lg'
 })
+
+/** 作者互动增强装饰槽位(插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => result.value?.owner?.metadata?.name || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略) */
+function handleToAuthorCard() {
+  const username = result.value?.owner?.metadata?.name
+  if (!username) { return }
+  openUserProfilePopup({
+    username,
+    nickname: result.value?.owner?.displayName,
+    avatar: result.value?.owner?.avatar,
+  })
+}
 
 /** 从 HTML 提取投票块 id */
 function extractVoteBlockIds(html: string): string[] {
@@ -423,16 +440,34 @@ onShareTimeline(() => {
       >
         <!-- 顶部信息 -->
         <view class="box-border flex flex-col gap-3 p-3 pb-2">
-          <view class="flex items-center gap-x-2">
-            <wd-avatar
-              :src="checkAvatarUrl(result.owner.avatar)"
-              :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
-              :shape="avatarShape"
-              custom-class="uh-global-card-glass !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
-              :class="avatarClass"
-              mode="aspectFill"
-            />
+          <view class="flex items-center gap-x-2" @click="handleToAuthorCard()">
+            <view class="relative shrink-0">
+              <wd-avatar
+                :src="checkAvatarUrl(result.owner.avatar)"
+                :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
+                :shape="avatarShape"
+                custom-class="uh-global-card-glass !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
+                :class="avatarClass"
+                mode="aspectFill"
+              />
+              <image
+                v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+                class="pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2"
+                mode="aspectFit"
+              />
+            </view>
             <text class="text-sm text-gray-600">{{ result?.owner?.displayName }}</text>
+            <image
+              v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+              class="h-4 w-4 shrink-0" mode="aspectFit"
+            />
+            <text
+              v-if="authorSlots.title.visible"
+              class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+              :style="authorSlots.title.style"
+            >
+              {{ authorSlots.title.text }}
+            </text>
           </view>
           <view class="font-semibold">
             {{ result?.spec.title }}

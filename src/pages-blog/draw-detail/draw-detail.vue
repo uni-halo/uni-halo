@@ -15,6 +15,8 @@ import { useUserStore } from '@/store/user'
 import { useAppConfigStore } from '@/store/appConfig'
 import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -66,6 +68,21 @@ const ownerText = computed(() =>
   draw.value?.owner?.displayName || draw.value?.owner?.username || '佚名')
 const ownerAvatar = computed(() => checkThumbnailUrl(draw.value?.owner?.avatar || ''))
 const ownerInitial = computed(() => ownerText.value.slice(0, 1).toUpperCase())
+/** 作者互动增强装饰槽位(作者缺失/插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => draw.value?.owner?.username || draw.value?.spec.ownerName || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略) */
+function handleToAuthorCard() {
+  const owner = draw.value?.owner
+  const username = owner?.username || draw.value?.spec.ownerName
+  if (!username) { return }
+  openUserProfilePopup({
+    username,
+    nickname: owner?.displayName,
+    avatar: owner?.avatar,
+  })
+}
 
 const board = ref<IGuessBoard | null>(null)
 
@@ -295,14 +312,32 @@ onPageScroll(({ scrollTop }) => {
           </view>
 
           <!-- 作者信息 -->
-          <view class="flex items-center justify-between text-xs text-gray-600">
+          <view class="flex items-center justify-between text-xs text-gray-600" @click="handleToAuthorCard()">
             <view class="w-full flex items-center gap-x-1">
               <text class="text-3xs text-gray-500">作者：</text>
-              <wd-avatar
-                :src="ownerAvatar" :text="ownerInitial" shape="round" size="42rpx"
-                custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
-              />
+              <view class="relative shrink-0">
+                <wd-avatar
+                  :src="ownerAvatar" :text="ownerInitial" shape="round" size="42rpx"
+                  custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+                />
+                <image
+                  v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+                  class="pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx] -translate-x-1/2 -translate-y-1/2"
+                  mode="aspectFit"
+                />
+              </view>
               <text class="text-3xs">{{ ownerText }}</text>
+              <image
+                v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+                class="h-3 w-3 shrink-0" mode="aspectFit"
+              />
+              <text
+                v-if="authorSlots.title.visible"
+                class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-xs"
+                :style="authorSlots.title.style"
+              >
+                {{ authorSlots.title.text }}
+              </text>
             </view>
             <text class="shrink-0 text-3xs text-gray-500">
               {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}

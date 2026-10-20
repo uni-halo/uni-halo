@@ -4,6 +4,8 @@ import { storeToRefs } from 'pinia'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { useSettingStore } from '@/store/setting'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { formatTime } from '@/utils/formatTime'
 import type { ICategory, IPost } from '@/api/types/halo'
 
@@ -154,6 +156,10 @@ const publishTimeText = computed(() => {
   return time ? formatTime({ d: time, f: 'yyyy/MM/dd' }) : ''
 })
 
+/** 作者互动增强装饰槽位(插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => props.article.owner?.metadata?.name || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
 /**
  * 头像地址(无头像 / 加载失败时由 wd-avatar 回退到首字文本)
  */
@@ -175,13 +181,16 @@ function handleToArticleDetail() {
     animationType: 'slide-in-right',
   })
 }
+/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略;卡内「查看主页」再跳个人主页) */
 function handleToUserProfile() {
   const username = props.article.owner?.metadata?.name
-  if (!username)
+  if (!username) {
     return
-  uni.navigateTo({
-    url: `/pages-blog/user-profile/user-profile?username=${encodeURIComponent(username)}`,
-    animationType: 'slide-in-right',
+  }
+  openUserProfilePopup({
+    username,
+    nickname: props.article.owner?.displayName,
+    avatar: props.article.owner?.avatar,
   })
 }
 </script>
@@ -242,22 +251,42 @@ function handleToUserProfile() {
       </view>
       <view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
         <view class="flex items-center" :class="cardLayout.authorGroup" @click.stop="handleToUserProfile()">
-          <wd-avatar
-            :src="avatarSrc"
-            :text="avatarFallbackText"
-            :shape="avatarShape"
-            custom-class="uh-global-card-glass"
-            :class="cardLayout.avatar"
-            mode="aspectFill"
-          />
+          <view class="relative shrink-0">
+            <wd-avatar
+              :src="avatarSrc"
+              :text="avatarFallbackText"
+              :shape="avatarShape"
+              custom-class="uh-global-card-glass"
+              :class="cardLayout.avatar"
+              mode="aspectFill"
+            />
+            <image
+              v-if="isSocialCard && authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+              class="pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
+              mode="aspectFit"
+            />
+          </view>
           <template v-if="isSocialCard">
             <view :class="cardLayout.infoCol">
-              <text
-                class="block truncate"
-                :class="cardLayout.nickname"
-              >
-                {{ article.owner.displayName }}
-              </text>
+              <view class="flex items-center gap-x-1">
+                <text
+                  class="block min-w-0 flex-1 truncate"
+                  :class="cardLayout.nickname"
+                >
+                  {{ article.owner.displayName }}
+                </text>
+                <image
+                  v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+                  class="h-4 w-4 shrink-0" mode="aspectFit"
+                />
+                <text
+                  v-if="authorSlots.title.visible"
+                  class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+                  :style="authorSlots.title.style"
+                >
+                  {{ authorSlots.title.text }}
+                </text>
+              </view>
               <view class="flex items-center gap-x-2">
                 <text class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>
                 <view class="visits flex items-center gap-x-1 text-gray-400">
@@ -268,7 +297,13 @@ function handleToUserProfile() {
               </view>
             </view>
           </template>
-          <text v-else class="min-w-0 flex-1 truncate">{{ article.owner.displayName }}</text>
+          <template v-else>
+            <text class="min-w-0 flex-1 truncate">{{ article.owner.displayName }}</text>
+            <image
+              v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+              class="h-3 w-3 shrink-0" mode="aspectFit"
+            />
+          </template>
         </view>
         <text
           v-if="!isGrid && !isSocialCard" class="text-gray-400"

@@ -32,6 +32,7 @@ export const NeedPluginIds = Object.freeze({
   PluginDouban: 'plugin-douban',
   PluginFootprint: 'footprint',
   PluginEquipment: 'equipment',
+  PluginInteractionPlus: 'interaction-plus',
 })
 
 interface IPluginAvailableOption {

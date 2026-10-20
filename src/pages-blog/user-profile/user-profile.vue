@@ -12,6 +12,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { useUpvote } from '@/hooks/useUpvote'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
+import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
 import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
@@ -38,46 +39,10 @@ const { userInfo } = storeToRefs(userStore)
 const pageUsername = ref('')
 const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userInfo.value.username)
 
-/* ---------------- 互动增强装饰(插件未启用时为空,静默降级) ---------------- */
+/* ---------------- 互动增强装饰(插件未启用/审核模式/站点开关关闭时槽位全 invisible,静默降级) ---------------- */
 const { identity, profile, decorationWall } = useUserIdentity(pageUsername)
-const wornDecorations = computed(() => identity.value?.decorations || {})
-const avatarFrame = computed(() => {
-  const url = checkImageUrl(wornDecorations.value.avatarFrame?.url)
-  return {
-    visible: url && identity.value?.display?.userCard?.showAvatarFrame,
-    url,
-  }
-})
-const primaryBadge = computed(() => {
-  const url = checkImageUrl(wornDecorations.value.primaryBadge?.url)
-  return {
-    visible: url && identity.value?.display?.userCard?.showPrimaryBadge,
-    url,
-  }
-})
-const wornTitle = computed(() => {
-  const title = wornDecorations.value?.title || null
-  return {
-    visible: title !== null && identity.value?.display?.userCard?.showTitle,
-    title,
-  }
-})
-
-const profileNicknameStyle = computed(() => {
-  const ns = wornDecorations.value.nameStyle?.nameStyle
-  if (!ns) { return '' }
-  if (ns.mode === 'gradient' && ns.colors?.length) { return `background-image:linear-gradient(135deg,${ns.colors.join(',')});-webkit-background-clip:text;background-clip:text;color:transparent` }
-  return ns.color ? `color:${ns.color}` : ''
-})
-
-const titleStyleCss = computed(() => {
-  const t = wornTitle.value.title
-  if (!t) { return '' }
-  const bg = t.titleBackgroundSecondary
-    ? `linear-gradient(135deg,${t.titleBackground},${t.titleBackgroundSecondary})`
-    : t.titleBackground
-  return `${bg ? `background-image:${bg};` : ''}${t.titleColor ? `color:${t.titleColor}` : ''}`
-})
+const wornSlots = computed(() => buildWornSlots(identity.value))
+const profileNicknameStyle = computed(() => nameStyleCssOf(identity.value))
 
 /* ---------------- 头部资料(优先级:互动增强 identity > 插件端 profile > 登录信息/兜底) ---------------- */
 const headerUser = computed(() => ({
@@ -94,8 +59,8 @@ const headerUser = computed(() => ({
 }))
 
 const profileBgUrl = computed(() => {
-  if (wornDecorations.value.cardBackground) {
-    return checkImageUrl(wornDecorations.value.cardBackground?.url)
+  if (wornSlots.value.cardBackground.visible) {
+    return wornSlots.value.cardBackground.url
   }
   return checkImageUrl(configs.value.featureConfig?.pages?.blogger?.bgImageUrl)
 })
@@ -382,7 +347,7 @@ onReachBottom(() => {
             class="!border-2 !border-white/40 !rounded-full" mode="aspectFill"
           />
           <image
-            v-if="avatarFrame.visible" :src="avatarFrame.url"
+            v-if="wornSlots.avatarFrame.visible" :src="wornSlots.avatarFrame.url"
             class="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2"
             mode="aspectFit"
           />
@@ -393,11 +358,11 @@ onReachBottom(() => {
               {{
                 headerUser.nickname || headerUser.username }}
             </text>
-            <image v-if="primaryBadge.visible" :src="primaryBadge.url" class="h-4 w-4" mode="aspectFit" />
+            <image v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url" class="h-4 w-4" mode="aspectFit" />
           </view>
           <view class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-            <text v-if="wornTitle.visible" class="box-border rounded-full px-2 py-0.5 text-xs" :style="titleStyleCss">
-              {{ wornTitle.title.titleText }}
+            <text v-if="wornSlots.title.visible" class="box-border rounded-full px-2 py-0.5 text-xs" :style="wornSlots.title.style">
+              {{ wornSlots.title.text }}
             </text>
           </view>
           <text class="line-clamp-2 text-center text-xs text-gray-900">{{ headerUser.bio }}</text>
