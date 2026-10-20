@@ -3,8 +3,10 @@
  * 播客播放器(智阅全能AI助手播客听读,新建)
  * 传入文章 postName,内部请求公开播客接口;无播客数据时整体不渲染
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getArticlePodcast } from '@/api/halo-plugin-third/summaraid-gpt'
+import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
+import { useAppConfigStore } from '@/store/appConfig'
 import { checkUrl } from '@/utils/url'
 import type { IPodcastTurn, IPublicPodcast } from '@/api/types/halo-plugin-third/summaraid-gpt'
 
@@ -16,8 +18,9 @@ interface IProps {
 const props = defineProps<IProps>()
 
 const emit = defineEmits<{
-  (e: 'on-loaded', data: IPublicPodcast): void
-  (e: 'on-error'): void
+  'on-loaded': [data: IPublicPodcast]
+  'on-error': []
+  'on-visible': [visible: boolean]
 }>()
 
 const podcast = ref<IPublicPodcast | null>(null)
@@ -25,6 +28,18 @@ const isPlaying = ref(false)
 const currentMs = ref(0)
 const speedIndex = ref(0)
 const speeds = [1, 1.25, 1.5, 2, 0.75] as const
+
+const appConfigStore = useAppConfigStore()
+const { available: pluginAvailable, check: checkPluginAvailable } = usePluginAvailable({
+  pluginId: NeedPluginIds.PluginSummaraidGPT,
+})
+
+/** 显示判定:插件启用 + 非审核模式 + 有已发布播客数据 */
+const isVisible = computed(() => pluginAvailable.value && !appConfigStore.auditModeEnabled && !!podcast.value)
+
+watch(isVisible, (visible) => {
+  if (visible) { emit('on-visible', visible) }
+}, { immediate: true })
 
 let audioContext: UniApp.InnerAudioContext | null = null
 
@@ -58,6 +73,9 @@ function formatTime(ms: number) {
 /* ---------------- 数据加载 ---------------- */
 
 async function handleLoad() {
+  const available = await checkPluginAvailable()
+  if (!available || appConfigStore.auditModeEnabled)
+    return
   try {
     const res = await getArticlePodcast(props.postName)
     if (!res.data?.audio?.url) { return }
@@ -167,7 +185,7 @@ onBeforeUnmount(() => {
 
 <template>
   <view
-    v-if="podcast"
+    v-if="isVisible"
     class="uh-podcast-player uh-global-card-glass uh-shadow-xs box-border w-full flex flex-col gap-y-3 p-3 !border !rounded-xl"
   >
     <view class="w-full flex items-center justify-between gap-2 overflow-hidden">
@@ -219,12 +237,13 @@ onBeforeUnmount(() => {
 
     <!-- 对话稿台词(带时间戳时可点击跳转) -->
     <scroll-view
-      v-if="showTurns && turns.length" :scroll-y="true" class="max-h-60"
-      :scroll-into-view="activeTurnId" :scroll-with-animation="true"
+      v-if="showTurns && turns.length" :scroll-y="true" class="max-h-60" :scroll-into-view="activeTurnId"
+      :scroll-with-animation="true"
     >
       <view class="w-full flex flex-col gap-y-2">
         <view
-          v-for="(turn, index) in turns" :id="`turn-${index}`" :key="index" class="flex flex-col gap-1 rounded-xl px-3 py-2"
+          v-for="(turn, index) in turns" :id="`turn-${index}`" :key="index"
+          class="flex flex-col gap-1 rounded-xl px-3 py-2"
           :class="index === activeTurnIndex ? 'bg-gray-100' : 'bg-gray-50'" @click="handleSeekTurn(turn)"
         >
           <text class="text-xs" :class="turn.speaker === 'A' ? 'text-gray-500' : 'text-gray-500'">

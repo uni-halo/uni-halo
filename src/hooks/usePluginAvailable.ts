@@ -33,6 +33,7 @@ export const NeedPluginIds = Object.freeze({
   PluginFootprint: 'footprint',
   PluginEquipment: 'equipment',
   PluginInteractionPlus: 'interaction-plus',
+  PluginSummaraidGPT: 'summaraidGPT',
 })
 
 interface IPluginAvailableOption {
@@ -175,6 +176,16 @@ export const NeedPlugins = new Map<string, IPluginInfo>([
       desc: '装备管理模块所需要的插件，用于展示博主装备清单（支持分组）',
       logo: checkUrl('/plugins/equipment/logo.svg'),
       url: 'https://github.com/chengzhongxue/plugin-equipment',
+    },
+  ],
+  [
+    NeedPluginIds.PluginSummaraidGPT,
+    {
+      id: 'summaraidGPT',
+      name: '智阅全能AI助手',
+      desc: '播客听读模块所需要的插件，用于生成与播放文章播客',
+      logo: checkUrl('/plugins/summaraidGPT/logo.png'),
+      url: 'https://github.com/acanyo/halo-plugin-summaraidGPT',
     },
   ],
 ])

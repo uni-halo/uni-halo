@@ -14,10 +14,13 @@ import { useUpvote } from '@/hooks/useUpvote'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
-import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+import { imagePreview } from '@/utils/image'
 import { getAvatarFallbackText } from '@/utils/avatar'
+import { formatTime } from '@/utils/formatTime'
 import { sleep } from '@/utils/common'
 import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
+import type { IDecorationWallItem, IIdentityMark } from '@/api/types/halo-plugin-third/interaction-plus'
 
 definePage({
   style: {
@@ -45,32 +48,31 @@ const { identity, profile, decorationWall, identityPlusAvailable } = useUserIden
 const wornSlots = computed(() => buildWornSlots(identity.value))
 const profileNicknameStyle = computed(() => nameStyleCssOf(identity.value))
 
-/* ---------------- 装扮墙展示样式(与本 app 互动增强资料卡弹窗同一套:稀有度描边+透明网格画布+右上角稀有度徽标) ---------------- */
+/* ---------------- 基本资料卡（方案 B 键值行,左右布局:label 左 value 右；增强数据按门控降级） ---------------- */
+/** 加入时间（互动增强 identity 优先,公开资料兜底） */
+const joinedAt = computed(() => identity.value?.registeredAt || profile.value?.registeredAt || '')
+const joinedText = computed(() => joinedAt.value ? formatTime({ d: joinedAt.value, f: 'yyyy/MM/dd' }) : '')
 
-/** 透明网格棋盘(模拟透明图层纹理) */
-const CHECKER_PATTERN = 'conic-gradient(rgb(0 0 0 / 0.05) 25%, transparent 0 50%, rgb(0 0 0 / 0.05) 0 75%, transparent 0)'
+/** 笔记/评论统计文本（仅由互动增强 identity 下发才展示；审核模式不展示） */
+const statsPosts = computed(() => identity.value?.stats?.posts)
+const statsComments = computed(() => identity.value?.stats?.comments)
+const statsText = computed(() => [
+  statsPosts.value !== undefined ? `${statsPosts.value} 篇笔记` : '',
+  statsComments.value !== undefined ? `${statsComments.value} 条评论` : '',
+].filter(Boolean).join(' · '))
+const showStatsRow = computed(() => !calcAuditModeEnabled.value && statsText.value !== '')
 
-/** 仅当稀有度色为 #rrggbb 形式时追加 6 位 alpha，避免 rgb()/颜色名拼接失效 */
-function hexAlpha(color: string | undefined, alpha: string): string {
-  return color && /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alpha}` : ''
-}
-
-/** 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退） */
-const wallStyled = computed(() => decorationWall.value.map((item) => {
-  const tint = hexAlpha(item.rarityColor, '14')
-  const layers = [tint ? `linear-gradient(160deg, ${tint}, transparent 70%)` : '', CHECKER_PATTERN]
-    .filter(Boolean)
-    .join(',')
-  const sizes = [tint ? '100% 100%' : '', '12px 12px'].filter(Boolean).join(', ')
-  return {
-    item,
-    style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
-    bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
-    badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
-    textStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
-    isTextDecoration: item.type === 'title' || item.type === 'name_style',
-  }
-}))
+/** 身份标牌（文字牌/图标/图片三形态,最多 3 个;identity 为空自然隐藏） */
+const markChips = computed(() => {
+  const marks = (identity.value?.identityMarks || []).slice(0, 3) as IIdentityMark[]
+  return marks
+    .filter(mark => !!mark?.displayName)
+    .map(mark => ({
+      displayName: mark.displayName,
+      icon: /\/|data:/.test(mark.icon || '') ? mark.icon : '',
+      style: mark.color ? `background:${mark.color};` : 'background:rgb(0 0 0 / 0.35);',
+    }))
+})
 
 /* ---------------- 头部资料(优先级:互动增强 identity > 插件端 profile > 登录信息/兜底) ---------------- */
 const headerUser = computed(() => ({
@@ -84,6 +86,51 @@ const headerUser = computed(() => ({
     || (isSelf.value ? userInfo.value.avatar : '')
     || '',
   bio: identity.value?.bio || profile.value?.bio || '这个人很懒，什么都没有留下~',
+}))
+
+/* ---------- 图片预览（头像/装扮条目;与资料卡弹窗一致,直接用工具类 imagePreview 原生预览） ---------- */
+
+function handlePreviewAvatar() {
+  const url = checkAvatarUrl(headerUser.value.avatar)
+  if (!url) { return }
+  imagePreview(url)
+}
+
+function handlePreviewAsset(item: IDecorationWallItem) {
+  const url = checkImageUrl(item?.url)
+  if (!url) { return }
+  imagePreview(url)
+}
+
+/* ---------------- 装扮墙展示样式(与本 app 互动增强资料卡弹窗同一套:稀有度描边+透明网格画布+右上角稀有度徽标) ---------------- */
+
+/** 透明网格棋盘(模拟透明图层纹理) */
+const CHECKER_PATTERN = 'conic-gradient(rgb(0 0 0 / 0.05) 25%, transparent 0 50%, rgb(0 0 0 / 0.05) 0 75%, transparent 0)'
+
+/** 仅当稀有度色为 #rrggbb 形式时追加 6 位 alpha，避免 rgb()/颜色名拼接失效 */
+function hexAlpha(color: string | undefined, alpha: string): string {
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alpha}` : ''
+}
+
+/**
+ * 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退）；
+ * item.url 统一经 checkImageUrl 规范化（空值/非法形式置空，给 src 与预览(imagePreview)前统一兜底）
+ */
+const wallStyled = computed(() => decorationWall.value.map((raw) => {
+  const item: IDecorationWallItem = { ...raw, url: checkImageUrl(raw.url) }
+  const tint = hexAlpha(item.rarityColor, '14')
+  const layers = [tint ? `linear-gradient(160deg, ${tint}, transparent 70%)` : '', CHECKER_PATTERN]
+    .filter(Boolean)
+    .join(',')
+  const sizes = [tint ? '100% 100%' : '', '12px 12px'].filter(Boolean).join(', ')
+  return {
+    item,
+    style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
+    bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
+    badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
+    textStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
+    isTextDecoration: item.type === 'title' || item.type === 'name_style',
+  }
 }))
 
 /* 顶部背景：佩戴素材优先；素材缺失或装载失败回退博主页背景图（useCardBgSrc 统一兜底）；连兜底未配置则为空串不渲染 */
@@ -369,7 +416,7 @@ onReachBottom(() => {
       />
       <view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
       <view class="absolute left-0 z-30 flex items-center justify-center gap-x-4 px-4 -bottom-6">
-        <view class="relative shrink-0">
+        <view class="relative shrink-0" @click="handlePreviewAvatar()">
           <wd-avatar
             :src="checkAvatarUrl(headerUser.avatar)"
             :text="getAvatarFallbackText(headerUser.nickname || headerUser.username)" shape="round"
@@ -411,7 +458,81 @@ onReachBottom(() => {
             </view>
           </view>
           <view class="w-full flex flex-col gap-y-2 text-sm text-gray-900">
-            用户信息内容
+            <!-- 键值行(label 左灰小字 + value 右主文;增强数据按门控逐行隐藏) -->
+            <view class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                用户昵称
+              </text>
+              <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1 leading-5">
+                <text class="truncate text-xs text-gray-900" :style="[profileNicknameStyle]">
+                  {{ headerUser.nickname || headerUser.username }}
+                </text>
+              </view>
+            </view>
+            <view v-if="wornSlots.primaryBadge.visible" class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                佩戴勋章
+              </text>
+              <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
+                <image :src="wornSlots.primaryBadge.url" class="h-5 w-5" mode="aspectFit" @click="imagePreview(wornSlots.primaryBadge.url)" />
+              </view>
+            </view>
+            <view v-if="wornSlots.title.visible" class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                佩戴称号
+              </text>
+              <view class="min-w-0 flex-1">
+                <text class="box-border max-w-fit truncate rounded-full px-2 py-0.5 text-xs" :style="wornSlots.title.style">
+                  {{ wornSlots.title.text }}
+                </text>
+              </view>
+            </view>
+            <view v-if="markChips.length" class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                身份标牌
+              </text>
+              <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
+                <template v-for="(mark, i) in markChips" :key="i">
+                  <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
+                  <text
+                    v-else class="box-border max-w-fit truncate rounded-full px-1.5 py-0.5 text-xs text-white"
+                    :style="mark.style"
+                  >
+                    {{ mark.displayName }}
+                  </text>
+                </template>
+              </view>
+            </view>
+            <view v-if="joinedText" class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                加入时间
+              </text>
+              <view class="min-w-0 flex-1">
+                <text class="text-xs text-gray-900 leading-5">
+                  {{ joinedText }}
+                </text>
+              </view>
+            </view>
+            <view v-if="showStatsRow" class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                互动数据
+              </text>
+              <view class="min-w-0 flex-1">
+                <text class="text-xs text-gray-900 leading-5">
+                  {{ statsText }}
+                </text>
+              </view>
+            </view>
+            <view class="flex items-start gap-x-4">
+              <text class="shrink-0 text-xs text-gray-400 leading-5">
+                个人简介
+              </text>
+              <view class="min-w-0 flex-1">
+                <text class="text-xs text-gray-500 leading-5">
+                  {{ headerUser.bio }}
+                </text>
+              </view>
+            </view>
           </view>
         </view>
         <view v-if="decorationWall.length" class="uh-global-card-glass rounded-lg p-3 !border !shadow-none">
@@ -427,6 +548,7 @@ onReachBottom(() => {
             <view
               v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
               class="flex flex-1 flex-col cursor-pointer"
+              @click="handlePreviewAsset(d.item)"
             >
               <view class="flex flex-col items-center justify-center gap-y-1">
                 <!-- 预览框(稀有度描边外框 + 固定高度/内边距/自身边框的透明网格画布 + 右上角稀有度徽标) -->

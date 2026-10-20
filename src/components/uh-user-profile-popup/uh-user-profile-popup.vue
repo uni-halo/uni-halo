@@ -15,7 +15,7 @@ import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { useAppConfigStore } from '@/store/appConfig'
 import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
-import { checkAvatarUrl } from '@/utils/url'
+import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
 import { imagePreview } from '@/utils/image'
@@ -86,8 +86,9 @@ function handlePreviewAvatar() {
 }
 
 function handlePreviewAsset(d: IDecorationWallItem) {
-  if (!d?.url) { return }
-  imagePreview(d.url)
+  const url = checkImageUrl(d?.url)
+  if (!url) { return }
+  imagePreview(url)
 }
 
 /** 仅当稀有度色为 #rrggbb 形式时追加 6 位 alpha，避免 rgb()/颜色名拼接失效 */
@@ -98,8 +99,12 @@ function hexAlpha(color: string | undefined, alpha: string): string {
 /** 透明网格棋盘(模拟透明图层纹理,与设计工具一致) */
 const CHECKER_PATTERN = 'conic-gradient(rgb(0 0 0 / 0.05) 25%, transparent 0 50%, rgb(0 0 0 / 0.05) 0 75%, transparent 0)'
 
-/** 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退） */
-const wallStyled = computed(() => decorationWall.value.map((item) => {
+/**
+ * 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退）；
+ * item.url 统一经 checkImageUrl 规范化（空值/非法形式置空，给 src 与预览(imagePreview)前统一兜底）
+ */
+const wallStyled = computed(() => decorationWall.value.map((raw) => {
+  const item: IDecorationWallItem = { ...raw, url: checkImageUrl(raw.url) }
   const tint = hexAlpha(item.rarityColor, '14')
   const layers = [tint ? `linear-gradient(160deg, ${tint}, transparent 70%)` : '', CHECKER_PATTERN]
     .filter(Boolean)

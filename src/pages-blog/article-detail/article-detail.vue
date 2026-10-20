@@ -58,6 +58,14 @@ const commentModal = ref({
   title: '',
   quoteReply: '',
 })
+
+/** 播客播放器可见性(组件内四条件判定通过后回调置位) */
+const podcastVisible = ref(true)
+
+function handlePodcastVisible(visible: boolean) {
+  podcastVisible.value = visible
+}
+
 const commentDetail = ref({
   show: false,
   loading: 'loading' as 'loading' | 'success' | 'error',
@@ -527,7 +535,7 @@ onShareTimeline(() => {
           <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
 
           <!-- 播客听读 -->
-          <uh-podcast-player :post-name="result?.metadata?.name" />
+          <uh-podcast-player v-if="podcastVisible" :post-name="result?.metadata?.name" @on-visible="handlePodcastVisible" />
 
           <!-- 内容 -->
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
