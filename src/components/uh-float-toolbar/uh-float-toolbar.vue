@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<IProps>(), {
   customContentClass: '',
   needPlaceholder: false,
   needGlassWrapper: true,
+  zIndex: 50,
 })
 
 const { safeBottomStyle } = useSafeArea()
@@ -22,6 +23,7 @@ interface IProps {
   customContentClass?: string
   needPlaceholder?: boolean
   needGlassWrapper?: boolean
+  zIndex?: number
 }
 
 const instance = getCurrentInstance()
@@ -35,8 +37,7 @@ const contentClass = computed(() => {
 
 const toolbarHeight = ref(0)
 const toolbarSafeAreaStyle = computed(() => {
-  if (!props.needPlaceholder)
-    return {}
+  if (!props.needPlaceholder) { return {} }
   return {
     height: `${toolbarHeight.value}px`,
   }
@@ -62,10 +63,11 @@ onMounted(() => {
 
 <template>
   <view
-    id="floatToolbar" class="fixed z-10 box-border w-full flex items-center justify-center pb-safe"
+    id="floatToolbar"
+    class="pointer-events-none fixed left-0 right-0 z-10 box-border w-full flex items-center justify-center overflow-hidden pb-safe"
     :class="[props.customClass]" :style="[safeBottomStyle]"
   >
-    <view :class="[contentClass]">
+    <view class="pointer-events-auto" :class="[contentClass]">
       <slot />
     </view>
   </view>

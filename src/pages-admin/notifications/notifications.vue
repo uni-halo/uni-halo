@@ -374,7 +374,7 @@ onPullDownRefresh(() => {
       @refresh="handleResetAndLoad"
     />
 
-    <view v-else class="box-border flex flex-col gap-3 p-3 pb-10">
+    <view v-else class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="item in allItems" :key="item.metadata.name"
         class="uh-global-card-glass uh-shadow-xs box-border flex flex-col overflow-hidden rounded-xl p-3"
@@ -447,6 +447,7 @@ onPullDownRefresh(() => {
     <uh-float-toolbar
       v-if="loadingStatus === DataLoadingStatusEnum.Success"
       :need-glass-wrapper="false"
+      :need-placeholder="true"
       custom-content-class="flex-col !gap-y-2"
     >
       <!-- 多选模式：全选行 -->
@@ -469,7 +470,7 @@ onPullDownRefresh(() => {
         class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
       >
         <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-2 py-1.5 shadow-none"
           :class="isAllSelected ? 'text-primary' : 'text-gray-600'"
           @click="handleToggleSelectAll"
         >
@@ -477,7 +478,7 @@ onPullDownRefresh(() => {
           <text class="shrink-0 text-xs text-gray-900 font-semibold">全选（{{ selectedNames.length }}）</text>
         </view>
         <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-2 py-1.5 shadow-none"
           :class="selectedNames.length === 0 ? 'opacity-50' : ''"
           @click="handleBatchMarkRead"
         >
@@ -485,7 +486,7 @@ onPullDownRefresh(() => {
           <text class="shrink-0 text-xs text-gray-900 font-semibold">已读</text>
         </view>
         <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-2 py-1.5 shadow-none"
           :class="selectedNames.length === 0 ? 'opacity-50' : ''"
           @click="handleBatchDelete"
         >
@@ -493,7 +494,7 @@ onPullDownRefresh(() => {
           <text class="shrink-0 text-xs text-red-400 font-semibold">删除</text>
         </view>
         <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-2 py-1.5 text-gray-900 shadow-none"
           @click="toggleSelectMode"
         >
           <wd-icon name="close" size="32rpx" />
@@ -507,14 +508,14 @@ onPullDownRefresh(() => {
       >
         <view
           v-if="unreadCount > 0"
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
           @click="handleMarkAllAsRead"
         >
           <wd-icon name="check-circle" size="32rpx" />
           <text class="shrink-0 text-xs text-gray-900 font-semibold">全部已读</text>
         </view>
         <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
+          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-4 py-1.5 shadow-none"
           @click="toggleSelectMode"
         >
           <wd-icon name="check-square" size="32rpx" />

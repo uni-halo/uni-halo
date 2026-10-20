@@ -466,15 +466,15 @@ onReachBottom(() => {
       </view>
     </template>
 
-    <uh-float-toolbar>
+    <uh-float-toolbar :need-placeholder="true">
       <view
-        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2 shadow-none"
         :class="[activeTab === 'post' ? 'bg-primary font-medium ' : '']" @click="switchTab('post')"
       >
         <text class="shrink-0 text-3xs text-gray-900 font-semibold">笔记</text>
       </view>
       <view
-        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2 shadow-none"
         :class="[activeTab === 'moment' ? 'bg-primary font-medium' : '']" @click="switchTab('moment')"
       >
         <text class="shrink-0 text-3xs text-gray-900 font-semibold">瞬间</text>

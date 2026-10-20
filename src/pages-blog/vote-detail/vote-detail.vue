@@ -213,7 +213,7 @@ async function handleSubmit() {
           showToast('复制成功')
         },
       })
-    }).catch(() => {})
+    }).catch(() => { })
     return
   }
 
@@ -280,7 +280,7 @@ onShareTimeline(() => ({
       empty-text="未查询到数据" @refresh="handleGetData"
     />
 
-    <view v-else class="box-border flex flex-col gap-y-3 px-3 pb-16 pt-2">
+    <view v-else class="box-border flex flex-col gap-y-3 px-3 pb-2 pt-2">
       <!-- 投票信息 -->
       <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-y-3 rounded-2xl p-3">
         <uh-section-title> 投票信息 </uh-section-title>
@@ -300,7 +300,10 @@ onShareTimeline(() => ({
           </view>
           <view class="info-row">
             <text>投票方式：</text>
-            <text class="tag box-border rounded-md px-1 py-0.5 text-xs" :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-red-400'">
+            <text
+              class="tag box-border rounded-md px-1 py-0.5 text-xs"
+              :class="vote.spec?.canAnonymously ? 'text-primary' : 'text-red-400'"
+            >
               {{ vote.spec?.canAnonymously ? '匿名' : '不匿名' }}
             </text>
           </view>
@@ -328,10 +331,7 @@ onShareTimeline(() => ({
         <view class="w-full flex flex-col gap-y-2">
           <view class="relative box-border flex items-center gap-x-2 text-sm">
             投票选项
-            <text
-              v-if="vote.spec?.type === 'multiple'"
-              class="text-xs font-normal"
-            >
+            <text v-if="vote.spec?.type === 'multiple'" class="text-xs font-normal">
               （最多选择
               {{ vote.spec?.maxVotes }} 项）
             </text>
@@ -340,9 +340,8 @@ onShareTimeline(() => ({
             <!-- PK 对抗条 -->
             <view v-if="vote.spec?.type === 'pk'" class="pk-container box-border w-full flex">
               <view
-                v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex"
-                class="radio-item flex-1" :class="optionIndex === 0 ? 'radio-left' : 'radio-right'"
-                :style="{ width: `${option._uh_percent}%` }"
+                v-for="(option, optionIndex) in vote.spec?.options" :key="optionIndex" class="radio-item flex-1"
+                :class="optionIndex === 0 ? 'radio-left' : 'radio-right'" :style="{ width: `${option._uh_percent}%` }"
               >
                 <view
                   class="option-item box-border w-full rounded-xl px-3 py-2"
@@ -393,45 +392,51 @@ onShareTimeline(() => ({
           {{ vote.stats?.voteCount || 0 }} 人已参与
         </view>
       </view>
-
-      <!-- 提交按钮 -->
-      <view class="fixed bottom-0 left-0 z-99 box-border w-screen px-7 pb-safe">
-        <view
-          class="uh-global-card-glass w-full flex items-center justify-center gap-x-2 border rounded-full"
-        >
-          <uh-button v-if="handleHasVoted()" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm">
-            您已参与投票
-          </uh-button>
-          <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '未开始'" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
-            @click="handleSubmitTip('投票未开始')"
-          >
-            投票未开始
-          </uh-button>
-          <uh-button
-            v-else-if="vote.spec?._uh_state?.state === '已结束'" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
-            @click="handleSubmitTip('投票已结束')"
-          >
-            投票已结束
-          </uh-button>
-          <uh-button
-            v-else-if="!vote.spec?.canAnonymously" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
-            @click="handleSubmit()"
-          >
-            不支持匿名投票
-          </uh-button>
-          <uh-button
-            v-else-if="submitForm.voteData.length === 0" class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
-            @click="handleSubmitTip('请选择选项')"
-          >
-            提交投票（请选择选项）
-          </uh-button>
-          <uh-button v-else class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm" @click="handleSubmit()">
-            提交投票
-          </uh-button>
-        </view>
-      </view>
     </view>
+    <!-- 提交按钮 -->
+    <uh-float-toolbar
+      v-if="loadingStatus === DataLoadingStatusEnum.Success" :need-placeholder="true"
+      custom-content-class="!p-0.5"
+    >
+      <view class="w-[80vw]">
+        <uh-button
+          v-if="handleHasVoted()" class="flex-1"
+          custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
+        >
+          您已参与投票
+        </uh-button>
+        <uh-button
+          v-else-if="vote.spec?._uh_state?.state === '未开始'" class="flex-1"
+          custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm" @click="handleSubmitTip('投票未开始')"
+        >
+          投票未开始
+        </uh-button>
+        <uh-button
+          v-else-if="vote.spec?._uh_state?.state === '已结束'" class="flex-1"
+          custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm" @click="handleSubmitTip('投票已结束')"
+        >
+          投票已结束
+        </uh-button>
+        <uh-button
+          v-else-if="!vote.spec?.canAnonymously" class="flex-1"
+          custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm" @click="handleSubmit()"
+        >
+          不支持匿名投票
+        </uh-button>
+        <uh-button
+          v-else-if="submitForm.voteData.length === 0" class="flex-1"
+          custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm" @click="handleSubmitTip('请选择选项')"
+        >
+          提交投票（请选择选项）
+        </uh-button>
+        <uh-button
+          v-else class="flex-1" custom-class="flex-1 !py-2 !rounded-full !bg-primary !text-sm"
+          @click="handleSubmit()"
+        >
+          提交投票
+        </uh-button>
+      </view>
+    </uh-float-toolbar>
   </view>
 </template>
 

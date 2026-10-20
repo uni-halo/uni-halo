@@ -8,6 +8,9 @@ import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { checkImageUrl } from '@/utils/url'
 import { useAppConfigStore } from '@/store/appConfig'
+import { resolveNoticeLink } from '@/utils/noticeLink'
+import type { NoticeLinkAction, NoticePlatform } from '@/utils/noticeLink'
+import { copyToClipboard } from '@/utils/clipboard'
 import { sleep } from '@/utils/common'
 import { markdownConfig } from '@/config/markdown'
 import type { INoticeDetail } from '@/api/types/uni-halo'
@@ -26,6 +29,7 @@ const pageTitle = usePageTitle('noticeDetail', '公告详情')
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 const name = ref('')
 const detail = ref<INoticeDetail | null>(null)
+const appConfigStore = useAppConfigStore()
 
 const spec = computed(() => detail.value?.spec)
 const content = computed(() => spec.value?.content || '')
@@ -40,89 +44,58 @@ const cover = computed(() => {
 
 const publishTime = computed(() => formatTime({ d: spec.value?.publishTime, f: 'yyyy年MM月dd日 星期w' }))
 
-/* ---------------- 链接跳转（按 linkType 与平台兼容处理） ---------------- */
-/** 链接类型：为空时按 link 非空回退 external（兼容历史数据） */
-const linkType = computed<'none' | 'external' | 'miniapp' | 'internal' | 'wechat-mp'>(() => {
-  return spec.value?.linkType || (spec.value?.link ? 'external' : 'none')
-})
-/** 是否为小程序链接（入口仅微信小程序端展示） */
-const isMiniappLink = computed(() => linkType.value === 'miniapp')
-/** 是否展示跳转入口 */
-const hasLink = computed(() => {
-  if (linkType.value === 'none') { return false }
-  if (isMiniappLink.value) {
-    // #ifdef MP-WEIXIN
-    return !!spec.value?.linkAppId
-    // #endif
-    // 非微信小程序端不展示小程序链接入口（App/H5 不支持跳转小程序）
-    return false
-  }
-  return !!spec.value?.link
-})
-/** 按钮文案 */
-const linkButtonText = computed(() => {
-  switch (linkType.value) {
-    case 'internal': return '查看相关页面'
-    case 'miniapp': return '打开小程序'
-    case 'wechat-mp': return '复制文章链接'
-    default: return '复制链接地址'
-  }
-})
-
-/** 外部链接/公众号文章打开方式：App 端非个人资质走内部 webview，其余复制链接提示 */
-function handleOpenExternal(url: string) {
-  // #ifdef APP-PLUS
-  const appConfigStore = useAppConfigStore()
-  const qualification = appConfigStore.configs.featureConfig?.profile?.appInfo?.qualification
-  if (qualification === 'enterprise') {
-    const data = encodeURIComponent(JSON.stringify({ title: title.value, url }))
-    uni.navigateTo({ url: `/pages-blog/website/website?data=${data}` })
-    return
-  }
+/* ---------------- 链接跳转（按 链接类型 × 运行端 × 小程序资质类型 解析） ---------------- */
+/** 当前运行端（条件编译注入；决定外链/公众号文章打开策略，见 utils/noticeLink.ts） */
+const platform = ((): NoticePlatform => {
+  // #ifdef MP-WEIXIN
+  return 'mp-weixin'
   // #endif
   // #ifdef H5
-  if (url) {
-    window.open(url, '_blank')
-    return
-  }
+  return 'h5'
   // #endif
-  copyLink(url)
-}
+  return 'app'
+})()
 
-/** 复制链接并提示 */
-function copyLink(url?: string) {
-  if (!url) { return }
-  uni.setClipboardData({
-    data: url,
-    success: () => {
-      uni.showToast({ title: '链接已复制，请在浏览器打开', icon: 'none' })
-    },
-    fail: () => {
-      uni.showToast({ title: '复制失败', icon: 'none' })
-    },
-  })
-}
+/** 小程序资质类型（插件端 appInfo.qualification；App 端企业资质外链走内部 webview） */
+const qualification = computed(() => appConfigStore.configs.featureConfig?.profile?.appInfo?.qualification)
 
-/** 跳转入口点击（按链接类型分发） */
-function handleLinkClick() {
-  const { link, linkAppId, linkPath } = spec.value || {}
-  if (linkType.value === 'internal') {
-    if (!link) { return }
-    uni.navigateTo({ url: link })
-    return
+/** 跳转入口解析（visible/text/behavior 由同一纯函数产出，文案=本次点击的真实动作） */
+const linkAction = computed(() =>
+  resolveNoticeLink({ entry: spec.value || {}, platform, qualification: qualification.value }))
+
+/** 执行解析出的跳转行为 */
+function handleLinkAction() {
+  const action: NoticeLinkAction = linkAction.value
+  const link = spec.value?.link || ''
+  switch (action.behavior) {
+    case 'internal': {
+      uni.navigateTo({ url: link })
+      break
+    }
+    case 'miniapp': {
+      uni.navigateToMiniProgram({
+        appId: spec.value?.linkAppId || '',
+        path: spec.value?.linkPath || '',
+        fail: () => {
+          uni.showToast({ title: '打开小程序失败', icon: 'none' })
+        },
+      })
+      break
+    }
+    case 'webview': {
+      const data = encodeURIComponent(JSON.stringify({ title: title.value, url: link }))
+      uni.navigateTo({ url: `/pages-blog/website/website?data=${data}` })
+      break
+    }
+    case 'h5-open': {
+      window.open(link, '_blank')
+      break
+    }
+    case 'copy': {
+      copyToClipboard(link, '链接已复制，请在浏览器打开')
+      break
+    }
   }
-  if (linkType.value === 'miniapp') {
-    if (!linkAppId) { return }
-    uni.navigateToMiniProgram({
-      appId: linkAppId,
-      path: linkPath || '',
-      fail: () => {
-        uni.showToast({ title: '打开小程序失败', icon: 'none' })
-      },
-    })
-    return
-  }
-  handleOpenExternal(link || '')
 }
 
 onShareAppMessage(() => ({
@@ -233,16 +206,16 @@ onLoad((options) => {
       </view>
     </view>
     <uh-float-toolbar
-      v-if="loadingStatus === 'success' && hasLink"
+      v-if="loadingStatus === 'success' && linkAction.visible"
       custom-content-class="!p-0.5"
       :need-placeholder="true"
     >
       <uh-button
         class="min-w-[80vw]"
         custom-class="uh-global-card-glass border w-full !rounded-full !py-2.5 font-medium !text-3xs !bg-primary"
-        @click="handleLinkClick"
+        @click="handleLinkAction"
       >
-        {{ linkButtonText }}
+        {{ linkAction.text }}
       </uh-button>
     </uh-float-toolbar>
   </view>

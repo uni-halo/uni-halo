@@ -152,22 +152,13 @@ function handleToPage(entry: IProfileEntry) {
 /** 个人入口（我的信息 / 个人主页 / 消息通知） */
 const PROFILE_ENTRIES = computed<Array<IProfileEntry>>(() => {
   const entries: Array<IProfileEntry> = [
-    { key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home' },
-    { key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile' },
-    // 暂时隐藏个人主页入口（visible: false 即整体过滤下线）
-    { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile', visible: false },
+    { key: 'home', type: 'switch', icon: 'home', label: '应用首页', path: '/pages/tabbar/home/home', visible: true },
+    { key: 'my-profile', type: 'navigate', icon: 'edit', label: '我的资料', path: '/pages-admin/my-profile/my-profile', visible: true },
+    { key: 'user-profile', type: 'navigate', icon: 'user', label: '个人主页', path: '/pages-blog/user-profile/user-profile', visible: true },
+    { key: 'notifications', type: 'navigate', icon: 'notification', label: '消息通知', path: '/pages-admin/notifications/notifications', visible: true },
   ]
-  // 消息通知需登录（官方通知接口走 PAT）
-  if (updateNowTime().hasLogin) {
-    entries.push({
-      key: 'notifications',
-      type: 'navigate',
-      icon: 'notification',
-      label: '消息通知',
-      path: '/pages-admin/notifications/notifications',
-    })
-  }
-  return entries.filter(entry => entry.visible !== false)
+
+  return entries.filter(entry => entry.visible)
 })
 
 /** 未读通知数（弹窗打开时刷新，用于入口红点徽标） */

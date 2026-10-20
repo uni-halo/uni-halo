@@ -268,7 +268,7 @@ onPageScroll((option: Page.PageScrollOption) => {
       min-height="65vh" empty-text="暂无绘画作品" empty-sub-text="还没有画作，去画一幅吧" @refresh="handleRetry"
     />
 
-    <view v-else class="box-border flex flex-col gap-3 px-3 pb-18 pt-3">
+    <view v-else class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="draw in dataList" :key="draw.metadata.name"
         class="uh-global-card-glass uh-shadow-xs box-border overflow-hidden rounded-xl"
@@ -338,8 +338,8 @@ onPageScroll((option: Page.PageScrollOption) => {
     </view>
 
     <!-- 底部悬浮：画一幅 -->
-    <uh-float-toolbar>
-      <view class="flex items-center justify-center gap-x-1 px-6 py-2.5" @click="handleGoDraw">
+    <uh-float-toolbar :need-placeholder="true">
+      <view class="box-border flex items-center justify-center gap-x-1 px-4 py-2" @click="handleGoDraw">
         <wd-icon name="plus" size="28rpx" />
         <text class="shrink-0 text-3xs font-semibold">画一幅</text>
       </view>

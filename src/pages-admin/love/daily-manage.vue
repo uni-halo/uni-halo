@@ -182,7 +182,7 @@ onShow(() => {
       min-height="70vh" theme="love" @refresh="handleRetry"
     />
 
-    <view v-else class="box-border flex flex-col gap-3 px-3 pb-24 pt-3">
+    <view v-else class="box-border flex flex-col gap-3 p-3">
       <view
         v-for="(item, index) in dataList" :key="item.metadata?.name || item.id"
         class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl"
@@ -246,8 +246,8 @@ onShow(() => {
 
     <!-- 底部悬浮：新增 -->
     <uh-permission permission="LOVE_DAILY_MANAGE">
-      <uh-float-toolbar>
-        <view class="flex items-center justify-center gap-x-1 px-6 py-2.5 text-love" @click="openCreate">
+      <uh-float-toolbar :need-placeholder="true">
+        <view class="box-border flex items-center justify-center gap-x-1 px-4 py-2 text-love" @click="openCreate">
           <wd-icon name="plus" size="28rpx" />
           <text class="shrink-0 text-3xs font-semibold">新增清单</text>
         </view>

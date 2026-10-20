@@ -22,7 +22,7 @@ const emit = defineEmits<{
   <uh-float-toolbar>
     <view
       v-if="actions.includes('apply')"
-      class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-8 py-2 shadow-none"
+      class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-3 py-2 shadow-none"
       @click="emit('apply')"
     >
       <wd-icon name="edit" size="32rpx" />
@@ -30,7 +30,7 @@ const emit = defineEmits<{
     </view>
     <view
       v-if="actions.includes('info')"
-      class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-8 py-2 shadow-none"
+      class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-3 py-2 shadow-none"
       @click="emit('info')"
     >
       <wd-icon name="info-circle" size="32rpx" />

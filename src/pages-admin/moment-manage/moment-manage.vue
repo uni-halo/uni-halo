@@ -160,7 +160,7 @@ function handleDelete(item: MomentItem) {
     catch (err: any) {
       uni.showToast({ title: err?.message || '删除失败', icon: 'none', duration: 2000 })
     }
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 function handleRetry() {
@@ -192,12 +192,13 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
     <!-- 无权限提示 -->
     <uh-permission roles="admin,author">
       <uh-data-loading
-        error-text="无权限" error-sub-text="可以联系站长开通"
-        :loading-status="DataLoadingStatusEnum.Error"
-        :use-refresh-button="false"
-        min-height="65vh"
+        error-text="无权限" error-sub-text="可以联系站长开通" :loading-status="DataLoadingStatusEnum.Error"
+        :use-refresh-button="false" min-height="65vh"
       >
-        <button open-type="contact" class="uh-button-native uh-global-card-glass uh-shadow-xs border py-2 !rounded-full !text-sm">
+        <button
+          open-type="contact"
+          class="uh-button-native uh-global-card-glass uh-shadow-xs border py-2 !rounded-full !text-sm"
+        >
           联系站长
         </button>
       </uh-data-loading>
@@ -205,37 +206,44 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
 
     <template v-if="isAdminView">
       <uh-data-loading
-        v-if="loadingStatus !== DataLoadingStatusEnum.Success"
-        :loading-status="loadingStatus"
-        min-height="65vh"
-        @refresh="handleRetry"
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
+        min-height="65vh" @refresh="handleRetry"
       />
 
-      <view v-else class="box-border flex flex-col gap-3 px-3 pt-3">
-        <view v-for="moment in dataList" :key="moment.name" class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl">
-          <view v-if="moment.approved === false || moment.visible === 'PRIVATE'" class="flex items-center justify-end gap-2 px-4 pt-3">
-            <text v-if="moment.approved === false" class="rounded-full bg-orange-100 px-2 py-0.5 text-3xs text-orange-500">待审核</text>
-            <text v-if="moment.visible === 'PRIVATE'" class="rounded-full bg-gray-100 px-2 py-0.5 text-3xs text-gray-500">私密</text>
+      <view v-else class="box-border flex flex-col gap-3 p-3">
+        <view
+          v-for="moment in dataList" :key="moment.name"
+          class="uh-global-card-glass uh-shadow-xs overflow-hidden rounded-xl"
+        >
+          <view
+            v-if="moment.approved === false || moment.visible === 'PRIVATE'"
+            class="flex items-center justify-end gap-2 px-4 pt-3"
+          >
+            <text
+              v-if="moment.approved === false"
+              class="rounded-full bg-orange-100 px-2 py-0.5 text-3xs text-orange-500"
+            >
+              待审核
+            </text>
+            <text
+              v-if="moment.visible === 'PRIVATE'"
+              class="rounded-full bg-gray-100 px-2 py-0.5 text-3xs text-gray-500"
+            >
+              私密
+            </text>
           </view>
           <view class="box-border px-3 pt-2 text-3xs text-gray-900 leading-relaxed">
             <mp-html
-              :content="moment.content"
-              lazy-load :domain="markdownConfig.domain"
-              :loading-img="markdownConfig.loadingGif" scroll-table selectable
-              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-              :markdown="true" :show-line-number="true"
+              :content="moment.content" lazy-load :domain="markdownConfig.domain"
+              :loading-img="markdownConfig.loadingGif" scroll-table selectable :tag-style="markdownConfig.tagStyle"
+              :container-style="markdownConfig.containStyle" :markdown="true" :show-line-number="true"
               :show-language-name="true" copy-by-long-press
             />
           </view>
           <view v-if="moment.images.length" class="flex flex-wrap gap-1 px-3 pt-2">
             <wd-img
-              v-for="(img, imgIndex) in moment.images.slice(0, 3)"
-              :key="img"
-              :src="img"
-              mode="aspectFill"
-              class="h-20 w-20"
-              :radius="8"
-              @click="handlePreview(imgIndex, moment.images)"
+              v-for="(img, imgIndex) in moment.images.slice(0, 3)" :key="img" :src="img" mode="aspectFill"
+              class="h-20 w-20" :radius="8" @click="handlePreview(imgIndex, moment.images)"
             >
               <template #loading>
                 <wd-loading size="64rpx" custom-class="text-primary" />
@@ -259,19 +267,18 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
 
-      <!-- 底部悬浮：发布瞬间 -->
-      <uh-float-toolbar>
-        <view class="h-[72rpx] flex items-center justify-center gap-x-1 px-6" @click="handleOpenPublish">
-          <wd-icon name="plus" size="28rpx" />
-          <text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
-        </view>
-      </uh-float-toolbar>
-
       <!-- 发布/编辑弹窗（全局组件，easycom 自动注册） -->
       <uh-admin-moment-edit-popup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
     </template>
+
+    <!-- 底部悬浮：发布瞬间 -->
+    <uh-float-toolbar v-if="isAdminView" :need-placeholder="true">
+      <view class="h-8 flex items-center justify-center gap-x-1 px-4" @click="handleOpenPublish">
+        <wd-icon name="plus" size="28rpx" />
+        <text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
+      </view>
+    </uh-float-toolbar>
   </view>
 </template>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>
