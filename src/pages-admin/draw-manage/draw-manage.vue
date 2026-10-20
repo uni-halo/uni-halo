@@ -338,17 +338,12 @@ onPageScroll((option: Page.PageScrollOption) => {
     </view>
 
     <!-- 底部悬浮：画一幅 -->
-    <view
-      class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 pb-safe"
-    >
-      <view
-        class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-primary"
-        @click="handleGoDraw"
-      >
+    <uh-float-toolbar>
+      <view class="flex items-center justify-center gap-x-1 px-6 py-2.5" @click="handleGoDraw">
         <wd-icon name="plus" size="28rpx" />
         <text class="shrink-0 text-3xs font-semibold">画一幅</text>
       </view>
-    </view>
+    </uh-float-toolbar>
 
     <!-- 竞猜管理弹层（谜底 / 竞猜记录 / 手动揭晓） -->
     <uh-glass-popup v-model="puzzleVisible" position="bottom" custom-class="rounded-2xl" :z-index="120">
@@ -428,7 +423,4 @@ onPageScroll((option: Page.PageScrollOption) => {
 </template>
 
 <style scoped lang="scss">
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
 </style>

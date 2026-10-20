@@ -3,258 +3,301 @@
  * 收敛:字段定义(PrefDef/页面分组/布局/功能)、三态(跟随站点默认/已自定义/恢复默认)、
  * 行构建、选值交互。两个消费方不再各自重复定义。
  */
-import { computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import { DefaultAppSettings } from '@/config/appSettings';
-import { useSettingStore } from '@/store/setting';
-import { isLocalOverride, readLocalPrefs } from '@/utils/preference';
-import type { LocalPrefs } from '@/utils/preference';
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { DefaultAppSettings } from '@/config/appSettings'
+import { useSettingStore } from '@/store/setting'
+import { isLocalOverride, readLocalPrefs } from '@/utils/preference'
+import type { LocalPrefs } from '@/utils/preference'
 
-/** 偏好字段定义(当前均为枚举选择项) */
+/** 偏好字段定义(枚举选择项 + 布尔开关项) */
 export interface PrefDef {
-	key: string;
-	label: string;
-	kind: 'enum';
-	path: string[];
-	options?: { label: string; value: string }[];
-	siteLabelOf?: (value: string) => string;
+  key: string
+  label: string
+  kind: 'enum'
+  path: string[]
+  options?: { label: string, value: string }[]
+  siteLabelOf?: (value: string) => string
+/** 布尔开关项(options 用 'true'/'false' 哨兵字符串渲染，落库时转 boolean) */
+boolValue?: boolean;
+}
+
+/** 展示行(PrefDef + 预计算的展示值与三态状态;模块级导出,避免返回类型引用私有名) */
+export interface PrefRow extends PrefDef {
+  displayValue: string
+  following: boolean
 }
 
 /** 布局设置按页面分组(每组:列表布局 + 卡片样式) */
 export const PAGE_GROUPS = [
-	{ key: 'home', label: '首页' },
-	{ key: 'articles', label: '笔记页面' },
-	{ key: 'archives', label: '归档页面' }
-];
+  { key: 'home', label: '首页' },
+  { key: 'articles', label: '笔记页面' },
+  { key: 'archives', label: '归档页面' },
+]
 
-/** 每组对应的插件端字段名(注意:文章卡片样式字段为 articlesCardType,无 s,
- * 不能用 ${group.key}CardType 模板拼接,否则弹窗会写入无人消费的野键) */
-const GROUP_FIELDS: Record<string, { listKey : string, cardKey : string }> = {
-	home: { listKey: 'homeListLayout', cardKey: 'homeCardType' },
-	articles: { listKey: 'articlesListLayout', cardKey: 'articlesCardType' },
-	archives: { listKey: 'archivesListLayout', cardKey: 'archivesCardType' }
-};
+/**
+ * 每组对应的插件端字段名(注意:文章卡片样式字段为 articlesCardType,无 s,
+ * 不能用 ${group.key}CardType 模板拼接,否则弹窗会写入无人消费的野键)
+ */
+const GROUP_FIELDS: Record<string, { listKey: string, cardKey: string }> = {
+  home: { listKey: 'homeListLayout', cardKey: 'homeCardType' },
+  articles: { listKey: 'articlesListLayout', cardKey: 'articlesCardType' },
+  archives: { listKey: 'archivesListLayout', cardKey: 'archivesCardType' },
+}
 
 /** 布局偏好字段(页面分组 × 列表布局/卡片样式;path 直接为插件端顶层字段名,无映射) */
+const BOOL_LABELS = [
+  { label: '开启', value: 'true' },
+  { label: '关闭', value: 'false' },
+]
+
+/** 内容页-笔记详情偏好(仅摘要打字机开关;布尔值,渲染为 [默认][开启][关闭] 选项行) */
+export const POST_DETAIL_PREFS: PrefDef[] = [
+  {
+    key: 'articlesSummaryTypewriterEnabled',
+    label: '摘要打字机',
+    kind: 'enum',
+    boolValue: true,
+    path: ['articlesSummaryTypewriterEnabled'],
+    options: BOOL_LABELS,
+  },
+]
+
 export const LAYOUT_PREFS: PrefDef[] = PAGE_GROUPS.flatMap((group) => {
-	const fields = GROUP_FIELDS[group.key];
-	return [
-		{
-			key: fields.listKey,
-			label: '列表布局',
-			kind: 'enum',
-			path: [fields.listKey],
-			options: [
-				{ label: '单列', value: 'single' },
-				{ label: '双列', value: 'double' }
-			]
-		},
-		{
-			key: fields.cardKey,
-			label: '卡片样式',
-			kind: 'enum',
-			path: [fields.cardKey],
-			options: [
-				{ label: '上图下文', value: 'image_top' },
-				{ label: '左文右图', value: 'image_right' },
-				{ label: '上文下图', value: 'image_bottom' },
-				{ label: '左图右文', value: 'image_left' }
-			]
-		}
-	];
-});
+  const fields = GROUP_FIELDS[group.key]
+  return [
+    {
+      key: fields.listKey,
+      label: '列表布局',
+      kind: 'enum',
+      path: [fields.listKey],
+      options: [
+        { label: '单列', value: 'single' },
+        { label: '双列', value: 'double' },
+      ],
+    },
+    {
+      key: fields.cardKey,
+      label: '卡片样式',
+      kind: 'enum',
+      path: [fields.cardKey],
+      options: [
+        { label: '上图下文', value: 'image_top' },
+        { label: '左文右图', value: 'image_right' },
+        { label: '上文下图', value: 'image_bottom' },
+        { label: '左图右文', value: 'image_left' },
+      ],
+    },
+  ]
+})
 
 /** 功能偏好按分组展示(通用功能 / 友链功能) */
 export const FEATURE_GROUPS = [
-	{ key: 'general', label: '通用功能' },
-	{ key: 'link', label: '友链功能' }
-];
+  { key: 'general', label: '通用功能' },
+  { key: 'link', label: '友链功能' },
+]
 
 /** 功能偏好字段(字段名与插件端一致) */
 export const FEATURE_PREFS: PrefDef[] = [
-	/** 头像外观:square 方形(默认) / circle 圆形;应用于文章卡片(image_bottom)与瞬间卡片 */
-	{
-		key: 'avatarShape',
-		label: '头像外观',
-		kind: 'enum',
-		path: ['avatarShape'],
-		options: [
-			{ label: '方形', value: 'square' },
-			{ label: '圆形', value: 'circle' }
-		]
-	},
-	{
-		key: 'miniProgramOpenMode',
-		label: '小程序友链打开模式',
-		kind: 'enum',
-		path: ['linkPage', 'miniProgramOpenMode'],
-		options: [
-			{ label: '全屏打开', value: 'fullscreen' },
-			{ label: '半屏打开', value: 'halfScreen' }
-		]
-	}
-];
+  /** 头像外观:square 方形(默认) / circle 圆形;应用于文章卡片(image_bottom)与瞬间卡片 */
+  {
+    key: 'avatarShape',
+    label: '头像外观',
+    kind: 'enum',
+    path: ['avatarShape'],
+    options: [
+      { label: '方形', value: 'square' },
+      { label: '圆形', value: 'circle' },
+    ],
+  },
+  {
+    key: 'miniProgramOpenMode',
+    label: '小程序友链打开模式',
+    kind: 'enum',
+    path: ['linkPage', 'miniProgramOpenMode'],
+    options: [
+      { label: '全屏打开', value: 'fullscreen' },
+      { label: '半屏打开', value: 'halfScreen' },
+    ],
+  },
+]
 
 /** 顶部分段器(布局 / 功能) */
-export const SETTING_TABS: { key: 'layout' | 'feature'; label: string }[] = [
-	{ key: 'layout', label: '布局' },
-	{ key: 'feature', label: '功能' }
-];
+export const SETTING_TABS: { key: 'layout' | 'feature', label: string }[] = [
+  { key: 'layout', label: '布局' },
+  { key: 'feature', label: '功能' },
+]
 
-export function usePreferenceRows() {
-	const { settings, siteDefaults } = storeToRefs(useSettingStore());
-	const { savePreference } = useSettingStore();
+export function usePreferenceRows() {  const { settings, siteDefaults } = storeToRefs(useSettingStore())
+  const { savePreference } = useSettingStore()
 
-	/* ---------------- 路径取值工具 ---------------- */
-	function getByPath(obj: unknown, path: string[]): unknown {
-		let cursor: unknown = obj;
-		for (const key of path) {
-			if (cursor === null || cursor === undefined) {
-				return undefined;
-			}
-			cursor = (cursor as Record<string, unknown>)[key];
-		}
-		return cursor;
-	}
+  /* ---------------- 路径取值工具 ---------------- */
+  function getByPath(obj: unknown, path: string[]): unknown {
+    let cursor: unknown = obj
+    for (const key of path) {
+      if (cursor === null || cursor === undefined) {
+        return undefined
+      }
+      cursor = (cursor as Record<string, unknown>)[key]
+    }
+    return cursor
+  }
 
-	/** 按路径构造差异 patch(null 表示删除该键=跟随站点默认) */
-	function buildPatch(path: string[], value: unknown): LocalPrefs {
-		const [head, ...rest] = path;
-		if (rest.length === 0) return { [head]: value } as LocalPrefs;
-		return { [head]: buildPatch(rest, value) } as LocalPrefs;
-	}
+  /** 按路径构造差异 patch(null 表示删除该键=跟随站点默认) */
+  function buildPatch(path: string[], value: unknown): LocalPrefs {
+    const [head, ...rest] = path
+    if (rest.length === 0)
+      return { [head]: value } as LocalPrefs
+    return { [head]: buildPatch(rest, value) } as LocalPrefs
+  }
 
-	/* ---------------- 状态读取 ---------------- */
-	function prefValueOf(path: string[]): unknown {
-		return getByPath(settings.value, path);
-	}
+  /* ---------------- 状态读取 ---------------- */
+  function prefValueOf(path: string[]): unknown {
+    return getByPath(settings.value, path)
+  }
 
-	/** 站点默认值(未配置时回退内置默认) */
-	function siteDefaultOf(path: string[]): unknown {
-		const site = getByPath(siteDefaults.value, path);
-		if (site !== undefined && site !== null) return site;
-		return getByPath(DefaultAppSettings, path);
-	}
+  /** 站点默认值(未配置时回退内置默认) */
+  function siteDefaultOf(path: string[]): unknown {
+    const site = getByPath(siteDefaults.value, path)
+    if (site !== undefined && site !== null)
+      return site
+    return getByPath(DefaultAppSettings, path)
+  }
 
-	function isOverridden(path: string[]): boolean {
-		return isLocalOverride(readLocalPrefs(), path);
-	}
+  function isOverridden(path: string[]): boolean {
+    return isLocalOverride(readLocalPrefs(), path)
+  }
 
-	function enumLabelOf(def: PrefDef, value: unknown): string {
-		const hit = def.options?.find((opt) => opt.value === value);
-		if (hit) return hit.label;
-		if (def.siteLabelOf && typeof value === 'string') return def.siteLabelOf(value);
-		return value === undefined || value === null ? '—' : String(value);
-	}
+  function enumLabelOf(def: PrefDef, value: unknown): string {
+    const hit = def.options?.find(opt => opt.value === value)
+    if (hit)
+      return hit.label
+    if (def.siteLabelOf && typeof value === 'string')
+      return def.siteLabelOf(value)
+    return value === undefined || value === null ? '—' : String(value)
+  }
 
-	/* ---------------- 展示行(预计算,避免模板渲染期函数调用) ---------------- */
-	interface PrefRow extends PrefDef {
-		displayValue: string;
-		following: boolean;
-	}
+/* ---------------- 展示行(预计算,避免模板渲染期函数调用) ---------------- */
+function buildRows(defs: PrefDef[]): PrefRow[] {
+  return defs.map(def => ({
+    ...def,
+    displayValue: def.boolValue
+      ? (prefValueOf(def.path) === true ? '开启' : '关闭')
+      : enumLabelOf(def, prefValueOf(def.path)),
+    following: isFollowing(def.path),
+  }))
+}
 
-	function buildRows(defs: PrefDef[]): PrefRow[] {
-		return defs.map((def) => ({
-			...def,
-			displayValue: enumLabelOf(def, prefValueOf(def.path)),
-			following: isFollowing(def.path)
-		}));
-	}
+  const layoutRows = computed(() => buildRows([...LAYOUT_PREFS, ...POST_DETAIL_PREFS]))
+  /** 功能偏好展示行(页面与全局弹窗共用) */
+  const featureRows = computed(() => buildRows(FEATURE_PREFS))
 
-	const layoutRows = computed(() => buildRows(LAYOUT_PREFS));
-	/** 功能偏好展示行(页面与全局弹窗共用) */
-	const featureRows = computed(() => buildRows(FEATURE_PREFS));
+  /** 功能偏好按分组的展示行(通用功能 / 友链功能) */
+  const featureGroups = computed(() =>
+    FEATURE_GROUPS.map(group => ({
+      key: group.key,
+      label: group.label,
+      rows: featureRows.value.filter((row) => {
+        if (group.key === 'general') {
+          return row.key === 'avatarShape'
+        }
+        return row.key === 'miniProgramOpenMode'
+      }),
+    })),
+  )
 
-	/** 功能偏好按分组的展示行(通用功能 / 友链功能) */
-	const featureGroups = computed(() =>
-		FEATURE_GROUPS.map((group) => ({
-			key: group.key,
-			label: group.label,
-			rows: featureRows.value.filter((row) => {
-				if (group.key === 'general') {
-					return row.key === 'avatarShape';
-				}
-				return row.key === 'miniProgramOpenMode';
-			})
-		}))
-	);
+  /** 布局设置按页面分组的展示行(列表布局 + 卡片样式;末尾追加笔记详情组=内容页摘要打字机开关) */
+  const layoutGroups = computed(() =>
+    PAGE_GROUPS.map((group) => {
+      const fields = GROUP_FIELDS[group.key]
+      return {
+        key: group.key,
+        label: group.label,
+        rows: layoutRows.value.filter(row =>
+          row.path[0] === fields.listKey
+          || row.path[0] === fields.cardKey,
+        ),
+      }
+    }).concat([
+      {
+        key: 'postDetail',
+        label: '笔记详情',
+        rows: layoutRows.value.filter(
+          row => row.path[0] === 'articlesSummaryTypewriterEnabled',
+        ),
+      },
+    ]),
+  )
 
-	/** 布局设置按页面分组的展示行（列表布局 + 卡片样式两行） */
-	const layoutGroups = computed(() =>
-		PAGE_GROUPS.map((group) => {
-			const fields = GROUP_FIELDS[group.key];
-			return {
-				key: group.key,
-				label: group.label,
-				rows: layoutRows.value.filter((row) =>
-					row.path[0] === fields.listKey || row.path[0] === fields.cardKey
-				)
-			};
-		})
-	);
+  /** 当前项是否处于「跟随站点默认」(本地未覆盖) */
+  function isFollowing(path: string[]): boolean {
+    return !isOverridden(path)
+  }
 
-	/** 当前项是否处于「跟随站点默认」(本地未覆盖) */
-	function isFollowing(path: string[]): boolean {
-		return !isOverridden(path);
-	}
+  /** 单项还原为跟随站点默认 */
+  function handleRevert(path: string[]): void {
+    savePreference(buildPatch(path, null))
+  }
 
-	/** 单项还原为跟随站点默认 */
-	function handleRevert(path: string[]): void {
-		savePreference(buildPatch(path, null));
-	}
+  /**
+   * 给定卡片样式字段路径,判断同组列表布局是否为双列(字段名经 GROUP_FIELDS 配对,
+   * 不能用 CardType→ListMode 字符串替换推导——articlesCardType 对应的是 articlesListLayout)
+   */
+  function isDoubleColumn(path: string[]): boolean {
+    const field = path[0] || ''
+    const pair = Object.values(GROUP_FIELDS).find(
+      p => p.cardKey === field || p.listKey === field,
+    )
+    if (!pair) {
+      return false
+    }
+    return prefValueOf([pair.listKey]) === 'double'
+  }
 
-	/** 给定卡片样式字段路径,判断同组列表布局是否为双列(字段名经 GROUP_FIELDS 配对,
-	 * 不能用 CardType→ListMode 字符串替换推导——articlesCardType 对应的是 articlesListLayout) */
-	function isDoubleColumn(path: string[]): boolean {
-		const field = path[0] || '';
-		const pair = Object.values(GROUP_FIELDS).find(
-			(p) => p.cardKey === field || p.listKey === field
-		);
-		if (!pair) {
-			return false;
-		}
-		return prefValueOf([pair.listKey]) === 'double';
-	}
+  /** 卡片样式选项是否因双列约束被禁用(双列仅允许 image_top) */
+  function isCardTypeOptionDisabled(path: string[], value: string): boolean {
+    return path[0].endsWith('CardType') && isDoubleColumn(path) && value !== 'image_top'
+  }
 
-	/** 卡片样式选项是否因双列约束被禁用(双列仅允许 image_top) */
-	function isCardTypeOptionDisabled(path: string[], value: string): boolean {
-		return path[0].endsWith('CardType') && isDoubleColumn(path) && value !== 'image_top';
-	}
+  function handleChoose(def: PrefDef, value: string | null): void {
+    if (value === null) {
+      handleRevert(def.path)
+      return
+    }
+    // 布尔开关项:'true'/'false' 哨兵字符串落库为 boolean
+    if (def.boolValue) {
+      savePreference(buildPatch(def.path, value === 'true'))
+      return
+    }
+    savePreference(buildPatch(def.path, value))
+    // 双列约束:列表布局改为双列时,同组卡片样式强制为 image_top
+    if (def.path[0].endsWith('ListLayout') && value === 'double') {
+      const pair = Object.values(GROUP_FIELDS).find(p => p.listKey === def.path[0])
+      if (pair && prefValueOf([pair.cardKey]) !== 'image_top') {
+        savePreference(buildPatch([pair.cardKey], 'image_top'))
+      }
+    }
+  }
 
-	function handleChoose(path: string[], value: string | null): void {
-		if (value === null) {
-			handleRevert(path);
-		} else {
-			savePreference(buildPatch(path, value));
-			// 双列约束:列表布局改为双列时,同组卡片样式强制为 image_top
-			if (path[0].endsWith('ListLayout') && value === 'double') {
-				const pair = Object.values(GROUP_FIELDS).find((p) => p.listKey === path[0]);
-				if (pair && prefValueOf([pair.cardKey]) !== 'image_top') {
-					savePreference(buildPatch([pair.cardKey], 'image_top'));
-				}
-			}
-		}
-	}
-
-	return {
-		PAGE_GROUPS,
-		FEATURE_GROUPS,
-		SETTING_TABS,
-		getByPath,
-		buildPatch,
-		prefValueOf,
-		siteDefaultOf,
-		isOverridden,
-		enumLabelOf,
-		buildRows,
-		layoutRows,
-		featureRows,
-		featureGroups,
-		layoutGroups,
-		isFollowing,
-		handleRevert,
-		handleChoose,
-		isDoubleColumn,
-		isCardTypeOptionDisabled
-	};
+  return {
+    PAGE_GROUPS,
+    FEATURE_GROUPS,
+    SETTING_TABS,
+    getByPath,
+    buildPatch,
+    prefValueOf,
+    siteDefaultOf,
+    isOverridden,
+    enumLabelOf,
+    buildRows,
+    layoutRows,
+    featureRows,
+    featureGroups,
+    layoutGroups,
+    isFollowing,
+    handleRevert,
+    handleChoose,
+    isDoubleColumn,
+    isCardTypeOptionDisabled,
+  }
 }

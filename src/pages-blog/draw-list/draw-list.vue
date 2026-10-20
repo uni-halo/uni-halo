@@ -261,7 +261,7 @@ function handleGuessSolved() {
         v-if="loadingStatus !== DataLoadingStatusEnum.Success" :loading-status="loadingStatus"
         empty-text="啊偶，还没有任何画作哦~" min-height="75vh" @refresh="handleRetry"
       />
-      <view v-else class="box-border w-full flex flex-col pb-12">
+      <view v-else class="box-border w-full flex flex-col">
         <view class="box-border w-full flex gap-3 p-3">
           <view class="flex flex-1 flex-col gap-3">
             <uh-draw-card
@@ -284,28 +284,24 @@ function handleGuessSolved() {
     </template>
 
     <!-- 底部悬浮：画一幅（登录 + 绘画权限） -->
-    <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 box-border w-fit pb-safe">
+    <uh-float-toolbar v-if="guessModeEnabled || loginEnabled" :need-placeholder="true">
       <view
-        class="uh-global-card-glass uh-shadow-xs box-border flex flex-1 items-center justify-center gap-x-3 border rounded-full p-1"
+        v-if="loginEnabled"
+        class="box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden rounded-full px-3 py-2 text-primary"
+        @click="handleGoDraw"
       >
-        <view
-          v-if="loginEnabled"
-          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
-          @click="handleGoDraw"
-        >
-          <wd-icon name="plus" size="28rpx" />
-          <text class="shrink-0 text-3xs font-semibold">画一幅</text>
-        </view>
-        <view
-          v-if="guessModeEnabled"
-          class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden border rounded-full px-3 py-2 text-primary !shadow-none"
-          @click="rankVisible = true"
-        >
-          <wd-icon name="crown" size="28rpx" />
-          <text class="shrink-0 text-3xs font-semibold">画谜排行榜</text>
-        </view>
+        <wd-icon name="plus" size="28rpx" />
+        <text class="shrink-0 text-3xs font-semibold">画一幅</text>
       </view>
-    </view>
+      <view
+        v-if="guessModeEnabled"
+        class="box-border flex shrink-0 items-center justify-center gap-x-1 overflow-hidden rounded-full px-3 py-2 text-primary"
+        @click="rankVisible = true"
+      >
+        <wd-icon name="crown" size="28rpx" />
+        <text class="shrink-0 text-3xs font-semibold">画谜排行榜</text>
+      </view>
+    </uh-float-toolbar>
 
     <!-- 详情弹层（普通作品，抽离组件） -->
     <uh-draw-detail-popup v-model="detailVisible" :draw="currentDraw" />
@@ -318,8 +314,4 @@ function handleGuessSolved() {
   </view>
 </template>
 
-<style scoped lang="scss">
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
-</style>
+<style scoped lang="scss"></style>

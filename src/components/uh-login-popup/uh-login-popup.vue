@@ -260,8 +260,8 @@ async function doWechatLogin() {
 
 <template>
   <uh-glass-popup
-    :model-value="modelValue" :hide-when-close="true" position="bottom"
-    :z-index="111"
+    :model-value="modelValue" :hide-when-close="true"
+    :z-index="111" position="bottom"
     :close-on-click-modal="false" custom-class="!rounded-2xl"
     @update:model-value="value => emit('update:modelValue', value)"
   >

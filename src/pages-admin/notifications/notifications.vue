@@ -444,9 +444,10 @@ onPullDownRefresh(() => {
     </view>
 
     <!-- 底部悬浮操作 -->
-    <view
+    <uh-float-toolbar
       v-if="loadingStatus === DataLoadingStatusEnum.Success"
-      class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex flex-col items-center justify-center gap-y-2 pb-safe"
+      :need-glass-wrapper="false"
+      custom-content-class="flex-col !gap-y-2"
     >
       <!-- 多选模式：全选行 -->
       <view v-if="false && selectMode" class="box-border flex items-center px-3">
@@ -520,14 +521,10 @@ onPullDownRefresh(() => {
           <text class="shrink-0 text-xs text-gray-900 font-semibold">批量管理</text>
         </view>
       </view>
-    </view>
+    </uh-float-toolbar>
   </view>
   <wd-dialog />
 </template>
 
 <style scoped lang="scss">
-/* 水平居中定位 */
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
 </style>

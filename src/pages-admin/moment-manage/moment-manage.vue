@@ -259,16 +259,13 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
       </view>
 
-      <!-- 底部悬浮：发布瞬间（参考笔记详情悬浮设计） -->
-      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
-        <view
-          class="uh-global-card-glass box-border h-[72rpx] flex items-center justify-center gap-x-1 border rounded-full px-6 text-primary shadow-none"
-          @click="handleOpenPublish"
-        >
+      <!-- 底部悬浮：发布瞬间 -->
+      <uh-float-toolbar>
+        <view class="h-[72rpx] flex items-center justify-center gap-x-1 px-6" @click="handleOpenPublish">
           <wd-icon name="plus" size="28rpx" />
           <text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
         </view>
-      </view>
+      </uh-float-toolbar>
 
       <!-- 发布/编辑弹窗（全局组件，easycom 自动注册） -->
       <uh-admin-moment-edit-popup ref="popupRef" :show="popupVisible" @on-close="handlePopupClose" />
@@ -277,7 +274,4 @@ const isAdminView = computed(() => can('MOMENT_MANAGE'))
 </template>
 
 <style scoped lang="scss">
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
 </style>

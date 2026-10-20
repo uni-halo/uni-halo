@@ -76,7 +76,7 @@ function handleCloseEnum() {
 function handleChooseEnum(value: string | null) {
   const def = enumSheet.value.def
   if (def) {
-    handleChoose(def.path, value)
+    handleChoose(def, value)
   }
   handleCloseEnum()
 }
@@ -88,7 +88,7 @@ const enumColumns = computed(() => {
   if (!def) { return [] }
   const options = (def.options || []).filter(opt => !isCardTypeOptionDisabled(def.path, opt.value))
   return [
-    { label: '跟随站点默认', value: '' },
+    { label: '默认', value: '' },
     ...options.map(opt => ({ label: opt.label, value: opt.value })),
   ]
 })
@@ -164,7 +164,7 @@ async function handleResetAll() {
               <view class="row-left flex flex-col gap-1">
                 <text class="text-3xs text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
-                  <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
+                  <text v-if="row.following" class="row-sub text-xs text-gray-400">默认</text>
                   <view
                     v-else
                     class="rounded-full bg-secondary px-2 py-0.5 text-xs text-[#4d7c0f] leading-none"
@@ -195,7 +195,7 @@ async function handleResetAll() {
               <view class="row-left flex flex-col gap-1">
                 <text class="text-3xs text-gray-900 font-semibold">{{ row.label }}</text>
                 <view v-if="false" class="flex items-center gap-2">
-                  <text v-if="row.following" class="row-sub text-xs text-gray-400">跟随站点默认</text>
+                  <text v-if="row.following" class="row-sub text-xs text-gray-400">默认</text>
                   <template v-else>
                     <view
                       class="rounded-full bg-secondary px-2 py-0.5 text-xs text-[#4d7c0f] leading-none"

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// i-carbon-code
 import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
 import { setTabbarItem } from './i18n'
 import { tabbarList, tabbarStore } from './store'
+import { useSafeArea } from '@/hooks/useSafeArea'
 import TabbarItem from './TabbarItem.vue'
 
 // #ifdef MP-WEIXIN
@@ -11,6 +11,8 @@ defineOptions({
   virtualHost: true,
 })
 // #endif
+
+const { safeBottomStyle } = useSafeArea()
 
 function handleClick(index: number) {
   // 添加振动反馈
@@ -103,8 +105,8 @@ onShow(() => {
 </script>
 
 <template>
-  <view v-if="customTabbarEnable" class="h-56px overflow-hidden bg-page pb-safe">
-    <view class="fixed bottom-0 z-100 box-border w-full px-12">
+  <view v-if="customTabbarEnable" class="overflow-hidden bg-page pb-safe" :style="[safeBottomStyle]">
+    <view class="fixed bottom-0 z-100 box-border w-full px-12 pb-safe" :style="[safeBottomStyle]">
       <view class="box-border w-full flex items-center justify-between gap-x-2" @touchmove.stop.prevent>
         <view
           class="uh-global-card-glass box-border flex flex-1 items-center gap-x-1 border rounded-full bg-white/75 p-1"
@@ -127,7 +129,7 @@ onShow(() => {
           <TabbarItem :item="rightButton.item" :index="rightButton.index" :is-bulge="true" />
         </view>
       </view>
-      <view class="pb-safe" />
     </view>
+    <view class="h-56px w-full" />
   </view>
 </template>

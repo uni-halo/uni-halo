@@ -4,6 +4,7 @@ import { useDialog } from '@wot-ui/ui'
 import { DIALOG_CANCEL_BUTTON_PROPS, DIALOG_CONFIRM_BUTTON_PROPS } from '@/config/dialog'
 import { useSettingStore } from '@/store/setting'
 import { usePreferenceRows } from '@/hooks/usePreferenceRows'
+import type { PrefDef } from '@/hooks/usePreferenceRows'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
 import { isWechat } from '@/utils/platform'
 
@@ -60,7 +61,10 @@ watch(() => props.modelValue, (visible) => {
   }
 })
 /** 路由末段 → 布局分组 key(user-profile 笔记 tab 消费文章卡片配置,归入 articles 组) */
-const ROUTE_GROUP_ALIAS: Record<string, string> = { 'user-profile': 'articles' }
+const ROUTE_GROUP_ALIAS: Record<string, string> = {
+  'user-profile': 'articles',
+  'article-detail': 'postDetail',
+}
 const filterLayoutGroups = computed(() => {
   const key = ROUTE_GROUP_ALIAS[routeKey.value] || routeKey.value
   return layoutGroups.value.filter(group => group.key === key)
@@ -73,8 +77,8 @@ function currentValueOf(path: string[]): string | null {
   return isFollowing(path) ? null : String(prefValueOf(path) ?? '')
 }
 
-function handleInlineChoose(path: string[], value: string | null): void {
-  handleChoose(path, value)
+function handleInlineChoose(row: PrefDef, value: string | null): void {
+  handleChoose(row, value)
 }
 
 /* ---------------- 重置全部 ---------------- */
@@ -99,6 +103,15 @@ async function handleResetAll() {
 
 function handleClose() {
   emits('update:modelValue', false)
+}
+
+function handleToSettingPage() {
+  uni.navigateTo({
+    url: '/pages-blog/setting/setting',
+    success: (res) => {
+      handleClose()
+    },
+  })
 }
 </script>
 
@@ -167,7 +180,7 @@ function handleClose() {
                       <view
                         class="uh-global-card-glass uh-shadow-xs border rounded-full px-3 py-1 text-xs"
                         :class="currentValueOf(row.path) === null ? 'bg-secondary' : 'border-gray-100 text-gray-500'"
-                        @click="handleInlineChoose(row.path, null)"
+                        @click="handleInlineChoose(row, null)"
                       >
                         默认
                       </view>
@@ -177,7 +190,7 @@ function handleClose() {
                         :class="[
                           currentValueOf(row.path) === opt.value ? 'bg-secondary' : 'border-gray-100 text-gray-500',
                           isCardTypeOptionDisabled(row.path, opt.value) ? 'opacity-40' : '',
-                        ]" @click="isCardTypeOptionDisabled(row.path, opt.value) ? null : handleInlineChoose(row.path, opt.value)"
+                        ]" @click="isCardTypeOptionDisabled(row.path, opt.value) ? null : handleInlineChoose(row, opt.value)"
                       >
                         {{ opt.label }}
                       </view>
@@ -215,7 +228,7 @@ function handleClose() {
                           v-if="row.following"
                           class="row-sub text-xs text-gray-400"
                         >
-                          跟随站点默认
+                          默认
                         </text>
                         <view
                           v-else
@@ -229,7 +242,7 @@ function handleClose() {
                       <view
                         class="uh-global-card-glass uh-shadow-xs border rounded-full px-3 py-1 text-xs"
                         :class="currentValueOf(row.path) === null ? 'bg-secondary' : 'border-gray-100 text-gray-500'"
-                        @click="handleInlineChoose(row.path, null)"
+                        @click="handleInlineChoose(row, null)"
                       >
                         默认
                       </view>
@@ -237,7 +250,7 @@ function handleClose() {
                         v-for="opt in row.options" :key="opt.value"
                         class="uh-global-card-glass uh-shadow-xs border rounded-full px-3 py-1 text-xs"
                         :class="currentValueOf(row.path) === opt.value ? 'bg-secondary' : 'border-gray-100 text-gray-500'"
-                        @click="handleInlineChoose(row.path, opt.value)"
+                        @click="handleInlineChoose(row, opt.value)"
                       >
                         {{ opt.label }}
                       </view>
@@ -253,16 +266,16 @@ function handleClose() {
       <!-- 底部固定操作区域 -->
       <view class="box-border w-full flex items-center gap-x-2">
         <uh-button
-          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs !bg-white/90 border !py-2.5 !rounded-xl !text-3xs"
-          @click="handleClose()"
-        >
-          关闭
-        </uh-button>
-        <uh-button
           class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs border !py-2.5 !rounded-xl !text-3xs !bg-white/90"
           @click="handleResetAll"
         >
           恢复默认
+        </uh-button>
+        <uh-button
+          class="flex-1" custom-class="flex-1 uh-global-card-glass uh-shadow-xs !bg-white/90 border !py-2.5 !rounded-xl !text-3xs"
+          @click="handleToSettingPage()"
+        >
+          去设置页
         </uh-button>
       </view>
     </view>

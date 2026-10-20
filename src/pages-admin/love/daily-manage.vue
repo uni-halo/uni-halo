@@ -244,17 +244,14 @@ onShow(() => {
       <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />
     </view>
 
-    <!-- 底部悬浮：新增（参考笔记详情悬浮设计） -->
+    <!-- 底部悬浮：新增 -->
     <uh-permission permission="LOVE_DAILY_MANAGE">
-      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
-        <view
-          class="uh-global-card-glass box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-love shadow-none"
-          @click="openCreate"
-        >
+      <uh-float-toolbar>
+        <view class="flex items-center justify-center gap-x-1 px-6 py-2.5 text-love" @click="openCreate">
           <wd-icon name="plus" size="28rpx" />
           <text class="shrink-0 text-3xs font-semibold">新增清单</text>
         </view>
-      </view>
+      </uh-float-toolbar>
     </uh-permission>
 
     <!-- 新增/编辑弹窗（全局组件，内聚表单与上传逻辑） -->
@@ -263,7 +260,4 @@ onShow(() => {
 </template>
 
 <style scoped lang="scss">
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
 </style>

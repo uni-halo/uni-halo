@@ -549,39 +549,35 @@ onShareTimeline(() => {
       </view>
 
       <!-- 悬浮操作 -->
-      <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+      <uh-float-toolbar>
         <view
-          class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
+          :class="[hasUpvoted() ? 'text-primary' : 'text-gray-900']" @click="handleDoLikesClick"
         >
-          <view
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
-            :class="[hasUpvoted() ? 'text-primary' : 'text-gray-900']" @click="handleDoLikesClick"
-          >
-            <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-            <text class="shrink-0 text-xs font-semibold">点赞</text>
-          </view>
-          <view
-            v-if="calcEnableComment"
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            @click="handleToComment()"
-          >
-            <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-            <text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
-          </view>
-          <view
-            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-            @click="handleTogglePostFavorite"
-          >
-            <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-            <text
-              class="shrink-0 text-xs font-semibold"
-              :class="[hasFavorited() ? 'text-primary' : 'text-gray-900']"
-            >
-              {{ hasFavorited() ? '已收藏' : '收藏' }}
-            </text>
-          </view>
+          <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
+          <text class="shrink-0 text-xs font-semibold">点赞</text>
         </view>
-      </view>
+        <view
+          v-if="calcEnableComment"
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleToComment()"
+        >
+          <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
+          <text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
+        </view>
+        <view
+          class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+          @click="handleTogglePostFavorite"
+        >
+          <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
+          <text
+            class="shrink-0 text-xs font-semibold"
+            :class="[hasFavorited() ? 'text-primary' : 'text-gray-900']"
+          >
+            {{ hasFavorited() ? '已收藏' : '收藏' }}
+          </text>
+        </view>
+      </uh-float-toolbar>
     </view>
 
     <!-- 评论弹窗 -->

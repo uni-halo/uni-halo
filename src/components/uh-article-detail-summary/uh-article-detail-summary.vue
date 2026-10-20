@@ -2,9 +2,12 @@
 /**
  * 文章详情摘要组件
  * 有 excerpt 内容时展示摘要卡片（打字机效果，支持收起展开）
+ * 开关：插件端 preferences.articlesSummaryTypewriterEnabled（未配置视为开启），偏好设置「笔记详情」可覆盖
  */
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useTypewriter } from '@/hooks/useTypewriter'
+import { useSettingStore } from '@/store/setting'
 
 interface IProps {
   /** 摘要内容（文章 excerpt.raw） */
@@ -15,9 +18,23 @@ const props = withDefaults(defineProps<IProps>(), {
   content: '',
 })
 
-const { displayText } = useTypewriter(() => props.content, { speed: 30 })
+const { settings } = storeToRefs(useSettingStore())
+
+/** 内容页-摘要打字机开关（未配置视为开启，与插件端默认值一致） */
+const isEnabled = computed(() => settings.value.articlesSummaryTypewriterEnabled)
 
 const expanded = ref(true)
+
+// immediate: false，由下方 watch 同时接管「开关状态」与「内容到达/变化」
+const { displayText, start, finish } = useTypewriter(() => props.content, { speed: 30, immediate: false })
+
+watch(
+  () => [isEnabled.value, props.content],
+  ([enabled]) => {
+    enabled ? start() : finish()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

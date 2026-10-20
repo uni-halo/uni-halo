@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useSafeArea } from '@/hooks/useSafeArea'
 
 defineOptions({
   options: {
@@ -19,6 +20,8 @@ interface IProps {
   defaultCollapsed?: boolean
   whenCountShowCollapsedButton?: number
 }
+
+const { safeBottomStyle } = useSafeArea()
 
 // 折叠状态
 const isCollapsed = ref(props.defaultCollapsed)
@@ -79,7 +82,7 @@ watch(() => props.visibleCount, (val) => {
 </script>
 
 <template>
-  <view class="fixed bottom-18 right-3 z-50 box-border flex flex-col gap-y-3 pb-safe">
+  <view class="fixed bottom-18 right-3 z-50 box-border flex flex-col gap-y-3 pb-safe" :style="[safeBottomStyle]">
     <view
       class="uhc-actions box-border flex flex-col gap-y-3" :class="[
         toggleActionsClass,

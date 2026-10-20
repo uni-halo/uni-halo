@@ -74,17 +74,20 @@ layout: {
 | `src/pages-blog/articles/articles.vue` | `layout.articles.listLayout` 决定容器与 `variant`(grid/list);卡片 `from="articles"` |
 | `src/pages-blog/archives/archives.vue` | `layout.archives.listLayout` 决定归档时间线内单/双列;卡片 `from="archives"` |
 | `src/components/uh-article-card/uh-article-card.vue` | 按 `from` 读取对应页面 `cardType` 作为 layout;grid/双列窄列自动回退 `image_top`;非法值兜底 `image_top` |
+| `src/components/uh-article-detail-summary/uh-article-detail-summary.vue` | `articlesSummaryTypewriterEnabled` 为真时笔记详情摘要卡做打字机动画(插件端 `preferences.articlesSummaryTypewriterEnabled`,未配置视为开启);关闭直接整段展示 |
 
 ## 5. 设置页枚举(「默认」= 跟随站点默认)
 
 - 列表布局:跟随站点默认 / 单列(`single`)/ 双列(`double`)
 - 卡片样式:跟随站点默认 / 上图下文(`image_top`)/ 左文右图(`image_right`)/ 上文下图(`image_bottom`)/ 左图右文(`image_left`)
+- 摘要打字机:默认 / 开启 / 关闭(布尔项,`PrefDef.boolValue`,落库转 boolean;仅「笔记详情」组,偏好弹窗在文章详情页展示)
 - 选择「跟随站点默认」时写入差异 `null`(删除本地覆盖),回退 L0 站点默认;无 L0 时回退内置默认。
 
 ## 6. 变更记录
 
 | 版本 | 变更 |
 |------|------|
+| v2.6 | 新增摘要打字机控制（UI 在内容页/笔记详情，数据存插件端 `preferences.articlesSummaryTypewriterEnabled`，与偏好字段同源，未配置视为开启）：`collectSiteDefaults` 同名透传为 `articlesSummaryTypewriterEnabled`，设置页/弹窗「布局」新增「笔记详情」组可覆盖，`uh-article-detail-summary`（笔记详情摘要卡）按开关打字机动画；`uh-article-card` 列表页不消费该开关 |
 | v2.5 | 内置默认 cardType 统一为 `image_top`;组件非法值兜底同步为 `image_top` |
 | v2.4 | 卡片样式值体系由旧 `lr_*/tb_*` 改为组件 layout 值 `image_top/image_right/image_bottom/image_left`;移除 `uh-article-card` 旧值映射(`CARD_TYPE_TO_LAYOUT`) |
 | v2.3 | 布局偏好由全局 `layout.home` / `layout.cardType`(字符串)重构为按页面分组 `layout.{home,articles,archives}.{listLayout,cardType}`;设置页增加「布局 / 功能」分段器与页面分组设置项;三个消费页面联动卡片 |

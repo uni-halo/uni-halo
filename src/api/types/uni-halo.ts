@@ -307,6 +307,8 @@ export interface IAppConfig {
       homeCardType?: string
       articlesListLayout?: 'single' | 'double' | string
       articlesCardType?: string
+      /** 内容页摘要打字机效果（笔记详情摘要卡逐字打字；未配置视为开启） */
+      articlesSummaryTypewriterEnabled?: boolean
       archivesListLayout?: 'single' | 'double' | string
       archivesCardType?: string
       /** 分类笔记页布局（single/double）与卡片样式（image_*） */

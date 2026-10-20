@@ -138,7 +138,7 @@ function handleOpenLink(url: string | undefined, label: string) {
       </view>
 
       <view
-        class="uh-global-card-glass uh-content-lift box-border min-h-[calc(100vh-300rpx)] w-full overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-8"
+        class="uh-global-card-glass box-border min-h-[calc(100vh-300rpx)] w-full overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-10"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->
@@ -203,30 +203,15 @@ function handleOpenLink(url: string | undefined, label: string) {
       </view>
 
       <!-- 悬浮操作：仓库/演示/文档外链 -->
-      <view
-        v-if="linkButtons.length"
-        class="fixed bottom-0 z-10 box-border w-full flex items-center justify-center pb-safe"
-      >
-        <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 rounded-full p-1 !border">
-          <view
-            v-for="btn in linkButtons" :key="btn.label"
-            class="uh-global-card-glass box-border h-8 flex shrink-0 items-center justify-center gap-x-1 rounded-full shadow-none !border !bg-primary !px-3"
-            @click="handleOpenLink(btn.url, btn.label)"
-          >
-            <text class="shrink-0 text-xs text-gray-900 font-semibold">{{ btn.label }}</text>
-          </view>
+      <uh-float-toolbar v-if="linkButtons.length">
+        <view
+          v-for="btn in linkButtons" :key="btn.label"
+          class="uh-global-card-glass box-border h-8 flex shrink-0 items-center justify-center gap-x-1 rounded-full shadow-none !border !bg-primary !px-3"
+          @click="handleOpenLink(btn.url, btn.label)"
+        >
+          <text class="shrink-0 text-xs text-gray-900 font-semibold">{{ btn.label }}</text>
         </view>
-      </view>
+      </uh-float-toolbar>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.uh-content-lift {
-  transform: translateY(-3rem);
-}
-
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
-</style>

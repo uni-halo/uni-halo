@@ -12,6 +12,7 @@ import { sleep } from '@/utils/common'
 import { t } from '@/locale'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { useNavbarSticky } from '@/hooks/useNavbarSticky'
+import { useWaterfallColumns } from '@/hooks/useWaterfallColumns'
 import type { IPhoto, IPhotoGroup } from '@/api/types/halo'
 
 definePage({
@@ -54,6 +55,8 @@ const category = ref<{ activeIndex: number, list: IPhotoGroup[] }>({
 const queryParams = ref({ size: 10, page: 1, group: '' })
 const dataList = ref<IPhoto[]>([])
 const visiblePhotoName = ref(false)
+/** 瀑布流双列 */
+const { columns, aspectOf } = useWaterfallColumns(dataList, item => item.spec.url)
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetCategory() {
@@ -271,22 +274,32 @@ onReachBottom(() => {
       />
 
       <view v-else class="box-border w-full p-3 pb-0">
-        <view class="grid grid-cols-2 gap-2.5">
+        <view class="flex gap-2.5">
           <view
-            v-for="(item, index) in dataList" :key="index"
-            class="uh-global-card-glass uh-shadow-xs relative h-38 w-full overflow-hidden rounded-xl"
-            @click="handlePreview(item)"
+            v-for="(column, columnIndex) in columns" :key="columnIndex"
+            class="flex flex-1 flex-col gap-2.5"
           >
-            <wd-img class="h-full w-full" :src="item.spec.url" mode="aspectFill" lazy-load>
-              <template #loading>
-                <wd-loading size="64rpx" custom-class="text-primary" />
-              </template>
-            </wd-img>
             <view
-              v-if="visiblePhotoName && item.spec.displayName"
-              class="absolute bottom-0 z-2 box-border w-full from-white/0 to-black/40 bg-gradient-to-b p-3 pt-6"
+              v-for="item in column" :key="item.metadata.name"
+              class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl"
+              @click="handlePreview(item)"
             >
-              <text class="line-clamp-2 text-xs text-white">{{ item.spec.displayName }}</text>
+              <view class="relative w-full" :style="{ paddingTop: `${aspectOf(item) * 100}%` }">
+                <wd-img
+                  custom-class="!absolute !inset-0 !h-full !w-full" :src="item.spec.url"
+                  mode="aspectFill" lazy-load
+                >
+                  <template #loading>
+                    <wd-loading size="64rpx" custom-class="text-primary" />
+                  </template>
+                </wd-img>
+              </view>
+              <view
+                v-if="visiblePhotoName && item.spec.displayName"
+                class="absolute bottom-0 z-2 box-border w-full from-white/0 to-black/40 bg-gradient-to-b p-3 pt-6"
+              >
+                <text class="line-clamp-2 text-xs text-white">{{ item.spec.displayName }}</text>
+              </view>
             </view>
           </view>
         </view>

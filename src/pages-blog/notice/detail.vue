@@ -222,7 +222,7 @@ onLoad((options) => {
         </text>
       </view>
 
-      <view class="mt-2 box-border w-full pb-12 pt-4 text-3xs text-gray-900">
+      <view class="mt-2 box-border w-full pb-4 pt-4 text-3xs text-gray-900">
         <mp-html
           :content="content" lazy-load :domain="markdownConfig.domain"
           :loading-img="markdownConfig.loadingGif" scroll-table selectable
@@ -231,16 +231,19 @@ onLoad((options) => {
           :show-language-name="true" copy-by-long-press
         />
       </view>
-
-      <view v-if="hasLink" class="fixed bottom-0 left-0 right-0 box-border px-4 pb-safe">
-        <uh-button
-          class="flex-1"
-          custom-class="uh-global-card-glass border w-full !rounded-full !py-2.5 font-medium !text-3xs !bg-primary"
-          @click="handleLinkClick"
-        >
-          {{ linkButtonText }}
-        </uh-button>
-      </view>
     </view>
+    <uh-float-toolbar
+      v-if="loadingStatus === 'success' && hasLink"
+      custom-content-class="!p-0.5"
+      :need-placeholder="true"
+    >
+      <uh-button
+        class="min-w-[80vw]"
+        custom-class="uh-global-card-glass border w-full !rounded-full !py-2.5 font-medium !text-3xs !bg-primary"
+        @click="handleLinkClick"
+      >
+        {{ linkButtonText }}
+      </uh-button>
+    </uh-float-toolbar>
   </view>
 </template>

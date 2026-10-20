@@ -4,15 +4,14 @@ import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getMomentList, getPostList, getUcMyPostList } from '@/api/halo'
 import { useAppConfigStore } from '@/store/appConfig'
-import { useNavbarSticky } from '@/hooks/useNavbarSticky'
 import { usePageScroll } from '@/hooks/usePageScroll'
-import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
 import { useFavoritesStore } from '@/store/favorites'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { useUpvote } from '@/hooks/useUpvote'
+import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
@@ -30,53 +29,76 @@ const PAGE_SIZE = 10
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('userProfile', '个人主页')
-// wd-sticky 吸顶偏移(导航栏高度,同 tabbar/gallery.vue 用法)
-const { height } = useNavbarSticky()
 const appConfigStore = useAppConfigStore()
-const tokenStore = useTokenStore()
 const userStore = useUserStore()
 const { configs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 const { userInfo } = storeToRefs(userStore)
-const offsetTop = computed(() => {
-  return height.value - 12
-})
 
 /* ---------------- 目标用户(onLoad 参数 username=metadata.name;缺省为当前登录用户) ---------------- */
 const pageUsername = ref('')
 const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userInfo.value.username)
 
-/* ---------------- 头部资料 ---------------- */
-const ownerInfo = ref<{ displayName?: string, avatar?: string, bio?: string }>({})
-
-const headerUser = computed(() => ({
-  nickname: (isSelf.value ? userInfo.value.nickname : ownerInfo.value.displayName) || pageUsername.value,
-  username: pageUsername.value,
-  avatar: (isSelf.value ? userInfo.value.avatar : ownerInfo.value.avatar) || '',
-  role: isSelf.value
-    ? (userInfo.value.roles?.includes('super-role') ? '超级管理员' : '普通用户')
-    : '',
-  isAdmin: isSelf.value && userInfo.value.roles?.includes('super-role'),
-  bio: ownerInfo.value.bio || '这个人很懒，什么都没有留下~',
-}))
-
-/** 封面图:复用 mine.vue(关于页)的 blogger.bgImageUrl;空时 checkImageUrl 自动回落默认背景图 */
-const profileStyle = computed(() => ({
-  backgroundImage: `url(${checkImageUrl(configs.value.featureConfig?.pages?.blogger?.bgImageUrl)})`,
-}))
-
-/** 从列表数据回填他人资料(取第一条带 owner 的记录) */
-function backfillOwner<T extends { owner?: { displayName?: string, avatar?: string, bio?: string } }>(items: T[]) {
-  if (isSelf.value)
-    return
-  const owner = items.find(item => item.owner)?.owner
-  if (owner && (owner.displayName || owner.avatar || owner.bio)) {
-    ownerInfo.value = {
-      displayName: owner.displayName,
-      avatar: owner.avatar,
-      bio: owner.bio,
-    }
+/* ---------------- 互动增强装饰(插件未启用时为空,静默降级) ---------------- */
+const { identity, profile, decorationWall } = useUserIdentity(pageUsername)
+const wornDecorations = computed(() => identity.value?.decorations || {})
+const avatarFrame = computed(() => {
+  const url = checkImageUrl(wornDecorations.value.avatarFrame?.url)
+  return {
+    visible: url && identity.value?.display?.userCard?.showAvatarFrame,
+    url,
   }
-}
+})
+const primaryBadge = computed(() => {
+  const url = checkImageUrl(wornDecorations.value.primaryBadge?.url)
+  return {
+    visible: url && identity.value?.display?.userCard?.showPrimaryBadge,
+    url,
+  }
+})
+const wornTitle = computed(() => {
+  const title = wornDecorations.value?.title || null
+  return {
+    visible: title !== null && identity.value?.display?.userCard?.showTitle,
+    title,
+  }
+})
+
+const profileNicknameStyle = computed(() => {
+  const ns = wornDecorations.value.nameStyle?.nameStyle
+  if (!ns) { return '' }
+  if (ns.mode === 'gradient' && ns.colors?.length) { return `background-image:linear-gradient(135deg,${ns.colors.join(',')});-webkit-background-clip:text;background-clip:text;color:transparent` }
+  return ns.color ? `color:${ns.color}` : ''
+})
+
+const titleStyleCss = computed(() => {
+  const t = wornTitle.value.title
+  if (!t) { return '' }
+  const bg = t.titleBackgroundSecondary
+    ? `linear-gradient(135deg,${t.titleBackground},${t.titleBackgroundSecondary})`
+    : t.titleBackground
+  return `${bg ? `background-image:${bg};` : ''}${t.titleColor ? `color:${t.titleColor}` : ''}`
+})
+
+/* ---------------- 头部资料(优先级:互动增强 identity > 插件端 profile > 登录信息/兜底) ---------------- */
+const headerUser = computed(() => ({
+  nickname: identity.value?.displayName
+    || profile.value?.displayName
+    || (isSelf.value ? userInfo.value.nickname : '')
+    || pageUsername.value,
+  username: pageUsername.value,
+  avatar: identity.value?.avatar
+    || profile.value?.avatar
+    || (isSelf.value ? userInfo.value.avatar : '')
+    || '',
+  bio: identity.value?.bio || profile.value?.bio || '这个人很懒，什么都没有留下~',
+}))
+
+const profileBgUrl = computed(() => {
+  if (wornDecorations.value.cardBackground) {
+    return checkImageUrl(wornDecorations.value.cardBackground?.url)
+  }
+  return checkImageUrl(configs.value.featureConfig?.pages?.blogger?.bgImageUrl)
+})
 
 /* ---------------- 双 Tab 各自独立的数据状态 ---------------- */
 interface IPagedFetchResult<T> {
@@ -190,7 +212,6 @@ const postState = usePagedList<IPost>({
       // UC 端点服务端强制 owner=当前用户,固定只取已发布,与站点可见性一致
       return getUcMyPostList({ page, size, sort: ['spec.publishTime,desc'] }).then((res) => {
         const items = (res.data.items || []).map(mapUcListedPost)
-        backfillOwner(items)
         return { items, hasNext: res.data.hasNext }
       })
     }
@@ -201,7 +222,6 @@ const postState = usePagedList<IPost>({
       fieldSelector: [`spec.owner==${pageUsername.value}`],
     }).then((res) => {
       const items = res.data.items || []
-      backfillOwner(items)
       return { items, hasNext: res.data.hasNext }
     })
   },
@@ -243,7 +263,6 @@ const momentState = usePagedList<MomentCard>({
     ownerName: pageUsername.value,
   }).then((res) => {
     const items = (res.data.items || []).map(mapMomentItem)
-    backfillOwner(items)
     return { items, hasNext: res.data.hasNext }
   }),
   auditFilter: items => auditFilterBy(appConfigStore.auditNamesOf('moments'))(items),
@@ -254,8 +273,7 @@ const activeTab = ref<'post' | 'moment'>('post')
 const loadedTabs = ref<Record<'post' | 'moment', boolean>>({ post: false, moment: false })
 
 function switchTab(key: 'post' | 'moment') {
-  if (activeTab.value === key)
-    return
+  if (activeTab.value === key) { return }
   activeTab.value = key
   if (!loadedTabs.value[key]) {
     loadedTabs.value[key] = true
@@ -316,9 +334,9 @@ onPageScroll((option: Page.PageScrollOption) => {
 onLoad((query) => {
   // 路由参数 username = 用户的 metadata.name;未传则回退为当前登录用户
   pageUsername.value = (query as Record<string, string> | undefined)?.username || userInfo.value.username || ''
-  if (!tokenStore.updateNowTime().hasLogin || !pageUsername.value) {
-    uni.showToast({ icon: 'none', title: '请先登录' })
-    setTimeout(() => uni.navigateBack(), 600)
+  if (!pageUsername.value) {
+    uni.showToast({ icon: 'none', title: '用户不存在' })
+    setTimeout(() => uni.navigateBack(), 1000)
     return
   }
   loadedTabs.value.post = true
@@ -353,27 +371,33 @@ onReachBottom(() => {
     />
 
     <view class="relative mb-8 box-border h-52 w-full">
-      <view class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :style="profileStyle" />
+      <image class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :src="profileBgUrl" mode="aspectFill" />
       <view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
       <view class="absolute left-0 z-30 flex items-center justify-center gap-x-4 px-4 -bottom-6">
-        <view class="shrink-0">
+        <view class="relative shrink-0">
           <wd-avatar
             :src="checkAvatarUrl(headerUser.avatar)"
             :text="getAvatarFallbackText(headerUser.nickname || headerUser.username)" shape="round"
             custom-class="uh-global-card-glass uh-shadow-xs !h-20 !w-20 !text-gray-900 !font-bold"
             class="!border-2 !border-white/40 !rounded-full" mode="aspectFill"
           />
+          <image
+            v-if="avatarFrame.visible" :src="avatarFrame.url"
+            class="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2"
+            mode="aspectFit"
+          />
         </view>
         <view class="flex flex-1 flex-col gap-y-1.5">
-          <view class="text-md text-gray-900 font-black drop-shadow">
-            {{ headerUser.nickname || headerUser.username }}
+          <view class="flex items-center gap-x-1">
+            <text class="text-md text-gray-900 font-black drop-shadow" :style="[profileNicknameStyle]">
+              {{
+                headerUser.nickname || headerUser.username }}
+            </text>
+            <image v-if="primaryBadge.visible" :src="primaryBadge.url" class="h-4 w-4" mode="aspectFit" />
           </view>
-          <view class="flex items-center gap-x-2">
-            <text
-              v-if="headerUser.role" class="box-border rounded-full px-2 py-0.5 text-xs"
-              :class="[headerUser.isAdmin ? 'bg-secondary text-gray-900' : 'bg-white/20 text-white']"
-            >
-              {{ headerUser.role }}
+          <view class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <text v-if="wornTitle.visible" class="box-border rounded-full px-2 py-0.5 text-xs" :style="titleStyleCss">
+              {{ wornTitle.title.titleText }}
             </text>
           </view>
           <text class="line-clamp-2 text-center text-xs text-gray-900">{{ headerUser.bio }}</text>
@@ -382,6 +406,29 @@ onReachBottom(() => {
       <view
         class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b"
       />
+    </view>
+
+    <view v-if="decorationWall.length" class="mb-2 px-3">
+      <view class="mb-2 text-sm text-gray-900 font-bold">
+        装扮墙
+      </view>
+      <view class="flex flex-wrap gap-2">
+        <view
+          v-for="(d, i) in decorationWall" :key="d.assetName || i"
+          class="uh-global-card-glass box-border w-[calc(50%-0.25rem)] flex items-center gap-2 border rounded-xl p-2"
+          :style="d.rarityColor ? `border-color:${d.rarityColor}` : ''"
+        >
+          <image v-if="d.url" :src="d.url" class="h-10 w-10 shrink-0 rounded-lg" mode="aspectFill" />
+          <view class="min-w-0 flex-1">
+            <view class="truncate text-xs text-gray-900">
+              {{ d.displayName }}
+            </view>
+            <view v-if="d.rarityDisplayName" class="text-3xs" :style="d.rarityColor ? `color:${d.rarityColor}` : ''">
+              {{ d.rarityDisplayName }}
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <template v-if="activeTab === 'post'">
@@ -419,39 +466,27 @@ onReachBottom(() => {
       </view>
     </template>
 
-    <view class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe">
+    <uh-float-toolbar>
       <view
-        class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
+        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+        :class="[activeTab === 'post' ? 'bg-primary font-medium ' : '']" @click="switchTab('post')"
       >
-        <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
-          :class="[activeTab === 'post' ? 'bg-primary font-medium ' : '']" @click="switchTab('post')"
-        >
-          <text class="shrink-0 text-3xs text-gray-900 font-semibold">笔记</text>
-        </view>
-        <view
-          class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
-          :class="[activeTab === 'moment' ? 'bg-primary font-medium' : '']" @click="switchTab('moment')"
-        >
-          <text class="shrink-0 text-3xs text-gray-900 font-semibold">瞬间</text>
-        </view>
+        <text class="shrink-0 text-3xs text-gray-900 font-semibold">笔记</text>
       </view>
-    </view>
+      <view
+        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 shadow-none"
+        :class="[activeTab === 'moment' ? 'bg-primary font-medium' : '']" @click="switchTab('moment')"
+      >
+        <text class="shrink-0 text-3xs text-gray-900 font-semibold">瞬间</text>
+      </view>
+    </uh-float-toolbar>
   </view>
 </template>
 
 <style scoped lang="scss">
 .uh-profile-mask {
   background-color: rgba(0, 0, 0, 0.075);
-  backdrop-filter: blur(4rpx);
-  -webkit-backdrop-filter: blur(4rpx);
-}
-
-.uh-content-lift {
-  transform: translateY(-3rem);
-}
-
-.uh-translate-x-center {
-  transform: translateX(-50%);
+  backdrop-filter: blur(2rpx);
+  -webkit-backdrop-filter: blur(2rpx);
 }
 </style>

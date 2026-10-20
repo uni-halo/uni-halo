@@ -175,6 +175,15 @@ function handleToArticleDetail() {
     animationType: 'slide-in-right',
   })
 }
+function handleToUserProfile() {
+  const username = props.article.owner?.metadata?.name
+  if (!username)
+    return
+  uni.navigateTo({
+    url: `/pages-blog/user-profile/user-profile?username=${encodeURIComponent(username)}`,
+    animationType: 'slide-in-right',
+  })
+}
 </script>
 
 <template>
@@ -232,7 +241,7 @@ function handleToArticleDetail() {
         </template>
       </view>
       <view class="flex items-center text-xs text-gray-500" :class="cardLayout.footer">
-        <view class="flex items-center" :class="cardLayout.authorGroup">
+        <view class="flex items-center" :class="cardLayout.authorGroup" @click.stop="handleToUserProfile()">
           <wd-avatar
             :src="avatarSrc"
             :text="avatarFallbackText"

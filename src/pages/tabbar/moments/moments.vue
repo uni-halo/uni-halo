@@ -488,9 +488,9 @@ onReachBottom(() => {
     </template>
 
     <!-- 发布瞬间 -->
-    <view
+    <uh-float-toolbar
       v-if="canPublish && uniHaloPluginAvailable && loadingStatus !== DataLoadingStatusEnum.Loading"
-      class="uh-translate-x-center fixed bottom-78px left-1/2 z-50 flex items-center justify-center pb-safe"
+      custom-class="bottom-78px" :need-glass-wrapper="false"
     >
       <view
         class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center gap-x-1 border rounded-full px-6 py-2.5 text-primary"
@@ -499,7 +499,7 @@ onReachBottom(() => {
         <wd-icon name="plus" size="28rpx" />
         <text class="shrink-0 text-3xs font-semibold">发布瞬间</text>
       </view>
-    </view>
+    </uh-float-toolbar>
   </view>
 
   <!-- 评论弹窗 -->

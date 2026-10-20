@@ -19,6 +19,8 @@ export interface IAppSettings {
     /** 小程序打开模式：fullscreen 全屏 / halfScreen 半屏 */
     miniProgramOpenMode?: string
   }
+  /** 内容页-笔记详情：摘要打字机效果（插件端 preferences.articlesSummaryTypewriterEnabled）：未配置视为开启 */
+  articlesSummaryTypewriterEnabled: boolean
 }
 
 export const DefaultAppSettings: IAppSettings = {
@@ -33,6 +35,7 @@ export const DefaultAppSettings: IAppSettings = {
   categoryArticlesCardType: 'image_top',
   tagArticlesListLayout: 'single',
   tagArticlesCardType: 'image_top',
+  articlesSummaryTypewriterEnabled: true,
   linkPage: {
     miniProgramOpenMode: 'fullscreen',
   },

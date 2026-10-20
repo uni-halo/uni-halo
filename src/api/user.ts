@@ -154,3 +154,22 @@ export function getUcCurrentUser() {
 export function changeMyPassword(oldPassword: string | undefined, password: string) {
   return http.Put<IResponse<IUcUserVo>>(`${UC_USER_API}/-/password`, { oldPassword, password }, userMeta())
 }
+
+/* ==================== 用户公开资料(插件端公开端点) ==================== */
+
+/** 用户公开资料(仅白名单字段,不含 email/phone) */
+export interface IPublicUserProfile {
+  username: string
+  displayName?: string
+  avatar?: string
+  bio?: string
+  registeredAt?: string
+}
+
+/** 用户不存在或被禁用时 404 */
+export function getUserPublicProfile(username: string) {
+  return http.Get<IResponse<IPublicUserProfile>>(
+    `/apis/api.unihalo.ialley.cn/v1alpha1/users/${username}/profile`,
+    { cacheFor: 0, meta: { requestFrom: RequestFrom.Halo } },
+  )
+}

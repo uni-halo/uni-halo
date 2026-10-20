@@ -396,45 +396,38 @@ onShareTimeline(() => ({
     </view>
 
     <!-- 悬浮操作 -->
-    <view
-      v-if="moment"
-      class="uh-translate-x-center fixed bottom-0 left-1/2 z-10 flex items-center justify-center pb-safe"
-    >
+    <uh-float-toolbar v-if="moment">
+      <!-- 点赞 -->
       <view
-        class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1 text-primary"
+        class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+        :class="[hasUpvoted() ? 'text-primary' : 'text-gray-900']" @click="handleDoLikesClick"
       >
-        <!-- 点赞 -->
-        <view
-          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-          :class="[hasUpvoted() ? 'text-primary' : 'text-gray-900']" @click="handleDoLikesClick"
-        >
-          <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
-          <text class="shrink-0 text-xs text-gray-900 font-semibold">点赞</text>
-        </view>
-        <!-- 评论 -->
-        <view
-          v-if="calcEnableComment"
-          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-          @click="handleToComment()"
-        >
-          <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
-          <text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
-        </view>
-        <!-- 收藏 -->
-        <view
-          class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
-          @click="handleToggleMomentFavorite"
-        >
-          <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-          <text
-            class="shrink-0 text-xs font-semibold"
-            :class="[momentFavorited ? 'text-primary' : 'text-gray-900']"
-          >
-            {{ momentFavorited ? '已收藏' : '收藏' }}
-          </text>
-        </view>
+        <wd-icon class-prefix="uhemoji-icon" name="-kiss-" size="36rpx" />
+        <text class="shrink-0 text-xs text-gray-900 font-semibold">点赞</text>
       </view>
-    </view>
+      <!-- 评论 -->
+      <view
+        v-if="calcEnableComment"
+        class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+        @click="handleToComment()"
+      >
+        <wd-icon class-prefix="uhemoji-icon" name="-thinking" size="36rpx" />
+        <text class="shrink-0 text-xs text-gray-900 font-semibold">评论</text>
+      </view>
+      <!-- 收藏 -->
+      <view
+        class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"
+        @click="handleToggleMomentFavorite"
+      >
+        <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
+        <text
+          class="shrink-0 text-xs font-semibold"
+          :class="[momentFavorited ? 'text-primary' : 'text-gray-900']"
+        >
+          {{ momentFavorited ? '已收藏' : '收藏' }}
+        </text>
+      </view>
+    </uh-float-toolbar>
 
     <!-- 评论弹窗 -->
     <uh-comment-modal
@@ -444,10 +437,3 @@ onShareTimeline(() => ({
     />
   </view>
 </template>
-
-<style scoped lang="scss">
-	/* 水平居中定位 */
-.uh-translate-x-center {
-  transform: translateX(-50%);
-}
-</style>

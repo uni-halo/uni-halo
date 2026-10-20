@@ -15,7 +15,6 @@ import { delCache, getCache, setCache } from '@/utils/storage'
 
 /** 本地偏好差异存储 key(仅差异 JSON) */
 export const LOCAL_PREFS_KEY = 'uh_pref_local_v1'
-/** 旧版 setting store persist key(pinia-plugin-persistedstate 默认以 store id 为 key) */
 export const LEGACY_SETTINGS_KEY = 'setting'
 
 /** 深层可选类型(仅覆盖部分字段的差异) */
@@ -61,7 +60,9 @@ export function clearLocalPrefs(): void {
  * 字段对照(与插件端一致):
  * - preferences.homeListLayout/homeCardType/articlesListLayout/articlesCardType/
  *   archivesListLayout/archivesCardType → 同名顶层字段;
- * - preferences.avatarShape → avatarShape。
+ * - preferences.avatarShape → avatarShape；
+ * - preferences.articlesSummaryTypewriterEnabled → 同名顶层字段（boolean，
+ *   内容页-笔记详情：摘要打字机效果）
  */
 export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
   const result: LocalPrefs = {}
@@ -95,6 +96,11 @@ export function collectSiteDefaults(configs: Partial<IAppConfig>): LocalPrefs {
 
     if (prefs.avatarShape === 'square' || prefs.avatarShape === 'circle') {
       result.avatarShape = prefs.avatarShape
+    }
+
+    // 内容页-笔记详情：摘要打字机效果（布尔透传，未配置视为开启）
+    if (typeof prefs.articlesSummaryTypewriterEnabled === 'boolean') {
+      result.articlesSummaryTypewriterEnabled = prefs.articlesSummaryTypewriterEnabled
     }
 
     // 友情链接页展示偏好（嵌套结构 linkPage.miniProgramOpenMode，值校验后透传）

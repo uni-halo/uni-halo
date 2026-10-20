@@ -3,3 +3,5 @@
 - 注释风格（用户强调）：功能注释只写简短功能名（如"年份选择器"），禁止"参考xxx/使用xxx组件/底部取消确认"等实现描述与指向性内容，注释保持极简。
 - 注释风格（用户强调）：功能注释只写简短功能名（如"更新自己的瞬间"），禁止技术说明（如"含 version 乐观锁/缺 version 会 500"等原理、原因、实现细节描述）。
 - 插件端（uni-halo-plugin）功能入口候选全量数据在 ui/src/constant/feature-entries.ts 的 FEATURE_ENTRY_REGISTRY（15 项，含常用/其他分组默认 key 列表）
+- 瀑布流双列：src/hooks/useWaterfallColumns（splitWaterfallColumns 纯函数 + 渲染前预取图片宽高 + 贪心分列 + 分页增量续分，列 ref 用 shallowRef 保泛型）+ useImageSize（宽高测量缓存）；图库页已接入，新瀑布流列表页直接复用，draw-list 亦可换用
+- uni.getImageInfo 在微信小程序端网络图需在小程序后台配置 downloadFile 合法域名才生效；开发者工具模拟器可能对正常 https 图误报 fail invalid（真机正常），属模拟器假错误，勿据此改代码
