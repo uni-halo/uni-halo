@@ -244,6 +244,8 @@ export interface ICommentConfig {
 
 export interface ICommentOwner {
   kind: 'Email' | 'Phone' | 'User'
+  /** 注册用户名（kind=User 时为 Halo metadata.name；匿名访客无此字段） */
+  name?: string
   displayName: string
   avatar?: string
   email?: string

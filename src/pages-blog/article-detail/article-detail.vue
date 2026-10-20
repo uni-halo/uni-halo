@@ -452,7 +452,7 @@ onShareTimeline(() => {
               />
               <image
                 v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-                class="pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 uh-frame-center"
+                class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-8 w-8"
                 mode="aspectFit"
               />
             </view>
@@ -525,6 +525,11 @@ onShareTimeline(() => {
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
           <!-- 摘要 -->
           <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
+
+          <!-- 播客听读 -->
+          <uh-podcast-player :post-name="result?.metadata?.name" />
+
+          <!-- 内容 -->
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
             <mp-html
               :content="result?.content?.raw"
@@ -633,8 +638,8 @@ onShareTimeline(() => {
   transform: translateX(-50%);
 }
 </style>
+
 <style scoped>
-/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
 .uh-frame-center {
   transform: translate(-50%, -50%);
 }
