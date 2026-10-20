@@ -112,11 +112,11 @@ function handlePreview(index: number, list: { url: string }[]) {
           />
           <image
             v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-            class="pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
+            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-11 w-11"
             mode="aspectFit"
           />
         </view>
-        <view class="ml-2 flex flex-col gap-y-1" @click="handleToAuthorCard()">
+        <view class="ml-2 flex flex-col gap-y-0.5" @click="handleToAuthorCard()">
           <view class="flex items-center gap-x-1">
             <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
             <image
@@ -125,7 +125,7 @@ function handlePreview(index: number, list: { url: string }[]) {
             />
             <text
               v-if="authorSlots.title.visible"
-              class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-xs"
+              class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-[10px]"
               :style="authorSlots.title.style"
             >
               {{ authorSlots.title.text }}
@@ -137,7 +137,7 @@ function handlePreview(index: number, list: { url: string }[]) {
         </view>
       </view>
       <view class="shrink-0">
-        <uh-button custom-class="!py-1.5 !bg-secondary !text-xs" @click="emit('detail')">
+        <uh-button custom-class="uh-global-card-glass !border !py-1.5 !bg-primary !text-xs !rounded-full" @click="emit('detail')">
           详情
         </uh-button>
       </view>
@@ -216,3 +216,10 @@ function handlePreview(index: number, list: { url: string }[]) {
     </view>
   </view>
 </template>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

@@ -149,7 +149,7 @@ function handleToLogin() {
             />
             <image
               v-if="myRankSlots.avatarFrame.visible" :src="myRankSlots.avatarFrame.url"
-              class="pointer-events-none absolute left-1/2 top-1/2 h-[66rpx] w-[66rpx] -translate-x-1/2 -translate-y-1/2"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[66rpx] w-[66rpx]"
               mode="aspectFit"
             />
           </view>
@@ -194,11 +194,11 @@ function handleToLogin() {
                 />
                 <image
                   v-if="slotsOf(item).avatarFrame.visible" :src="slotsOf(item).avatarFrame.url"
-                  class="pointer-events-none absolute left-1/2 top-1/2 h-[78rpx] w-[78rpx] -translate-x-1/2 -translate-y-1/2"
+                  class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[78rpx] w-[78rpx]"
                   mode="aspectFit"
                 />
               </view>
-              <view class="flex min-w-0 flex-1 items-center gap-x-1">
+              <view class="min-w-0 flex flex-1 items-center gap-x-1">
                 <text class="min-w-0 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
                 <image
                   v-if="slotsOf(item).primaryBadge.visible" :src="slotsOf(item).primaryBadge.url"
@@ -223,3 +223,10 @@ function handleToLogin() {
     </view>
   </uh-glass-popup>
 </template>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

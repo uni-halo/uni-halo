@@ -228,7 +228,7 @@ function handleLogout() {
         >
           <image
             v-if="wornSlots.cardBackground.visible" :src="wornSlots.cardBackground.url"
-            class="pointer-events-none absolute left-0 top-0 h-16 w-full opacity-60" mode="aspectFill"
+            class="pointer-events-none absolute inset-0 block w-full" mode="widthFix"
           />
           <view class="relative shrink-0">
             <wd-avatar
@@ -239,7 +239,7 @@ function handleLogout() {
             />
             <image
               v-if="wornSlots.avatarFrame.visible" :src="wornSlots.avatarFrame.url"
-              class="pointer-events-none absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-14 w-14"
               mode="aspectFit"
             />
           </view>
@@ -270,7 +270,7 @@ function handleLogout() {
       <!-- 个人入口 -->
       <view class="w-full flex shrink-0 flex-col">
         <uh-section-title>基本功能</uh-section-title>
-        <view class="grid grid-cols-3 mt-3 box-border gap-3">
+        <view class="grid grid-cols-3 mt-3 box-border gap-2.5">
           <view
             v-for="entry in PROFILE_ENTRIES" :key="entry.key"
             class="uh-global-card-glass flex flex-col items-center gap-y-1 overflow-hidden rounded-xl p-2 !shadow-none"
@@ -297,7 +297,7 @@ function handleLogout() {
       <view class="w-full flex flex-1 flex-col">
         <uh-section-title>功能入口</uh-section-title>
         <scroll-view v-if="visibleAdminEntries.length !== 0" scroll-y :show-scrollbar="false" class="mt-3 flex-1">
-          <view class="box-border flex flex-col gap-y-3">
+          <view class="box-border flex flex-col gap-y-2.5">
             <uh-permission v-for="entry in visibleAdminEntries" :key="entry.key" :permission="entry.permission">
               <view
                 class="uh-global-card-glass flex items-center gap-x-2 rounded-xl px-3 py-2.5 !shadow-none"
@@ -338,3 +338,10 @@ function handleLogout() {
   </uh-glass-popup>
   <wd-dialog selector="user-popup" />
 </template>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

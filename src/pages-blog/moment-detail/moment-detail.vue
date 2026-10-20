@@ -326,7 +326,7 @@ onShareTimeline(() => ({
             />
             <image
               v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-              class="pointer-events-none absolute left-1/2 top-1/2 h-[104rpx] w-[104rpx] -translate-x-1/2 -translate-y-1/2"
+              class="pointer-events-none absolute left-1/2 top-1/2 h-[104rpx] w-[104rpx] uh-frame-center"
               mode="aspectFit"
             />
           </view>
@@ -472,3 +472,9 @@ onShareTimeline(() => ({
     />
   </view>
 </template>
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

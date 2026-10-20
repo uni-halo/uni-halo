@@ -7,16 +7,17 @@
  * - 单用户身份缓存 ensure（并发去重，命中/查无分别 TTL）
  * - 批量身份缓存 ensureMany（POST /identities，≤50/批，供排行榜等列表场景）
  * - 槽位读取 slotsOf（buildWornSlots 包装，无数据返回全 invisible 槽位）
+ * - 装扮墙缓存 wall（30s TTL，查无/失败负缓存，供资料卡等单用户场景）
  */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { checkPluginAvailable } from '@/api/halo'
-import { getBatchIdentities, getPublicIdentity } from '@/api/halo-plugin-third/interaction-plus'
+import { getBatchIdentities, getDecorationWall, getPublicIdentity } from '@/api/halo-plugin-third/interaction-plus'
 import { buildWornSlots } from '@/utils/wornDecorations'
 import { useAppConfigStore } from '@/store/appConfig'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { IWornSlots } from '@/utils/wornDecorations'
-import type { IPublicIdentity } from '@/api/types/halo-plugin-third/interaction-plus'
+import type { IDecorationWallItem, IPublicIdentity } from '@/api/types/halo-plugin-third/interaction-plus'
 
 /** 互动增强插件 ID（检测接口 path 参数） */
 const PLUGIN_ID = NeedPluginIds.PluginInteractionPlus
@@ -145,6 +146,40 @@ export const useIdentityStore = defineStore(
       return buildWornSlots(identities.value[username]?.value)
     }
 
+    /** 装扮墙缓存：username → 项列表（空数组=查无/失败的负缓存） */
+    const walls = ref<Record<string, { value: IDecorationWallItem[], at: number }>>({})
+    const pendingWalls = new Map<string, Promise<IDecorationWallItem[]>>()
+    /** 装扮墙缓存时长（ms） */
+    const WALL_TTL = 30 * 1000
+
+    /**
+     * 确保单用户装扮墙已缓存（门控未过/失败返回空数组，负缓存 30s 防反复请求）
+     */
+    async function wall(username: string): Promise<IDecorationWallItem[]> {
+      if (!username) { return [] }
+      await checkAvailable()
+      if (!enabled.value) { return [] }
+      const cached = walls.value[username]
+      if (cached && Date.now() - cached.at < WALL_TTL) {
+        return cached.value
+      }
+      if (pendingWalls.has(username)) { return pendingWalls.get(username)! }
+      const task = getDecorationWall(username)
+        .then((res) => {
+          const value = res.data || []
+          walls.value[username] = { value, at: Date.now() }
+          return value
+        })
+        .catch((err) => {
+          console.error(`获取用户装扮墙失败: ${username}`, err)
+          walls.value[username] = { value: [], at: Date.now() }
+          return []
+        })
+        .finally(() => pendingWalls.delete(username))
+      pendingWalls.set(username, task)
+      return task
+    }
+
     return {
       available,
       availableCheckedAt,
@@ -155,6 +190,7 @@ export const useIdentityStore = defineStore(
       ensure,
       ensureMany,
       slotsOf,
+      wall,
     }
   },
 )

@@ -262,7 +262,7 @@ function handleToUserProfile() {
             />
             <image
               v-if="isSocialCard && authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-              class="pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-11 w-11"
               mode="aspectFit"
             />
           </view>
@@ -277,11 +277,11 @@ function handleToUserProfile() {
                 </text>
                 <image
                   v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-                  class="h-4 w-4 shrink-0" mode="aspectFit"
+                  class="mb-1 block h-4 w-4 shrink-0" mode="aspectFit"
                 />
                 <text
                   v-if="authorSlots.title.visible"
-                  class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+                  class="mb-1 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}
@@ -323,3 +323,10 @@ function handleToUserProfile() {
     </view>
   </view>
 </template>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

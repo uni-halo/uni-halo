@@ -32,7 +32,7 @@ const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('userProfile', '个人主页')
 const appConfigStore = useAppConfigStore()
 const userStore = useUserStore()
-const { configs, auditData, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
+const { configs, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
 const { userInfo } = storeToRefs(userStore)
 
 /* ---------------- 目标用户(onLoad 参数 username=metadata.name;缺省为当前登录用户) ---------------- */
@@ -40,9 +40,36 @@ const pageUsername = ref('')
 const isSelf = computed(() => !!pageUsername.value && pageUsername.value === userInfo.value.username)
 
 /* ---------------- 互动增强装饰(插件未启用/审核模式/站点开关关闭时槽位全 invisible,静默降级) ---------------- */
-const { identity, profile, decorationWall } = useUserIdentity(pageUsername)
+const { identity, profile, decorationWall, identityPlusAvailable } = useUserIdentity(pageUsername)
 const wornSlots = computed(() => buildWornSlots(identity.value))
 const profileNicknameStyle = computed(() => nameStyleCssOf(identity.value))
+
+/* ---------------- 装扮墙展示样式(与本 app 互动增强资料卡弹窗同一套:稀有度描边+透明网格画布+右上角稀有度徽标) ---------------- */
+
+/** 透明网格棋盘(模拟透明图层纹理) */
+const CHECKER_PATTERN = 'conic-gradient(rgb(0 0 0 / 0.05) 25%, transparent 0 50%, rgb(0 0 0 / 0.05) 0 75%, transparent 0)'
+
+/** 仅当稀有度色为 #rrggbb 形式时追加 6 位 alpha，避免 rgb()/颜色名拼接失效 */
+function hexAlpha(color: string | undefined, alpha: string): string {
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alpha}` : ''
+}
+
+/** 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退） */
+const wallStyled = computed(() => decorationWall.value.map((item) => {
+  const tint = hexAlpha(item.rarityColor, '14')
+  const layers = [tint ? `linear-gradient(160deg, ${tint}, transparent 70%)` : '', CHECKER_PATTERN]
+    .filter(Boolean)
+    .join(',')
+  const sizes = [tint ? '100% 100%' : '', '12px 12px'].filter(Boolean).join(', ')
+  return {
+    item,
+    style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
+    bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
+    badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
+    textStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
+    isTextDecoration: item.type === 'title' || item.type === 'name_style',
+  }
+}))
 
 /* ---------------- 头部资料(优先级:互动增强 identity > 插件端 profile > 登录信息/兜底) ---------------- */
 const headerUser = computed(() => ({
@@ -233,11 +260,13 @@ const momentState = usePagedList<MomentCard>({
   auditFilter: items => auditFilterBy(appConfigStore.auditNamesOf('moments'))(items),
 })
 
-/* ---------------- Tab 切换(切换不重置已加载数据,首次进入才拉取) ---------------- */
-const activeTab = ref<'post' | 'moment'>('post')
-const loadedTabs = ref<Record<'post' | 'moment', boolean>>({ post: false, moment: false })
+type ActiveTab = 'info' | 'post' | 'moment'
 
-function switchTab(key: 'post' | 'moment') {
+/* ---------------- Tab 切换(切换不重置已加载数据,首次进入才拉取) ---------------- */
+const activeTab = ref<ActiveTab>('info')
+const loadedTabs = ref<Record<ActiveTab, boolean>>({ info: false, post: false, moment: false })
+
+function switchTab(key: ActiveTab) {
   if (activeTab.value === key) { return }
   activeTab.value = key
   if (!loadedTabs.value[key]) {
@@ -245,7 +274,7 @@ function switchTab(key: 'post' | 'moment') {
     if (key === 'post') {
       postState.refresh()
     }
-    else {
+    else if (key === 'moment') {
       momentState.refresh()
     }
   }
@@ -348,7 +377,7 @@ onReachBottom(() => {
           />
           <image
             v-if="wornSlots.avatarFrame.visible" :src="wornSlots.avatarFrame.url"
-            class="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2"
+            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-24 w-24"
             mode="aspectFit"
           />
         </view>
@@ -372,31 +401,71 @@ onReachBottom(() => {
         class="pointer-events-none absolute bottom-0 left-0 z-20 h-18 w-full from-black/0 to-page bg-gradient-to-b"
       />
     </view>
-
-    <view v-if="decorationWall.length" class="mb-2 px-3">
-      <view class="mb-2 text-sm text-gray-900 font-bold">
-        装扮墙
-      </view>
-      <view class="flex flex-wrap gap-2">
-        <view
-          v-for="(d, i) in decorationWall" :key="d.assetName || i"
-          class="uh-global-card-glass box-border w-[calc(50%-0.25rem)] flex items-center gap-2 border rounded-xl p-2"
-          :style="d.rarityColor ? `border-color:${d.rarityColor}` : ''"
-        >
-          <image v-if="d.url" :src="d.url" class="h-10 w-10 shrink-0 rounded-lg" mode="aspectFill" />
-          <view class="min-w-0 flex-1">
-            <view class="truncate text-xs text-gray-900">
-              {{ d.displayName }}
+    <template v-if="activeTab === 'info'">
+      <view class="box-border flex flex-col gap-y-3 overflow-hidden p-3">
+        <view class="uh-global-card-glass rounded-lg p-3 !border !shadow-none">
+          <view class="mb-2 flex items-center justify-between">
+            <view class="text-sm text-gray-900 font-bold">
+              基本资料
             </view>
-            <view v-if="d.rarityDisplayName" class="text-3xs" :style="d.rarityColor ? `color:${d.rarityColor}` : ''">
-              {{ d.rarityDisplayName }}
+          </view>
+          <view class="w-full flex flex-col gap-y-2 text-sm text-gray-900">
+            用户信息内容
+          </view>
+        </view>
+        <view v-if="decorationWall.length" class="uh-global-card-glass rounded-lg p-3 !border !shadow-none">
+          <view class="mb-2 flex items-center justify-between">
+            <view class="text-sm text-gray-900 font-bold">
+              装扮展示
+            </view>
+            <view class="rounded-full text-xs text-gray-500">
+              共 {{ decorationWall.length }} 件
+            </view>
+          </view>
+          <view class="grid grid-cols-3 gap-2">
+            <view
+              v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
+              class="flex flex-1 flex-col cursor-pointer"
+            >
+              <view class="flex flex-col items-center justify-center gap-y-1">
+                <!-- 预览框(稀有度描边外框 + 固定高度/内边距/自身边框的透明网格画布 + 右上角稀有度徽标) -->
+                <view
+                  class="relative box-border w-full overflow-hidden border rounded-lg p-1.5"
+                  :style="d.style"
+                >
+                  <view
+                    class="h-16 w-full flex items-center justify-center border border-gray-100 rounded-lg"
+                    :style="d.bgStyle"
+                  >
+                    <image
+                      v-if="d.item.url" :src="d.item.url"
+                      class="h-full w-full rounded-md p-1" mode="aspectFit"
+                    />
+                    <text
+                      v-else class="w-full truncate px-1 text-center font-black" :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'"
+                      :style="d.textStyle"
+                    >
+                      {{ d.item.displayName }}
+                    </text>
+                  </view>
+                  <view
+                    v-if="d.item.rarityDisplayName"
+                    class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-xs text-white"
+                    :style="d.badgeStyle"
+                  >
+                    {{ d.item.rarityDisplayName }}
+                  </view>
+                </view>
+                <!-- 名称(框外下方,不随稀有度着色) -->
+                <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>
+              </view>
             </view>
           </view>
         </view>
       </view>
-    </view>
+    </template>
 
-    <template v-if="activeTab === 'post'">
+    <template v-else-if="activeTab === 'post'">
       <uh-data-loading
         v-if="postState.loadingStatus.value !== DataLoadingStatusEnum.Success"
         :loading-status="postState.loadingStatus.value" empty-text="啊偶，还没有发布过笔记哦~" min-height="50vh"
@@ -411,7 +480,7 @@ onReachBottom(() => {
       </view>
     </template>
 
-    <template v-else>
+    <template v-else-if="activeTab === 'moment'">
       <uh-data-loading
         v-if="momentState.loadingStatus.value !== DataLoadingStatusEnum.Success"
         :loading-status="momentState.loadingStatus.value" empty-text="啊偶，还没有发布过瞬间哦~" min-height="50vh"
@@ -433,16 +502,23 @@ onReachBottom(() => {
 
     <uh-float-toolbar :need-placeholder="true">
       <view
-        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2 shadow-none"
-        :class="[activeTab === 'post' ? 'bg-primary font-medium ' : '']" @click="switchTab('post')"
+        v-if="identityPlusAvailable"
+        class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-4 py-2.5 shadow-none"
+        :class="[activeTab === 'info' ? 'bg-primary ' : '']" @click="switchTab('info')"
       >
-        <text class="shrink-0 text-3xs text-gray-900 font-semibold">笔记</text>
+        <text class="shrink-0 text-3xs text-gray-900">用户资料</text>
       </view>
       <view
-        class="uh-global-card-glass box-border flex flex-1 items-center justify-center gap-x-1 border rounded-full px-6 py-2 shadow-none"
-        :class="[activeTab === 'moment' ? 'bg-primary font-medium' : '']" @click="switchTab('moment')"
+        class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-4 py-2.5 shadow-none"
+        :class="[activeTab === 'post' ? 'bg-primary ' : '']" @click="switchTab('post')"
       >
-        <text class="shrink-0 text-3xs text-gray-900 font-semibold">瞬间</text>
+        <text class="shrink-0 text-3xs text-gray-900">笔记</text>
+      </view>
+      <view
+        class="uh-global-card-glass box-border flex shrink-0 items-center justify-center gap-x-1 border rounded-full px-4 py-2.5 shadow-none"
+        :class="[activeTab === 'moment' ? 'bg-primary ' : '']" @click="switchTab('moment')"
+      >
+        <text class="shrink-0 text-3xs text-gray-900">瞬间</text>
       </view>
     </uh-float-toolbar>
   </view>
@@ -453,5 +529,12 @@ onReachBottom(() => {
   background-color: rgba(0, 0, 0, 0.075);
   backdrop-filter: blur(2rpx);
   -webkit-backdrop-filter: blur(2rpx);
+}
+</style>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
 }
 </style>
