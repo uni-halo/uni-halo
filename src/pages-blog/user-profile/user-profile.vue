@@ -12,8 +12,9 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { useUpvote } from '@/hooks/useUpvote'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
+import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
-import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
@@ -85,12 +86,9 @@ const headerUser = computed(() => ({
   bio: identity.value?.bio || profile.value?.bio || '这个人很懒，什么都没有留下~',
 }))
 
-const profileBgUrl = computed(() => {
-  if (wornSlots.value.cardBackground.visible) {
-    return wornSlots.value.cardBackground.url
-  }
-  return checkImageUrl(configs.value.featureConfig?.pages?.blogger?.bgImageUrl)
-})
+/* 顶部背景：佩戴素材优先；素材缺失或装载失败回退博主页背景图（useCardBgSrc 统一兜底）；连兜底未配置则为空串不渲染 */
+const { cardBgSrc, onCardBgError } = useCardBgSrc(() => wornSlots.value?.cardBackground.url || '')
+const profileBgUrl = cardBgSrc
 
 /* ---------------- 双 Tab 各自独立的数据状态 ---------------- */
 interface IPagedFetchResult<T> {
@@ -365,7 +363,10 @@ onReachBottom(() => {
     />
 
     <view class="relative mb-8 box-border h-52 w-full">
-      <image class="absolute left-0 top-0 h-full w-full bg-cover bg-center" :src="profileBgUrl" mode="aspectFill" />
+      <image
+        v-if="profileBgUrl" class="absolute left-0 top-0 h-full w-full bg-cover bg-center"
+        :src="profileBgUrl" mode="aspectFill" @error="onCardBgError()"
+      />
       <view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
       <view class="absolute left-0 z-30 flex items-center justify-center gap-x-4 px-4 -bottom-6">
         <view class="relative shrink-0">

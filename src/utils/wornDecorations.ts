@@ -67,7 +67,7 @@ export function buildWornSlots(identity: IPublicIdentity | null | undefined): IW
 
   return {
     avatarFrame: {
-      visible: !!frameUrl && !!userCard.showAvatarFrame,
+      visible: true,
       url: frameUrl,
     },
     primaryBadge: {

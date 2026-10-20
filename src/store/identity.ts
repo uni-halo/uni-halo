@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 import { checkPluginAvailable } from '@/api/halo'
 import { getBatchIdentities, getDecorationWall, getPublicIdentity } from '@/api/halo-plugin-third/interaction-plus'
 import { buildWornSlots } from '@/utils/wornDecorations'
+import { checkImageUrl } from '@/utils/url'
 import { useAppConfigStore } from '@/store/appConfig'
 import { NeedPluginIds } from '@/hooks/usePluginAvailable'
 import type { IWornSlots } from '@/utils/wornDecorations'
@@ -52,6 +53,13 @@ export const useIdentityStore = defineStore(
     const siteEnabled = computed(() => appConfigStore.configs.featureConfig?.preferences?.interactionPlusEnabled !== false)
     /** 三重门控：全部满足才允许展示装饰 */
     const enabled = computed(() => available.value === true && !appConfigStore.auditModeEnabled && siteEnabled.value)
+
+    /**
+     * 名片背景素材装载失败的兜底图：功能设置-页面设置-博主页背景图
+     * （cardBackground 素材 404/失效时，消费方 @error 回退到此图，保证背景不塌空）
+     */
+    const cardBgFallback = computed(() =>
+      checkImageUrl(appConfigStore.configs.featureConfig?.pages?.blogger?.bgImageUrl))
 
     /**
      * 检测插件可用性（TTL 内直接返回缓存结果；失败按不可用处理）
@@ -186,6 +194,7 @@ export const useIdentityStore = defineStore(
       identities,
       siteEnabled,
       enabled,
+      cardBgFallback,
       checkAvailable,
       ensure,
       ensureMany,

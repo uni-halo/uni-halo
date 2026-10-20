@@ -12,6 +12,7 @@
 import { computed } from 'vue'
 import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
+import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { useAppConfigStore } from '@/store/appConfig'
 import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
 import { checkAvatarUrl } from '@/utils/url'
@@ -25,6 +26,8 @@ const { identity, profile, decorationWall } = useUserIdentity(() => payload.valu
 
 const slots = computed(() => buildWornSlots(identity.value))
 const nameStyleCss = computed(() => nameStyleCssOf(identity.value))
+/** 名片背景（素材缺失/装载失败回退博主页背景图，连兜底未配置则为空串不渲染） */
+const { cardBgSrc, onCardBgError } = useCardBgSrc(() => slots.value.cardBackground.url)
 
 /** 头部资料（优先级：互动增强 identity > 插件端 profile > 入参兜底） */
 const headerUser = computed(() => ({
@@ -128,25 +131,22 @@ function handleToProfile() {
       <scroll-view :scroll-y="true" :show-scrollbar="false" class="max-h-[70vh] w-full">
         <!-- 用户卡片(垂直居中布局 + 名片背景顶部素材带,头像骑素材带下缘) -->
         <view class="relative box-border w-full overflow-hidden rounded-2xl bg-white/80 pb-3">
-          <view v-if="slots.cardBackground.visible" class="absolute h-28 w-full overflow-hidden">
+          <view v-if="cardBgSrc" class="absolute h-36 w-full overflow-hidden">
             <image
-              v-if="slots.cardBackground.visible" :src="slots.cardBackground.url"
-              class="pointer-events-none absolute left-0 top-0 h-28 w-full" mode="aspectFill"
+              :src="cardBgSrc"
+              class="pointer-events-none absolute inset-0 h-full w-full" mode="aspectFill"
+              @error="onCardBgError()"
             />
             <!-- 磨砂面纱(对齐 user-profile 顶部:rgba(0,0,0,.075) + backdrop blur) -->
+            <view class="uh-profile-mask pointer-events-none absolute inset-0 h-full w-full" />
+            <!-- 底部渐隐衔卡片底 -->
             <view
-              v-if="slots.cardBackground.visible"
-              class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-28 w-full"
-            />
-            <!-- 底部渐隐收边 -->
-            <view
-              v-if="slots.cardBackground.visible"
               class="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-full from-white/0 to-[#F9F9FA] bg-gradient-to-b"
             />
           </view>
           <view
             class="relative z-20 box-border flex flex-col items-center gap-y-2 px-4 pb-4"
-            :class="slots.cardBackground.visible ? 'pt-20' : 'pt-5'"
+            :class="cardBgSrc ? 'pt-26' : 'pt-5'"
           >
             <view class="relative shrink-0">
               <wd-avatar
@@ -220,7 +220,7 @@ function handleToProfile() {
             class="box-border flex flex-col gap-y-2 border-t border-gray-100 px-3 py-3"
           >
             <view class="flex items-center justify-between">
-              <view class="text-xs text-gray-900 font-bold">
+              <view class="text-3xs text-gray-900 font-bold">
                 装扮展示
               </view>
               <view class="rounded-full text-xs text-gray-500">

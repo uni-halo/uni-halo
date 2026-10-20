@@ -100,7 +100,7 @@ function handlePreview(index: number, list: { url: string }[]) {
 <template>
   <view class="uh-global-card-glass uh-shadow-xs w-full flex-1 overflow-hidden rounded-xl">
     <view class="box-border flex items-center px-3 pt-3">
-      <view class="flex flex-1 items-center">
+      <view class="flex flex-1 items-center" @click="handleToAuthorCard()">
         <view class="relative shrink-0">
           <wd-avatar
             :src="avatarUrl"
@@ -116,7 +116,7 @@ function handlePreview(index: number, list: { url: string }[]) {
             mode="aspectFit"
           />
         </view>
-        <view class="ml-2 flex flex-col gap-y-0.5" @click="handleToAuthorCard()">
+        <view class="ml-2 flex flex-col gap-y-0.5">
           <view class="flex items-center gap-x-1">
             <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
             <image
