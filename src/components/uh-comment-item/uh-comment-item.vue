@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { checkAvatarUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { useSettingStore } from '@/store/setting'
 import { useAppConfigStore } from '@/store/appConfig'
 import type { ICommentReply } from '@/api/types/halo'
@@ -40,6 +41,7 @@ dayjs.locale('zh-cn')
 
 const { settings } = storeToRefs(useSettingStore())
 const { commentWidgetConfig } = storeToRefs(useAppConfigStore())
+const { openUserProfilePopup } = useUserProfilePopup()
 
 function resolveAvatarUrlHash(url: string, comment: ICommentReply) {
   const hash = comment.spec.owner?.annotations?.['email-hash'] ?? Date.now().toString()
@@ -109,6 +111,34 @@ function handleOnReply() {
 function handleOnDetail() {
   emit('on-detail', props.comment)
 }
+
+/**
+ * 头像/昵称点击：展示个人资料卡。
+ * 注册用户（kind=User 且有 name）识别为常规模式（可查看主页）；
+ * 其他一律匿名（guest）访客，附带可选主页网址 website，
+ * 资料卡回落匿名模式（灰色「匿名用户」标牌 + 复制网址）。
+ */
+function handleOnUser() {
+  // 由于目前评论功能未返回用户metadata.name，无法展示用户主页
+  return
+  const owner = props.comment.spec.owner
+  // 头像复用条目自身解析结果（含头像策略/镜像头像服务回退；popup 内无头像再取首字）
+  // 注：resolveAvatarUrlHash 依赖 avatarConfig.enable + policy 逻辑，已包含于 avatar computed
+  if (owner.kind === 'User' && owner.name) {
+    openUserProfilePopup({
+      username: owner.name,
+      nickname: owner.displayName,
+      avatar: avatar.value,
+    })
+    return
+  }
+  openUserProfilePopup({
+    anonymous: true,
+    nickname: owner.displayName,
+    avatar: avatar.value,
+    website: owner.website || '',
+  })
+}
 </script>
 
 <template>
@@ -117,7 +147,7 @@ function handleOnDetail() {
       'pl-10': props.isChild,
     }"
   >
-    <view class="flex shrink-0">
+    <view class="flex shrink-0" @click="handleOnUser()">
       <wd-avatar
         :src="avatar" :text="avatarText" :shape="settings.avatarShape === 'circle' ? 'round' : 'square'"
         custom-class="uh-global-card-glass uh-shadow-xs !bg-[#bbe52a6b] !h-10 !w-10 !text-sm !font-bold !text-gray-900"
@@ -126,7 +156,7 @@ function handleOnDetail() {
     </view>
     <view class="box-border flex-1 pl-2">
       <view class="text-sm text-gray-500">
-        <text class="text-grey text-xs">{{ comment.spec.owner.displayName }}</text>
+        <text class="text-grey text-xs" @click="handleOnUser()">{{ comment.spec.owner.displayName }}</text>
       </view>
       <view v-if="quoteReplyText" class="mt-1 text-xs text-gray-400">
         {{ quoteReplyText }}

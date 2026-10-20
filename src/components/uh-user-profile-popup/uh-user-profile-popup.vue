@@ -29,6 +29,11 @@ const nameStyleCss = computed(() => nameStyleCssOf(identity.value))
 /** 名片背景（素材缺失/装载失败回退博主页背景图，连兜底未配置则为空串不渲染） */
 const { cardBgSrc, onCardBgError } = useCardBgSrc(() => slots.value.cardBackground.url)
 
+/** 匿名（guest）模式：评论区未登录访客，仅有昵称/头像（可能空）/可选 website */
+const isGuest = computed(() => !!payload.value.anonymous)
+/** 匿名标牌样式（仿称号槽位形态，灰色系） */
+const GUEST_CHIP_STYLE = 'background:rgb(0 0 0 / 0.07);color:rgb(0 0 0 / 0.55);'
+
 /** 头部资料（优先级：互动增强 identity > 插件端 profile > 入参兜底） */
 const headerUser = computed(() => ({
   nickname: identity.value?.displayName
@@ -120,6 +125,16 @@ function handleToProfile() {
     animationType: 'slide-in-right',
   })
 }
+
+/** 匿名/guest 模式：复制访客主页网址（无则不响应） */
+function handleCopyWebsite() {
+  const url = payload.value.website
+  if (!url) { return }
+  uni.setClipboardData({
+    data: url,
+    success: () => uni.showToast({ icon: 'none', title: '网址已复制' }),
+  })
+}
 </script>
 
 <template>
@@ -127,7 +142,7 @@ function handleToProfile() {
     v-model="userProfilePopupVisible" position="bottom" custom-class="rounded-2xl" :z-index="130"
     @close="closeUserProfilePopup()"
   >
-    <view v-if="payload.username" class="uh-profile-fade flex flex-col">
+    <view v-if="payload.username || payload.anonymous" class="uh-profile-fade flex flex-col">
       <scroll-view :scroll-y="true" :show-scrollbar="false" class="max-h-[70vh] w-full">
         <!-- 用户卡片(垂直居中布局 + 名片背景顶部素材带,头像骑素材带下缘) -->
         <view class="relative box-border w-full overflow-hidden rounded-2xl bg-white/80 pb-3">
@@ -151,7 +166,7 @@ function handleToProfile() {
             <view class="relative shrink-0">
               <wd-avatar
                 :src="checkAvatarUrl(headerUser.avatar)"
-                :text="getAvatarFallbackText(headerUser.nickname || payload.username)" shape="round"
+                :text="getAvatarFallbackText(headerUser.nickname || payload.username, '?')" shape="round"
                 custom-class="uh-global-card-glass uh-shadow-xs !h-16 !w-16 !border-2 !border-white/40 !text-gray-900 !font-bold"
                 mode="aspectFill" @click="handlePreviewAvatar()"
               />
@@ -170,11 +185,17 @@ function handleToProfile() {
                 mode="aspectFit"
               />
             </view>
-            <!-- 称号 + 身份标牌(同为身份徽章语义,同行 wrap) -->
+            <!-- 称号 + 匿名标牌 + 身份标牌(同为身份徽章语义,同行 wrap;匿名时灰色「匿名用户」) -->
             <view
-              v-if="slots.title.visible || markChips.length"
+              v-if="slots.title.visible || isGuest || markChips.length"
               class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1"
             >
+              <text
+                v-if="isGuest" class="box-border truncate rounded-full px-2 py-0.5 text-xs"
+                :style="GUEST_CHIP_STYLE"
+              >
+                匿名用户
+              </text>
               <text
                 v-if="slots.title.visible" class="box-border truncate rounded-full px-2 py-0.5 text-xs"
                 :style="slots.title.style"
@@ -191,7 +212,9 @@ function handleToProfile() {
                 </text>
               </template>
             </view>
-            <text class="line-clamp-2 text-center text-xs text-gray-500">{{ headerUser.bio }}</text>
+            <text v-if="!isGuest" class="line-clamp-2 text-center text-xs text-gray-500">
+              {{ headerUser.bio }}
+            </text>
             <!-- 统计(数字加粗 + label 小字;互动统计依赖互动增强 identity,审核模式下不展示) -->
             <view v-if="showInteractStats" class="w-full flex items-center pt-1 text-center">
               <view class="flex-1">
@@ -268,13 +291,28 @@ function handleToProfile() {
               </view>
             </scroll-view>
           </view>
-          <!-- 查看主页(含底部安全区) -->
-          <view class="box-border flex items-center justify-center gap-x-3 px-3 pt-2">
-            <uh-button class="flex-1" custom-class="uh-global-card-glass !border !rounded-xl !bg-white !py-2.5 !text-3xs !text-gray-900" @click="closeUserProfilePopup">
+          <!-- 底部操作(常规=查看主页;匿名=guest 网址可复制,否则仅关闭) -->
+          <view class="box-border flex items-center gap-x-3 px-3 pt-2">
+            <uh-button
+              class="flex-1"
+              custom-class="uh-global-card-glass !border !rounded-xl !bg-white !py-2.5 !text-3xs !text-gray-900"
+              @click="closeUserProfilePopup"
+            >
               关闭
             </uh-button>
-            <uh-button class="flex-1" custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900" @click="handleToProfile">
+            <uh-button
+              v-if="payload.username" class="flex-1"
+              custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
+              @click="handleToProfile"
+            >
               查看主页
+            </uh-button>
+            <uh-button
+              v-else-if="payload.website" class="flex-1"
+              custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
+              @click="handleCopyWebsite"
+            >
+              复制网址
             </uh-button>
           </view>
         </view>
