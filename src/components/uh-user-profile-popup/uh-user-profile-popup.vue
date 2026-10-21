@@ -255,7 +255,7 @@ function handleCopyWebsite() {
           <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
             <view class="inline-flex gap-2">
               <view
-                v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
+                v-for="(d, i) in wallStyled" :key="i"
                 class="inline-block w-24 shrink-0 cursor-pointer" @click="handlePreviewAsset(d.item)"
               >
                 <view class="flex flex-col items-center justify-center gap-y-1.5">
@@ -300,7 +300,7 @@ function handleCopyWebsite() {
             关闭
           </uh-button>
           <uh-button
-            v-if="payload.username" class="flex-1"
+            v-if="payload.homeButtonVisible && payload.username" class="flex-1"
             custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
             @click="handleToProfile"
           >

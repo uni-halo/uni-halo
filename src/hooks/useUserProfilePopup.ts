@@ -10,6 +10,7 @@
  */
 import { ref } from 'vue'
 import { useAppConfigStore } from '@/store/appConfig'
+
 export interface IUserProfilePopupPayload {
   /**
    * 目标用户名（Halo metadata.name）；
@@ -24,6 +25,8 @@ export interface IUserProfilePopupPayload {
   website?: string
   /** 匿名（guest）标记：标牌区展示灰色「匿名用户」chip */
   anonymous?: boolean
+  /** 是否展示用户资料卡 查看主页 按钮 */
+  homeButtonVisible?: boolean
 }
 /** 弹窗状态（现状：模块级单例，全局共享一份） */
 const userProfilePopupVisible = ref(false)

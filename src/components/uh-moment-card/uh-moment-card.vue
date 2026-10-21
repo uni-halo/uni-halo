@@ -22,6 +22,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<IProps>(), {
+  canOpenUserProfile: true,
+  showUserProfileHomeButton: true,
   blogger: () => ({ nickname: '', avatar: '' }),
 })
 
@@ -42,6 +44,10 @@ interface IProps {
   blogger?: { nickname?: string, avatar?: string }
   /** 是否开启评论（评论按钮显隐） */
   allowComment?: boolean
+  /** 是否开启用户资料卡（点击作者头像） */
+  canOpenUserProfile?: boolean
+  /** 是否显示用户资料卡 查看主页 按钮 */
+  showUserProfileHomeButton?: boolean
 }
 
 const { isFavorite } = useFavoritesStore()
@@ -74,11 +80,15 @@ const { openUserProfilePopup } = useUserProfilePopup()
 
 /** 点击作者:打开用户资料卡(作者缺失时 hook 内因 username 为空直接忽略) */
 function handleToAuthorCard() {
+  if (!props.canOpenUserProfile) {
+    return
+  }
   const owner = props.moment.owner
   openUserProfilePopup({
     username: owner?.name || '',
     nickname: owner?.displayName,
     avatar: owner?.avatar,
+    homeButtonVisible: props.showUserProfileHomeButton,
   })
 }
 /** 无头像时显示昵称首字(wd-avatar 回退) */

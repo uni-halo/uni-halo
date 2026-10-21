@@ -7,7 +7,7 @@ import { useSettingStore } from '@/store/setting'
 import { useWornSlots } from '@/hooks/useWornSlots'
 import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { formatTime } from '@/utils/formatTime'
-import type { ICategory, IPost } from '@/api/types/halo'
+import type { IPost } from '@/api/types/halo'
 
 type CardLayout = 'image_top' | 'image_right' | 'image_bottom' | 'image_left'
 
@@ -27,16 +27,23 @@ interface CardLayoutClasses {
   pinned: string
 }
 
-const props = withDefaults(defineProps<{
+interface IProps {
   from?: 'home' | 'articles' | 'archives' | ''
   auditMode?: boolean
   article: IPost
   variant?: 'list' | 'grid'
   layout?: CardLayout
-}>(), {
+  canOpenUserProfile?: boolean
+  /** 是否显示用户资料卡 查看主页 按钮 */
+  showUserProfileHomeButton?: boolean
+}
+
+const props = withDefaults(defineProps<IProps>(), {
   auditMode: false,
   from: '',
   variant: 'list',
+  canOpenUserProfile: true,
+  showUserProfileHomeButton: true,
 })
 
 const { settings } = storeToRefs(useSettingStore())
@@ -181,9 +188,12 @@ function handleToArticleDetail() {
     animationType: 'slide-in-right',
   })
 }
-/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略;卡内「查看主页」再跳个人主页) */
+/** 点击作者:打开用户资料卡 */
 function handleToUserProfile() {
-  const username = props.article.owner?.metadata?.name
+  if (!props.canOpenUserProfile) {
+    return
+  }
+  const username = props.article.owner?.metadata?.name || props.article.owner?.name || ''
   if (!username) {
     return
   }
@@ -191,6 +201,7 @@ function handleToUserProfile() {
     username,
     nickname: props.article.owner?.displayName,
     avatar: props.article.owner?.avatar,
+    homeButtonVisible: props.showUserProfileHomeButton,
   })
 }
 </script>

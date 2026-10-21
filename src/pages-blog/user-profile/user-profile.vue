@@ -252,11 +252,14 @@ const postState = usePagedList<IPost>({
         return { items, hasNext: res.data.hasNext }
       })
     }
+    // 他人视角走官方公开接口:Halo 聚合器预置 content.halo.run/{owner,published,deleted} 标签,
+    // 公开匿名列表仅支持 labelSelector(不白名单 fieldSelector.spec.owner);
+    // owner 标签由 reconciler 与 spec.owner 保持同步,返回为完整 Post(owner.metadata.name 在内)
     return getPostList({
       page,
       size,
       sort: ['spec.publishTime,desc'],
-      fieldSelector: [`spec.owner==${pageUsername.value}`],
+      labelSelector: [`content.halo.run/owner=${pageUsername.value}`],
     }).then((res) => {
       const items = res.data.items || []
       return { items, hasNext: res.data.hasNext }
@@ -615,7 +618,7 @@ onReachBottom(() => {
       <view v-else class="box-border flex flex-col gap-3 p-3">
         <uh-article-card
           v-for="article in postState.list.value" :key="article.metadata.name" from="articles"
-          variant="list" :article="article" :audit-mode="calcAuditModeEnabled"
+          variant="list" :article="article" :audit-mode="calcAuditModeEnabled" :show-user-profile-home-button="false"
         />
         <uh-data-loadmore :status="postState.loadMoreStatus.value.status" :text="postState.loadMoreStatus.value.text" />
       </view>
@@ -631,6 +634,7 @@ onReachBottom(() => {
         <uh-moment-card
           v-for="moment in momentState.list.value" :key="moment.metadata.name" :moment="moment"
           :blogger="{ nickname: headerUser.nickname, avatar: checkAvatarUrl(headerUser.avatar) }"
+          :show-user-profile-home-button="false"
           @detail="handleToMoment(moment)" @like="handleMomentLike(moment)" @comment="handleToMoment(moment)"
           @favorite="handleToggleMomentFavorite(moment)"
         />

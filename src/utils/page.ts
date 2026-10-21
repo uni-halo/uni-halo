@@ -100,3 +100,15 @@ export function calcAniWait(index: number): number {
   }
   return aniWaitIndex * 50
 }
+
+/**
+ * 判断当前页面是否为指定路径
+ * @param pagePath 页面路径,如 'pages-blog/article-detail/article-detail'
+ * @returns 是否为当前页面
+ */
+export function isCurrentPage(pagePath: string) {
+  const pages = getCurrentPages()
+  console.log('pages', pages)
+  const currentPage = pages[pages.length - 1]
+  return currentPage.route === pagePath
+}
