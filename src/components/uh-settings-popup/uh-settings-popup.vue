@@ -6,7 +6,6 @@ import { useSettingStore } from '@/store/setting'
 import { usePreferenceRows } from '@/hooks/usePreferenceRows'
 import type { PrefDef } from '@/hooks/usePreferenceRows'
 import { DataLoadingStatusEnum } from '@/hooks/useDataLoadingStatus'
-import { isWechat } from '@/utils/platform'
 
 defineOptions({
   options: {
@@ -14,7 +13,9 @@ defineOptions({
   },
 })
 
-const props = defineProps<IProps>()
+const props = withDefaults(defineProps<IProps>(), {
+  useFilter: false,
+})
 
 const emits = defineEmits<IEmits>()
 
@@ -23,6 +24,7 @@ const settingStore = useSettingStore()
 interface IProps {
   /** v-model:是否显示 */
   modelValue: boolean
+  useFilter?: boolean
 }
 
 const {
@@ -66,6 +68,9 @@ const ROUTE_GROUP_ALIAS: Record<string, string> = {
   'article-detail': 'postDetail',
 }
 const filterLayoutGroups = computed(() => {
+  if (!props.useFilter) {
+    return layoutGroups.value
+  }
   const key = ROUTE_GROUP_ALIAS[routeKey.value] || routeKey.value
   return layoutGroups.value.filter(group => group.key === key)
 })
@@ -134,7 +139,7 @@ function handleToSettingPage() {
       </view>
 
       <!-- 分段器:布局 / 功能 -->
-      <view class="uh-global-card-glass flex rounded-xl p-1 shadow-none">
+      <view class="uh-global-card-glass box-border flex rounded-xl p-0.5 shadow-none">
         <view
           v-for="tab in SETTING_TABS" :key="tab.key"
           class="box-border flex-1 rounded-lg py-2 text-center text-3xs"
@@ -160,9 +165,8 @@ function handleToSettingPage() {
             <template v-else>
               <view v-for="group in filterLayoutGroups" :key="group.key" class="flex flex-col gap-y-3">
                 <uh-section-title>{{ group.label }}</uh-section-title>
-                <view class="uh-global-card-glass overflow-hidden rounded-xl shadow-none">
-                  <view v-for="(row) in group.rows" :key="row.key" class="box-border p-3">
-                    <!-- 左 label / 右 说明 -->
+                <view class="uh-global-card-glass box-border flex flex-col gap-y-3 overflow-hidden rounded-xl p-3 shadow-none">
+                  <view v-for="(row) in group.rows" :key="row.key" class="flex flex-col gap-y-2">
                     <view class="flex items-center justify-between">
                       <text class="text-3xs text-gray-900 font-semibold">{{ row.label }}</text>
                       <view class="flex items-center gap-2">
@@ -176,7 +180,7 @@ function handleToSettingPage() {
                       </view>
                     </view>
                     <!-- 下方横向选项(分段器风格:默认 + options) -->
-                    <view class="mt-3 flex flex-wrap gap-2">
+                    <view class="flex flex-wrap gap-1.5">
                       <view
                         class="uh-global-card-glass uh-shadow-xs border rounded-full px-3 py-1 text-xs"
                         :class="currentValueOf(row.path) === null ? 'bg-secondary' : 'border-gray-100 text-gray-500'"

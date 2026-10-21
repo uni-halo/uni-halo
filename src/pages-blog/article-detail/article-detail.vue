@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, getCurrentInstance, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getPostByName, postTrackersCounter } from '@/api/halo'
@@ -30,6 +30,8 @@ definePage({
     navigationStyle: 'custom',
   },
 })
+
+const instance = getCurrentInstance()
 
 const { scrollY, updatePageScrollValue } = usePageScroll()
 /** 页面标题（插件端可配置，留空回退内置默认；滚动后显示笔记题目） */
@@ -301,10 +303,10 @@ function handleToComment() {
     return
   }
   if (!calcEnableComment.value) {
-    uni.showToast({ icon: 'none', title: '笔记已开启禁止评论！' })
+    uni.showToast({ icon: 'none', title: '功能暂未开放！' })
     return
   }
-  handleScrollToSelector('#comment-section')
+  // handleScrollToSelector({ selector: '#comment-section', instance })
   commentModal.value = {
     show: true,
     isComment: true,

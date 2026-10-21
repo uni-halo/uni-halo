@@ -339,7 +339,7 @@ onPageScroll((option: Page.PageScrollOption) => {
           {{ bloggerInfo.nickname }}
         </view>
         <view
-          class="desc mt-2 px-10 text-center text-2xs text-white/90 leading-relaxed text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]"
+          class="desc mt-2 px-10 text-center text-2xs text-white/90 leading-5 text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)]"
         >
           {{ bloggerInfo.description || '这个博主很懒，竟然没写介绍~' }}
         </view>

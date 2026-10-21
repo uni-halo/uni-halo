@@ -378,11 +378,11 @@ onUnmounted(() => {
   <uh-glass-popup v-model="popupVisible" position="bottom" custom-class="!rounded-2xl" :z-index="110" :close-on-click-modal="false">
     <view class="uh-ai-chat box-border flex flex-col gap-y-3 p-3">
       <!-- 顶部栏 -->
-      <view class="flex items-center justify-between pb-3">
+      <view class="flex items-center justify-between gap-x-4 pb-3">
         <view class="flex flex-1 items-center gap-x-2">
           <view
             v-if="assistantAvatar"
-            class="uh-global-card-glass uh-shadow-primary-xs h-5.5 w-5.5 border rounded-lg"
+            class="uh-global-card-glass uh-shadow-primary-xs h-5.5 w-5.5 shrink-0 overflow-hidden !border !rounded-lg"
           >
             <image
               :src="assistantAvatar"
@@ -390,7 +390,7 @@ onUnmounted(() => {
               mode="aspectFill"
             />
           </view>
-          <text class="text-base font-semibold">AI 助手</text>
+          <text class="flex-1 truncate text-base font-semibold">{{ assistantName || 'AI 助手' }}</text>
         </view>
         <view class="flex items-center gap-3">
           <view

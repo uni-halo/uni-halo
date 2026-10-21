@@ -4,6 +4,12 @@
  */
 import { useAppConfigStore } from '@/store/appConfig'
 
+interface ScrollToSelectorOptions {
+  selector: string
+  instance: any
+  duration?: number
+}
+
 /** 动画索引(列表动画错峰) */
 let aniWaitIndex = 0
 
@@ -39,7 +45,7 @@ export function handleToTopPage(duration = 500) {
  */
 function getFixedNavbarOffset(): number {
   const winInfo = uni.getWindowInfo()
-  const statusHeight = winInfo.safeArea?.top || winInfo.statusBarHeight || 0
+  const statusHeight = winInfo.safeAreaInsets?.top || winInfo.statusBarHeight || 0
   return statusHeight + 46
 }
 
@@ -49,11 +55,14 @@ function getFixedNavbarOffset(): number {
  * @param selector 目标元素选择器,如 '#comment-section'
  * @param duration 滚动时长,默认 300
  */
-export function handleScrollToSelector(selector: string, duration = 300) {
-  uni.createSelectorQuery()
-    .selectViewport().scrollOffset(() => {})
-    .select(selector).boundingClientRect()
+export function handleScrollToSelector({ selector, instance, duration = 300 }: ScrollToSelectorOptions) {
+  const query = uni.createSelectorQuery().in(instance)
+  query.selectViewport()
+    .scrollOffset(() => {})
+    .select(selector)
+    .boundingClientRect()
     .exec((res) => {
+      console.log('res', res)
       const viewport = res?.[0] as { scrollTop?: number } | undefined
       const rect = res?.[1] as { top?: number } | undefined
       if (!rect || rect.top === undefined || rect.top === null) {

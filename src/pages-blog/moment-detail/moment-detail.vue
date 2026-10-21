@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, getCurrentInstance, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPageScroll, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getMomentByName } from '@/api/halo'
@@ -27,7 +27,7 @@ definePage({
     navigationStyle: 'custom',
   },
 })
-
+const instance = getCurrentInstance()
 const { scrollY, updatePageScrollValue } = usePageScroll()
 const pageTitle = usePageTitle('momentDetail', '瞬间详情')
 const { configs: haloConfigs } = storeToRefs(useAppConfigStore())
@@ -186,13 +186,12 @@ const commentListRef = ref<{ refresh: (options?: { expandCommentName?: string })
 /** 底部悬浮评论按钮:滚动到评论区并弹出评论窗 */
 function handleToComment() {
   const current = moment.value
-  if (!current)
-    return
+  if (!current) { return }
   if (!calcEnableComment.value) {
-    uni.showToast({ icon: 'none', title: '评论功能未开启！' })
+    uni.showToast({ icon: 'none', title: '功能暂未开放！' })
     return
   }
-  handleScrollToSelector('#comment-section')
+  // handleScrollToSelector({ selector: '#comment-section', instance })
   commentModal.value = {
     show: true,
     isComment: true,
@@ -326,7 +325,7 @@ onShareTimeline(() => ({
             />
             <image
               v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-              class="pointer-events-none absolute left-1/2 top-1/2 h-[104rpx] w-[104rpx] uh-frame-center"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[104rpx] w-[104rpx]"
               mode="aspectFit"
             />
           </view>
@@ -472,6 +471,7 @@ onShareTimeline(() => ({
     />
   </view>
 </template>
+
 <style scoped>
 /* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
 .uh-frame-center {

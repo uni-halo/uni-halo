@@ -411,7 +411,7 @@ onReachBottom(() => {
 
     <view class="relative mb-8 box-border h-52 w-full">
       <image
-        v-if="profileBgUrl" class="absolute left-0 top-0 h-full w-full bg-cover bg-center"
+        v-if="profileBgUrl" class="absolute left-0 top-0 h-full w-full bg-cover bg-center !block"
         :src="profileBgUrl" mode="aspectFill" @error="onCardBgError()"
       />
       <view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
@@ -425,24 +425,42 @@ onReachBottom(() => {
           />
           <image
             v-if="wornSlots.avatarFrame.visible" :src="wornSlots.avatarFrame.url"
-            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-24 w-24"
-            mode="aspectFit"
+            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 !block" mode="aspectFit"
           />
         </view>
         <view class="flex flex-1 flex-col gap-y-1.5">
           <view class="flex items-center gap-x-1">
-            <text class="text-md text-gray-900 font-black drop-shadow" :style="[profileNicknameStyle]">
-              {{
-                headerUser.nickname || headerUser.username }}
+            <text
+              class="text-md text-white font-black text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)] drop-shadow"
+              :style="[profileNicknameStyle]"
+            >
+              {{ headerUser.nickname || '匿名用户' }}
             </text>
-            <image v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url" class="h-4 w-4" mode="aspectFit" />
+            <image
+              v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url" class="h-4.5 w-4.5 !block"
+              mode="aspectFit"
+            />
           </view>
-          <view class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-            <text v-if="wornSlots.title.visible" class="box-border rounded-full px-2 py-0.5 text-xs" :style="wornSlots.title.style">
+          <view v-if="wornSlots.title.visible || markChips.length !== 0" class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <text
+              v-if="wornSlots.title.visible" class="box-border rounded-full px-2 py-0.5 text-xs"
+              :style="wornSlots.title.style"
+            >
               {{ wornSlots.title.text }}
             </text>
+            <template v-for="(mark, i) in markChips" :key="i">
+              <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
+              <text
+                v-else class="box-border max-w-fit truncate rounded-full px-1.5 py-0.5 text-xs text-white"
+                :style="mark.style"
+              >
+                {{ mark.displayName }}
+              </text>
+            </template>
           </view>
-          <text class="line-clamp-2 text-center text-xs text-gray-900">{{ headerUser.bio }}</text>
+          <text class="text-xs text-gray-900" :class="[wornSlots.title.visible || markChips.length !== 0 ? 'line-clamp-1' : 'line-clamp-2']">
+            {{ headerUser.bio }}
+          </text>
         </view>
       </view>
       <view
@@ -473,7 +491,10 @@ onReachBottom(() => {
                 佩戴勋章
               </text>
               <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
-                <image :src="wornSlots.primaryBadge.url" class="h-5 w-5" mode="aspectFit" @click="imagePreview(wornSlots.primaryBadge.url)" />
+                <image
+                  :src="wornSlots.primaryBadge.url" class="h-5 w-5" mode="aspectFit"
+                  @click="imagePreview(wornSlots.primaryBadge.url)"
+                />
               </view>
             </view>
             <view v-if="wornSlots.title.visible" class="flex items-start gap-x-4">
@@ -481,7 +502,10 @@ onReachBottom(() => {
                 佩戴称号
               </text>
               <view class="min-w-0 flex-1">
-                <text class="box-border max-w-fit truncate rounded-full px-2 py-0.5 text-xs" :style="wornSlots.title.style">
+                <text
+                  class="box-border max-w-fit truncate rounded-full px-2 py-0.5 text-xs"
+                  :style="wornSlots.title.style"
+                >
                   {{ wornSlots.title.text }}
                 </text>
               </view>
@@ -545,26 +569,22 @@ onReachBottom(() => {
           </view>
           <view class="grid grid-cols-3 gap-2.5">
             <view
-              v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
-              class="flex flex-1 flex-col cursor-pointer"
+              v-for="(d, i) in wallStyled" :key="d.item.assetName || i" class="flex flex-1 flex-col cursor-pointer"
               @click="handlePreviewAsset(d.item)"
             >
               <view class="flex flex-col items-center justify-center gap-y-1">
-                <view
-                  class="relative box-border w-full overflow-hidden border rounded-lg"
-                  :style="d.style"
-                >
+                <view class="relative box-border w-full overflow-hidden border rounded-lg" :style="d.style">
                   <view
                     class="box-border h-18 w-full flex items-center justify-center border border-gray-100 rounded-lg border-solid p-2"
                     :style="[d.bgStyle]"
                   >
                     <image
-                      v-if="d.item.url" :src="d.item.url"
-                      class="h-full w-full rounded-lg !block" mode="aspectFit"
+                      v-if="d.item.url" :src="d.item.url" class="h-full w-full rounded-lg !block"
+                      mode="aspectFit"
                     />
                     <text
-                      v-else class="w-full truncate px-1 text-center font-black" :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'"
-                      :style="d.textStyle"
+                      v-else class="w-full truncate px-1 text-center font-black"
+                      :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'" :style="d.textStyle"
                     >
                       {{ d.item.displayName }}
                     </text>
