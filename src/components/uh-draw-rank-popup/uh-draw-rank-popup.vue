@@ -157,7 +157,7 @@ function handleToLogin() {
             <text class="text-3xs text-gray-600">{{ myRank.displayName }}</text>
             <image
               v-if="myRankSlots.primaryBadge.visible" :src="myRankSlots.primaryBadge.url"
-              class="h-3 w-3 shrink-0" mode="aspectFit"
+              class="h-4 w-4 shrink-0 !block" mode="aspectFit"
             />
           </view>
         </view>
@@ -175,7 +175,7 @@ function handleToLogin() {
           @refresh="handleGetData"
         />
         <scroll-view v-else :scroll-y="true" :show-scrollbar="false" class="h-[50vh] w-full flex-1">
-          <view class="w-full flex flex-col gap-y-2.5">
+          <view class="box-border w-full flex flex-col gap-y-2.5 pt-1">
             <view
               v-for="item in rankList" :key="item.username"
               class="box-border flex items-center gap-x-2.5 px-1"
@@ -194,7 +194,7 @@ function handleToLogin() {
                 />
                 <image
                   v-if="slotsOf(item).avatarFrame.visible" :src="slotsOf(item).avatarFrame.url"
-                  class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[78rpx] w-[78rpx]"
+                  class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-10 w-10 !block"
                   mode="aspectFit"
                 />
               </view>
@@ -202,7 +202,7 @@ function handleToLogin() {
                 <text class="min-w-0 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
                 <image
                   v-if="slotsOf(item).primaryBadge.visible" :src="slotsOf(item).primaryBadge.url"
-                  class="h-3 w-3 shrink-0" mode="aspectFit"
+                  class="h-4 w-4 shrink-0 !block" mode="aspectFit"
                 />
               </view>
               <text class="shrink-0 text-3xs text-gray-500"> <text class="text-sm text-gray-900 font-bold"> {{ item.score }} </text>  分</text>

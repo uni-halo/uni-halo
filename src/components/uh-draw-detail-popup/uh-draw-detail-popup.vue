@@ -4,7 +4,8 @@
  * 从 draw-list 页面抽离，与竞猜弹窗（uh-draw-guess-popup）平级复用。
  */
 import { computed, ref, watch } from 'vue'
-import { checkThumbnailUrl } from '@/utils/url'
+import { checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+import { imagePreview } from '@/utils/image'
 import { formatTime } from '@/utils/formatTime'
 import { useWornSlots } from '@/hooks/useWornSlots'
 import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
@@ -46,8 +47,9 @@ watch(() => [visible.value, props.draw], ([value]) => {
 })
 
 function handlePreviewCover() {
-  if (!cover.value) { return }
-  uni.previewImage({ urls: [cover.value] })
+  const url = checkImageUrl(cover.value)
+  if (!url) { return }
+  imagePreview(url)
 }
 
 function handleToDetailPage(draw: IDraw) {
@@ -106,18 +108,18 @@ function handleToDetailPage(draw: IDraw) {
                   />
                   <image
                     v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-                    class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx]"
+                    class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 !block"
                     mode="aspectFit"
                   />
                 </view>
-                <text>{{ ownerText }}</text>
+                <text class="ml-0.5 text-gray-600 font-bold">{{ ownerText }}</text>
                 <image
                   v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-                  class="h-3 w-3 shrink-0" mode="aspectFit"
+                  class="h-4 w-4 shrink-0 !block" mode="aspectFit"
                 />
                 <text
                   v-if="authorSlots.title.visible"
-                  class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-xs"
+                  class="box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}

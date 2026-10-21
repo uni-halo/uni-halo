@@ -148,180 +148,173 @@ function handleCopyWebsite() {
     @close="closeUserProfilePopup()"
   >
     <view v-if="payload.username || payload.anonymous" class="uh-profile-fade flex flex-col">
-      <scroll-view :scroll-y="true" :show-scrollbar="false" class="max-h-[70vh] w-full">
-        <!-- 用户卡片(垂直居中布局 + 名片背景顶部素材带,头像骑素材带下缘) -->
-        <view class="relative box-border w-full overflow-hidden rounded-2xl bg-white/80 pb-3">
-          <view v-if="cardBgSrc" class="absolute h-36 w-full overflow-hidden">
+      <view class="relative box-border w-full overflow-hidden rounded-2xl bg-white/80 pb-3">
+        <view
+          class="uh-global-card-glass uh-shadow-xs absolute right-2 top-2 z-30 box-border h-6 w-6 flex items-center justify-center border rounded-lg text-gray-900 !bg-white/80"
+          @click="closeUserProfilePopup"
+        >
+          <wd-icon name="close" size="28rpx" />
+        </view>
+        <view v-if="cardBgSrc" class="absolute h-36 w-full overflow-hidden">
+          <image
+            :src="cardBgSrc" class="pointer-events-none absolute inset-0 h-full w-full" mode="aspectFill"
+            @error="onCardBgError()"
+          />
+          <!-- 磨砂面纱(对齐 user-profile 顶部:rgba(0,0,0,.075) + backdrop blur) -->
+          <view class="uh-profile-mask pointer-events-none absolute inset-0 h-full w-full" />
+          <!-- 底部渐隐衔卡片底 -->
+          <view
+            class="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-full from-white/0 to-[#F9F9FA] bg-gradient-to-b"
+          />
+        </view>
+        <view
+          class="relative z-20 box-border flex flex-col items-center gap-y-2 px-4 pb-4"
+          :class="cardBgSrc ? 'pt-26' : 'pt-5'"
+        >
+          <view class="relative shrink-0">
+            <wd-avatar
+              :src="checkAvatarUrl(headerUser.avatar)"
+              :text="getAvatarFallbackText(headerUser.nickname || payload.username, '?')" shape="round"
+              custom-class="uh-global-card-glass uh-shadow-xs !h-16 !w-16 !border-2 !border-white/40 !text-gray-900 !font-bold"
+              mode="aspectFill" @click="handlePreviewAvatar()"
+            />
             <image
-              :src="cardBgSrc"
-              class="pointer-events-none absolute inset-0 h-full w-full" mode="aspectFill"
-              @error="onCardBgError()"
-            />
-            <!-- 磨砂面纱(对齐 user-profile 顶部:rgba(0,0,0,.075) + backdrop blur) -->
-            <view class="uh-profile-mask pointer-events-none absolute inset-0 h-full w-full" />
-            <!-- 底部渐隐衔卡片底 -->
-            <view
-              class="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-full from-white/0 to-[#F9F9FA] bg-gradient-to-b"
+              v-if="slots.avatarFrame.visible" :src="slots.avatarFrame.url"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[4.5rem] w-[4.5rem]"
+              mode="aspectFit"
             />
           </view>
-          <view
-            class="relative z-20 box-border flex flex-col items-center gap-y-2 px-4 pb-4"
-            :class="cardBgSrc ? 'pt-26' : 'pt-5'"
-          >
-            <view class="relative shrink-0">
-              <wd-avatar
-                :src="checkAvatarUrl(headerUser.avatar)"
-                :text="getAvatarFallbackText(headerUser.nickname || payload.username, '?')" shape="round"
-                custom-class="uh-global-card-glass uh-shadow-xs !h-16 !w-16 !border-2 !border-white/40 !text-gray-900 !font-bold"
-                mode="aspectFill" @click="handlePreviewAvatar()"
-              />
-              <image
-                v-if="slots.avatarFrame.visible" :src="slots.avatarFrame.url"
-                class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[4.5rem] w-[4.5rem]"
-                mode="aspectFit"
-              />
-            </view>
-            <view class="flex items-center gap-x-1">
-              <text class="truncate text-sm text-gray-900 font-black" :style="nameStyleCss">
-                {{ headerUser.nickname || payload.username }}
-              </text>
-              <image
-                v-if="slots.primaryBadge.visible" :src="slots.primaryBadge.url" class="h-4 w-4 shrink-0"
-                mode="aspectFit"
-              />
-            </view>
-            <!-- 称号 + 匿名标牌 + 身份标牌(同为身份徽章语义,同行 wrap;匿名时灰色「匿名用户」) -->
-            <view
-              v-if="slots.title.visible || isGuest || markChips.length"
-              class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1"
-            >
-              <text
-                v-if="isGuest" class="box-border truncate rounded-full px-2 py-0.5 text-xs"
-                :style="GUEST_CHIP_STYLE"
-              >
-                匿名用户
-              </text>
-              <text
-                v-if="slots.title.visible" class="box-border truncate rounded-full px-2 py-0.5 text-xs"
-                :style="slots.title.style"
-              >
-                {{ slots.title.text }}
-              </text>
-              <template v-for="(mark, i) in markChips" :key="i">
-                <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
-                <text
-                  v-else class="box-border truncate rounded-full px-1.5 py-0.5 text-xs text-white"
-                  :style="mark.style"
-                >
-                  {{ mark.displayName }}
-                </text>
-              </template>
-            </view>
-            <text v-if="!isGuest" class="line-clamp-2 text-center text-xs text-gray-500">
-              {{ headerUser.bio }}
+          <view class="flex items-center gap-x-1">
+            <text class="truncate text-sm text-gray-900 font-black" :style="nameStyleCss">
+              {{ headerUser.nickname || payload.username }}
             </text>
-            <!-- 统计(数字加粗 + label 小字;互动统计依赖互动增强 identity,审核模式下不展示) -->
-            <view v-if="showInteractStats" class="w-full flex items-center pt-1 text-center">
-              <view class="flex-1">
-                <text class="block text-sm text-gray-900 font-bold">{{ joinedText || '-' }}</text>
-                <text class="text-xs text-gray-400">加入时间</text>
-              </view>
-              <view class="flex-1">
-                <text class="block text-sm text-gray-900 font-bold">{{ statsPosts ?? '-' }}</text>
-                <text class="text-xs text-gray-400">笔记</text>
-              </view>
-              <view class="flex-1">
-                <text class="block text-sm text-gray-900 font-bold">{{ statsComments ?? '-' }}</text>
-                <text class="text-xs text-gray-400">评论</text>
-              </view>
-            </view>
-            <!-- 无互动统计(插件未启用/门控未过/审核模式):仅加入时间单格居中 -->
-            <view v-else-if="joinedText" class="w-full pt-1 text-center">
-              <text class="block text-xs text-gray-900 font-bold">{{ joinedText }}</text>
-              <text class="text-3xs text-gray-400">加入时间</text>
-            </view>
+            <image
+              v-if="slots.primaryBadge.visible" :src="slots.primaryBadge.url" class="h-4 w-4 shrink-0"
+              mode="aspectFit"
+            />
           </view>
-
-          <!-- 装扮墙(用户公开的全部装饰,稀有度着色,点击放大;关闭公开时接口返回空) -->
+          <!-- 称号 + 匿名标牌 + 身份标牌(同为身份徽章语义,同行 wrap;匿名时灰色「匿名用户」) -->
           <view
-            v-if="decorationWall.length"
-            class="box-border flex flex-col gap-y-2 border-t border-gray-100 px-3 py-3"
+            v-if="slots.title.visible || isGuest || markChips.length"
+            class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1"
           >
-            <view class="flex items-center justify-between">
-              <view class="text-3xs text-gray-900 font-bold">
-                装扮展示
-              </view>
-              <view class="rounded-full text-xs text-gray-500">
-                共 {{ decorationWall.length }} 件
-              </view>
-            </view>
-            <!-- 单行横向滚动(条目宽≈原 3 列宽,whitespace-nowrap 兼容小程序端) -->
-            <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
-              <view class="inline-flex gap-2">
-                <view
-                  v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
-                  class="inline-block w-24 shrink-0 cursor-pointer" @click="handlePreviewAsset(d.item)"
-                >
-                  <view class="flex flex-col items-center justify-center gap-y-1.5">
-                    <!-- 预览框(稀有度描边外框 + 固定高度/内边距/自身边框的透明网格画布 + 右上角稀有度徽标) -->
-                    <view class="relative box-border w-full overflow-hidden border rounded-lg p-2" :style="d.style">
-                      <view
-                        class="h-16 w-full flex items-center justify-center border border-gray-100 rounded-lg"
-                        :style="d.bgStyle"
-                      >
-                        <image
-                          v-if="d.item.url" :src="d.item.url" class="h-full w-full rounded-md p-1"
-                          mode="aspectFit"
-                        />
-                        <!-- title/昵称样式类装饰无图时:名称文字即装饰本体,稀有度色作用于内部文字 -->
-                        <text
-                          v-else class="w-full truncate px-1 text-center font-black"
-                          :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'" :style="d.textStyle"
-                        >
-                          {{ d.item.displayName }}
-                        </text>
-                      </view>
-                      <view
-                        v-if="d.item.rarityDisplayName"
-                        class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-xs text-white"
-                        :style="d.badgeStyle"
-                      >
-                        {{ d.item.rarityDisplayName }}
-                      </view>
-                    </view>
-                    <!-- 名称(框外下方,不随稀有度着色) -->
-                    <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>
-                  </view>
-                </view>
-              </view>
-            </scroll-view>
+            <text v-if="isGuest" class="box-border truncate rounded-full px-2 py-0.5 text-xs" :style="GUEST_CHIP_STYLE">
+              匿名用户
+            </text>
+            <text
+              v-if="slots.title.visible" class="box-border truncate rounded-full px-2 py-0.5 text-xs"
+              :style="slots.title.style"
+            >
+              {{ slots.title.text }}
+            </text>
+            <template v-for="(mark, i) in markChips" :key="i">
+              <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
+              <text
+                v-else class="box-border truncate rounded-full px-1.5 py-0.5 text-xs text-white"
+                :style="mark.style"
+              >
+                {{ mark.displayName }}
+              </text>
+            </template>
           </view>
-          <!-- 底部操作(常规=查看主页;匿名=guest 网址可复制,否则仅关闭) -->
-          <view class="box-border flex items-center gap-x-3 px-3 pt-2">
-            <uh-button
-              class="flex-1"
-              custom-class="uh-global-card-glass !border !rounded-xl !bg-white !py-2.5 !text-3xs !text-gray-900"
-              @click="closeUserProfilePopup"
-            >
-              关闭
-            </uh-button>
-            <uh-button
-              v-if="payload.username" class="flex-1"
-              custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
-              @click="handleToProfile"
-            >
-              查看主页
-            </uh-button>
-            <uh-button
-              v-else-if="payload.website" class="flex-1"
-              custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
-              @click="handleCopyWebsite"
-            >
-              复制网址
-            </uh-button>
+          <text v-if="!isGuest" class="line-clamp-2 text-center text-xs text-gray-500">
+            {{ headerUser.bio }}
+          </text>
+          <!-- 统计(数字加粗 + label 小字;互动统计依赖互动增强 identity,审核模式下不展示) -->
+          <view v-if="showInteractStats" class="w-full flex items-center pt-1 text-center">
+            <view class="flex-1">
+              <text class="block text-sm text-gray-900 font-bold">{{ joinedText || '-' }}</text>
+              <text class="text-xs text-gray-400">加入时间</text>
+            </view>
+            <view class="flex-1">
+              <text class="block text-sm text-gray-900 font-bold">{{ statsPosts ?? '-' }}</text>
+              <text class="text-xs text-gray-400">笔记</text>
+            </view>
+            <view class="flex-1">
+              <text class="block text-sm text-gray-900 font-bold">{{ statsComments ?? '-' }}</text>
+              <text class="text-xs text-gray-400">评论</text>
+            </view>
+          </view>
+          <!-- 无互动统计(插件未启用/门控未过/审核模式):仅加入时间单格居中 -->
+          <view v-else-if="joinedText" class="w-full pt-1 text-center">
+            <text class="block text-xs text-gray-900 font-bold">{{ joinedText }}</text>
+            <text class="text-3xs text-gray-400">加入时间</text>
           </view>
         </view>
-      </scroll-view>
+
+        <!-- 装扮墙(用户公开的全部装饰,稀有度着色,点击放大;关闭公开时接口返回空) -->
+        <view v-if="decorationWall.length" class="box-border flex flex-col gap-y-2 border-t border-gray-100 px-3 py-3">
+          <view class="flex items-center justify-between">
+            <view class="text-3xs text-gray-900 font-bold">
+              装扮展示
+            </view>
+            <view class="rounded-full text-xs text-gray-500">
+              共 {{ decorationWall.length }} 件
+            </view>
+          </view>
+          <scroll-view :scroll-x="true" :show-scrollbar="false" class="w-full whitespace-nowrap">
+            <view class="inline-flex gap-2">
+              <view
+                v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
+                class="inline-block w-24 shrink-0 cursor-pointer" @click="handlePreviewAsset(d.item)"
+              >
+                <view class="flex flex-col items-center justify-center gap-y-1.5">
+                  <view class="relative box-border w-full overflow-hidden border rounded-lg" :style="[d.style]">
+                    <view
+                      class="box-border h-18 w-full flex items-center justify-center border border-gray-100 rounded-lg border-solid p-2"
+                      :style="d.bgStyle"
+                    >
+                      <image
+                        v-if="d.item.url" :src="d.item.url" class="h-full w-full rounded-lg !block"
+                        mode="aspectFit"
+                      />
+                      <text
+                        v-else class="w-full truncate px-1 text-center font-black"
+                        :class="d.isTextDecoration ? 'text-xs' : 'leading-5 text-3xs'" :style="[d.textStyle]"
+                      >
+                        {{ d.item.displayName }}
+                      </text>
+                    </view>
+                    <view
+                      v-if="d.item.rarityDisplayName"
+                      class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-xs text-white"
+                      :style="[d.badgeStyle]"
+                    >
+                      {{ d.item.rarityDisplayName }}
+                    </view>
+                  </view>
+                  <!-- 名称(框外下方,不随稀有度着色) -->
+                  <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 底部操作(常规=查看主页;匿名=guest 网址可复制,否则仅关闭) -->
+        <view class="box-border flex items-center gap-x-3 px-3 pt-2">
+          <uh-button
+            class="flex-1"
+            custom-class="uh-global-card-glass !border !rounded-xl !bg-white !py-2.5 !text-3xs !text-gray-900"
+            @click="closeUserProfilePopup"
+          >
+            关闭
+          </uh-button>
+          <uh-button
+            v-if="payload.username" class="flex-1"
+            custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
+            @click="handleToProfile"
+          >
+            查看主页
+          </uh-button>
+          <uh-button
+            v-else-if="payload.website" class="flex-1"
+            custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
+            @click="handleCopyWebsite"
+          >
+            复制网址
+          </uh-button>
+        </view>
+      </view>
     </view>
   </uh-glass-popup>
 </template>

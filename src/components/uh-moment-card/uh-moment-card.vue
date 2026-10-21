@@ -121,11 +121,11 @@ function handlePreview(index: number, list: { url: string }[]) {
             <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-              class="h-3 w-3 shrink-0" mode="aspectFit"
+              class="h-4 w-4 shrink-0" mode="aspectFit"
             />
             <text
               v-if="authorSlots.title.visible"
-              class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-[10px]"
+              class="ml-0.5 box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
               :style="authorSlots.title.style"
             >
               {{ authorSlots.title.text }}

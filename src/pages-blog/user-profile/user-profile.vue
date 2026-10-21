@@ -458,7 +458,6 @@ onReachBottom(() => {
             </view>
           </view>
           <view class="w-full flex flex-col gap-y-2 text-sm text-gray-900">
-            <!-- 键值行(label 左灰小字 + value 右主文;增强数据按门控逐行隐藏) -->
             <view class="flex items-start gap-x-4">
               <text class="shrink-0 text-xs text-gray-400 leading-5">
                 用户昵称
@@ -544,25 +543,24 @@ onReachBottom(() => {
               共 {{ decorationWall.length }} 件
             </view>
           </view>
-          <view class="grid grid-cols-3 gap-2">
+          <view class="grid grid-cols-3 gap-2.5">
             <view
               v-for="(d, i) in wallStyled" :key="d.item.assetName || i"
               class="flex flex-1 flex-col cursor-pointer"
               @click="handlePreviewAsset(d.item)"
             >
               <view class="flex flex-col items-center justify-center gap-y-1">
-                <!-- 预览框(稀有度描边外框 + 固定高度/内边距/自身边框的透明网格画布 + 右上角稀有度徽标) -->
                 <view
-                  class="relative box-border w-full overflow-hidden border rounded-lg p-1.5"
+                  class="relative box-border w-full overflow-hidden border rounded-lg"
                   :style="d.style"
                 >
                   <view
-                    class="h-16 w-full flex items-center justify-center border border-gray-100 rounded-lg"
-                    :style="d.bgStyle"
+                    class="box-border h-18 w-full flex items-center justify-center border border-gray-100 rounded-lg border-solid p-2"
+                    :style="[d.bgStyle]"
                   >
                     <image
                       v-if="d.item.url" :src="d.item.url"
-                      class="h-full w-full rounded-md p-1" mode="aspectFit"
+                      class="h-full w-full rounded-lg !block" mode="aspectFit"
                     />
                     <text
                       v-else class="w-full truncate px-1 text-center font-black" :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'"

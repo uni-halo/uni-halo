@@ -55,8 +55,6 @@ const category = ref<{ activeIndex: number, list: IPhotoGroup[] }>({
 const queryParams = ref({ size: 10, page: 1, group: '' })
 const dataList = ref<IPhoto[]>([])
 const visiblePhotoName = ref(false)
-/** 瀑布流双列 */
-const { columns, aspectOf } = useWaterfallColumns(dataList, item => item.spec.url)
 
 /* ---------------- 数据加载 ---------------- */
 async function handleGetCategory() {
@@ -160,17 +158,6 @@ function handleGetDataByCategory(index: number, cate: IPhotoGroup) {
   handleGetData(true)
 }
 
-/* ---------------- 图片预览 ---------------- */
-function handlePreview(data: IPhoto) {
-  const current = dataList.value.findIndex(x => x.metadata.name === data.metadata.name)
-  uni.previewImage({
-    current,
-    urls: dataList.value.map(x => x.spec.url),
-    indicator: 'number',
-    loop: true,
-  })
-}
-
 /* ---------------- 分享 ---------------- */
 
 onShareAppMessage(() => ({
@@ -232,10 +219,7 @@ onReachBottom(() => {
 
 <template>
   <view class="box-border min-h-screen w-screen flex flex-col bg-page">
-    <uh-navbar
-      :scroll-y="scrollY" :use-back="false" :default-title="pageTitle"
-      title-color="text-gray-900"
-    >
+    <uh-navbar :scroll-y="scrollY" :use-back="false" :default-title="pageTitle" title-color="text-gray-900">
       <template #left>
         <uh-button
           custom-class="box-border uh-global-card-glass border !bg-primary !inline-flex text-gray-900 !px-1.5 !py-1 !text-xs !rounded-lg"
@@ -269,38 +253,17 @@ onReachBottom(() => {
       </wd-sticky>
 
       <uh-data-loading
-        v-if="loadingStatus !== DataLoadingStatusEnum.Success" min-height="65vh" :loading-status="loadingStatus"
-        @refresh="handleGetCategory"
+        v-if="loadingStatus !== DataLoadingStatusEnum.Success" min-height="65vh"
+        :loading-status="loadingStatus" @refresh="handleGetCategory"
       />
 
       <view v-else class="box-border w-full p-3 pb-0">
-        <view class="flex gap-2.5">
-          <view
-            v-for="(column, columnIndex) in columns" :key="columnIndex"
-            class="flex flex-1 flex-col gap-2.5"
-          >
-            <view
-              v-for="item in column" :key="item.metadata.name"
-              class="uh-global-card-glass uh-shadow-xs relative overflow-hidden rounded-xl"
-              @click="handlePreview(item)"
-            >
-              <view class="relative w-full" :style="{ paddingTop: `${aspectOf(item) * 100}%` }">
-                <wd-img
-                  custom-class="!absolute !inset-0 !h-full !w-full" :src="item.spec.url"
-                  mode="aspectFill" lazy-load
-                >
-                  <template #loading>
-                    <wd-loading size="64rpx" custom-class="text-primary" />
-                  </template>
-                </wd-img>
-              </view>
-              <view
-                v-if="visiblePhotoName && item.spec.displayName"
-                class="absolute bottom-0 z-2 box-border w-full from-white/0 to-black/40 bg-gradient-to-b p-3 pt-6"
-              >
-                <text class="line-clamp-2 text-xs text-white">{{ item.spec.displayName }}</text>
-              </view>
-            </view>
+        <view class="w-full flex gap-2.5">
+          <view class="grid grid-cols-2 w-full gap-2.5">
+            <uh-gallery-card
+              v-for="(item, index) in dataList" :key="index" :photos="dataList"
+              :visible-photo-name="visiblePhotoName" :item="item"
+            />
           </view>
         </view>
         <uh-data-loadmore :status="loadMoreStatus.status" :text="loadMoreStatus.text" />

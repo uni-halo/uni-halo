@@ -59,8 +59,8 @@ const dateText = computed(() => {
     class="uh-global-card-glass uh-shadow-xs box-border w-full overflow-hidden rounded-xl bg-white/80"
     @click="emit('tap')"
   >
-    <view v-if="coverUrl" class="relative w-full">
-      <wd-img :src="coverUrl" mode="widthFix" lazy-load custom-class="!block h-full w-full">
+    <view v-if="coverUrl" class="relative h-32 w-full overflow-hidden">
+      <wd-img :src="coverUrl" mode="aspectFill" lazy-load custom-class="!block h-full w-full">
         <template #loading>
           <wd-loading size="64rpx" custom-class="text-primary" />
         </template>
@@ -87,14 +87,14 @@ const dateText = computed(() => {
           />
           <image
             v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx]"
+            class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-7 w-7"
             mode="aspectFit"
           />
         </view>
         <text class="truncate text-3xs text-gray-400">{{ ownerText }}</text>
         <image
           v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-          class="h-3 w-3 shrink-0" mode="aspectFit"
+          class="h-4 w-4 shrink-0 !block" mode="aspectFit"
         />
       </view>
     </view>

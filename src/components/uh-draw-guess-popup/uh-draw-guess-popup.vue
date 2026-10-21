@@ -9,10 +9,15 @@ import { storeToRefs } from 'pinia'
 import { getGuessBoard, submitGuess } from '@/api/draw'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
-import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
+import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
+import { imagePreview } from '@/utils/image'
 import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
+import { useWornSlots } from '@/hooks/useWornSlots'
+import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
+import { useIdentityStore } from '@/store/identity'
+import { nameStyleCssOf } from '@/utils/wornDecorations'
 import type { IDraw, IGuessBoard } from '@/api/types/draw'
 
 const props = defineProps<{
@@ -29,6 +34,21 @@ const visible = defineModel<boolean>({ default: false })
 const appConfigStore = useAppConfigStore()
 const tokenStore = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
+const identityStore = useIdentityStore()
+
+/** 出题人互动增强装饰槽位(作者缺失/插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
+const authorSlots = useWornSlots(() => props.draw?.owner?.username || props.draw?.spec.ownerName || '')
+const { openUserProfilePopup } = useUserProfilePopup()
+
+/** 互动增强资料卡(本弹窗 z-index 110,资料卡 130 盖住;关闭后自然浮回) */
+function handleToUserProfile(data: Parameters<typeof openUserProfilePopup>[0]) {
+  openUserProfilePopup(data)
+}
+
+/** 猜中榜用户昵称渐变样式(identity 缓存,无则空串) */
+function boardNameStyle(username: string) {
+  return nameStyleCssOf(identityStore.identities[username]?.value)
+}
 
 const { openLoginPopup } = useLoginPopup()
 
@@ -90,6 +110,8 @@ async function loadBoard() {
       item._isMe = item.username === userInfo.value?.username
       return item
     })
+    // 批量预热猜中榜用户互动增强身份(门控未过内部静默跳过)
+    identityStore.ensureMany(board.value?.board?.map(item => item.username) || [])
   }
   catch (err: any) {
     console.error('获取画谜信息失败', err)
@@ -162,8 +184,9 @@ function handleToLogin() {
 }
 
 function handlePreviewCover() {
-  if (!cover.value) { return }
-  uni.previewImage({ urls: [cover.value] })
+  const url = checkImageUrl(cover.value)
+  if (!url) { return }
+  imagePreview(url)
 }
 
 function handleToDetailPage(draw: IDraw) {
@@ -216,14 +239,38 @@ function handleToDetailPage(draw: IDraw) {
           </view>
 
           <!-- 作者信息 -->
-          <view class="flex items-center justify-between text-xs text-gray-600">
+          <view
+            class="flex items-center justify-between text-xs text-gray-600" @click="handleToUserProfile({
+              username: props.draw?.owner?.username || props.draw?.spec.ownerName,
+              nickname: props.draw?.owner?.displayName || ownerText,
+              avatar: props.draw?.owner?.avatar,
+            })"
+          >
             <view class="w-full flex items-center gap-x-1">
               <text class="text-xs text-gray-500">作者：</text>
-              <wd-avatar
-                :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
-                custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+              <view class="relative shrink-0">
+                <wd-avatar
+                  :src="ownerAvatar" :text="ownerInitial" shape="round" size="36rpx"
+                  custom-class="uh-global-card-glass !shadow-none !border" mode="aspectFill"
+                />
+                <image
+                  v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
+                  class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 !block"
+                  mode="aspectFit"
+                />
+              </view>
+              <text class="ml-0.5 text-gray-600 font-bold">{{ ownerText }}</text>
+              <image
+                v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
+                class="h-4 w-4 shrink-0 !block" mode="aspectFit"
               />
-              <text>{{ ownerText }}</text>
+              <text
+                v-if="authorSlots.title.visible"
+                class="box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
+                :style="authorSlots.title.style"
+              >
+                {{ authorSlots.title.text }}
+              </text>
             </view>
             <text class="shrink-0">
               {{ formatTime({ d: draw.metadata.creationTimestamp, f: 'yyyy年MM月dd日' }) }}
@@ -239,8 +286,8 @@ function handleToDetailPage(draw: IDraw) {
             <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
               谜底提示：{{ draw.spec.puzzleHint }}
             </view>
-            <view class="flex items-center text-xs text-gray-400">
-              <text>统计数据： {{ board?.guessCount ?? 0 }} 人参与</text>
+            <view class="flex items-center text-xs text-gray-500">
+              <text>统计数据：{{ board?.guessCount ?? 0 }} 人参与</text>
               <text>丨</text>
               <text> {{ board?.solvedCount ?? 0 }} 人猜中</text>
             </view>
@@ -248,8 +295,11 @@ function handleToDetailPage(draw: IDraw) {
             <!-- 态 1：已揭晓 -->
             <template v-if="revealed">
               <view class="flex flex-col gap-y-1">
-                <text class="text-sm text-primary font-bold">画谜谜底：{{ board?.answer }}</text>
-                <text class="text-xs text-gray-500">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
+                <view v-if="board?.answer">
+                  <text class="text-xs text-gray-500">画谜谜底：</text>
+                  <text class="text-sm text-primary font-bold">{{ board?.answer }}</text>
+                </view>
+                <text class="text-xs text-gray-400">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
               </view>
             </template>
 
@@ -258,7 +308,10 @@ function handleToDetailPage(draw: IDraw) {
               <view class="flex flex-col gap-y-1">
                 <text class="text-xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
                 <template v-if="!revealed">
-                  <text v-if="board?.answer" class="text-xs text-gray-900 font-semibold">画谜谜底：{{ board.answer }}</text>
+                  <view v-if="board?.answer">
+                    <text class="text-xs text-gray-500">画谜谜底：</text>
+                    <text class="text-xs text-gray-900 font-semibold">{{ board.answer }}</text>
+                  </view>
                   <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
                 </template>
               </view>
@@ -309,7 +362,10 @@ function handleToDetailPage(draw: IDraw) {
             <view v-if="board?.board?.length" class="mt-2 w-full flex flex-col gap-y-2">
               <view class="w-full flex items-center justify-between">
                 <text class="text-xs text-gray-600 font-bold"> 猜中榜（按猜中时间） </text>
-                <view class="flex shrink-0 items-center gap-x-0.5 text-gray-400" @click="isCollapsedBoardUsers = !isCollapsedBoardUsers">
+                <view
+                  class="flex shrink-0 items-center gap-x-0.5 text-gray-400"
+                  @click="isCollapsedBoardUsers = !isCollapsedBoardUsers"
+                >
                   <wd-icon :name="isCollapsedBoardUsers ? 'down' : 'up'" size="28rpx" />
                   <text class="text-xs">{{ isCollapsedBoardUsers ? '收起' : '展开' }}</text>
                 </view>
@@ -321,27 +377,38 @@ function handleToDetailPage(draw: IDraw) {
                     v-for="item in board.board" :key="item.username"
                     class="w-full flex items-center justify-between gap-x-2"
                   >
-                    <view class="flex shrink-0 items-center gap-x-1.5">
-                      <wd-avatar
-                        :src="item.avatar"
-                        :text="(item.displayName || item.username).charAt(0)" shape="round" size="42rpx"
-                        custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
-                      />
+                    <view
+                      class="min-w-0 flex flex-1 shrink-0 items-center gap-x-1.5"
+                      @click="handleToUserProfile({ username: item.username, nickname: item.displayName || item.username, avatar: item.avatar })"
+                    >
+                      <view class="relative shrink-0">
+                        <wd-avatar
+                          :src="item.avatar" :text="(item.displayName || item.username).charAt(0)"
+                          shape="round" size="42rpx" custom-class="uh-global-card-glass !shadow-none !border !block"
+                          mode="aspectFill"
+                        />
+                        <image
+                          v-if="identityStore.slotsOf(item.username).avatarFrame.visible"
+                          :src="identityStore.slotsOf(item.username).avatarFrame.url"
+                          class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 z-10 h-6 w-6 !block"
+                          mode="aspectFit"
+                        />
+                      </view>
                       <text
-                        class="text-xs"
-                        :class="[
+                        class="truncate text-xs font-bold" :class="[
                           item._isMe ? 'text-primary' : 'text-gray-600',
-                        ]"
+                        ]" :style="[boardNameStyle(item.username)]"
                       >
                         {{ item.displayName || item.username }}
                       </text>
-                      <text v-if="item._isMe" class="text-xs text-primary">(我)</text>
+                      <image
+                        v-if="identityStore.slotsOf(item.username).primaryBadge.visible"
+                        :src="identityStore.slotsOf(item.username).primaryBadge.url" class="h-4 w-4 shrink-0 !block"
+                        mode="aspectFit"
+                      />
                     </view>
                     <text v-if="item.solvedAt" class="shrink-0 text-xs text-gray-500">
-                      {{ formatTime({
-                        d: item.solvedAt,
-                        f:
-                          'yyyy年MM月dd日' }) }}
+                      {{ formatTime({ d: item.solvedAt, f: 'yyyy年MM月dd日' }) }}
                     </text>
                   </view>
                 </view>
@@ -372,3 +439,10 @@ function handleToDetailPage(draw: IDraw) {
     </view>
   </uh-glass-popup>
 </template>
+
+<style scoped>
+/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
+.uh-frame-center {
+  transform: translate(-50%, -50%);
+}
+</style>

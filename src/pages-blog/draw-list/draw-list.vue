@@ -263,7 +263,7 @@ function handleGuessSolved() {
       />
       <view v-else class="box-border w-full flex flex-col">
         <view class="box-border w-full flex gap-3 p-3">
-          <view class="flex flex-1 flex-col gap-3">
+          <!-- <view class="flex flex-1 flex-col gap-3">
             <uh-draw-card
               v-for="draw in leftColumn" :key="draw.metadata.name" :draw="draw"
               @tap="handleOpenDetail(draw)"
@@ -272,6 +272,12 @@ function handleGuessSolved() {
           <view class="flex flex-1 flex-col gap-3">
             <uh-draw-card
               v-for="draw in rightColumn" :key="draw.metadata.name" :draw="draw"
+              @tap="handleOpenDetail(draw)"
+            />
+          </view> -->
+          <view class="grid grid-cols-2 w-full gap-3">
+            <uh-draw-card
+              v-for="draw in drawList" :key="draw.metadata.name" :draw="draw"
               @tap="handleOpenDetail(draw)"
             />
           </view>

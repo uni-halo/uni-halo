@@ -137,6 +137,7 @@ function handleTogglePlay() {
 
 function handleToggleShowTurns() {
   showTurns.value = !showTurns.value
+  console.log('showTurns', showTurns.value)
 }
 
 function handleSeekPercent(percent: number) {
@@ -198,7 +199,7 @@ onBeforeUnmount(() => {
       <view class="flex flex-1 flex-col gap-y-0.5">
         <view class="flex items-center gap-x-1.5 text-gray-900">
           <wd-icon name="live-broadcast" size="32rpx" />
-          <text class="text-sm font-bold"> 播客听读 </text>
+          <text class="text-3xs font-bold"> 播客听读 </text>
         </view>
 
         <view class="min-w-0 flex flex-1 items-center gap-x-0.5">
@@ -219,20 +220,20 @@ onBeforeUnmount(() => {
         </view>
         <!-- #endif -->
         <view
-          class="box-border flex items-center justify-center gap-x-0.5 rounded-full bg-gray-900 px-2.5 py-1 text-white"
+          class="box-border flex cursor-pointer items-center justify-center gap-x-0.5 rounded-full bg-gray-900 px-2.5 py-1 text-white"
           @click="handleTogglePlay"
         >
           <wd-icon :name="isPlaying ? 'pause' : 'play-arrow-fill'" size="28rpx" />
           <text class="text-xs text-white">{{ isPlaying ? '暂停' : '播放' }}</text>
         </view>
         <view
-          class="box-border flex items-center justify-center rounded-full bg-gray-900 px-2.5 py-1 text-white"
+          class="box-border flex cursor-pointer items-center justify-center rounded-full bg-gray-900 px-2.5 py-1 text-white"
           @click="handleReplay"
         >
           <wd-icon name="refresh" size="28rpx" />
         </view>
         <view
-          class="box-border flex items-center justify-center gap-x-0.5 rounded-full bg-gray-900 px-2.5 py-1 text-white"
+          class="box-border flex cursor-pointer items-center justify-center gap-x-0.5 rounded-full bg-gray-900 px-2.5 py-1 text-white"
           @click="handleToggleShowTurns"
         >
           <wd-icon :name="showTurns ? 'up' : 'down'" size="28rpx" />

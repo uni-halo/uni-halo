@@ -25,6 +25,7 @@ const { safeBottomStyle } = useSafeArea()
 
 // 折叠状态
 const isCollapsed = ref(props.defaultCollapsed)
+const collapsedStatus = ref(props.defaultCollapsed)
 const isShowCollapsedButton = ref(true)
 // 用户点击过才使用动画，动画结束后复位避免页面切换时动画重播
 const hasToggled = ref(false)
@@ -53,9 +54,13 @@ function toggleCollapsed() {
   }
   hasToggled.value = true
   isCollapsed.value = !isCollapsed.value
+  if (!isCollapsed.value) {
+    collapsedStatus.value = isCollapsed.value
+  }
   animationTimer = setTimeout(() => {
     hasToggled.value = false
     animationTimer = null
+    collapsedStatus.value = isCollapsed.value
   }, 300)
 }
 
@@ -84,9 +89,8 @@ watch(() => props.visibleCount, (val) => {
 <template>
   <view class="fixed bottom-18 right-3 z-50 box-border flex flex-col gap-y-3 pb-safe" :style="[safeBottomStyle]">
     <view
-      class="uhc-actions box-border flex flex-col gap-y-3" :class="[
-        toggleActionsClass,
-      ]"
+      class="uhc-actions box-border flex flex-col gap-y-3"
+      :class="[toggleActionsClass, collapsedStatus ? '!hidden' : 'flex']"
     >
       <slot />
     </view>

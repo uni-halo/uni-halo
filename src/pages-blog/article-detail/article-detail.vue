@@ -454,24 +454,24 @@ onShareTimeline(() => {
                 :src="checkAvatarUrl(result.owner.avatar)"
                 :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
                 :shape="avatarShape"
-                custom-class="uh-global-card-glass !h-6 !w-6 !text-[12px] !leading-none !text-gray-900"
+                custom-class="uh-global-card-glass !h-6 !w-6 !text-xs !leading-none !text-gray-900"
                 :class="avatarClass"
                 mode="aspectFill"
               />
               <image
                 v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-                class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-8 w-8"
+                class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 !block"
                 mode="aspectFit"
               />
             </view>
-            <text class="text-sm text-gray-600">{{ result?.owner?.displayName }}</text>
+            <text class="text-sm text-gray-900">{{ result?.owner?.displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-              class="h-4 w-4 shrink-0" mode="aspectFit"
+              class="h-4 w-4 shrink-0 !block" mode="aspectFit"
             />
             <text
               v-if="authorSlots.title.visible"
-              class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
+              class="box-border shrink-0 truncate rounded-full px-2 py-[1px] text-[10px]"
               :style="authorSlots.title.style"
             >
               {{ authorSlots.title.text }}
@@ -535,7 +535,7 @@ onShareTimeline(() => {
           <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
 
           <!-- 播客听读 -->
-          <uh-podcast-player v-if="podcastVisible" :post-name="result?.metadata?.name" @on-visible="handlePodcastVisible" />
+          <uh-article-podcast-player v-if="podcastVisible" :post-name="result?.metadata?.name" @on-visible="handlePodcastVisible" />
 
           <!-- 内容 -->
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">

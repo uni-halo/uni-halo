@@ -88,9 +88,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <view class="uh-audio-player box-border flex w-full items-center gap-4 rounded-xl px-6 py-4" style="background-color: #f6f7f8;">
+  <view class="uh-audio-player box-border w-full flex items-center gap-4 rounded-xl px-6 py-4" style="background-color: #f6f7f8;">
     <!-- 播放/暂停按钮 -->
-    <view class="play-btn flex h-[72rpx] w-[72rpx] shrink-0 items-center justify-center rounded-full" style="background-color: #03a9f4;" @click="handleTogglePlay">
+    <view class="play-btn h-[72rpx] w-[72rpx] flex shrink-0 items-center justify-center rounded-full" style="background-color: #03a9f4;" @click="handleTogglePlay">
       <view v-if="!isPlaying" class="play-icon ml-1 border-y-[16rpx] border-l-[24rpx] border-y-transparent border-l-white" />
       <view v-else class="pause-icon flex gap-2">
         <view class="h-[28rpx] w-[8rpx] rounded-sm bg-white" />
@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
     </view>
 
     <!-- 音频信息 + 进度条 -->
-    <view class="info flex min-w-0 flex-1 flex-col gap-2">
+    <view class="info min-w-0 flex flex-1 flex-col gap-2">
       <view class="audio-name overflow-hidden text-ellipsis whitespace-nowrap text-[26rpx] text-[#333]">
         {{ name || '音频' }}
       </view>

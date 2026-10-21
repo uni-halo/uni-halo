@@ -17,6 +17,8 @@ import { NeedPluginIds, usePluginAvailable } from '@/hooks/usePluginAvailable'
 import { useLoginPopup } from '@/hooks/useLoginPopup'
 import { useWornSlots } from '@/hooks/useWornSlots'
 import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
+import { useIdentityStore } from '@/store/identity'
+import { nameStyleCssOf } from '@/utils/wornDecorations'
 import { checkAvatarUrl, checkThumbnailUrl } from '@/utils/url'
 import { formatTime } from '@/utils/formatTime'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
@@ -85,6 +87,12 @@ function handleToAuthorCard() {
 }
 
 const board = ref<IGuessBoard | null>(null)
+const identityStore = useIdentityStore()
+
+/** 猜中榜用户昵称渐变样式(identity 缓存,无则空串) */
+function boardNameStyle(username: string) {
+  return nameStyleCssOf(identityStore.identities[username]?.value)
+}
 
 /** 已揭晓 */
 const revealed = computed(() => board.value?.revealed === true)
@@ -135,6 +143,8 @@ async function loadBoard() {
       item._isMe = item.username === userInfo.value?.username
       return item
     })
+    // 批量预热猜中榜用户互动增强身份(门控未过内部静默跳过)
+    identityStore.ensureMany(board.value?.board?.map(item => item.username) || [])
   }
   catch (err: any) {
     console.error('获取画谜信息失败', err)
@@ -322,18 +332,18 @@ onPageScroll(({ scrollTop }) => {
                 />
                 <image
                   v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-                  class="pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx] uh-frame-center"
+                  class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[58rpx] w-[58rpx]"
                   mode="aspectFit"
                 />
               </view>
               <text class="text-3xs">{{ ownerText }}</text>
               <image
                 v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-                class="h-3 w-3 shrink-0" mode="aspectFit"
+                class="h-4 w-4 shrink-0 !block" mode="aspectFit"
               />
               <text
                 v-if="authorSlots.title.visible"
-                class="box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-xs"
+                class="box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
                 :style="authorSlots.title.style"
               >
                 {{ authorSlots.title.text }}
@@ -423,24 +433,49 @@ onPageScroll(({ scrollTop }) => {
 
           <!-- 猜中榜 -->
           <template v-if="board && board?.board?.length !== 0">
-            <uh-section-title>
-              画谜榜单
-            </uh-section-title>
+            <uh-section-title> 画谜榜单 </uh-section-title>
             <view class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none">
               <view class="w-full flex flex-wrap gap-x-3 gap-y-2">
                 <view
                   v-for="item in board.board" :key="item.username"
-                  class="w-full flex items-center justify-between gap-x-2"
+                  class="flex w-full items-center justify-between gap-x-2"
                 >
-                  <view class="flex shrink-0 items-center gap-x-1.5">
-                    <wd-avatar
-                      :src="item.avatar" :text="(item.displayName || item.username).charAt(0)" shape="round"
-                      size="52rpx" custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
-                    />
-                    <text class="text-3xs" :class="[item._isMe ? 'text-primary' : 'text-gray-600']">
+                  <view
+                    class="flex min-w-0 flex-1 shrink-0 items-center gap-x-1.5"
+                    @click="openUserProfilePopup({ username: item.username, nickname: item.displayName || item.username, avatar: item.avatar })"
+                  >
+                    <view class="relative shrink-0">
+                      <wd-avatar
+                        :src="item.avatar" :text="(item.displayName || item.username).charAt(0)" shape="round"
+                        size="52rpx" custom-class="uh-global-card-glass !shadow-none !border !block" mode="aspectFill"
+                      />
+                      <image
+                        v-if="identityStore.slotsOf(item.username).avatarFrame.visible" :src="identityStore.slotsOf(item.username).avatarFrame.url"
+                        class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-12 w-12 !block"
+                        mode="aspectFit"
+                      />
+                    </view>
+                    <text
+                      class="truncate text-3xs font-bold"
+                      :class="[item._isMe ? 'text-primary' : 'text-gray-600']"
+                      :style="[boardNameStyle(item.username)]"
+                    >
                       {{ item.displayName || item.username }}
                     </text>
-                    <text v-if="item._isMe" class="text-3xs text-primary">(我)</text>
+                    <image
+                      v-if="identityStore.slotsOf(item.username).primaryBadge.visible" :src="identityStore.slotsOf(item.username).primaryBadge.url"
+                      class="h-4 w-4 shrink-0 !block" mode="aspectFit"
+                    />
+                    <text
+                      v-if="identityStore.slotsOf(item.username).title.visible"
+                      class="box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
+                      :style="identityStore.slotsOf(item.username).title.style"
+                    >
+                      {{ identityStore.slotsOf(item.username).title.text }}
+                    </text>
+                    <text v-if="item._isMe" class="shrink-0 text-3xs text-primary">
+                      (我)
+                    </text>
                   </view>
                   <text v-if="item.solvedAt" class="shrink-0 text-3xs text-gray-500">
                     {{ formatTime({
@@ -467,8 +502,8 @@ onPageScroll(({ scrollTop }) => {
     </template>
   </view>
 </template>
+
 <style scoped>
-/* -translate-* 工具类在端内不支持,头像框居中经此类实现 */
 .uh-frame-center {
   transform: translate(-50%, -50%);
 }

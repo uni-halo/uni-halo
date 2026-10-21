@@ -262,11 +262,11 @@ function handleLogout() {
                 <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
                 <image
                   v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url"
-                  class="h-4 w-4 shrink-0" mode="aspectFit"
+                  class="h-4 w-4 shrink-0 !block" mode="aspectFit"
                 />
               </view>
               <text
-                v-if="wornSlots.title.visible" class="mt-1 box-border max-w-fit shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
+                v-if="wornSlots.title.visible" class="mt-1 box-border max-w-fit shrink-0 truncate rounded-full px-2 py-[1px] text-[10px]"
                 :style="wornSlots.title.style"
               >
                 {{ wornSlots.title.text }}

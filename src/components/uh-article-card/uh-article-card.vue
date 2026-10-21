@@ -235,7 +235,7 @@ function handleToUserProfile() {
         <template v-if="article.categories && article.categories.length !== 0">
           <text
             v-for="cate in article.categories.slice(0, 2)" :key="cate.metadata.name"
-            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
+            class="box-border rounded-full bg-gray-100 px-2 py-[1px] text-xs text-gray-600"
           >
             {{ cate.spec.displayName }}
           </text>
@@ -243,7 +243,7 @@ function handleToUserProfile() {
         <template v-if="article.tags && article.tags.length !== 0">
           <text
             v-for="tag in article.tags.slice(0, 2)" :key="tag.metadata.name"
-            class="uh-global-card-glass uh-shadow-xs box-border border rounded-xl px-2 py-0.5 text-xs !bg-secondary"
+            class="box-border rounded-full bg-gray-100 px-2 py-[1px] text-xs text-gray-600"
           >
             # {{ tag.spec.displayName }}
           </text>
@@ -268,9 +268,9 @@ function handleToUserProfile() {
           </view>
           <template v-if="isSocialCard">
             <view :class="cardLayout.infoCol">
-              <view class="flex items-center gap-x-1">
+              <view class="flex items-center justify-start gap-x-0.5">
                 <text
-                  class="block min-w-0 flex-1 truncate"
+                  class="block shrink-0 truncate"
                   :class="cardLayout.nickname"
                 >
                   {{ article.owner.displayName }}
@@ -281,7 +281,7 @@ function handleToUserProfile() {
                 />
                 <text
                   v-if="authorSlots.title.visible"
-                  class="mb-1 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
+                  class="mb-1 ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-[1px] text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}
@@ -298,10 +298,10 @@ function handleToUserProfile() {
             </view>
           </template>
           <template v-else>
-            <text class="min-w-0 flex-1 truncate">{{ article.owner.displayName }}</text>
+            <text class="shrink-0 truncate">{{ article.owner.displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-              class="h-3 w-3 shrink-0" mode="aspectFit"
+              class="h-4 w-4 shrink-0 !block" mode="aspectFit"
             />
           </template>
         </view>
