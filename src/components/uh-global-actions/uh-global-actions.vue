@@ -75,10 +75,12 @@ watch(() => props.visibleCount, (val) => {
     if (val >= props.whenCountShowCollapsedButton) {
       isShowCollapsedButton.value = true
       isCollapsed.value = true
+      collapsedStatus.value = true
     }
     else {
       isShowCollapsedButton.value = false
       isCollapsed.value = false
+      collapsedStatus.value = false
     }
   })
 }, {
