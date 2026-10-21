@@ -22,7 +22,18 @@ export interface IIdentityMark {
 /**
  * 装饰类型
  */
-export type DecorationType = 'badge' | 'avatar_frame' | 'title' | 'name_style' | 'card_background' | string
+export type DecorationType = 'badge' | 'avatar_frame' | 'title' | 'name_style' | 'card_background'
+
+/**
+ * 装饰类型显示名
+ */
+export const decorationTypes: Record<DecorationType, string> = {
+  badge: '勋章',
+  avatar_frame: '头像框',
+  title: '称号',
+  name_style: '昵称样式',
+  card_background: '名片背景',
+}
 
 /**
  * 装饰基础信息
@@ -197,7 +208,7 @@ export interface IBatchIdentitiesRes {
  * 用户获得的全部有效装饰,每项自包含完整信息,无需再按 id 查询;
  * 用户关闭「公开装扮墙」时返回空数组,用户不存在或被禁用时 404
  */
-export interface IDecorationWallItem {
+export interface IDecorationWallItem extends ITitleDecoration {
   /** 装饰资产内部名(唯一标识,可作列表 key) */
   assetName?: string
   /** 装饰类型(同 IDecorationItem.type) */

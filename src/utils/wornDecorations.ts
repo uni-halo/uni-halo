@@ -11,7 +11,7 @@
  * - 称号：佩戴 且 display.userCard.showTitle 为真值；样式由颜色字段组合 CSS
  * - 名片背景：素材 URL 合法即可（不受 userCard 策略裁剪，跟随试点行为）
  */
-import type { IPublicIdentity, ITitleDecoration } from '@/api/types/halo-plugin-third/interaction-plus'
+import type { IDecorationItem, IIdentityMark, IPublicIdentity, ITitleDecoration } from '@/api/types/halo-plugin-third/interaction-plus'
 
 /**
  * 素材地址校验（装饰素材由互动增强插件下发，均为绝对地址）：
@@ -26,6 +26,8 @@ function normalizeAssetUrl(url?: string): string {
 export interface IWornImageSlot {
   visible: boolean
   url: string
+  /** 原始装饰数据，包含所有字段 */
+  data: IDecorationItem
 }
 
 /** 称号槽位 */
@@ -35,6 +37,8 @@ export interface IWornTitleSlot {
   text: string
   /** 称号样式 CSS（背景/渐变 + 文字色），直接绑定 :style */
   style: string
+  /** 原始装饰数据，包含所有字段 */
+  data: IDecorationItem
 }
 
 /** 单用户全部展示槽位（无数据时各槽位 visible=false，调用方零防御） */
@@ -46,11 +50,22 @@ export interface IWornSlots {
 }
 
 /** 称号样式 CSS（背景支持 135° 渐变第二色；文字色可空继承正文） */
-function titleStyleCss(title: ITitleDecoration): string {
+export function titleStyleCss(title: ITitleDecoration): string {
   const bg = title.titleBackgroundSecondary
     ? `linear-gradient(135deg,${title.titleBackground},${title.titleBackgroundSecondary})`
     : title.titleBackground
   return `${bg ? `background-image:${bg};` : ''}${title.titleColor ? `color:${title.titleColor}` : ''}`
+}
+
+/** 昵称样式 CSS 文字单色或者渐变 */
+export function nicknameStyleCss(title: ITitleDecoration): string {
+  // 待实现
+  return ``
+}
+
+/** 身份标识样式 CSS 边框加文字颜色 */
+export function identityMarksStyleCss(mark: IIdentityMark): string {
+  return `border-color:${mark.color};color:${mark.color};`
 }
 
 /**
@@ -69,19 +84,23 @@ export function buildWornSlots(identity: IPublicIdentity | null | undefined): IW
     avatarFrame: {
       visible: true,
       url: frameUrl,
+      data: worn.avatarFrame,
     },
     primaryBadge: {
       visible: !!badgeUrl && !!userCard.showPrimaryBadge,
       url: badgeUrl,
+      data: worn.primaryBadge,
     },
     title: {
       visible: !!title && !!userCard.showTitle,
       text: title?.titleText || '',
       style: title ? titleStyleCss(title) : '',
+      data: worn.title,
     },
     cardBackground: {
       visible: !!cardBgUrl,
       url: cardBgUrl,
+      data: worn.cardBackground,
     },
   }
 }

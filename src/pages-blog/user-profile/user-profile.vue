@@ -13,12 +13,13 @@ import { buildMomentFavoriteItem } from '@/utils/favorite'
 import { useUpvote } from '@/hooks/useUpvote'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { useCardBgSrc } from '@/hooks/useWornSlots'
-import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
+import { buildWornSlots, identityMarksStyleCss, nameStyleCssOf, nicknameStyleCss, titleStyleCss } from '@/utils/wornDecorations'
 import { checkAvatarUrl, checkImageUrl, checkThumbnailUrl } from '@/utils/url'
 import { imagePreview } from '@/utils/image'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
 import { sleep } from '@/utils/common'
+import { decorationTypes } from '@/api/types/halo-plugin-third/interaction-plus'
 import type { IMoment, IPost, IUcListedPost } from '@/api/types/halo'
 import type { IDecorationWallItem, IIdentityMark } from '@/api/types/halo-plugin-third/interaction-plus'
 
@@ -70,7 +71,7 @@ const markChips = computed(() => {
     .map(mark => ({
       displayName: mark.displayName,
       icon: /\/|data:/.test(mark.icon || '') ? mark.icon : '',
-      style: mark.color ? `background:${mark.color};` : 'background:rgb(0 0 0 / 0.35);',
+      style: identityMarksStyleCss(mark),
     }))
 })
 
@@ -128,7 +129,7 @@ const wallStyled = computed(() => decorationWall.value.map((raw) => {
     style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
     bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
     badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
-    textStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
+    textStyle: item.type === 'name_style' ? nicknameStyleCss(item) : titleStyleCss(item),
     isTextDecoration: item.type === 'title' || item.type === 'name_style',
   }
 }))
@@ -454,7 +455,7 @@ onReachBottom(() => {
             <template v-for="(mark, i) in markChips" :key="i">
               <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
               <text
-                v-else class="box-border max-w-fit truncate rounded-full px-1.5 py-0.5 text-xs text-white"
+                v-else class="box-border max-w-fit truncate border rounded-full border-solid px-1.5 py-0.5 text-xs text-white"
                 :style="mark.style"
               >
                 {{ mark.displayName }}
@@ -498,6 +499,7 @@ onReachBottom(() => {
                   :src="wornSlots.primaryBadge.url" class="h-5 w-5" mode="aspectFit"
                   @click="imagePreview(wornSlots.primaryBadge.url)"
                 />
+                <text class="text-xs text-gray-900" :style="[]">{{ wornSlots.primaryBadge.data?.displayName }}</text>
               </view>
             </view>
             <view v-if="wornSlots.title.visible" class="flex items-start gap-x-4">
@@ -507,7 +509,7 @@ onReachBottom(() => {
               <view class="min-w-0 flex-1">
                 <text
                   class="box-border max-w-fit truncate rounded-full px-2 py-0.5 text-xs"
-                  :style="wornSlots.title.style"
+                  :style="[wornSlots.title.style]"
                 >
                   {{ wornSlots.title.text }}
                 </text>
@@ -517,11 +519,11 @@ onReachBottom(() => {
               <text class="shrink-0 text-xs text-gray-400 leading-5">
                 身份标牌
               </text>
-              <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
+              <view class="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
                 <template v-for="(mark, i) in markChips" :key="i">
                   <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
                   <text
-                    v-else class="box-border max-w-fit truncate rounded-full px-1.5 py-0.5 text-xs text-white"
+                    v-else class="box-border max-w-fit truncate border rounded-full border-solid px-1.5 py-0.5 text-xs text-white"
                     :style="mark.style"
                   >
                     {{ mark.displayName }}
@@ -576,9 +578,9 @@ onReachBottom(() => {
               @click="handlePreviewAsset(d.item)"
             >
               <view class="flex flex-col items-center justify-center gap-y-1">
-                <view class="relative box-border w-full overflow-hidden border rounded-lg" :style="d.style">
+                <view class="relative box-border w-full overflow-hidden border border-gray-100 rounded-lg border-solid" :style="[d.style]">
                   <view
-                    class="box-border h-18 w-full flex items-center justify-center border border-gray-100 rounded-lg border-solid p-2"
+                    class="box-border h-18 w-full flex items-center justify-center p-2"
                     :style="[d.bgStyle]"
                   >
                     <image
@@ -586,19 +588,25 @@ onReachBottom(() => {
                       mode="aspectFit"
                     />
                     <text
-                      v-else class="w-full truncate px-1 text-center font-black"
-                      :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'" :style="d.textStyle"
+                      v-else class="w-full truncate rounded-lg px-1 text-center font-black"
+                      :class="d.isTextDecoration ? 'text-xs' : 'text-2xs'" :style="[d.textStyle]"
                     >
                       {{ d.item.displayName }}
                     </text>
                   </view>
-                  <view
+                  <text
                     v-if="d.item.rarityDisplayName"
-                    class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-xs text-white"
-                    :style="d.badgeStyle"
+                    class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-[10px] text-white"
+                    :style="[d.badgeStyle]"
                   >
-                    {{ d.item.rarityDisplayName }}
-                  </view>
+                    {{ decorationTypes[d.item.type] || '-' }}·{{ d.item.rarityDisplayName }}
+                  </text>
+                  <text
+                    v-else
+                    class="absolute right-0 top-0 z-10 box-border rounded-lb-md bg-primary px-1 text-[10px] text-white"
+                  >
+                    {{ decorationTypes[d.item.type] || '-' }}
+                  </text>
                 </view>
                 <!-- 名称(框外下方,不随稀有度着色) -->
                 <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>

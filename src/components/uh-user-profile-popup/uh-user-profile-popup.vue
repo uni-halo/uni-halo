@@ -14,11 +14,12 @@ import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { useAppConfigStore } from '@/store/appConfig'
-import { buildWornSlots, nameStyleCssOf } from '@/utils/wornDecorations'
+import { buildWornSlots, identityMarksStyleCss, nameStyleCssOf, titleStyleCss } from '@/utils/wornDecorations'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
 import { imagePreview } from '@/utils/image'
+import { decorationTypes } from '@/api/types/halo-plugin-third/interaction-plus'
 import type { IDecorationWallItem, IIdentityMark } from '@/api/types/halo-plugin-third/interaction-plus'
 
 const { userProfilePopupVisible, payload, closeUserProfilePopup } = useUserProfilePopup()
@@ -73,7 +74,7 @@ const markChips = computed(() => {
     .map(mark => ({
       displayName: mark.displayName,
       icon: /\/|data:/.test(mark.icon || '') ? mark.icon : '',
-      style: mark.color ? `background:${mark.color};` : 'background:rgb(0 0 0 / 0.35);',
+      style: identityMarksStyleCss(mark),
     }))
 })
 
@@ -116,7 +117,7 @@ const wallStyled = computed(() => decorationWall.value.map((raw) => {
     style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
     bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
     badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
-    textStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
+    textStyle: titleStyleCss(item),
     isTextDecoration,
   }
 }))
@@ -210,8 +211,8 @@ function handleCopyWebsite() {
             <template v-for="(mark, i) in markChips" :key="i">
               <image v-if="mark.icon" :src="mark.icon" class="h-4 w-4" mode="aspectFit" />
               <text
-                v-else class="box-border truncate rounded-full px-1.5 py-0.5 text-xs text-white"
-                :style="mark.style"
+                v-else class="box-border truncate border rounded-full border-solid px-1.5 py-0.5 text-xs text-white"
+                :style="[mark.style]"
               >
                 {{ mark.displayName }}
               </text>
@@ -220,7 +221,6 @@ function handleCopyWebsite() {
           <text v-if="!isGuest" class="line-clamp-2 text-center text-xs text-gray-500">
             {{ headerUser.bio }}
           </text>
-          <!-- 统计(数字加粗 + label 小字;互动统计依赖互动增强 identity,审核模式下不展示) -->
           <view v-if="showInteractStats" class="w-full flex items-center pt-1 text-center">
             <view class="flex-1">
               <text class="block text-sm text-gray-900 font-bold">{{ joinedText || '-' }}</text>
@@ -235,7 +235,6 @@ function handleCopyWebsite() {
               <text class="text-xs text-gray-400">评论</text>
             </view>
           </view>
-          <!-- 无互动统计(插件未启用/门控未过/审核模式):仅加入时间单格居中 -->
           <view v-else-if="joinedText" class="w-full pt-1 text-center">
             <text class="block text-xs text-gray-900 font-bold">{{ joinedText }}</text>
             <text class="text-3xs text-gray-400">加入时间</text>
@@ -243,7 +242,7 @@ function handleCopyWebsite() {
         </view>
 
         <!-- 装扮墙(用户公开的全部装饰,稀有度着色,点击放大;关闭公开时接口返回空) -->
-        <view v-if="decorationWall.length" class="box-border flex flex-col gap-y-2 border-t border-gray-100 px-3 py-3">
+        <view v-if="decorationWall.length" class="box-border flex flex-col gap-y-2 border-t border-gray-100 border-t-solid px-3 py-3">
           <view class="flex items-center justify-between">
             <view class="text-3xs text-gray-900 font-bold">
               装扮展示
@@ -259,9 +258,9 @@ function handleCopyWebsite() {
                 class="inline-block w-24 shrink-0 cursor-pointer" @click="handlePreviewAsset(d.item)"
               >
                 <view class="flex flex-col items-center justify-center gap-y-1.5">
-                  <view class="relative box-border w-full overflow-hidden border rounded-lg" :style="[d.style]">
+                  <view class="relative box-border w-full overflow-hidden border border-gray-100 rounded-lg rounded-lg border-solid" :style="[d.style]">
                     <view
-                      class="box-border h-18 w-full flex items-center justify-center border border-gray-100 rounded-lg border-solid p-2"
+                      class="box-border h-18 w-full flex items-center justify-center p-2"
                       :style="d.bgStyle"
                     >
                       <image
@@ -269,19 +268,26 @@ function handleCopyWebsite() {
                         mode="aspectFit"
                       />
                       <text
-                        v-else class="w-full truncate px-1 text-center font-black"
+                        v-else class="w-full truncate rounded-full px-1 text-center font-black"
                         :class="d.isTextDecoration ? 'text-xs' : 'leading-5 text-3xs'" :style="[d.textStyle]"
                       >
                         {{ d.item.displayName }}
                       </text>
                     </view>
-                    <view
+                    <text
                       v-if="d.item.rarityDisplayName"
-                      class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-xs text-white"
+                      class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-[10px] text-white"
                       :style="[d.badgeStyle]"
                     >
-                      {{ d.item.rarityDisplayName }}
-                    </view>
+                      {{ decorationTypes[d.item.type] || '-' }}·{{ d.item.rarityDisplayName }}
+                    </text>
+                    <text
+                      v-else
+                      class="absolute right-0 top-0 z-10 box-border rounded-lb-md bg-primary px-1 text-[10px] text-white"
+                      :style="[d.badgeStyle]"
+                    >
+                      {{ decorationTypes[d.item.type] || '-' }}
+                    </text>
                   </view>
                   <!-- 名称(框外下方,不随稀有度着色) -->
                   <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>
