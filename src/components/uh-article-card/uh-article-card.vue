@@ -292,7 +292,7 @@ function handleToUserProfile() {
                 />
                 <text
                   v-if="authorSlots.title.visible"
-                  class="mb-1 ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-[1px] text-[10px]"
+                  class="mb-1 ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}

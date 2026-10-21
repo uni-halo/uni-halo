@@ -413,7 +413,7 @@ onReachBottom(() => {
       :need-placeholder="false"
     />
 
-    <view class="relative mb-8 box-border h-52 w-full">
+    <view class="relative mb-8 box-border h-66 w-full">
       <image
         v-if="profileBgUrl" class="absolute left-0 top-0 h-full w-full bg-cover bg-center !block"
         :src="profileBgUrl" mode="aspectFill" @error="onCardBgError()"
@@ -435,7 +435,7 @@ onReachBottom(() => {
         <view class="flex flex-1 flex-col gap-y-1.5">
           <view class="flex items-center gap-x-1">
             <text
-              class="text-md text-white font-black text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)] drop-shadow"
+              class="text-md text-white font-bold text-shadow-[0_2rpx_8rpx_rgba(0,0,0,0.4)] drop-shadow"
               :style="[profileNicknameStyle]"
             >
               {{ headerUser.nickname || '匿名用户' }}
@@ -481,17 +481,17 @@ onReachBottom(() => {
           </view>
           <view class="w-full flex flex-col gap-y-2 text-sm text-gray-900">
             <view class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 用户昵称
               </text>
               <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1 leading-5">
-                <text class="truncate text-xs text-gray-900" :style="[profileNicknameStyle]">
+                <text class="truncate text-3xs text-gray-900" :style="[profileNicknameStyle]">
                   {{ headerUser.nickname || headerUser.username }}
                 </text>
               </view>
             </view>
             <view v-if="wornSlots.primaryBadge.visible" class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 佩戴勋章
               </text>
               <view class="min-w-0 flex flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
@@ -499,11 +499,11 @@ onReachBottom(() => {
                   :src="wornSlots.primaryBadge.url" class="h-5 w-5" mode="aspectFit"
                   @click="imagePreview(wornSlots.primaryBadge.url)"
                 />
-                <text class="text-xs text-gray-900" :style="[]">{{ wornSlots.primaryBadge.data?.displayName }}</text>
+                <text class="text-3xs text-gray-900" :style="[]">{{ wornSlots.primaryBadge.data?.displayName }}</text>
               </view>
             </view>
             <view v-if="wornSlots.title.visible" class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 佩戴称号
               </text>
               <view class="min-w-0 flex-1">
@@ -516,7 +516,7 @@ onReachBottom(() => {
               </view>
             </view>
             <view v-if="markChips.length" class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 身份标牌
               </text>
               <view class="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
@@ -532,31 +532,31 @@ onReachBottom(() => {
               </view>
             </view>
             <view v-if="joinedText" class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 加入时间
               </text>
               <view class="min-w-0 flex-1">
-                <text class="text-xs text-gray-900 leading-5">
+                <text class="text-3xs text-gray-900 leading-5">
                   {{ joinedText }}
                 </text>
               </view>
             </view>
             <view v-if="showStatsRow" class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 互动数据
               </text>
               <view class="min-w-0 flex-1">
-                <text class="text-xs text-gray-900 leading-5">
+                <text class="text-3xs text-gray-900 leading-5">
                   {{ statsText }}
                 </text>
               </view>
             </view>
             <view class="flex items-start gap-x-4">
-              <text class="shrink-0 text-xs text-gray-400 leading-5">
+              <text class="shrink-0 text-3xs text-gray-400 leading-5">
                 个人简介
               </text>
               <view class="min-w-0 flex-1">
-                <text class="text-xs text-gray-500 leading-5">
+                <text class="text-3xs text-gray-500 leading-5">
                   {{ headerUser.bio }}
                 </text>
               </view>

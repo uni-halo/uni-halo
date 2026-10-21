@@ -533,11 +533,11 @@ onShareTimeline(() => {
 
         <!-- 内容区域 -->
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
-          <!-- 摘要 -->
-          <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
-
           <!-- 播客听读 -->
           <uh-article-podcast-player v-if="podcastVisible" :post-name="result?.metadata?.name" @on-visible="handlePodcastVisible" />
+
+          <!-- 摘要 -->
+          <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
 
           <!-- 内容 -->
           <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">

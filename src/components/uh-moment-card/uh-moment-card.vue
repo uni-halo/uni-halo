@@ -135,7 +135,7 @@ function handlePreview(index: number, list: { url: string }[]) {
             />
             <text
               v-if="authorSlots.title.visible"
-              class="ml-0.5 box-border shrink-0 truncate rounded-full px-1.5 py-[1px] text-[10px]"
+              class="ml-0.5 box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-[10px]"
               :style="authorSlots.title.style"
             >
               {{ authorSlots.title.text }}
