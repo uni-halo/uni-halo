@@ -154,7 +154,7 @@ function handleToLogin() {
             />
           </view>
           <view class="flex items-center gap-x-1">
-            <text class="text-3xs text-gray-600">{{ myRank.displayName }}</text>
+            <text class="text-3xs text-gray-600" :style="myRankSlots.nameStyle.style">{{ myRank.displayName }}</text>
             <image
               v-if="myRankSlots.primaryBadge.visible" :src="myRankSlots.primaryBadge.url"
               class="h-4 w-4 shrink-0 !block" mode="aspectFit"
@@ -199,7 +199,7 @@ function handleToLogin() {
                 />
               </view>
               <view class="min-w-0 flex flex-1 items-center gap-x-1">
-                <text class="min-w-0 truncate text-3xs text-gray-900 font-semibold">{{ textOf(item) }}</text>
+                <text class="min-w-0 truncate text-3xs text-gray-900 font-semibold" :style="slotsOf(item).nameStyle.style">{{ textOf(item) }}</text>
                 <image
                   v-if="slotsOf(item).primaryBadge.visible" :src="slotsOf(item).primaryBadge.url"
                   class="h-4 w-4 shrink-0 !block" mode="aspectFit"

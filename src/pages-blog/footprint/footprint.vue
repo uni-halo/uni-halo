@@ -233,43 +233,41 @@ onLoad(async () => {
         <footprint-map
           v-if="mapVisible" ref="mapRef" :footprints="footprints" @marker-tap="handleMarkerTap"
         />
-        <!-- 底部悬浮操作栏(参考文章详情悬浮样式)：列表/放大/缩小/刷新/还原 -->
-        <view class="footprint-bar fixed bottom-0 left-0 right-0 z-10 flex items-center justify-center pt-2 pb-safe">
-          <view class="uh-global-card-glass box-border flex items-center justify-center gap-2 border rounded-full p-1">
-            <view
-              class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
-              @click="openListSheet"
-            >
-              <wd-icon name="list" size="28rpx" class="text-gray-900" />
-              <text class="shrink-0 text-xs text-gray-900 font-semibold">列表</text>
-            </view>
-            <view
-              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-              @click="handleZoomIn"
-            >
-              <wd-icon name="zoom-in" size="36rpx" class="text-gray-900" />
-            </view>
-            <view
-              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-              @click="handleZoomOut"
-            >
-              <wd-icon name="zoom-out" size="36rpx" class="text-gray-900" />
-            </view>
-            <view
-              class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
-              @click="handleGetData"
-            >
-              <wd-icon name="sync" size="34rpx" class="text-gray-900" />
-            </view>
-            <view
-              class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
-              @click="handleResetView"
-            >
-              <wd-icon name="refresh" size="28rpx" class="text-gray-900" />
-              <text class="shrink-0 text-xs text-gray-900 font-semibold">还原</text>
-            </view>
+        <!-- 底部悬浮操作栏列表/放大/缩小/刷新/还原 -->
+        <uh-float-toolbar>
+          <view
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
+            @click="openListSheet"
+          >
+            <wd-icon name="list" size="28rpx" class="text-gray-900" />
+            <text class="shrink-0 text-xs text-gray-900 font-semibold">列表</text>
           </view>
-        </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleZoomIn"
+          >
+            <wd-icon name="zoom-in" size="36rpx" class="text-gray-900" />
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleZoomOut"
+          >
+            <wd-icon name="zoom-out" size="36rpx" class="text-gray-900" />
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 w-9 flex items-center justify-center border rounded-full shadow-none"
+            @click="handleGetData"
+          >
+            <wd-icon name="sync" size="34rpx" class="text-gray-900" />
+          </view>
+          <view
+            class="uh-global-card-glass box-border h-9 flex flex-1 items-center justify-center gap-x-1 border rounded-full px-5 shadow-none"
+            @click="handleResetView"
+          >
+            <wd-icon name="refresh" size="28rpx" class="text-gray-900" />
+            <text class="shrink-0 text-xs text-gray-900 font-semibold">还原</text>
+          </view>
+        </uh-float-toolbar>
       </view>
       <!-- 底部弹层 -->
       <footprint-sheet

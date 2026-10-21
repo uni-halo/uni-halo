@@ -283,6 +283,7 @@ function handleToUserProfile() {
                 <text
                   class="block shrink-0 truncate"
                   :class="cardLayout.nickname"
+                  :style="authorSlots.nameStyle.style"
                 >
                   {{ article.owner.displayName }}
                 </text>

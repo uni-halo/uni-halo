@@ -336,7 +336,7 @@ onPageScroll(({ scrollTop }) => {
                   mode="aspectFit"
                 />
               </view>
-              <text class="text-3xs">{{ ownerText }}</text>
+              <text class="text-3xs" :style="authorSlots.nameStyle.style">{{ ownerText }}</text>
               <image
                 v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
                 class="h-4 w-4 shrink-0 !block" mode="aspectFit"

@@ -91,7 +91,7 @@ const dateText = computed(() => {
             mode="aspectFit"
           />
         </view>
-        <text class="truncate text-3xs text-gray-400">{{ ownerText }}</text>
+        <text class="truncate text-3xs text-gray-400" :style="authorSlots.nameStyle.style">{{ ownerText }}</text>
         <image
           v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
           class="h-4 w-4 shrink-0 !block" mode="aspectFit"

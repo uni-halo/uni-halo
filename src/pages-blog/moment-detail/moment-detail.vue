@@ -331,7 +331,7 @@ onShareTimeline(() => ({
           </view>
           <view class="ml-3 flex flex-col">
             <view class="flex items-center gap-x-1">
-              <text class="text-md text-gray-600 font-medium">{{ moment.owner?.displayName || '' }}</text>
+              <text class="text-md text-gray-600 font-medium" :style="authorSlots.nameStyle.style">{{ moment.owner?.displayName || '' }}</text>
               <image
                 v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
                 class="h-4 w-4 shrink-0" mode="aspectFit"

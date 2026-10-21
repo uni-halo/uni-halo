@@ -259,7 +259,7 @@ function handleLogout() {
             </view>
             <view class="min-w-0 flex-1">
               <view class="flex items-center gap-x-1">
-                <text class="line-clamp-1 text-sm text-gray-900 font-semibold">{{ userInfo.nickname }}</text>
+                <text class="line-clamp-1 text-sm text-gray-900 font-semibold" :style="wornSlots.nameStyle.style">{{ userInfo.nickname }}</text>
                 <image
                   v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url"
                   class="h-4 w-4 shrink-0 !block" mode="aspectFit"

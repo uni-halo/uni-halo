@@ -128,7 +128,7 @@ function handlePreview(index: number, list: { url: string }[]) {
         </view>
         <view class="ml-2 flex flex-col gap-y-1">
           <view class="flex items-center gap-x-1">
-            <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
+            <text class="text-3xs text-gray-900 font-bold" :style="authorSlots.nameStyle.style">{{ displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
               class="h-4 w-4 shrink-0" mode="aspectFit"

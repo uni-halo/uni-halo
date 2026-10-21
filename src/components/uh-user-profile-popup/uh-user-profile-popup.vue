@@ -14,7 +14,7 @@ import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { useUserIdentity } from '@/hooks/useUserIdentity'
 import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { useAppConfigStore } from '@/store/appConfig'
-import { buildWornSlots, identityMarksStyleCss, nameStyleCssOf, titleStyleCss } from '@/utils/wornDecorations'
+import { buildWornSlots, identityMarksStyleCss, nameStyleCssOf, nicknameStyleCss, titleStyleCss } from '@/utils/wornDecorations'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { formatTime } from '@/utils/formatTime'
@@ -32,6 +32,8 @@ const { cardBgSrc, onCardBgError } = useCardBgSrc(() => slots.value.cardBackgrou
 
 /** 匿名（guest）模式：评论区未登录访客，仅有昵称/头像（可能空）/可选 website */
 const isGuest = computed(() => !!payload.value.anonymous)
+/** 是否显示home 按钮，如果不传值，默认显示 */
+const showHomeButton = computed(() => payload.value.homeButtonVisible !== false)
 /** 匿名标牌样式（仿称号槽位形态，灰色系） */
 const GUEST_CHIP_STYLE = 'background:rgb(0 0 0 / 0.07);color:rgb(0 0 0 / 0.55);'
 
@@ -117,7 +119,7 @@ const wallStyled = computed(() => decorationWall.value.map((raw) => {
     style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
     bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
     badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
-    textStyle: titleStyleCss(item),
+    textStyle: item.type === 'name_style' ? nicknameStyleCss(item) : titleStyleCss(item),
     isTextDecoration,
   }
 }))
@@ -306,7 +308,7 @@ function handleCopyWebsite() {
             关闭
           </uh-button>
           <uh-button
-            v-if="payload.homeButtonVisible && payload.username" class="flex-1"
+            v-if="showHomeButton && payload.username" class="flex-1"
             custom-class="uh-global-card-glass !border !rounded-xl !bg-primary !py-2.5 !text-3xs !text-gray-900"
             @click="handleToProfile"
           >

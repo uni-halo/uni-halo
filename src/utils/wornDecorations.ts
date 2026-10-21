@@ -11,7 +11,7 @@
  * - 称号：佩戴 且 display.userCard.showTitle 为真值；样式由颜色字段组合 CSS
  * - 名片背景：素材 URL 合法即可（不受 userCard 策略裁剪，跟随试点行为）
  */
-import type { IDecorationItem, IIdentityMark, IPublicIdentity, ITitleDecoration } from '@/api/types/halo-plugin-third/interaction-plus'
+import type { IDecorationItem, IIdentityMark, INameStyleDecoration, IPublicIdentity, ITitleDecoration } from '@/api/types/halo-plugin-third/interaction-plus'
 
 /**
  * 素材地址校验（装饰素材由互动增强插件下发，均为绝对地址）：
@@ -41,12 +41,20 @@ export interface IWornTitleSlot {
   data: IDecorationItem
 }
 
+/** 昵称样式槽位 */
+export interface IWornNameStyleSlot {
+  visible: boolean
+  /** 昵称样式 CSS（渐变文字挖空/纯色），直接绑定 :style */
+  style: string
+}
+
 /** 单用户全部展示槽位（无数据时各槽位 visible=false，调用方零防御） */
 export interface IWornSlots {
   avatarFrame: IWornImageSlot
   primaryBadge: IWornImageSlot
   title: IWornTitleSlot
   cardBackground: IWornImageSlot
+  nameStyle: IWornNameStyleSlot
 }
 
 /** 称号样式 CSS（背景支持 135° 渐变第二色；文字色可空继承正文） */
@@ -57,10 +65,19 @@ export function titleStyleCss(title: ITitleDecoration): string {
   return `${bg ? `background-image:${bg};` : ''}${title.titleColor ? `color:${title.titleColor}` : ''}`
 }
 
+/** 昵称样式配置 → CSS（gradient 渐变文字 / solid 纯色；无配置返回空串） */
+function nameStyleRuleCss(ns?: { mode?: string, colors?: string[], color?: string }): string {
+  if (!ns) { return '' }
+  if (ns.mode === 'gradient' && ns.colors?.length) {
+    return `background-image:linear-gradient(135deg,${ns.colors.join(',')});-webkit-background-clip:text;background-clip:text;color:transparent`
+  }
+  const solid = ns.color || (ns.mode === 'solid' ? ns.colors?.[0] : '')
+  return solid ? `color:${solid}` : ''
+}
+
 /** 昵称样式 CSS 文字单色或者渐变 */
-export function nicknameStyleCss(title: ITitleDecoration): string {
-  // 待实现
-  return ``
+export function nicknameStyleCss(item: ITitleDecoration | INameStyleDecoration): string {
+  return nameStyleRuleCss((item as INameStyleDecoration).nameStyle)
 }
 
 /** 身份标识样式 CSS 边框加文字颜色 */
@@ -74,6 +91,8 @@ export function identityMarksStyleCss(mark: IIdentityMark): string {
 export function buildWornSlots(identity: IPublicIdentity | null | undefined): IWornSlots {
   const worn = identity?.decorations || {}
   const userCard = (identity?.display?.userCard || {}) as Record<string, unknown>
+  const identityLine = identity?.display?.identityLine || {}
+  const nameStyleCss = nameStyleRuleCss(worn.nameStyle?.nameStyle)
 
   const frameUrl = normalizeAssetUrl(worn.avatarFrame?.url || '')
   const badgeUrl = normalizeAssetUrl(worn.primaryBadge?.url || '')
@@ -102,6 +121,10 @@ export function buildWornSlots(identity: IPublicIdentity | null | undefined): IW
       url: cardBgUrl,
       data: worn.cardBackground,
     },
+    nameStyle: {
+      visible: !!nameStyleCss && !!identityLine.showNameStyle,
+      style: identityLine.showNameStyle ? nameStyleCss : '',
+    },
   }
 }
 
@@ -109,10 +132,5 @@ export function buildWornSlots(identity: IPublicIdentity | null | undefined): IW
  * 昵称样式 CSS（nameStyle：gradient 渐变文字 / solid 纯色；无样式返回空串）
  */
 export function nameStyleCssOf(identity: IPublicIdentity | null | undefined): string {
-  const ns = identity?.decorations?.nameStyle?.nameStyle
-  if (!ns) { return '' }
-  if (ns.mode === 'gradient' && ns.colors?.length) {
-    return `background-image:linear-gradient(135deg,${ns.colors.join(',')});-webkit-background-clip:text;background-clip:text;color:transparent`
-  }
-  return ns.color ? `color:${ns.color}` : ''
+  return nameStyleRuleCss(identity?.decorations?.nameStyle?.nameStyle)
 }

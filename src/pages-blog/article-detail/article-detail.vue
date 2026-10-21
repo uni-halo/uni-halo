@@ -147,12 +147,6 @@ function extractPortfolioSlugs(html: string): string[] {
   return slugs
 }
 
-/** 移除内容中的 tag 链接 */
-function removeTagLinksCompletely(html: string): string {
-  const regex = /<a\b[^>]+class=(['"])[^'"]*\btag\b[^'"]*\1[^>]*>[\s\S]*?<\/a>/gi
-  return html.replace(regex, '')
-}
-
 /** 投票卡片事件：详情按钮跳转投票详情页，data 为整卡全量数据 */
 function handleVoteCardActions(payload: { action: string, data: Record<string, any> }) {
   if (payload.action !== 'detail')
@@ -351,22 +345,6 @@ function handleOnShowCommentDetail(data: { postName: string, comment: IComment }
   }
 }
 
-async function handleGetChildComments() {
-  commentDetail.value.loading = 'loading'
-  try {
-    const res = await getPostCommentReplyList(commentDetail.value.postName, {
-      page: 1,
-      size: 100,
-    })
-    commentDetail.value.loading = 'success'
-    commentDetail.value.list = res.data.items
-  }
-  catch (err) {
-    console.error(err)
-    commentDetail.value.loading = 'error'
-  }
-}
-
 /* ---------------- 跳转 ---------------- */
 function handleToCate(category: { metadata: { name: string }, spec: { displayName: string } }) {
   uni.navigateTo({
@@ -466,7 +444,7 @@ onShareTimeline(() => {
                 mode="aspectFit"
               />
             </view>
-            <text class="text-sm text-gray-900">{{ result?.owner?.displayName }}</text>
+            <text class="text-sm text-gray-900" :style="authorSlots.nameStyle.style">{{ result?.owner?.displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
               class="h-4 w-4 shrink-0 !block" mode="aspectFit"

@@ -112,7 +112,7 @@ function handleToDetailPage(draw: IDraw) {
                     mode="aspectFit"
                   />
                 </view>
-                <text class="ml-0.5 text-gray-600 font-bold">{{ ownerText }}</text>
+                <text class="ml-0.5 text-gray-600 font-bold" :style="authorSlots.nameStyle.style">{{ ownerText }}</text>
                 <image
                   v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
                   class="h-4 w-4 shrink-0 !block" mode="aspectFit"

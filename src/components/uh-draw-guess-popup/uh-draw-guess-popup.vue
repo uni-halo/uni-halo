@@ -259,7 +259,7 @@ function handleToDetailPage(draw: IDraw) {
                   mode="aspectFit"
                 />
               </view>
-              <text class="ml-0.5 text-gray-600 font-bold">{{ ownerText }}</text>
+              <text class="ml-0.5 text-gray-600 font-bold" :style="authorSlots.nameStyle.style">{{ ownerText }}</text>
               <image
                 v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
                 class="h-4 w-4 shrink-0 !block" mode="aspectFit"
@@ -283,10 +283,10 @@ function handleToDetailPage(draw: IDraw) {
             class="uh-global-card-glass box-border flex flex-col gap-y-2 rounded-xl p-3 !border !shadow-none"
           >
             <!-- 提示语与统计 -->
-            <view v-if="draw.spec?.puzzleHint" class="text-xs text-gray-500">
+            <view v-if="draw.spec?.puzzleHint" class="text-3xs text-gray-500">
               谜底提示：{{ draw.spec.puzzleHint }}
             </view>
-            <view class="flex items-center text-xs text-gray-500">
+            <view class="flex items-center text-3xs text-gray-500">
               <text>统计数据：{{ board?.guessCount ?? 0 }} 人参与</text>
               <text>丨</text>
               <text> {{ board?.solvedCount ?? 0 }} 人猜中</text>
@@ -296,23 +296,23 @@ function handleToDetailPage(draw: IDraw) {
             <template v-if="revealed">
               <view class="flex flex-col gap-y-1">
                 <view v-if="board?.answer">
-                  <text class="text-xs text-gray-500">画谜谜底：</text>
+                  <text class="text-3xs text-gray-500">画谜谜底：</text>
                   <text class="text-sm text-primary font-bold">{{ board?.answer }}</text>
                 </view>
-                <text class="text-xs text-gray-400">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
+                <text class="text-3xs text-gray-400">本次画谜谜底已揭晓，您猜中了吗，感谢参与！</text>
               </view>
             </template>
 
             <!-- 态 2：本人已猜中 -->
             <template v-else-if="solvedByMe">
               <view class="flex flex-col gap-y-1">
-                <text class="text-xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
+                <text class="text-3xs text-primary font-bold">恭喜您，您已猜中获得积分 +1 </text>
                 <template v-if="!revealed">
                   <view v-if="board?.answer">
-                    <text class="text-xs text-gray-500">画谜谜底：</text>
-                    <text class="text-xs text-gray-900 font-semibold">{{ board.answer }}</text>
+                    <text class="text-3xs text-gray-500">画谜谜底：</text>
+                    <text class="text-sm text-gray-900 font-semibold">{{ board.answer }}</text>
                   </view>
-                  <text class="text-xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
+                  <text class="text-3xs text-gray-400">温馨提醒：其他小伙伴还在猜，别剧透哦</text>
                 </template>
               </view>
             </template>
@@ -320,8 +320,8 @@ function handleToDetailPage(draw: IDraw) {
             <!-- 态 3：出题人本人 -->
             <template v-else-if="isMine">
               <view class="flex flex-col gap-y-1">
-                <text class="text-xs text-gray-500">这是你的画谜作品，你自己无法参与！</text>
-                <text class="text-xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
+                <text class="text-3xs text-gray-500">这是你的画谜作品，你自己无法参与！</text>
+                <text class="text-3xs text-gray-400">可在「我的绘画」中查看画谜记录或手动揭晓</text>
               </view>
             </template>
 
@@ -395,7 +395,7 @@ function handleToDetailPage(draw: IDraw) {
                         />
                       </view>
                       <text
-                        class="truncate text-xs font-bold" :class="[
+                        class="truncate text-3xs font-bold" :class="[
                           item._isMe ? 'text-primary' : 'text-gray-600',
                         ]" :style="[boardNameStyle(item.username)]"
                       >
