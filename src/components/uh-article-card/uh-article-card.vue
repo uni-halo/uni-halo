@@ -157,7 +157,7 @@ const publishTimeText = computed(() => {
 })
 
 /** 作者互动增强装饰槽位(插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
-const authorSlots = useWornSlots(() => props.article.owner?.metadata?.name || '')
+const authorSlots = useWornSlots(() => props.article.owner?.metadata?.name || props.article.owner?.name || '')
 const { openUserProfilePopup } = useUserProfilePopup()
 
 /**

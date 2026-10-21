@@ -31,6 +31,7 @@ export interface IOwner {
   avatar?: string
   displayName?: string
   bio?: string
+  name?: string
   metadata: { name: string }
 }
 

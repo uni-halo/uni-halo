@@ -212,7 +212,7 @@ function handleLogout() {
 
 <template>
   <uh-glass-popup
-    v-model="popupVisible" position="left" custom-class="rounded-rt-xl rounded-rb-xl !border"
+    v-model="popupVisible" position="left" custom-class="rounded-rt-xl rounded-rb-xl !border !border-l-none !border-t-none"
     :z-index="110" hide-when-close
   >
     <view class="relative box-border h-full w-[70vw] flex flex-col gap-y-4 overflow-hidden" :style="[containerStyle]">

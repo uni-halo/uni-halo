@@ -116,7 +116,7 @@ function handlePreview(index: number, list: { url: string }[]) {
             mode="aspectFit"
           />
         </view>
-        <view class="ml-2 flex flex-col gap-y-0.5">
+        <view class="ml-2 flex flex-col gap-y-1">
           <view class="flex items-center gap-x-1">
             <text class="text-3xs text-gray-900 font-bold">{{ displayName }}</text>
             <image
