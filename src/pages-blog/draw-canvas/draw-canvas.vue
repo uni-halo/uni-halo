@@ -187,6 +187,8 @@ const uploadSrc = ref('')
 const uploadImg = ref<{ w: number, h: number, fitW: number, fitH: number } | null>(null)
 /** movable-view 摆放状态(相对预览区左上角,px;scale 为双指缩放倍数) */
 const uploadTransform = ref({ x: 0, y: 0, scale: 1 })
+/** 手势过程中的实际摆放(不回绑到 movable-view,回写会导致缩放被重置) */
+const uploadPlacement = ref({ x: 0, y: 0, scale: 1 })
 
 /** 切换创作模式;离开手绘态时放弃未落版的贴图选中 */
 function switchCanvasMode(mode: 'draw' | 'upload') {
@@ -231,6 +233,7 @@ async function applyUploadSrc(src: string) {
     const fitH = info.height * fit
     uploadImg.value = { w: info.width, h: info.height, fitW, fitH }
     uploadTransform.value = { x: (area.width - fitW) / 2, y: (area.height - fitH) / 2, scale: 1 }
+    uploadPlacement.value = { ...uploadTransform.value }
     uploadSrc.value = src
   }
   catch (err) {
@@ -254,15 +257,15 @@ function handleChooseUpload() {
 
 /** movable-view 拖动:记录摆放位置 */
 function handleUploadMove(e: any) {
-  uploadTransform.value.x = e.detail.x
-  uploadTransform.value.y = e.detail.y
+  uploadPlacement.value.x = e.detail.x
+  uploadPlacement.value.y = e.detail.y
 }
 
 /** movable-view 缩放:记录缩放倍数(事件同时带最新 x/y,一并同步) */
 function handleUploadScale(e: any) {
-  uploadTransform.value.scale = e.detail.scale
-  uploadTransform.value.x = e.detail.x
-  uploadTransform.value.y = e.detail.y
+  uploadPlacement.value.scale = e.detail.scale
+  uploadPlacement.value.x = e.detail.x
+  uploadPlacement.value.y = e.detail.y
 }
 
 /** 上传模式:移除已选图片 */
@@ -270,6 +273,7 @@ function handleRemoveUpload() {
   uploadSrc.value = ''
   uploadImg.value = null
   uploadTransform.value = { x: 0, y: 0, scale: 1 }
+  uploadPlacement.value = { x: 0, y: 0, scale: 1 }
 }
 
 /** 查询隐藏合成画布节点(canvas 2d) */
@@ -320,7 +324,7 @@ async function composeUploadImage(): Promise<string> {
     image.onerror = () => reject(new Error('图片加载失败'))
     image.src = src
   })
-  const t = uploadTransform.value
+  const t = uploadPlacement.value
   ctx.drawImage(drawable, t.x, t.y, img.fitW * t.scale, img.fitH * t.scale)
   return new Promise((resolve, reject) => {
     uni.canvasToTempFilePath({
@@ -405,6 +409,7 @@ function resetPublishForm() {
   uploadSrc.value = ''
   uploadImg.value = null
   uploadTransform.value = { x: 0, y: 0, scale: 1 }
+  uploadPlacement.value = { x: 0, y: 0, scale: 1 }
 }
 
 /** 发布画作：导出图片(手绘)或直用选图(上传) → 上传附件 → 提交绘画（owner/status 由服务端覆盖） */
