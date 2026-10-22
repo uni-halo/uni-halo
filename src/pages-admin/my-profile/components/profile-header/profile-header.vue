@@ -212,7 +212,7 @@ function chooseAvatar() {
       <!-- 数据行(审核模式/增强不可用时隐藏) -->
       <view
         v-if="enhanceEnabled && !auditMode"
-        class="uh-global-card-glass mt-3 flex items-center gap-x-6 rounded-lg px-4 py-2.5 !shadow-none"
+        class="uh-global-card-glass mt-3 flex items-center gap-x-6 rounded-lg px-4 py-1.5 !shadow-none"
       >
         <view class="flex items-baseline gap-x-1">
           <text class="text-sm text-gray-900 font-bold">{{ stats?.posts ?? 0 }}</text>
