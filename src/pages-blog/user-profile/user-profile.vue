@@ -442,7 +442,7 @@ onReachBottom(() => {
               {{ headerUser.nickname || '匿名用户' }}
             </text>
             <image
-              v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url" class="h-4.5 w-4.5 !block"
+              v-if="wornSlots.primaryBadge.visible" :src="wornSlots.primaryBadge.url" class="h-5 w-5 !block"
               mode="aspectFit"
             />
           </view>
