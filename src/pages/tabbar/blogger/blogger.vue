@@ -349,16 +349,16 @@ onPageScroll((option: Page.PageScrollOption) => {
       <view class="absolute left-0 top-0 z-1 h-full w-full bg-white/5" style="backdrop-filter:blur(4rpx)" />
       <image
         v-if="calcWaveUrl" :src="calcWaveUrl" mode="scaleToFill"
-        class="gif-wave absolute bottom-0 left-0 z-90 h-18 w-full" style="mix-blend-mode: screen;"
+        class="gif-wave absolute bottom-0 left-0 z-10 h-18 w-full" style="mix-blend-mode: screen;"
       />
       <!-- 过渡 -->
-      <view class="absolute bottom-0 left-0 z-90 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
+      <view class="absolute bottom-0 left-0 z-10 h-18 w-full from-black/0 to-page bg-gradient-to-b" />
     </view>
 
     <!-- 站点统计 -->
     <view
       v-if="featureMode === 'list'"
-      class="uh-global-card-glass uh-shadow-xs relative z-90 mx-4 flex border rounded-2xl -mt-16"
+      class="uh-global-card-glass uh-shadow-xs relative z-10 mx-4 flex border rounded-2xl -mt-16"
     >
       <view v-for="item in allStats" :key="item.key" class="flex-1 py-4 text-center">
         <wd-count-to
@@ -373,7 +373,7 @@ onPageScroll((option: Page.PageScrollOption) => {
 
     <!-- 功能导航：非分组模式 -->
     <template v-if="featureMode === 'grid'">
-      <view v-if="commonFeatures.length !== 0" class="relative z-90 box-border overflow-hidden p-4 -mt-20">
+      <view v-if="commonFeatures.length !== 0" class="relative z-10 box-border overflow-hidden p-4 -mt-20">
         <view class="uh-global-card-glass uh-shadow-xs grid grid-cols-5 box-border gap-3.5 border rounded-3xl p-4">
           <view
             v-for="(nav) in commonFeatures" :key="nav.key"
