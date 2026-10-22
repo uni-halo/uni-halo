@@ -28,7 +28,8 @@ const loginEntryVisible = computed(() =>
   loginConfig.value?.passwordLoginEnabled !== false
   || loginConfig.value?.wechatLoginEnabled === true)
 
-const { hasLogin } = storeToRefs(useTokenStore())
+const { hasLogin, validToken } = storeToRefs(useTokenStore())
+const { updateNowTime } = useTokenStore()
 const { userInfo } = storeToRefs(useUserStore())
 
 // 黑名单模式(入口页/维护页等过渡页不展示)
@@ -54,7 +55,17 @@ const avatarSrc = computed(() => checkAvatarUrl(userInfo.value.avatar || ''))
 const avatarText = computed(() => getAvatarFallbackText(userInfo.value.nickname || userInfo.value.username))
 
 function handleClick() {
-  emits('action-click', hasLogin.value)
+  // 无 token:保持原逻辑,跳转登录页
+  if (!validToken.value) {
+    emits('action-click', false)
+    return
+  }
+  // 有 token:校验会话有效性,失效则提示并拦截(不打开侧边栏,不跳转)
+  if (!updateNowTime().hasLogin) {
+    uni.showToast({ icon: 'none', title: '登录已过期，请重新登录' })
+    return
+  }
+  emits('action-click', true)
 }
 watch((visible), (newVal) => {
   emits('is-visible', newVal)

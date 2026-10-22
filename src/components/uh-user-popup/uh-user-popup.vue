@@ -177,6 +177,7 @@ watch(popupVisible, (visible) => {
   if (visible && !updateNowTime().hasLogin) {
     uni.showToast({ icon: 'none', title: '请先登录' })
     setTimeout(() => handleClose(), 600)
+    return
   }
 
   if (visible && updateNowTime().hasLogin) {
