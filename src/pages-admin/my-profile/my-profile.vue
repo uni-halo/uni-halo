@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { onPageScroll, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { useDialog } from '@wot-ui/ui'
@@ -28,11 +28,13 @@ import {
   verifyEmail,
 } from '@/api/user'
 import { usePageScroll } from '@/hooks/usePageScroll'
+import { useUserIdentity } from '@/hooks/useUserIdentity'
+import ProfileHeader from './components/profile-header/profile-header.vue'
+import ProfileDecorationPanel from './components/profile-decoration-panel/profile-decoration-panel.vue'
+import { useMyDecorations } from './composables/use-my-decorations'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { isWechat } from '@/utils/platform'
-import { checkAvatarUrl } from '@/utils/url'
-import { getAvatarFallbackText } from '@/utils/avatar'
 import { sleep } from '@/utils/common'
 import { isValidEmail } from '@/utils/validate'
 import { getEnvBaseUrl } from '@/utils'
@@ -53,6 +55,20 @@ const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 
 const isAdmin = computed(() => userInfo.value.roles?.includes('super-role'))
+
+/* ---------------- Tab 切换与装扮状态 ---------------- */
+type ProfileTab = 'profile' | 'decoration'
+const activeTab = ref<ProfileTab>('profile')
+const deco = useMyDecorations()
+const { identityPlusAvailable, identity, profile: publicProfile } = useUserIdentity(() => userInfo.value.username)
+const identityStats = computed(() => identity.value?.stats || null)
+const headerBio = computed(() => publicProfile.value?.bio || '')
+
+watch(identityPlusAvailable, (available) => {
+  if (available && !deco.loaded.value) {
+    deco.load()
+  }
+}, { immediate: true })
 
 /** 统一提取报错文案(插件端错误体在 error.data.detail) */
 function errText(error: any, fallback: string) {
@@ -88,35 +104,6 @@ const avatarUploading = ref(false)
 function onAvatarPicked(filePath: string) {
   doUploadAvatar(filePath)
 }
-
-// #ifdef MP-WEIXIN
-/** 微信端:open-type="chooseAvatar" 原生选择回调(微信头像/相册/拍照) */
-function onWxAvatarChosen(e: { detail: { avatarUrl: string } }) {
-  const url = e.detail?.avatarUrl
-  if (url) {
-    onAvatarPicked(url)
-  }
-}
-// #endif
-
-// #ifndef MP-WEIXIN
-/** 非微信端:相册/相机二选一 */
-function chooseAvatar() {
-  if (avatarUploading.value) {
-    return
-  }
-  uni.chooseImage({
-    count: 1,
-    sourceType: ['album', 'camera'],
-    success: (res) => {
-      const path = res.tempFilePaths?.[0]
-      if (path) {
-        onAvatarPicked(path)
-      }
-    },
-  })
-}
-// #endif
 
 /**
  * 上传头像
@@ -588,250 +575,240 @@ function handleCopyWebsiteUrl() {
 <template>
   <wd-dialog />
   <view class="box-border box-border min-h-screen bg-page pb-safe">
-    <uh-navbar :scroll-y="scrollY" default-title="我的资料" title-color="text-gray-900" :need-placeholder="true" />
+    <uh-navbar
+      :scroll-y="scrollY" default-title="我的资料" :scroll-title="userInfo.nickname || userInfo.username"
+      :need-placeholder="false"
+    />
+
+    <!-- 头部:通栏封面 + 头像 + 昵称 + 徽章 + 数据行 -->
+    <profile-header
+      :avatar="userInfo.avatar" :nickname="userInfo.nickname" :username="userInfo.username"
+      :bio="headerBio" :uploading="avatarUploading" :deco="deco" :identity-marks="deco.identityMarks.value"
+      :stats="identityStats" @on-avatar-change="onAvatarPicked" @on-cover-tap="activeTab = 'decoration'"
+    />
 
     <view class="box-border flex flex-col gap-y-5 px-4 py-3">
-      <!-- 头像卡片:微信端 open-type 原生弹出(微信头像/相册/拍照),其他端点击走 chooseImage -->
-      <view class="uh-global-card-glass uh-shadow-xs flex flex-col items-center gap-y-2 rounded-2xl py-6">
-        <!-- #ifdef MP-WEIXIN -->
-        <button
-          class="avatar-trigger relative h-22 w-22" open-type="chooseAvatar" :disabled="avatarUploading"
-          @chooseavatar="onWxAvatarChosen"
-        >
-          <wd-avatar
-            :src="checkAvatarUrl(userInfo.avatar)"
-            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)" shape="round"
-            custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
-            class="!rounded-full" mode="aspectFill"
-          />
-          <view class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center">
-            <wd-icon name="camera" size="32rpx" custom-class="text-white" />
-          </view>
-          <view
-            v-if="avatarUploading"
-            class="absolute inset-0 flex items-center justify-center rounded-full bg-black/30"
-          >
-            <wd-loading size="52rpx" class="text-primary" />
-          </view>
-        </button>
-        <!-- #endif -->
-        <!-- #ifndef MP-WEIXIN -->
-        <view class="relative h-22 w-22" @click="chooseAvatar">
-          <wd-avatar
-            :src="checkAvatarUrl(userInfo.avatar)"
-            :text="getAvatarFallbackText(userInfo.nickname || userInfo.username)" shape="round"
-            custom-class="uh-global-card-glass uh-shadow-xs !h-full !w-full !text-gray-900 !font-bold"
-            class="!rounded-full" mode="aspectFill"
-          />
-          <view class="uh-translate-center absolute left-1/2 top-1/2 h-6 w-6 flex items-center justify-center">
-            <wd-icon name="camera" size="32rpx" custom-class="text-white" />
-          </view>
-          <view
-            v-if="avatarUploading"
-            class="absolute inset-0 flex items-center justify-center rounded-full bg-black/30"
-          >
-            <wd-loading size="52rpx" class="text-primary" />
-          </view>
-        </view>
-        <!-- #endif -->
-        <text class="text-md text-gray-900 font-bold">{{ userInfo.nickname || userInfo.username }}</text>
-        <text class="text-3xs text-gray-400">点击头像更换</text>
-      </view>
-
-      <!-- 账号资料 -->
-      <view class="flex flex-col">
-        <uh-section-title>账号资料</uh-section-title>
-        <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
-          <!-- 昵称(整行可点进编辑) -->
-          <view class="flex items-center gap-x-3 px-4 py-3" :class="editingNickname ? '' : 'border-b border-black/5'">
-            <wd-icon name="at" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">昵称</text>
-            <view class="flex flex-1 items-center justify-end gap-x-2">
-              <template v-if="editingNickname">
-                <wd-input
-                  v-model="nicknameDraft" no-border
-                  custom-class="flex-1 uh-profile-input uh-global-card-glass uh-shadow-xs border !rounded-lg !h-auto !py-1 !bg-gray-100 !text-xs"
-                  focus placeholder="请输入昵称" :disabled="nicknameSaving" :maxlength="20" @confirm="saveNickname"
-                />
-                <view class="flex shrink-0 items-center gap-x-1">
-                  <uh-button
-                    custom-class="uh-global-card-glass border !bg-gray-100 !px-2 py-1.5 !text-xs text-gray-gray-600"
-                    @click="cancelEditNickname"
-                  >
-                    取消
-                  </uh-button>
-                  <uh-button
-                    custom-class="uh-global-card-glass !bg-primary border shrink-0 !px-2 py-1.5 !text-xs text-gray-900"
-                    :class="nicknameSaving ? 'opacity-60' : ''" @click="saveNickname"
-                  >
-                    {{ nicknameSaving ? '保存中' : '保存' }}
-                  </uh-button>
-                </view>
-              </template>
-              <template v-else>
-                <text class="truncate text-2xs text-gray-500" @click="!editingNickname && startEditNickname()">
-                  {{ userInfo.nickname || '-' }}
+      <template v-if="activeTab === 'profile'">
+        <!-- 账号资料 -->
+        <view class="flex flex-col">
+          <uh-section-title>账号资料</uh-section-title>
+          <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
+            <!-- 昵称(整行可点进编辑) -->
+            <view class="flex items-center gap-x-3 px-4 py-3" :class="editingNickname ? '' : 'border-b border-black/5'">
+              <wd-icon name="at" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">昵称</text>
+              <view class="flex flex-1 items-center justify-end gap-x-2">
+                <template v-if="editingNickname">
+                  <wd-input
+                    v-model="nicknameDraft" no-border
+                    custom-class="flex-1 uh-profile-input uh-global-card-glass uh-shadow-xs border !rounded-lg !h-auto !py-1 !bg-gray-100 !text-xs"
+                    focus placeholder="请输入昵称" :disabled="nicknameSaving" :maxlength="20" @confirm="saveNickname"
+                  />
+                  <view class="flex shrink-0 items-center gap-x-1">
+                    <uh-button
+                      custom-class="uh-global-card-glass border !bg-gray-100 !px-2 py-1.5 !text-xs text-gray-gray-600"
+                      @click="cancelEditNickname"
+                    >
+                      取消
+                    </uh-button>
+                    <uh-button
+                      custom-class="uh-global-card-glass !bg-primary border shrink-0 !px-2 py-1.5 !text-xs text-gray-900"
+                      :class="nicknameSaving ? 'opacity-60' : ''" @click="saveNickname"
+                    >
+                      {{ nicknameSaving ? '保存中' : '保存' }}
+                    </uh-button>
+                  </view>
+                </template>
+                <template v-else>
+                  <text class="truncate text-2xs text-gray-500" @click="!editingNickname && startEditNickname()">
+                    {{ userInfo.nickname || '-' }}
+                  </text>
+                  <wd-icon
+                    name="edit" size="28rpx" custom-class="text-gray-500"
+                    @click="!editingNickname && startEditNickname()"
+                  />
+                </template>
+              </view>
+            </view>
+            <!-- 用户名(资源 name,不可改) -->
+            <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3">
+              <wd-icon name="user" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">用户名</text>
+              <view class="flex flex-1 items-center justify-end gap-x-2">
+                <text class="text-2xs text-gray-500" @click="copyUsername">{{ userInfo.username || '-' }}</text>
+              </view>
+            </view>
+            <!-- 角色 -->
+            <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3">
+              <wd-icon name="idcard" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">角色</text>
+              <view class="flex flex-1 items-center justify-end">
+                <text class="rounded-full bg-secondary px-2 py-0.5 text-20rpx text-[#4d7c0f]">
+                  {{ isAdmin ? '超级管理员' : '普通用户' }}
                 </text>
-                <wd-icon
-                  name="edit" size="28rpx" custom-class="text-gray-500"
-                  @click="!editingNickname && startEditNickname()"
-                />
-              </template>
+              </view>
+            </view>
+            <!-- 邮箱(点击打开验证/换绑弹层;验证状态来自 console users/- 的 emailVerified) -->
+            <view class="flex items-center gap-x-3 px-4 py-3" @click="openEmailSheet">
+              <wd-icon name="email" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">邮箱</text>
+              <view class="min-w-0 flex flex-1 items-center justify-end gap-x-2">
+                <text
+                  class="shrink-0 rounded-full px-2 py-0.5 text-20rpx"
+                  :class="emailInfo.verified ? 'bg-secondary text-[#4d7c0f]' : 'bg-orange-400/10 text-orange-500'"
+                >
+                  {{ emailInfo.verified ? '已验证' : '未验证' }}
+                </text>
+                <text class="truncate text-2xs text-gray-500">{{ emailInfo.email || userInfo.email || '-' }}</text>
+                <wd-icon name="edit" size="28rpx" custom-class="shrink-0 text-gray-400" />
+              </view>
             </view>
           </view>
-          <!-- 用户名(资源 name,不可改) -->
-          <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3">
-            <wd-icon name="user" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">用户名</text>
-            <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-2xs text-gray-500" @click="copyUsername">{{ userInfo.username || '-' }}</text>
+        </view>
+
+        <!-- 账号绑定 -->
+        <!-- #ifdef MP-WEIXIN -->
+        <view class="flex flex-col">
+          <uh-section-title>账号绑定</uh-section-title>
+          <view class="uh-global-card-glass uh-shadow-xs mt-3 flex items-center gap-x-3 rounded-2xl px-4 py-4">
+            <view
+              class="uh-global-card-glass h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-green-400/10 shadow-none"
+            >
+              <wd-icon name="message" size="46rpx" class="text-primary" />
             </view>
-          </view>
-          <!-- 角色 -->
-          <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3">
-            <wd-icon name="idcard" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">角色</text>
-            <view class="flex flex-1 items-center justify-end">
-              <text class="rounded-full bg-secondary px-2 py-0.5 text-20rpx text-[#4d7c0f]">
-                {{ isAdmin ? '超级管理员' : '普通用户' }}
+            <view class="min-w-0 flex flex-1 flex-col gap-y-1">
+              <view class="flex items-center gap-x-1.5">
+                <view class="h-2 w-2 rounded-full" :class="isBound ? 'bg-primary' : 'bg-gray-300'" />
+                <text class="text-3xs text-gray-900 font-bold">
+                  {{ bindingLoading ? '查询中...' : isBound ? '已绑定微信' : '未绑定微信' }}
+                </text>
+              </view>
+              <text class="text-xs text-gray-400">
+                可在微信小程序内一键登录
               </text>
             </view>
-          </view>
-          <!-- 邮箱(点击打开验证/换绑弹层;验证状态来自 console users/- 的 emailVerified) -->
-          <view class="flex items-center gap-x-3 px-4 py-3" @click="openEmailSheet">
-            <wd-icon name="email" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">邮箱</text>
-            <view class="min-w-0 flex flex-1 items-center justify-end gap-x-2">
-              <text
-                class="shrink-0 rounded-full px-2 py-0.5 text-20rpx"
-                :class="emailInfo.verified ? 'bg-secondary text-[#4d7c0f]' : 'bg-orange-400/10 text-orange-500'"
+            <template v-if="!bindingLoading">
+              <uh-button
+                v-if="isBound"
+                custom-class="uh-global-card-glass !border !rounded-full !border-red-400/30 !bg-red-400/10 !px-4 !py-1.5 !text-xs !text-red-400 !shadow-none"
+                @action-click="handleUnbindWechat"
               >
-                {{ emailInfo.verified ? '已验证' : '未验证' }}
-              </text>
-              <text class="truncate text-2xs text-gray-500">{{ emailInfo.email || userInfo.email || '-' }}</text>
-              <wd-icon name="edit" size="28rpx" custom-class="shrink-0 text-gray-400" />
+                解除绑定
+              </uh-button>
+              <uh-button
+                v-else-if="isWechat"
+                custom-class="!rounded-full !bg-green-500 !px-4 !py-1.5 !text-xs !text-white"
+                :class="bindSubmitting ? 'opacity-60' : ''" @action-click="handleBindWechat"
+              >
+                {{ bindSubmitting ? '绑定中' : '一键绑定' }}
+              </uh-button>
+            </template>
+          </view>
+        </view>
+        <!-- #endif -->
+
+        <!-- 账号安全 -->
+        <view class="flex flex-col">
+          <uh-section-title>账号安全</uh-section-title>
+          <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
+            <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3.5" @click="forgotSheet = true">
+              <wd-icon name="unlock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">忘记密码</text>
+              <view class="flex flex-1 items-center justify-end gap-x-2">
+                <text class="text-3xs text-gray-400">找回忘记的密码</text>
+                <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
+              </view>
+            </view>
+            <view class="flex items-center gap-x-3 px-4 py-3.5" @click="openPasswordSheet">
+              <wd-icon name="lock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
+              <text class="shrink-0 text-sm text-gray-900">修改密码</text>
+              <view class="flex flex-1 items-center justify-end gap-x-2">
+                <text class="text-3xs text-gray-400">修改/设置密码</text>
+                <wd-icon name="edit" size="28rpx" custom-class="text-gray-400" />
+              </view>
             </view>
           </view>
         </view>
-      </view>
-
-      <!-- 账号绑定 -->
-      <!-- #ifdef MP-WEIXIN -->
-      <view class="flex flex-col">
-        <uh-section-title>账号绑定</uh-section-title>
-        <view class="uh-global-card-glass uh-shadow-xs mt-3 flex items-center gap-x-3 rounded-2xl px-4 py-4">
-          <view
-            class="uh-global-card-glass h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-green-400/10 shadow-none"
+        <view class="flex flex-col">
+          <uh-section-title>常见问题</uh-section-title>
+          <view class="question-collapse uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
+            <wd-collapse v-model="question" :accordion="true">
+              <wd-collapse-item
+                :border="false" custom-body-class="px-3 py-1 !text-xs" title="无法验证邮箱？"
+                name="verifyEmail"
+              >
+                <view class="w-full items-center leading-5.5">
+                  <text>如果遇到无法验证邮箱的情况，请联系客服，或者尝试登录网页端进行操作。</text>
+                  <!-- #ifdef MP-WEIXIN -->
+                  <button
+                    class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                    open-type="contact"
+                  >
+                    联系客服
+                  </button>
+                  <!-- #endif -->
+                  <button
+                    class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                    @click="handleCopyWebsiteUrl"
+                  >
+                    去网页端
+                  </button>
+                </view>
+              </wd-collapse-item>
+              <wd-collapse-item custom-body-class="px-3 py-1 !text-xs" title="忘记密码无法找回？" name="forgotPassword">
+                <view class="w-full items-center leading-5.5">
+                  <text>如果忘记密码，联系客服即可找回，或者尝试登录网页端进行操作。</text>
+                  <!-- #ifdef MP-WEIXIN -->
+                  <button
+                    class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                    open-type="contact"
+                  >
+                    联系客服
+                  </button>
+                  <!-- #endif -->
+                  <button
+                    class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
+                    @click="handleCopyWebsiteUrl"
+                  >
+                    去网页端
+                  </button>
+                </view>
+              </wd-collapse-item>
+            </wd-collapse>
+          </view>
+        </view>
+        <!-- 退出登录 -->
+        <view class="mt-2 box-border hidden w-full">
+          <uh-button
+            custom-class="uh-global-card-glass w-full !border !border-red-400/30 !bg-red-400/80 !py-2.5 !text-white !rounded-full !text-3xs"
+            @action-click="handleLogout()"
           >
-            <wd-icon name="message" size="46rpx" class="text-primary" />
-          </view>
-          <view class="min-w-0 flex flex-1 flex-col gap-y-1">
-            <view class="flex items-center gap-x-1.5">
-              <view class="h-2 w-2 rounded-full" :class="isBound ? 'bg-primary' : 'bg-gray-300'" />
-              <text class="text-3xs text-gray-900 font-bold">
-                {{ bindingLoading ? '查询中...' : isBound ? '已绑定微信' : '未绑定微信' }}
-              </text>
-            </view>
-            <text class="text-xs text-gray-400">
-              可在微信小程序内一键登录
-            </text>
-          </view>
-          <template v-if="!bindingLoading">
-            <uh-button
-              v-if="isBound"
-              custom-class="uh-global-card-glass !border !rounded-full !border-red-400/30 !bg-red-400/10 !px-4 !py-1.5 !text-xs !text-red-400 !shadow-none"
-              @action-click="handleUnbindWechat"
-            >
-              解除绑定
-            </uh-button>
-            <uh-button
-              v-else-if="isWechat" custom-class="!rounded-full !bg-green-500 !px-4 !py-1.5 !text-xs !text-white"
-              :class="bindSubmitting ? 'opacity-60' : ''" @action-click="handleBindWechat"
-            >
-              {{ bindSubmitting ? '绑定中' : '一键绑定' }}
-            </uh-button>
-          </template>
+            退出登录
+          </uh-button>
         </view>
-      </view>
-      <!-- #endif -->
+      </template>
 
-      <!-- 账号安全 -->
-      <view class="flex flex-col">
-        <uh-section-title>账号安全</uh-section-title>
-        <view class="uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
-          <view class="flex items-center gap-x-3 border-b border-black/5 px-4 py-3.5" @click="forgotSheet = true">
-            <wd-icon name="unlock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">忘记密码</text>
-            <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-3xs text-gray-400">找回忘记的密码</text>
-              <wd-icon name="arrow-right" size="28rpx" custom-class="text-gray-400" />
-            </view>
-          </view>
-          <view class="flex items-center gap-x-3 px-4 py-3.5" @click="openPasswordSheet">
-            <wd-icon name="lock" size="36rpx" custom-class="text-gray-900 dark:text-gray-100" />
-            <text class="shrink-0 text-sm text-gray-900">修改密码</text>
-            <view class="flex flex-1 items-center justify-end gap-x-2">
-              <text class="text-3xs text-gray-400">修改/设置密码</text>
-              <wd-icon name="edit" size="28rpx" custom-class="text-gray-400" />
-            </view>
-          </view>
-        </view>
-      </view>
-      <view class="flex flex-col">
-        <uh-section-title>常见问题</uh-section-title>
-        <view class="question-collapse uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
-          <wd-collapse v-model="question" :accordion="true">
-            <wd-collapse-item :border="false" custom-body-class="px-3 py-1 !text-xs" title="无法验证邮箱？" name="verifyEmail">
-              <view class="w-full items-center leading-5.5">
-                <text>如果遇到无法验证邮箱的情况，请联系客服，或者尝试登录网页端进行操作。</text>
-                <!-- #ifdef MP-WEIXIN -->
-                <button
-                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                  open-type="contact"
-                >
-                  联系客服
-                </button>
-                <!-- #endif -->
-                <button
-                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                  @click="handleCopyWebsiteUrl"
-                >
-                  去网页端
-                </button>
-              </view>
-            </wd-collapse-item>
-            <wd-collapse-item custom-body-class="px-3 py-1 !text-xs" title="忘记密码无法找回？" name="forgotPassword">
-              <view class="w-full items-center leading-5.5">
-                <text>如果忘记密码，联系客服即可找回，或者尝试登录网页端进行操作。</text>
-                <!-- #ifdef MP-WEIXIN -->
-                <button
-                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                  open-type="contact"
-                >
-                  联系客服
-                </button>
-                <!-- #endif -->
-                <button
-                  class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                  @click="handleCopyWebsiteUrl"
-                >
-                  去网页端
-                </button>
-              </view>
-            </wd-collapse-item>
-          </wd-collapse>
-        </view>
-      </view>
-      <!-- 退出登录 -->
-      <view class="mt-2 box-border w-full">
-        <uh-button
-          custom-class="uh-global-card-glass w-full !border !border-red-400/30 !bg-red-400/80 !py-2.5 !text-white !rounded-full !text-3xs"
-          @action-click="handleLogout()"
-        >
-          退出登录
-        </uh-button>
-      </view>
+      <!-- 装扮 Tab -->
+      <template v-else>
+        <profile-decoration-panel :deco="deco" />
+      </template>
     </view>
+
+    <uh-float-toolbar :need-placeholder="true">
+      <view
+        class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center rounded-full px-5 py-2.5 !border"
+        :class="activeTab === 'profile' ? 'bg-primary' : ''" @click="activeTab = 'profile'"
+      >
+        <text class="text-3xs text-gray-900">我的资料</text>
+      </view>
+      <view
+        v-if="identityPlusAvailable"
+        class="uh-global-card-glass uh-shadow-xs box-border flex items-center justify-center rounded-full px-5 py-2.5 !border"
+        :class="activeTab === 'decoration' ? 'bg-primary' : ''" @click="activeTab = 'decoration'"
+      >
+        <text class="text-3xs text-gray-900">我的装扮</text>
+      </view>
+    </uh-float-toolbar>
 
     <!-- 修改密码弹层(输入中途误触遮罩不应丢弃已填内容,禁用遮罩关闭) -->
     <uh-glass-popup
@@ -916,9 +893,9 @@ function handleCopyWebsiteUrl() {
             show-password prefix-icon="lock" no-border placeholder="请输入当前密码" clearable :disabled="emailSubmitting"
           />
           <wd-input
-            v-if="needTicketPassword" v-model="ticketPassword" custom-class="uh-profile-input !rounded-lg" placeholder-class="text-xs"
-            show-password prefix-icon="lock" no-border placeholder="验证票据已过期，请输入当前密码重新获取" clearable
-            :disabled="emailSubmitting || emailCodeSending"
+            v-if="needTicketPassword" v-model="ticketPassword" custom-class="uh-profile-input !rounded-lg"
+            placeholder-class="text-xs" show-password prefix-icon="lock" no-border placeholder="验证票据已过期，请输入当前密码重新获取"
+            clearable :disabled="emailSubmitting || emailCodeSending"
           />
           <text class="text-xs text-gray-600">
             {{ useTicketFlow
@@ -954,18 +931,6 @@ function handleCopyWebsiteUrl() {
 </template>
 
 <style scoped lang="scss">
-.avatar-trigger {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border-radius: 9999rpx;
-  line-height: 1;
-}
-
-.avatar-trigger::after {
-  border: none;
-}
-
 :deep(.uh-profile-input) {
   box-sizing: border-box;
   height: 74rpx;
@@ -983,6 +948,7 @@ function handleCopyWebsiteUrl() {
   &:deep(.wd-collapse-item__title) {
     font-size: 26rpx;
   }
+
   &:deep(.wd-collapse) {
     background: transparent !important;
   }

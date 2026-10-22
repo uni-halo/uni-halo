@@ -242,7 +242,7 @@ function handleToUserProfile() {
       >
         {{ article.status?.excerpt }}
       </view>
-      <view v-if="!isGrid" class="box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
+      <view v-if="false && !isGrid" class="box-border flex flex-wrap gap-2" :class="cardLayout.tagCategory">
         <template v-if="article.categories && article.categories.length !== 0">
           <text
             v-for="cate in article.categories.slice(0, 2)" :key="cate.metadata.name"
