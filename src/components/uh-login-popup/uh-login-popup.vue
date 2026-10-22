@@ -8,6 +8,7 @@ import { getGlobalInfo } from '@/api/auth'
 import { getPluginCaptcha } from '@/api/uni-halo'
 import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 import { REGISTER_PAGE } from '@/router/config'
+import { clearRememberedLogin, getRememberedLogin, saveRememberedLogin } from '@/utils/remember-login'
 
 /**
  * 登录弹窗(底部弹层):在当前页面内完成登录,不打断浏览上下文。
@@ -45,6 +46,9 @@ const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled 
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+
+/* ---------- 记住密码(本地混淆存储,登录成功时写入/清除) ---------- */
+const rememberMe = ref(false)
 
 /* ---------- 登录图形验证码(站点开启 captchaConfig.scope.login 后,服务端 403 附新码时展示) ---------- */
 const captchaImage = ref('')
@@ -163,12 +167,21 @@ function handleWechatEmailRequired(error: unknown): boolean {
 }
 
 /* ---------- 弹层显隐 ---------- */
-/** 弹层每次打开时重置表单(验证码/密码不保留) */
+/** 弹层每次打开时重置验证码;记住密码则回填账号密码并保持勾选 */
 watch(() => props.modelValue, (visible) => {
   if (visible) {
-    username.value = ''
-    password.value = ''
     resetCaptcha()
+    const remembered = getRememberedLogin()
+    if (remembered) {
+      username.value = remembered.username
+      password.value = remembered.password
+      rememberMe.value = true
+    }
+    else {
+      username.value = ''
+      password.value = ''
+      rememberMe.value = false
+    }
   }
 })
 
@@ -216,6 +229,13 @@ async function doPasswordLogin() {
       password: password.value,
       captcha: buildCaptcha(),
     })
+    // 按勾选状态写入/清除记住的凭据
+    if (rememberMe.value) {
+      saveRememberedLogin(username.value, password.value)
+    }
+    else {
+      clearRememberedLogin()
+    }
     resetCaptcha()
     handleLoginSuccess()
   }
@@ -324,6 +344,16 @@ async function doWechatLogin() {
           </view>
           <view v-if="captchaSrc" class="box-border w-full pl-2 text-left text-xs text-gray-500">
             点击图片可刷新验证码
+          </view>
+          <!-- 记住密码 -->
+          <view class="w-full flex items-center gap-x-1.5 pl-2" @click="rememberMe = !rememberMe">
+            <view
+              class="box-border h-4 w-4 flex items-center justify-center border rounded"
+              :class="rememberMe ? 'bg-primary border-primary' : 'border-gray-300 bg-white/60'"
+            >
+              <wd-icon v-if="rememberMe" name="check" size="22rpx" custom-class="text-gray-900" />
+            </view>
+            <text class="text-xs text-black/50">记住密码</text>
           </view>
           <uh-button
             class="w-full flex-1"

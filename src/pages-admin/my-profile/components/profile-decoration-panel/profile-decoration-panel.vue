@@ -91,16 +91,6 @@ function slotValue(key: DecorationSlotKey) {
       </view>
     </template>
 
-    <!-- 选择弹层 -->
-    <DecorationPicker
-      v-if="activeSlot" v-model="pickerVisible"
-      :label="activeSlot.label" :multiple="activeSlot.multiple"
-      :items="deco.availableByType.value[activeSlot.type] || []"
-      :current="slotValue(activeSlot.key)"
-      :rarities="deco.rarities.value"
-      @on-confirm="onPickerConfirm"
-    />
-
     <!-- 底部保存条(草稿有改动时出现) -->
     <view v-if="deco.dirty.value" class="box-border w-full pb-safe">
       <view class="uh-global-card-glass uh-shadow-xs box-border flex items-center gap-x-3 border rounded-xl p-2 pl-4">
@@ -113,5 +103,15 @@ function slotValue(key: DecorationSlotKey) {
         </uh-button>
       </view>
     </view>
+
+    <!-- 选择弹层 -->
+    <DecorationPicker
+      v-if="activeSlot" v-model="pickerVisible"
+      :label="activeSlot.label" :multiple="activeSlot.multiple"
+      :items="deco.availableByType.value[activeSlot.type] || []"
+      :current="slotValue(activeSlot.key)"
+      :rarities="deco.rarities.value"
+      @on-confirm="onPickerConfirm"
+    />
   </view>
 </template>

@@ -9,6 +9,7 @@ import { getGlobalInfo } from '@/api/auth'
 import { getPluginCaptcha } from '@/api/uni-halo'
 import type { ICaptchaQuery, IPluginCaptcha } from '@/api/uni-halo'
 import { REGISTER_PAGE } from '@/router/config'
+import { clearRememberedLogin, getRememberedLogin, saveRememberedLogin } from '@/utils/remember-login'
 
 definePage({
   style: {
@@ -40,6 +41,17 @@ const wechatLoginEnabled = computed(() => loginConfig.value?.wechatLoginEnabled 
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+
+/* ---------- 记住密码(本地混淆存储,登录成功时写入/清除) ---------- */
+const rememberMe = ref(false)
+
+/** 回填记住的账号密码 */
+const remembered = getRememberedLogin()
+if (remembered) {
+  username.value = remembered.username
+  password.value = remembered.password
+  rememberMe.value = true
+}
 
 /* ---------- 登录图形验证码(站点开启 captchaConfig.scope.login 后,服务端 403 附新码时展示) ---------- */
 const captchaImage = ref('')
@@ -152,6 +164,13 @@ async function doPasswordLogin() {
       password: password.value,
       captcha: buildCaptcha(),
     })
+    // 按勾选状态写入/清除记住的凭据
+    if (rememberMe.value) {
+      saveRememberedLogin(username.value, password.value)
+    }
+    else {
+      clearRememberedLogin()
+    }
     resetCaptcha()
     handleLoginSuccess()
   }
@@ -318,6 +337,16 @@ function handleLoginSuccess() {
               </view>
               <view v-if="captchaSrc" class="mt-2 text-xs text-gray-500">
                 点击图片可刷新验证码
+              </view>
+              <!-- 记住密码 -->
+              <view class="mt-3 flex items-center gap-x-1.5 px-2" @click="rememberMe = !rememberMe">
+                <view
+                  class="box-border h-4 w-4 flex items-center justify-center border border-solid rounded"
+                  :class="rememberMe ? 'bg-primary border-primary' : 'border-gray-300 bg-white/60'"
+                >
+                  <wd-icon v-if="rememberMe" name="check" size="22rpx" custom-class="text-gray-900" />
+                </view>
+                <text class="text-xs text-gray-400">记住密码</text>
               </view>
               <uh-button
                 class="w-full"

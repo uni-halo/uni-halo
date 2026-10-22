@@ -5,6 +5,7 @@
  * 封面与佩戴预览随装扮草稿实时变化,头像点击触发更换
  */
 import type { IIdentityMark } from '@/api/types/halo-plugin-third/interaction-plus'
+import { useCardBgSrc } from '@/hooks/useWornSlots'
 import { getAvatarFallbackText } from '@/utils/avatar'
 import { checkAvatarUrl } from '@/utils/url'
 import { identityMarksStyleCss } from '@/utils/wornDecorations'
@@ -23,6 +24,10 @@ interface IProps {
   identityMarks?: IIdentityMark[]
   /** 互动数据 */
   stats?: { posts?: number, comments?: number } | null
+  /** 互动增强是否可用(不可用时隐藏背景图设置入口) */
+  enhanceEnabled?: boolean
+  /** 审核模式(与增强不可用一起隐藏统计数据行) */
+  auditMode?: boolean
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -33,6 +38,8 @@ const props = withDefaults(defineProps<IProps>(), {
   uploading: false,
   identityMarks: () => [],
   stats: null,
+  enhanceEnabled: true,
+  auditMode: false,
 })
 
 const emit = defineEmits<{
@@ -42,6 +49,9 @@ const emit = defineEmits<{
 
 /** 头像框素材 */
 const frameUrl = computed(() => props.deco.previewFrameUrl.value)
+
+/** 封面图:佩戴的名片背景优先,素材缺失/装载失败/增强未启用回退博主页背景图(同 user-profile) */
+const { cardBgSrc, onCardBgError } = useCardBgSrc(() => props.deco.previewCardBgUrl.value)
 
 /** 昵称后徽章排:主勋章 + 展示勋章(去重,最多 4 个) */
 const badgeUrls = computed(() => {
@@ -98,11 +108,11 @@ function chooseAvatar() {
 
 <template>
   <view class="box-border w-full">
-    <!-- 顶部大图封面(佩戴的名片背景,通栏铺满,无则渐变兜底) -->
-    <view class="relative z-0 h-52 w-full overflow-hidden">
+    <!-- 顶部大图封面(佩戴的名片背景,通栏铺满,无则博主页背景图/渐变兜底) -->
+    <view class="relative z-0 h-60 w-full overflow-hidden">
       <image
-        v-if="deco.previewCardBgUrl.value" class="h-full w-full bg-cover bg-center !block"
-        :src="deco.previewCardBgUrl.value" mode="aspectFill"
+        v-if="cardBgSrc" class="h-full w-full bg-cover bg-center !block"
+        :src="cardBgSrc" mode="aspectFill" @error="onCardBgError"
       />
       <view v-else class="h-full w-full from-primary/35 via-secondary/25 to-primary/10 bg-gradient-to-br" />
       <!-- 轻遮罩压暗封面(同 user-profile) -->
@@ -112,9 +122,10 @@ function chooseAvatar() {
     </view>
 
     <!-- 玻璃资料卡:一半压在封面交界处 -->
-    <view class="uh-global-card-glass uh-shadow-xs relative z-10 mx-4 box-border rounded-2xl p-3 -mt-12">
-      <!-- 更换封面入口(进装扮 Tab) -->
+    <view class="uh-global-card-glass uh-shadow-xs relative z-10 mx-4 box-border rounded-2xl p-3 -mt-20">
+      <!-- 更换封面入口(进装扮 Tab,增强不可用时隐藏) -->
       <view
+        v-if="enhanceEnabled"
         class="absolute right-2 top-2 z-20 box-border flex items-center gap-x-1 rounded-full bg-black/35 px-2 py-0.5"
         @click="emit('on-cover-tap')"
       >
@@ -198,8 +209,9 @@ function chooseAvatar() {
         </view>
       </view>
 
-      <!-- 数据行 -->
+      <!-- 数据行(审核模式/增强不可用时隐藏) -->
       <view
+        v-if="enhanceEnabled && !auditMode"
         class="uh-global-card-glass mt-3 flex items-center gap-x-6 rounded-lg px-4 py-2.5 !shadow-none"
       >
         <view class="flex items-baseline gap-x-1">

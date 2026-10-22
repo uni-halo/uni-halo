@@ -103,7 +103,7 @@ function hexAlpha(color: string | undefined, alpha: string): string {
 const CHECKER_PATTERN = 'conic-gradient(rgb(0 0 0 / 0.05) 25%, transparent 0 50%, rgb(0 0 0 / 0.05) 0 75%, transparent 0)'
 
 /**
- * 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角稀有度徽标/title 类文字着色，非 hex 安全回退）；
+ * 装扮墙条目展示样式（稀有度着色：描边淡色/画布轻染叠加透明网格/右上角类型徽标/名称行稀有度前缀/title 类文字着色，非 hex 安全回退）；
  * item.url 统一经 checkImageUrl 规范化（空值/非法形式置空，给 src 与预览(imagePreview)前统一兜底）
  */
 const wallStyled = computed(() => decorationWall.value.map((raw) => {
@@ -119,6 +119,7 @@ const wallStyled = computed(() => decorationWall.value.map((raw) => {
     style: hexAlpha(item.rarityColor, '40') ? `border-color:${hexAlpha(item.rarityColor, '40')};` : '',
     bgStyle: layers ? `background-image:${layers};background-size:${sizes};` : '',
     badgeStyle: item.rarityColor ? `background:${item.rarityColor};` : '',
+    rarityTextStyle: item.rarityColor ? `color:${item.rarityColor};` : '',
     textStyle: item.type === 'name_style' ? nicknameStyleCss(item) : titleStyleCss(item),
     isTextDecoration,
   }
@@ -276,23 +277,22 @@ function handleCopyWebsite() {
                         {{ d.item.displayName }}
                       </text>
                     </view>
+                    <!-- 类型角标(稀有度色底,无稀有度回落主题色) -->
                     <text
-                      v-if="d.item.rarityDisplayName"
                       class="absolute right-0 top-0 z-10 box-border rounded-lb-md px-1 text-[10px] text-white"
-                      :style="[d.badgeStyle]"
-                    >
-                      {{ decorationTypes[d.item.type] || '-' }}·{{ d.item.rarityDisplayName }}
-                    </text>
-                    <text
-                      v-else
-                      class="absolute right-0 top-0 z-10 box-border rounded-lb-md bg-primary px-1 text-[10px] text-white"
+                      :class="d.item.rarityColor ? '' : 'bg-primary'"
                       :style="[d.badgeStyle]"
                     >
                       {{ decorationTypes[d.item.type] || '-' }}
                     </text>
                   </view>
-                  <!-- 名称(框外下方,不随稀有度着色) -->
-                  <text class="w-full truncate text-center text-xs text-gray-700">{{ d.item.displayName }}</text>
+                  <!-- 名称行:稀有度在前 -->
+                  <view class="w-full flex items-center justify-center gap-x-1">
+                    <text v-if="d.item.rarityDisplayName" class="shrink-0 text-xs font-bold" :style="[d.rarityTextStyle]">
+                      {{ d.item.rarityDisplayName }}
+                    </text>
+                    <text class="w-full truncate text-xs text-gray-700">{{ d.item.displayName }}</text>
+                  </view>
                 </view>
               </view>
             </view>
