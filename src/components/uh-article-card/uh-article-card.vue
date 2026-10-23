@@ -279,9 +279,9 @@ function handleToUserProfile() {
           </view>
           <template v-if="isSocialCard">
             <view :class="cardLayout.infoCol">
-              <view class="flex items-center justify-start gap-x-0.5">
+              <view class="mb-1 flex items-center justify-start gap-x-0.5">
                 <text
-                  class="block shrink-0 truncate"
+                  class="block shrink-0 truncate !mb-0"
                   :class="cardLayout.nickname"
                   :style="authorSlots.nameStyle.style"
                 >
@@ -289,11 +289,11 @@ function handleToUserProfile() {
                 </text>
                 <image
                   v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-                  class="mb-1 block h-4 w-4 shrink-0" mode="aspectFit"
+                  class="block h-4 w-4 shrink-0" mode="aspectFit"
                 />
                 <text
                   v-if="authorSlots.title.visible"
-                  class="mb-1 ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
+                  class="ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}

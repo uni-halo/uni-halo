@@ -126,8 +126,8 @@ function handlePreview(index: number, list: { url: string }[]) {
             mode="aspectFit"
           />
         </view>
-        <view class="mb-1 ml-2 flex flex-col">
-          <view class="flex items-center gap-x-1">
+        <view class="ml-2 flex flex-col">
+          <view class="mb-1 flex items-center gap-x-1">
             <text class="text-3xs text-gray-900 font-bold" :style="authorSlots.nameStyle.style">{{ displayName }}</text>
             <image
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
