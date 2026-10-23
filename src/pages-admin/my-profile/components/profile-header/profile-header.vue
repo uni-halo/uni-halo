@@ -114,7 +114,7 @@ function chooseAvatar() {
         v-if="cardBgSrc" class="h-full w-full bg-cover bg-center !block"
         :src="cardBgSrc" mode="aspectFill" @error="onCardBgError"
       />
-      <view v-else class="h-full w-full from-primary/35 via-secondary/25 to-primary/10 bg-gradient-to-br" />
+      <view v-else class="h-full w-full from-[rgba(185,228,36,0.7)] via-[rgba(215,249,76,0.5)] to-[rgba(185,228,36,0.2)] bg-gradient-to-br" />
       <!-- 轻遮罩压暗封面(同 user-profile) -->
       <view class="uh-profile-mask pointer-events-none absolute left-0 top-0 h-full w-full" />
       <!-- 底部渐隐过渡 -->
@@ -135,7 +135,7 @@ function chooseAvatar() {
         <!-- 头像:微信端 open-type 原生弹出,其他端 chooseImage -->
         <!-- #ifdef MP-WEIXIN -->
         <button
-          class="avatar-trigger relative h-20 w-20 shrink-0" open-type="chooseAvatar" :disabled="uploading"
+          class="avatar-trigger relative h-20 w-20 shrink-0 !overflow-inherit" open-type="chooseAvatar" :disabled="uploading"
           @chooseavatar="onWxAvatarChosen"
         >
           <wd-avatar
@@ -154,7 +154,7 @@ function chooseAvatar() {
             <!-- #endif -->
             <!-- 头像框 -->
             <image
-              v-if="frameUrl" class="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 !block"
+              v-if="frameUrl" class="pointer-events-none absolute left-1/2 top-1/2 z-20 h-24 w-24 !block"
               :src="frameUrl" mode="aspectFit" style="transform:translate(-50%,-50%)"
             />
             <!-- 更换角标 -->

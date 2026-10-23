@@ -414,7 +414,7 @@ onReachBottom(() => {
       :need-placeholder="false"
     />
 
-    <view class="relative mb-8 box-border h-66 w-full">
+    <view class="relative mb-8 box-border h-70 w-full">
       <image
         v-if="profileBgUrl" class="absolute left-0 top-0 h-full w-full bg-cover bg-center !block"
         :src="profileBgUrl" mode="aspectFill" @error="onCardBgError()"

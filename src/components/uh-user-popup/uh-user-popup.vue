@@ -176,13 +176,14 @@ const unreadNotifyCount = ref(0)
 watch(popupVisible, (visible) => {
   if (visible && !updateNowTime().hasLogin) {
     uni.showToast({ icon: 'none', title: '请先登录' })
-    setTimeout(() => handleClose(), 600)
+    setTimeout(() => handleClose(), 100)
     return
   }
 
   if (visible && updateNowTime().hasLogin) {
     const username = userInfo.value.username
     if (!username) {
+      handleClose()
       return
     }
     getUnreadNotificationCount(username).then((count) => {
