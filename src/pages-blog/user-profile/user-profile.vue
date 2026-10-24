@@ -408,7 +408,7 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar
       :scroll-y="scrollY" :default-title="pageTitle" :scroll-title="headerUser.nickname"
       :need-placeholder="false"

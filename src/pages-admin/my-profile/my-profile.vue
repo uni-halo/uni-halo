@@ -108,8 +108,7 @@ onShow(() => {
 </script>
 
 <template>
-  <wd-dialog />
-  <view class="box-border box-border min-h-screen bg-page pb-safe">
+  <view class="box-border box-border min-h-screen bg-page">
     <uh-navbar
       :scroll-y="scrollY" default-title="我的资料" :scroll-title="userInfo.nickname || userInfo.username"
       :need-placeholder="false"
@@ -152,4 +151,5 @@ onShow(() => {
       </view>
     </uh-float-toolbar>
   </view>
+  <wd-dialog />
 </template>

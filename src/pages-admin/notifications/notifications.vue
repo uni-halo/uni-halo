@@ -351,7 +351,7 @@ onPullDownRefresh(() => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" default-title="消息通知" title-color="text-gray-900" />
 
     <wd-sticky :offset-top="offsetTop">

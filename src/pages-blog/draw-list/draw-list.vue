@@ -234,7 +234,7 @@ function handleGuessSolved() {
 </script>
 
 <template>
-  <view class="min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="min-h-screen w-screen flex flex-col bg-page">
     <uh-navbar :scroll-y="scrollY" :use-back="true" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-plugin-unavailable

@@ -392,7 +392,7 @@ onShareTimeline(() => {
       </view>
 
       <view
-        class="uh-global-card-glass box-border overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-16 -mt-10"
+        class="uh-global-card-glass box-border overflow-hidden border rounded-bl-xl rounded-br-xl rounded-lt-3xl rounded-rt-3xl border-b-none pb-12 -mt-10"
         :style="{ boxShadow: '0 -16rpx 12rpx rgba(0, 0, 0, 0.035)' }"
       >
         <!-- 顶部信息 -->

@@ -270,7 +270,7 @@ onShareTimeline(() => ({
 
 <template>
   <wd-dialog />
-  <view class="box-border min-h-screen w-screen flex flex-col bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen flex flex-col bg-page">
     <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 

@@ -152,7 +152,7 @@ onLoad((options) => {
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen bg-page">
     <!-- 自定义导航 -->
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" :scroll-title="title" title-color="text-gray-900" />
 
@@ -163,9 +163,9 @@ onLoad((options) => {
     />
 
     <!-- 正文 -->
-    <view v-else class="box-border p-4">
+    <view v-else class="box-border p-3 pb-0">
       <!-- 有图，wd-img 如果加载空的地址 会一直处于loading状态，所以空值我们不加载 -->
-      <wd-img v-if="cover" class="mb-5 h-[320rpx] w-full" :radius="12" :src="cover" mode="aspectFill">
+      <wd-img v-if="cover" class="mb-5 h-40 w-full" :radius="12" :src="cover" mode="aspectFill">
         <template #loading>
           <wd-loading size="64rpx" custom-class="text-primary" />
         </template>
@@ -173,7 +173,7 @@ onLoad((options) => {
       <!-- 无图 -->
       <view
         v-else
-        class="mb-5 h-[320rpx] w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400"
+        class="mb-5 h-40 w-full flex items-center justify-center from-[#ebfabf] to-[#f5fae8] bg-gradient-to-b text-gray-400"
       >
         <wd-icon class-prefix="uhemoji-icon" name="-injury" size="72rpx" />
       </view>
@@ -183,19 +183,19 @@ onLoad((options) => {
 
       <view class="mt-3 flex items-center gap-2">
         <view
-          v-if="typeDisplayName" class="rounded px-2 py-0.5 text-[20rpx]" :style="{
+          v-if="typeDisplayName" class="rounded px-2 py-0.5 text-xs" :style="{
             color: typeColor || '#f83856',
             backgroundColor: typeColor ? `${typeColor}1a` : '#fdeef1',
           }"
         >
           {{ typeDisplayName }}
         </view>
-        <text class="text-[22rpx] text-gray-500">
+        <text class="text-xs text-gray-500">
           {{ publishTime }}
         </text>
       </view>
 
-      <view class="mt-2 box-border w-full pb-4 pt-4 text-3xs text-gray-900">
+      <view class="mt-2 box-border w-full py-3 text-3xs text-gray-900">
         <mp-html
           :content="content" lazy-load :domain="markdownConfig.domain"
           :loading-img="markdownConfig.loadingGif" scroll-table selectable
