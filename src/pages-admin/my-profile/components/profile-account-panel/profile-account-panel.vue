@@ -33,9 +33,6 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { isWechat } from '@/utils/platform'
 import { isValidEmail } from '@/utils/validate'
-import { getEnvBaseUrl } from '@/utils'
-
-const question = ref('')
 
 const dialog = useDialog()
 const tokenStore = useTokenStore()
@@ -477,15 +474,6 @@ function isExampleEMail(email: string) {
   return email?.trim().endsWith('@example.com')
 }
 
-function handleCopyWebsiteUrl() {
-  uni.setClipboardData({
-    data: getEnvBaseUrl(),
-    success: () => {
-      uni.showToast({ icon: 'none', title: '已复制到剪贴板，打开浏览器访问' })
-    },
-  })
-}
-
 /** 面板可见时刷新绑定/邮箱状态(页面 onShow 透传) */
 function refresh() {
   fetchBinding()
@@ -641,54 +629,6 @@ onMounted(() => {
         </view>
       </view>
     </view>
-    <view class="flex flex-col">
-      <uh-section-title>常见问题</uh-section-title>
-      <view class="question-collapse uh-global-card-glass uh-shadow-xs mt-3 overflow-hidden rounded-2xl">
-        <wd-collapse v-model="question" :accordion="true">
-          <wd-collapse-item
-            :border="false" custom-body-class="px-3 py-1 !text-xs" title="无法验证邮箱？"
-            name="verifyEmail"
-          >
-            <view class="w-full items-center leading-5.5">
-              <text>如果遇到无法验证邮箱的情况，请联系客服，或者尝试登录网页端进行操作。</text>
-              <!-- #ifdef MP-WEIXIN -->
-              <button
-                class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                open-type="contact"
-              >
-                联系客服
-              </button>
-              <!-- #endif -->
-              <button
-                class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                @click="handleCopyWebsiteUrl"
-              >
-                去网页端
-              </button>
-            </view>
-          </wd-collapse-item>
-          <wd-collapse-item custom-body-class="px-3 py-1 !text-xs" title="忘记密码无法找回？" name="forgotPassword">
-            <view class="w-full items-center leading-5.5">
-              <text>如果忘记密码，联系客服即可找回，或者尝试登录网页端进行操作。</text>
-              <!-- #ifdef MP-WEIXIN -->
-              <button
-                class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                open-type="contact"
-              >
-                联系客服
-              </button>
-              <!-- #endif -->
-              <button
-                class="uh-button-native uh-global-card-glass mx-1 box-border rounded-lg bg-primary px-2 py-0.5 text-xs text-gray-900 shadow-none !inline-flex !border"
-                @click="handleCopyWebsiteUrl"
-              >
-                去网页端
-              </button>
-            </view>
-          </wd-collapse-item>
-        </wd-collapse>
-      </view>
-    </view>
     <!-- 退出登录 -->
     <view class="mt-2 box-border hidden w-full">
       <uh-button
@@ -827,19 +767,5 @@ onMounted(() => {
   background-color: rgb(255 255 255 / 65%);
   border-radius: 20rpx;
   width: 100%;
-}
-
-.question-collapse {
-  &:deep(.wd-collapse-item__header) {
-    padding: 16rpx 24rpx;
-  }
-
-  &:deep(.wd-collapse-item__title) {
-    font-size: 26rpx;
-  }
-
-  &:deep(.wd-collapse) {
-    background: transparent !important;
-  }
 }
 </style>

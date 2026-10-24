@@ -3,6 +3,7 @@
  * 持有库存/佩戴草稿/保存与开关操作,供头部预览与装扮面板共用
  */
 import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import {
   getDecorationMetadata,
   getMyDecorationInventory,
@@ -12,6 +13,8 @@ import {
 } from '@/api/halo-plugin-third/interaction-plus-uc'
 import type { IDecorationRarity } from '@/api/halo-plugin-third/interaction-plus-uc'
 import type { DecorationType, IIdentityMark } from '@/api/types/halo-plugin-third/interaction-plus'
+import { useIdentityStore } from '@/store/identity'
+import { useUserStore } from '@/store/user'
 import { checkImageUrl } from '@/utils/url'
 import type {
   IDecorationInventoryItem,
@@ -109,6 +112,9 @@ export function useMyDecorations() {
   const invalidCount = ref(0)
   const rarities = ref<IDecorationRarity[]>([])
   const identityMarks = ref<IIdentityMark[]>([])
+
+  const identityStore = useIdentityStore()
+  const { userInfo } = storeToRefs(useUserStore())
 
   /* ---------------- 计算属性 ---------------- */
 
@@ -248,6 +254,7 @@ export function useMyDecorations() {
       savedDraft.value = normalizeDraft(view)
       draft.value = normalizeDraft(view)
       invalidCount.value = view?.invalidItems?.length || 0
+      identityStore.invalidate(userInfo.value.username)
       uni.showToast({ icon: 'none', title: '装扮已保存' })
       return true
     }
@@ -267,6 +274,7 @@ export function useMyDecorations() {
     visibility.value = value
     try {
       await saveMyDecorationVisibility({ publicDecorationsVisible: value })
+      identityStore.invalidate(userInfo.value.username)
       uni.showToast({ icon: 'none', title: value ? '装扮墙已公开' : '装扮墙已隐藏' })
     }
     catch (error: any) {

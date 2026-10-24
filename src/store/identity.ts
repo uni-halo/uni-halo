@@ -154,6 +154,13 @@ export const useIdentityStore = defineStore(
       return buildWornSlots(identities.value[username]?.value)
     }
 
+    /** 主动失效单用户身份与装扮墙缓存（本人装扮保存后调用，展示立即生效） */
+    function invalidate(username: string) {
+      if (!username) { return }
+      delete identities.value[username]
+      delete walls.value[username]
+    }
+
     /** 装扮墙缓存：username → 项列表（空数组=查无/失败的负缓存） */
     const walls = ref<Record<string, { value: IDecorationWallItem[], at: number }>>({})
     const pendingWalls = new Map<string, Promise<IDecorationWallItem[]>>()
@@ -200,6 +207,7 @@ export const useIdentityStore = defineStore(
       ensureMany,
       slotsOf,
       wall,
+      invalidate,
     }
   },
 )

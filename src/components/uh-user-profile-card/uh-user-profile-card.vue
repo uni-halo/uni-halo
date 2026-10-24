@@ -96,10 +96,9 @@ function handleToUserProfile() {
       v-if="cardBgSrc" class="absolute inset-0 z-0 h-full w-full bg-cover bg-center !block" :src="cardBgSrc"
       mode="aspectFill" @error="onCardBgError()"
     />
-    <view class="absolute inset-0 z-1 bg-black/10" />
+    <view class="absolute inset-0 z-1 from-black/5 to-black/0 bg-gradient-to-r opacity-60" style="backdrop-filter: blur(4rpx);" />
     <view
       class="relative z-2 box-border h-full w-full flex items-center gap-x-3 p-3"
-      style="backdrop-filter: blur(4rpx);"
     >
       <!-- 头像 -->
       <view class="relative shrink-0">
