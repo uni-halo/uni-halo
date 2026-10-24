@@ -133,13 +133,13 @@ function handlePreview(index: number, list: { url: string }[]) {
               v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
               class="h-4 w-4 shrink-0" mode="aspectFit"
             />
-            <text
+            <!-- <text
               v-if="authorSlots.title.visible"
               class="ml-0.5 box-border shrink-0 truncate rounded-full px-1.5 py-0.5 text-[10px]"
               :style="authorSlots.title.style"
             >
               {{ authorSlots.title.text }}
-            </text>
+            </text> -->
           </view>
           <view class="text-xs text-gray-400">
             {{ formatMomentTime(moment.spec.releaseTime) }}
@@ -147,7 +147,7 @@ function handlePreview(index: number, list: { url: string }[]) {
         </view>
       </view>
       <view class="shrink-0">
-        <uh-button custom-class="uh-global-card-glass !border !py-1.5 !bg-primary !text-xs !rounded-full" @click="emit('detail')">
+        <uh-button custom-class="uh-global-card-glass box-border !border !px-3 !py-1 !bg-primary !text-xs !rounded-full" @click="emit('detail')">
           详情
         </uh-button>
       </view>

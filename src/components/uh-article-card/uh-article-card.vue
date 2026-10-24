@@ -291,13 +291,13 @@ function handleToUserProfile() {
                   v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
                   class="block h-4 w-4 shrink-0" mode="aspectFit"
                 />
-                <text
+                <!-- <text
                   v-if="authorSlots.title.visible"
                   class="ml-0.5 box-border shrink-0 truncate rounded-full px-2 py-0.5 text-[10px]"
                   :style="authorSlots.title.style"
                 >
                   {{ authorSlots.title.text }}
-                </text>
+                </text> -->
               </view>
               <view class="flex items-center gap-x-2">
                 <text class="text-gray-400" :class="cardLayout.time">{{ publishTimeText }}</text>

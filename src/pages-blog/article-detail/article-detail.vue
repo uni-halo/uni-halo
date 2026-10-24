@@ -3,24 +3,20 @@ import { computed, getCurrentInstance, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad, onPullDownRefresh, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { getPostByName, postTrackersCounter } from '@/api/halo'
-import { getPostCommentReplyList } from '@/api/halo-plugin-official/comment'
 import { useUpvote } from '@/hooks/useUpvote'
 import { usePageScroll } from '@/hooks/usePageScroll'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { formatTime } from '@/utils/formatTime'
 import { useAppConfigStore } from '@/store/appConfig'
 import { useFavoritesStore } from '@/store/favorites'
-import { useSettingStore } from '@/store/setting'
-import { useWornSlots } from '@/hooks/useWornSlots'
-import { useUserProfilePopup } from '@/hooks/useUserProfilePopup'
 import { checkAvatarUrl, checkImageUrl } from '@/utils/url'
-import { getAvatarFallbackText } from '@/utils/avatar'
 import { buildPostFavoriteItem } from '@/utils/favorite'
 import { getDomainOnly } from '@/utils/urlParams'
 import { getEnvBaseUrl } from '@/utils'
 import { handleScrollToSelector } from '@/utils/page'
 import { markdownConfig } from '@/config/markdown'
 import { DataLoadingStatusEnum, useDataLoadingStatus } from '@/hooks/useDataLoadingStatus'
+import { imagePreview } from '@/utils/image'
 import type { IComment, IPost } from '@/api/types/halo'
 
 definePage({
@@ -40,8 +36,7 @@ const appConfigStore = useAppConfigStore()
 const favoritesStore = useFavoritesStore()
 const { loadingStatus, updateLoadingStatus } = useDataLoadingStatus()
 
-const { configs: haloConfigs, auditModeEnabled: calcAuditModeEnabled } = storeToRefs(appConfigStore)
-const { settings } = storeToRefs(useSettingStore())
+const { configs: haloConfigs, auditModeEnabled } = storeToRefs(appConfigStore)
 
 /* ---------------- 状态 ---------------- */
 const queryName = ref('')
@@ -79,43 +74,11 @@ const commentDetail = ref({
 /* ---------------- 计算属性 ---------------- */
 const postDetailPageConfig = computed(() => haloConfigs.value.featureConfig?.pages?.postDetail)
 
-const bloggerInfo = computed(() => {
-  const blogger = haloConfigs.value.featureConfig?.profile?.blogger
-  return {
-    nickname: blogger?.nickname || '',
-    avatar: checkAvatarUrl(blogger?.avatar),
-  }
-})
-
 const calcIsShowComment = computed(() => !!postDetailPageConfig.value?.showComment)
 /** 是否启用评论（站点开关 + 文章自身开关，文章未配置时视为允许） */
 const calcEnableComment = computed(() =>
   !!postDetailPageConfig.value?.enableComment
   && result.value?.spec.allowComment !== false)
-
-const avatarShape = computed(() => (settings.value.avatarShape === 'circle' ? 'round' : 'square') as 'round' | 'square')
-
-const avatarClass = computed(() => {
-  if (settings.value.avatarShape === 'circle') {
-    return '!rounded-full'
-  }
-  return '!rounded-lg'
-})
-
-/** 作者互动增强装饰槽位(插件未启用/审核模式/站点开关关闭时全 invisible,静默降级) */
-const authorSlots = useWornSlots(() => result.value?.owner?.metadata?.name || '')
-const { openUserProfilePopup } = useUserProfilePopup()
-
-/** 点击作者:打开用户资料卡(审核模式下 hook 内直接忽略) */
-function handleToAuthorCard() {
-  const username = result.value?.owner?.metadata?.name
-  if (!username) { return }
-  openUserProfilePopup({
-    username,
-    nickname: result.value?.owner?.displayName,
-    avatar: result.value?.owner?.avatar,
-  })
-}
 
 /** 从 HTML 提取投票块 id */
 function extractVoteBlockIds(html: string): string[] {
@@ -406,20 +369,26 @@ onShareTimeline(() => {
       :scroll-title="result?.spec?.title"
     />
 
-    <uh-data-loading
-      v-if="loadingStatus !== 'success'" :loading-status="loadingStatus"
-      @refresh="handleGetData()"
-    />
+    <uh-data-loading v-if="loadingStatus !== 'success'" :loading-status="loadingStatus" @refresh="handleGetData()" />
 
     <view v-else class="box-border pt-72">
       <!-- 顶部背景封面区域 -->
       <view class="fixed left-0 top-0 h-72 w-full">
-        <wd-img v-if="result?.spec.cover" :src="result.spec.cover" class="h-full w-full" mode="aspectFill">
+        <!-- <image
+          class="absolute inset-0 z-0 h-full w-full origin-center scale-150 transform"
+          :src="result.spec.cover"
+          mode="aspectFill"
+        /> -->
+        <wd-img
+          :src="result.spec.cover" class="relative z-2 h-full w-full"
+          mode="aspectFill" @click="imagePreview(result?.spec.cover)"
+        >
           <template #loading>
             <wd-loading size="64rpx" custom-class="text-primary" />
           </template>
         </wd-img>
-        <view class="absolute bottom-0 left-0 h-[140rpx] w-full from-white/0 to-page bg-gradient-to-b" />
+        <view class="pointer-events-none absolute inset-0 z-3 h-full w-full bg-black/10" />
+        <view class="pointer-events-none absolute bottom-0 left-0 z-2 h-[140rpx] w-full from-white/0 to-page bg-gradient-to-b" />
       </view>
 
       <view
@@ -428,107 +397,80 @@ onShareTimeline(() => {
       >
         <!-- 顶部信息 -->
         <view class="box-border flex flex-col gap-3 p-3 pb-2">
-          <view class="flex items-center gap-x-2" @click="handleToAuthorCard()">
-            <view class="relative shrink-0">
-              <wd-avatar
-                :src="checkAvatarUrl(result.owner.avatar)"
-                :text="getAvatarFallbackText(result?.owner?.displayName || result?.owner?.metadata?.name)"
-                :shape="avatarShape"
-                custom-class="uh-global-card-glass !h-6 !w-6 !text-xs !leading-none !text-gray-900"
-                :class="avatarClass"
-                mode="aspectFill"
-              />
-              <image
-                v-if="authorSlots.avatarFrame.visible" :src="authorSlots.avatarFrame.url"
-                class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 !block"
-                mode="aspectFit"
-              />
-            </view>
-            <text class="text-sm text-gray-900" :style="authorSlots.nameStyle.style">{{ result?.owner?.displayName }}</text>
-            <image
-              v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-              class="h-4 w-4 shrink-0 !block" mode="aspectFit"
-            />
-            <text
-              v-if="authorSlots.title.visible"
-              class="box-border shrink-0 truncate rounded-full px-2 py-[1px] text-[10px]"
-              :style="authorSlots.title.style"
-            >
-              {{ authorSlots.title.text }}
-            </text>
-          </view>
-          <view class="font-semibold">
+          <view class="font-semibold leading-6">
             {{ result?.spec.title }}
           </view>
+          <!-- 用户信息 -->
+          <uh-user-profile-card :audit-mode="auditModeEnabled" :username="result?.owner?.metadata?.name" />
+
+          <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-3">
+            <view class="flex flex-1 items-center gap-x-2 text-gray-500">
+              <text class="shrink-0 text-xs">日期</text>
+              <text class="shrink-0 text-3xs text-gray-900">{{ formatPublishTime(result?.spec.publishTime) }}</text>
+            </view>
+            <view class="flex items-center gap-x-4">
+              <view class="flex shrink-0 items-center gap-x-2 text-gray-500">
+                <text class="shrink-0 text-xs">阅读</text>
+                <text class="shrink-0 text-sm text-gray-900">{{ result?.stats?.visit ?? 0 }}</text>
+              </view>
+              <view class="flex shrink-0 items-center gap-x-2 text-gray-500">
+                <text class="shrink-0 text-xs">喜欢</text>
+                <text class="shrink-0 text-sm text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
+              </view>
+              <view
+                v-if="calcEnableComment" class="flex shrink-0 items-center gap-x-2 text-gray-500"
+                @click="handleToComment()"
+              >
+                <text class="shrink-0 text-xs">评论</text>
+                <text class="shrink-0 text-sm text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
+              </view>
+              <view class="flex shrink-0 items-center gap-x-2 text-gray-500">
+                <text class="shrink-0 text-xs">字数</text>
+                <text class="shrink-0 text-sm text-gray-900">{{ result?.content?.raw.length || 0 }}</text>
+              </view>
+            </view>
+          </view>
+
           <view
             v-if="result?.categories.length !== 0 || result?.tags.length !== 0"
             class="flex flex-wrap items-center gap-2 text-xs"
           >
             <text
               v-for="(item, index) in result?.categories" :key="index"
-              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1"
-              @click="handleToCate(item)"
+              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1" @click="handleToCate(item)"
             >
               {{ item.spec.displayName }}
             </text>
             <text
               v-for="(item, index) in result?.tags" :key="index"
-              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1"
-              @click="handleToTag(item)"
+              class="uh-global-card-glass uh-shadow-xs border rounded-full px-2 py-1" @click="handleToTag(item)"
             >
               #{{ item.spec.displayName }}
             </text>
-          </view>
-
-          <view class="uh-global-card-glass uh-shadow-xs box-border flex flex-col gap-3 rounded-xl p-3">
-            <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-              <text class="text-xs">日期</text>
-              <text class="text-xs text-gray-900">{{ formatPublishTime(result?.spec.publishTime) }}</text>
-            </view>
-            <view class="flex items-center">
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">阅读</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.visit ?? 0 }}</text>
-              </view>
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">喜欢</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.upvote ?? 0 }}</text>
-              </view>
-              <view
-                v-if="calcEnableComment" class="flex flex-1 items-center gap-x-2 text-gray-500"
-                @click="handleToComment()"
-              >
-                <text class="text-xs">评论</text>
-                <text class="text-xs text-gray-900">{{ result?.stats?.comment ?? 0 }}</text>
-              </view>
-              <view class="flex flex-1 items-center gap-x-2 text-gray-500">
-                <text class="text-xs">字数</text>
-                <text class="text-xs text-gray-900">{{ result?.content?.raw.length || 0 }}</text>
-              </view>
-            </view>
           </view>
         </view>
 
         <!-- 内容区域 -->
         <view class="box-border flex flex-col gap-y-4 p-3 pt-2">
           <!-- 播客听读 -->
-          <uh-article-podcast-player v-if="podcastVisible" :post-name="result?.metadata?.name" @on-visible="handlePodcastVisible" />
+          <uh-article-podcast-player
+            v-if="podcastVisible" :post-name="result?.metadata?.name"
+            @on-visible="handlePodcastVisible"
+          />
 
           <!-- 摘要 -->
           <uh-article-detail-summary :content="result?.spec?.excerpt?.raw" />
 
           <!-- 内容 -->
-          <view class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10">
+          <view
+            class="uh-global-card-glass uh-shadow-xs box-border rounded-xl p-3 text-3xs text-gray-900 leading-6 !bg-white/10"
+          >
             <mp-html
-              :content="result?.content?.raw"
-              lazy-load :domain="markdownConfig.domain"
-              :loading-img="markdownConfig.loadingGif" scroll-table selectable
-              :tag-style="markdownConfig.tagStyle" :container-style="markdownConfig.containStyle"
-              :markdown="true" :show-line-number="true"
-              :show-language-name="true" copy-by-long-press
-              @uhe-vote-actions="handleVoteCardActions"
-              @uhe-portfolio-actions="handlePortfolioCardActions"
-              @uhe-douban-actions="handleDoubanCardActions"
+              :content="result?.content?.raw" lazy-load :domain="markdownConfig.domain"
+              :loading-img="markdownConfig.loadingGif" scroll-table selectable :tag-style="markdownConfig.tagStyle"
+              :container-style="markdownConfig.containStyle" :markdown="true" :show-line-number="true"
+              :show-language-name="true" copy-by-long-press @uhe-vote-actions="handleVoteCardActions"
+              @uhe-portfolio-actions="handlePortfolioCardActions" @uhe-douban-actions="handleDoubanCardActions"
             />
           </view>
         </view>
@@ -598,10 +540,7 @@ onShareTimeline(() => {
           @click="handleTogglePostFavorite"
         >
           <wd-icon class-prefix="uhemoji-icon" name="-smile-" size="36rpx" />
-          <text
-            class="shrink-0 text-xs font-semibold"
-            :class="[hasFavorited() ? 'text-primary' : 'text-gray-900']"
-          >
+          <text class="shrink-0 text-xs font-semibold" :class="[hasFavorited() ? 'text-primary' : 'text-gray-900']">
             {{ hasFavorited() ? '已收藏' : '收藏' }}
           </text>
         </view>

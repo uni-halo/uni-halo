@@ -291,7 +291,7 @@ onShareTimeline(() => ({
 </script>
 
 <template>
-  <view class="box-border min-h-screen w-screen bg-page pb-safe">
+  <view class="box-border min-h-screen w-screen bg-page">
     <uh-navbar :scroll-y="scrollY" :default-title="pageTitle" title-color="text-gray-900" />
 
     <uh-data-loading
@@ -299,7 +299,7 @@ onShareTimeline(() => ({
       empty-text="瞬间不存在或已被删除" @refresh="loadMoment"
     />
 
-    <view v-else-if="moment" class="box-border px-3 pb-14 pt-2">
+    <view v-else-if="moment" class="box-border p-3">
       <view class="uh-global-card-glass uh-shadow-xs mb-3 box-border overflow-hidden rounded-2xl pb-4">
         <!-- 刊头:大字日期 -->
         <view v-if="moment.spec.releaseTime" class="px-4 pt-4">
@@ -331,18 +331,11 @@ onShareTimeline(() => ({
           </view>
           <view class="ml-3 flex flex-col">
             <view class="flex items-center gap-x-1">
-              <text class="text-md text-gray-600 font-medium" :style="authorSlots.nameStyle.style">{{ moment.owner?.displayName || '' }}</text>
+              <text class="text-md text-gray-600 font-semibold" :style="authorSlots.nameStyle.style">{{ moment.owner?.displayName || '' }}</text>
               <image
                 v-if="authorSlots.primaryBadge.visible" :src="authorSlots.primaryBadge.url"
-                class="h-4 w-4 shrink-0" mode="aspectFit"
+                class="h-5 w-5 shrink-0 !block" mode="aspectFit"
               />
-              <text
-                v-if="authorSlots.title.visible"
-                class="box-border shrink-0 truncate rounded-full px-2 py-0.5 text-xs"
-                :style="authorSlots.title.style"
-              >
-                {{ authorSlots.title.text }}
-              </text>
             </view>
             <view class="mt-0.5 text-xs text-gray-400">
               记录了这美好的一刻
@@ -430,7 +423,7 @@ onShareTimeline(() => ({
     </view>
 
     <!-- 悬浮操作 -->
-    <uh-float-toolbar v-if="moment">
+    <uh-float-toolbar v-if="moment" :need-placeholder="true">
       <!-- 点赞 -->
       <view
         class="uh-global-card-glass box-border h-[72rpx] flex flex-1 items-center justify-center gap-x-1 border rounded-full px-4 shadow-none"

@@ -179,12 +179,12 @@ function handleCopyWebsite() {
             <wd-avatar
               :src="checkAvatarUrl(headerUser.avatar)"
               :text="getAvatarFallbackText(headerUser.nickname || payload.username, '?')" shape="round"
-              custom-class="uh-global-card-glass uh-shadow-xs !h-16 !w-16 !border-2 !border-white/40 !text-gray-900 !font-bold"
+              custom-class="uh-global-card-glass uh-shadow-xs !h-18 !w-18 !border-2 !border-white/40 !text-gray-900 !font-bold"
               mode="aspectFill" @click="handlePreviewAvatar()"
             />
             <image
               v-if="slots.avatarFrame.visible" :src="slots.avatarFrame.url"
-              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-[4.5rem] w-[4.5rem]"
+              class="uh-frame-center pointer-events-none absolute left-1/2 top-1/2 h-22 w-22"
               mode="aspectFit"
             />
           </view>

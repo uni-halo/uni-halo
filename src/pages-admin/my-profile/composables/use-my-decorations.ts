@@ -7,7 +7,6 @@ import {
   getDecorationMetadata,
   getMyDecorationInventory,
   getMyDecorationProfile,
-
   saveMyDecorationProfile,
   saveMyDecorationVisibility,
 } from '@/api/halo-plugin-third/interaction-plus-uc'

@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
     class="uh-podcast-player uh-global-card-glass uh-shadow-xs box-border w-full flex flex-col gap-y-3 p-3 !border !rounded-xl"
   >
     <view class="w-full flex items-center justify-between gap-2 overflow-hidden">
-      <view class="flex flex-1 flex-col gap-y-0.5">
+      <view class="flex flex-1 flex-col gap-y-1">
         <view class="flex items-center gap-x-1.5 text-gray-900">
           <wd-icon name="live-broadcast" size="32rpx" />
           <text class="text-3xs font-bold"> 播客听读 </text>
@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
       <view class="w-full flex flex-col gap-y-2">
         <view
           v-for="(turn, index) in turns" :id="`turn-${index}`" :key="index"
-          class="flex flex-col gap-1 rounded-xl px-3 py-2"
+          class="flex flex-col gap-1 rounded-lg px-3 py-2"
           :class="index === activeTurnIndex ? 'bg-gray-100' : 'bg-gray-50'" @click="handleSeekTurn(turn)"
         >
           <text class="text-xs" :class="turn.speaker === 'A' ? 'text-gray-500' : 'text-gray-500'">
